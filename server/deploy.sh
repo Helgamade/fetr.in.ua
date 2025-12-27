@@ -20,6 +20,10 @@ echo "Copying files from dist/ to root..."
 # Создаем папку assets если её нет
 mkdir -p assets
 
+# Очищаем старые файлы из assets перед копированием новых
+echo "Cleaning old assets..."
+rm -f assets/index-*.js assets/index-*.css 2>/dev/null || true
+
 # Копируем index.html ПЕРВЫМ (КРИТИЧНО!)
 echo "Copying index.html..."
 cp dist/index.html index.html
