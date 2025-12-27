@@ -265,6 +265,9 @@ export function Comparison() {
                   <th className="text-left p-3 font-semibold sticky left-0 bg-background z-10 min-w-[200px]">
                     Параметр
                   </th>
+                  <th className="text-center p-3 font-semibold min-w-[80px]">
+                    Порядок
+                  </th>
                   {products.map((product) => (
                     <th key={product.id} className="text-center p-3 font-semibold min-w-[150px]">
                       {product.name}
@@ -288,6 +291,9 @@ export function Comparison() {
                         >
                           <Edit2 className="h-3 w-3" />
                         </Button>
+                      </td>
+                      <td className="p-3 text-center">
+                        {feature.sortOrder}
                       </td>
                       {products.map((product) => {
                         // Use local value if exists, otherwise use server value
@@ -354,17 +360,22 @@ export function Comparison() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            {!editingFeature && (
-              <div className="space-y-2">
-                <Label htmlFor="key">Ключ (латиниця, без пробілів)</Label>
-                <Input
-                  id="key"
-                  value={newFeature.key}
-                  onChange={(e) => setNewFeature({ ...newFeature, key: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
-                  placeholder="colors"
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="key">Ключ (латиниця, без пробілів)</Label>
+              <Input
+                id="key"
+                value={editingFeature?.key || newFeature.key}
+                onChange={(e) => {
+                  if (editingFeature) {
+                    // Key cannot be changed when editing
+                    return;
+                  }
+                  setNewFeature({ ...newFeature, key: e.target.value.toLowerCase().replace(/\s+/g, '-') });
+                }}
+                disabled={!!editingFeature}
+                placeholder="colors"
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="label">Назва параметра</Label>
               <Input
