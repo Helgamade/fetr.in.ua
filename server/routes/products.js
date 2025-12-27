@@ -28,6 +28,7 @@ router.get('/', async (req, res, next) => {
       `, [product.id]);
       product.options = options.map(opt => ({
         id: opt.id,
+        code: opt.code,
         name: opt.name,
         price: parseFloat(opt.price) || 0,
         description: opt.description || null,

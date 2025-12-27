@@ -242,7 +242,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                 <div className="space-y-3">
                   {product.options.map(option => (
                     <label
-                      key={option.id}
+                      key={option.code}
                       className={cn(
                         'flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors',
                         selectedOptions.includes(option.code)
