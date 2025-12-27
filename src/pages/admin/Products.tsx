@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Plus, 
   Edit, 
@@ -7,7 +7,9 @@ import {
   Package,
   Eye,
   ShoppingCart,
-  X
+  X,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -109,6 +111,51 @@ export function Products() {
         },
       }
     );
+  };
+
+  const handleImageUpload = async (index: number, file: File) => {
+    setUploadingIndex(index);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch('/api/products/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Помилка завантаження файлу');
+      }
+
+      const data = await response.json();
+      const newImages = [...(editingProduct?.images || [])];
+      newImages[index] = data.url;
+      setEditingProduct({ ...editingProduct!, images: newImages });
+      toast({
+        title: 'Успішно',
+        description: 'Зображення завантажено',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Помилка',
+        description: error.message || 'Не вдалося завантажити зображення',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingIndex(null);
+    }
+  };
+
+  const handleFileInputChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleImageUpload(index, file);
+    }
+    // Сброс input для возможности загрузки того же файла снова
+    if (fileInputRefs.current[index]) {
+      fileInputRefs.current[index]!.value = '';
+    }
   };
 
   const handleDelete = (productId: string) => {
@@ -392,7 +439,7 @@ export function Products() {
                 <div className="space-y-2">
                   <Label>Зображення товару</Label>
                   <p className="text-xs text-muted-foreground mb-4">
-                    Додайте URL зображень. Перше зображення буде основним. Можна додавати необмежену кількість.
+                    Додайте URL зображень або завантажте файли з комп'ютера (кнопка з іконкою завантаження). Перше зображення буде основним. Можна додавати необмежену кількість.
                   </p>
                   <div className="space-y-3">
                     {editingProduct.images.map((image, index) => (

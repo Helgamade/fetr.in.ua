@@ -57,6 +57,10 @@ app.use('/api/team', teamRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/comparison', comparisonRoutes);
 
+// Serve uploaded files
+const UPLOADS_DIR = join(__dirname, '..', 'uploads');
+app.use('/uploads', express.static(UPLOADS_DIR));
+
 // Serve frontend when the hosting proxies ALL traffic to Node.js.
 // Web root is one level up from /server → / (contains index.html, assets/, etc.)
 const WEB_ROOT = join(__dirname, '..');
