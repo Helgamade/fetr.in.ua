@@ -12,20 +12,22 @@ router.get('/', async (req, res, next) => {
 
     // Get items for each order
     for (const order of orders) {
+      const orderIdInt = order.id; // Save INT id before renaming
       const [items] = await pool.execute(`
-        SELECT oi.*, oio.option_id 
+        SELECT oi.*, oio.option_id, p.code as product_code
         FROM order_items oi
         LEFT JOIN order_item_options oio ON oi.id = oio.order_item_id
+        LEFT JOIN products p ON oi.product_id = p.id
         WHERE oi.order_id = ?
         ORDER BY oi.id
-      `, [order.id]);
+      `, [orderIdInt]);
 
-      // Group items by order_item_id
+      // Group items by order_item_id and convert product_id INT to code
       const itemsMap = new Map();
       items.forEach(item => {
         if (!itemsMap.has(item.id)) {
           itemsMap.set(item.id, {
-            productId: item.product_id,
+            productId: item.product_code || item.product_id, // Use code if available from JOIN
             quantity: item.quantity,
             selectedOptions: []
           });
@@ -72,6 +74,10 @@ router.get('/', async (req, res, next) => {
       order.updatedAt = new Date(order.updated_at);
       delete order.created_at;
       delete order.updated_at;
+      
+      // Use order_number as id for frontend compatibility
+      order.id = order.order_number;
+      delete order.order_number;
     }
 
     res.json(orders);
@@ -107,7 +113,7 @@ router.get('/:id', async (req, res, next) => {
     items.forEach(item => {
       if (!itemsMap.has(item.id)) {
         itemsMap.set(item.id, {
-          productId: item.product_id,
+          productId: item.product_code || item.product_id, // Use code if available from JOIN
           quantity: item.quantity,
           selectedOptions: []
         });
@@ -148,6 +154,10 @@ router.get('/:id', async (req, res, next) => {
     order.updatedAt = new Date(order.updated_at);
     delete order.created_at;
     delete order.updated_at;
+    
+    // Use order_number as id for frontend compatibility
+    order.id = order.order_number;
+    delete order.order_number;
 
     res.json(order);
   } catch (error) {
@@ -242,7 +252,7 @@ router.post('/', async (req, res, next) => {
       }
 
       await connection.commit();
-      res.status(201).json({ id: orderId, orderNumber: id, message: 'Order created' });
+      res.status(201).json({ id: id, message: 'Order created' });
     } catch (error) {
       await connection.rollback();
       throw error;
@@ -260,9 +270,10 @@ router.patch('/:id/status', async (req, res, next) => {
     const { id } = req.params;
     const { status } = req.body;
 
+    // id is order_number (VARCHAR), not INT id
     await pool.execute(`
       UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
+      WHERE order_number = ?
     `, [status, id]);
 
     res.json({ id, status, message: 'Order status updated' });
@@ -280,6 +291,7 @@ router.put('/:id', async (req, res, next) => {
     // Helper function to convert undefined/empty to null
     const toNull = (val) => (val === undefined || val === null || val === '') ? null : val;
 
+    // id is order_number (VARCHAR), not INT id
     await pool.execute(`
       UPDATE orders SET
         customer_name = ?, customer_phone = ?, customer_email = ?,
@@ -287,7 +299,7 @@ router.put('/:id', async (req, res, next) => {
         delivery_post_index = ?, delivery_address = ?,
         payment_method = ?, status = ?, subtotal = ?, discount = ?,
         delivery_cost = ?, total = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
+      WHERE order_number = ?
     `, [
       customer.name, customer.phone, toNull(customer.email),
       delivery.method, toNull(delivery.city), toNull(delivery.warehouse),

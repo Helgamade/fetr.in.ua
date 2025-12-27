@@ -73,7 +73,7 @@ export function Orders() {
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(order.id).toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customer.phone.includes(searchQuery);
     
@@ -96,7 +96,7 @@ export function Orders() {
   };
 
   const getProductName = (productId: string) => {
-    return products.find(p => p.id === productId)?.name || productId;
+    return products.find(p => p.code === productId)?.name || productId;
   };
 
   if (isLoading) {
