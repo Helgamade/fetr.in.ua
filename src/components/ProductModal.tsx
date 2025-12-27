@@ -76,7 +76,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
       />
 
       {/* Modal */}
-      <div className="relative w-full h-full md:h-auto md:max-h-[90vh] md:max-w-6xl md:mx-4 bg-card md:rounded-2xl overflow-hidden animate-scale-in">
+      <div className="relative w-full h-full xl:h-auto xl:max-h-[90vh] xl:mx-4 bg-card xl:rounded-2xl overflow-hidden animate-scale-in" style={{ maxWidth: 'calc(660px + min(90vh, 100vw - 660px - 2rem))' }}>
         {/* Close button */}
         <button
           onClick={onClose}
@@ -86,9 +86,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
         </button>
 
         <div className="h-full overflow-y-auto">
-          <div className="md:flex">
+          <div className="flex flex-col xl:flex-row">
             {/* Image Gallery */}
-            <div className="relative aspect-square md:aspect-auto md:w-2/3 md:h-[90vh] bg-muted flex items-center justify-center">
+            <div className="relative aspect-square xl:aspect-auto xl:flex-1 xl:h-[90vh] bg-muted flex items-center justify-center min-w-0">
               <img
                 src={product.images[currentImageIndex]}
                 alt={product.name}
@@ -138,7 +138,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
             </div>
 
             {/* Content */}
-            <div className="p-6 md:w-1/3 md:overflow-y-auto md:max-h-[90vh]">
+            <div className="p-6 xl:w-[660px] xl:flex-shrink-0 xl:overflow-y-auto xl:max-h-[90vh]">
               {/* Header */}
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
