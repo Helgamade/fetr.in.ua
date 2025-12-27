@@ -2,8 +2,8 @@
 import { Product, Order } from '@/types/store';
 
 // Use environment variable or fallback to relative path
-// In production: use full URL or relative path depending on proxy setup
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3001/api');
+// In production with proxy: always use relative path /api
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {

@@ -20,6 +20,7 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '.env') });
 
 const app = express();
+// Use PORT from environment (set by hosting) or fallback to 3001
 const PORT = process.env.PORT || 3001;
 
 // Middleware
