@@ -1,0 +1,63 @@
+import React from 'react';
+import { faqs } from '@/data/products';
+import { HelpCircle, ChevronDown } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+
+export const FAQSection: React.FC = () => {
+  return (
+    <section id="faq" className="py-20">
+      <div className="container-tight">
+        {/* Section header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4">
+            <HelpCircle className="w-4 h-4" />
+            <span className="text-sm font-medium">Часті питання</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
+            Відповіді на ваші питання
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Знайдіть відповіді на найпоширеніші запитання
+          </p>
+        </div>
+
+        {/* FAQ Accordion */}
+        <div className="max-w-3xl mx-auto">
+          <Accordion type="single" collapsible className="space-y-4">
+            {faqs.map((faq, index) => (
+              <AccordionItem
+                key={faq.id}
+                value={faq.id}
+                className="glass-card px-6 border-0 data-[state=open]:shadow-medium transition-shadow"
+              >
+                <AccordionTrigger className="hover:no-underline py-5">
+                  <span className="text-left font-heading font-semibold pr-4">
+                    {faq.question}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-5 text-muted-foreground">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+
+        {/* Contact CTA */}
+        <div className="mt-12 text-center p-6 rounded-2xl bg-sage/50">
+          <p className="text-lg font-medium text-foreground mb-2">
+            Не знайшли відповіді на своє питання?
+          </p>
+          <p className="text-muted-foreground">
+            Напишіть нам у <a href="https://instagram.com/helgamade_ua" target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">Instagram</a> або зателефонуйте за номером <a href="tel:+380501234567" className="text-primary font-medium hover:underline">+38 (050) 123-45-67</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+};

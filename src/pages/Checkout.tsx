@@ -1,0 +1,431 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "@/context/CartContext";
+import { products } from "@/data/products";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ArrowLeft, Package, CreditCard, Truck, MapPin, Phone, Mail, User } from "lucide-react";
+import { Helmet } from "react-helmet-async";
+import { toast } from "@/hooks/use-toast";
+
+const Checkout = () => {
+  const navigate = useNavigate();
+  const { items, getTotal, clearCart } = useCart();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    paymentMethod: "card",
+    deliveryMethod: "nova_poshta",
+    city: "",
+    warehouse: "",
+    address: "",
+    postalCode: "",
+    comment: ""
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.phone || !formData.city) {
+      toast({
+        title: "Помилка",
+        description: "Будь ласка, заповніть всі обов'язкові поля",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    // Simulate order submission
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const orderId = `FTR-${Date.now().toString(36).toUpperCase()}`;
+    
+    clearCart();
+    navigate(`/thank-you?order=${orderId}`);
+  };
+
+  const total = getTotal();
+  const deliveryPrice = total >= 1500 ? 0 : 70;
+  const finalTotal = total + deliveryPrice;
+
+  // Get full product data for cart items
+  const cartItemsWithProducts = items.map(item => {
+    const product = products.find(p => p.id === item.productId);
+    return { ...item, product };
+  }).filter(item => item.product);
+
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <Package className="w-16 h-16 mx-auto text-muted-foreground" />
+          <h1 className="text-2xl font-bold">Кошик порожній</h1>
+          <p className="text-muted-foreground">Додайте товари для оформлення замовлення</p>
+          <Button onClick={() => navigate("/")} className="rounded-full">
+            Повернутися до покупок
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Helmet>
+        <title>Оформлення замовлення | FetrInUA</title>
+        <meta name="robots" content="noindex" />
+      </Helmet>
+      
+      <div className="min-h-screen bg-muted/30">
+        {/* Header */}
+        <header className="bg-background border-b sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate(-1)}
+              className="rounded-full"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-xl font-bold">Оформлення замовлення</h1>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Form */}
+            <div className="lg:col-span-2 space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Contact Info */}
+                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
+                  <h2 className="text-lg font-bold flex items-center gap-2">
+                    <User className="w-5 h-5 text-primary" />
+                    Контактні дані
+                  </h2>
+                  
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Ім'я та прізвище *</Label>
+                      <Input
+                        id="name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        placeholder="Олена Петренко"
+                        required
+                        className="rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Телефон *</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="phone"
+                          name="phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          placeholder="+380 XX XXX XX XX"
+                          required
+                          className="rounded-xl pl-10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="email@example.com"
+                        className="rounded-xl pl-10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment */}
+                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
+                  <h2 className="text-lg font-bold flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-primary" />
+                    Спосіб оплати
+                  </h2>
+                  
+                  <RadioGroup
+                    value={formData.paymentMethod}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}
+                    className="space-y-3"
+                  >
+                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
+                      <RadioGroupItem value="card" id="card" />
+                      <div>
+                        <div className="font-medium">Оплата на карту</div>
+                        <div className="text-sm text-muted-foreground">Переказ на картку ПриватБанку</div>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
+                      <RadioGroupItem value="cod" id="cod" />
+                      <div>
+                        <div className="font-medium">Накладений платіж</div>
+                        <div className="text-sm text-muted-foreground">Оплата при отриманні (+20 грн комісія)</div>
+                      </div>
+                    </label>
+                  </RadioGroup>
+                </div>
+
+                {/* Delivery */}
+                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
+                  <h2 className="text-lg font-bold flex items-center gap-2">
+                    <Truck className="w-5 h-5 text-primary" />
+                    Доставка
+                  </h2>
+                  
+                  <RadioGroup
+                    value={formData.deliveryMethod}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, deliveryMethod: value }))}
+                    className="space-y-3"
+                  >
+                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
+                      <RadioGroupItem value="nova_poshta" id="nova_poshta" />
+                      <div className="flex-1">
+                        <div className="font-medium">Нова Пошта</div>
+                        <div className="text-sm text-muted-foreground">1-2 дні по Україні</div>
+                      </div>
+                      <div className="text-sm font-medium">
+                        {total >= 1500 ? <span className="text-green-600">Безкоштовно</span> : "від 70 грн"}
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
+                      <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
+                      <div className="flex-1">
+                        <div className="font-medium">Укрпошта</div>
+                        <div className="text-sm text-muted-foreground">3-5 днів по Україні</div>
+                      </div>
+                      <div className="text-sm font-medium">від 45 грн</div>
+                    </label>
+                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
+                      <RadioGroupItem value="pickup" id="pickup" />
+                      <div className="flex-1">
+                        <div className="font-medium">Самовивіз</div>
+                        <div className="text-sm text-muted-foreground">м. Київ, вул. Урлівська 30</div>
+                      </div>
+                      <div className="text-sm font-medium text-green-600">Безкоштовно</div>
+                    </label>
+                  </RadioGroup>
+
+                  {/* Delivery Address */}
+                  {formData.deliveryMethod !== "pickup" && (
+                    <div className="space-y-4 pt-4 border-t">
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="city">Місто *</Label>
+                          <div className="relative">
+                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                              id="city"
+                              name="city"
+                              value={formData.city}
+                              onChange={handleInputChange}
+                              placeholder="Введіть місто"
+                              required
+                              className="rounded-xl pl-10"
+                            />
+                          </div>
+                        </div>
+                        
+                        {formData.deliveryMethod === "nova_poshta" && (
+                          <div className="space-y-2">
+                            <Label htmlFor="warehouse">Відділення *</Label>
+                            <Input
+                              id="warehouse"
+                              name="warehouse"
+                              value={formData.warehouse}
+                              onChange={handleInputChange}
+                              placeholder="Номер відділення"
+                              required
+                              className="rounded-xl"
+                            />
+                          </div>
+                        )}
+                        
+                        {formData.deliveryMethod === "ukr_poshta" && (
+                          <>
+                            <div className="space-y-2">
+                              <Label htmlFor="postalCode">Індекс *</Label>
+                              <Input
+                                id="postalCode"
+                                name="postalCode"
+                                value={formData.postalCode}
+                                onChange={handleInputChange}
+                                placeholder="01001"
+                                required
+                                className="rounded-xl"
+                              />
+                            </div>
+                            <div className="space-y-2 sm:col-span-2">
+                              <Label htmlFor="address">Адреса *</Label>
+                              <Input
+                                id="address"
+                                name="address"
+                                value={formData.address}
+                                onChange={handleInputChange}
+                                placeholder="Вулиця, будинок, квартира"
+                                required
+                                className="rounded-xl"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {formData.deliveryMethod === "pickup" && (
+                    <div className="p-4 bg-secondary/50 rounded-xl">
+                      <div className="font-medium mb-1">Адреса самовивозу:</div>
+                      <div className="text-muted-foreground">м. Київ, вул. Урлівська 30</div>
+                      <div className="text-sm text-muted-foreground mt-2">Пн-Пт: 10:00-18:00, Сб: 10:00-15:00</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Comment */}
+                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
+                  <Label htmlFor="comment">Коментар до замовлення</Label>
+                  <textarea
+                    id="comment"
+                    name="comment"
+                    value={formData.comment}
+                    onChange={handleInputChange}
+                    placeholder="Додаткові побажання..."
+                    className="w-full min-h-[100px] p-3 border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                  />
+                </div>
+
+                {/* Submit Button (Mobile) */}
+                <div className="lg:hidden">
+                  <Button 
+                    type="submit" 
+                    size="lg" 
+                    className="w-full rounded-full text-lg"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Обробка..." : `Підтвердити замовлення • ${finalTotal} грн`}
+                  </Button>
+                </div>
+              </form>
+            </div>
+
+            {/* Order Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-card rounded-2xl p-6 shadow-soft sticky top-24 space-y-4">
+                <h2 className="text-lg font-bold">Ваше замовлення</h2>
+                
+                <div className="space-y-3 max-h-[300px] overflow-auto">
+                  {cartItemsWithProducts.map((item) => {
+                    const product = item.product!;
+                    const productOptions = item.selectedOptions.map(optId => 
+                      product.options.find(o => o.id === optId)
+                    ).filter(Boolean);
+                    const optionsTotal = productOptions.reduce((sum, opt) => sum + (opt?.price || 0), 0);
+                    
+                    return (
+                      <div key={item.productId + JSON.stringify(item.selectedOptions)} className="flex gap-3">
+                        <img 
+                          src={product.images[0]} 
+                          alt={product.name}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{product.name}</div>
+                          <div className="text-xs text-muted-foreground">Кількість: {item.quantity}</div>
+                          {productOptions.length > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                              + {productOptions.length} опц.
+                            </div>
+                          )}
+                        </div>
+                        <div className="font-medium text-sm">
+                          {((product.salePrice || product.basePrice) * item.quantity) + optionsTotal} грн
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="border-t pt-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Товари:</span>
+                    <span>{total} грн</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Доставка:</span>
+                    <span className={deliveryPrice === 0 ? "text-green-600" : ""}>
+                      {deliveryPrice === 0 ? "Безкоштовно" : `${deliveryPrice} грн`}
+                    </span>
+                  </div>
+                  {formData.paymentMethod === "cod" && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Комісія НП:</span>
+                      <span>+20 грн</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                    <span>Разом:</span>
+                    <span className="text-primary">
+                      {finalTotal + (formData.paymentMethod === "cod" ? 20 : 0)} грн
+                    </span>
+                  </div>
+                </div>
+
+                {/* Submit Button (Desktop) */}
+                <div className="hidden lg:block pt-4">
+                  <Button 
+                    type="submit" 
+                    size="lg" 
+                    className="w-full rounded-full"
+                    disabled={isSubmitting}
+                    onClick={handleSubmit}
+                  >
+                    {isSubmitting ? "Обробка..." : "Підтвердити замовлення"}
+                  </Button>
+                </div>
+
+                {/* Trust badges */}
+                <div className="flex flex-wrap gap-2 pt-4 border-t justify-center text-xs text-muted-foreground">
+                  <span>🔒 Безпечна оплата</span>
+                  <span>•</span>
+                  <span>📦 Швидка доставка</span>
+                  <span>•</span>
+                  <span>↩️ 14 днів повернення</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Checkout;
