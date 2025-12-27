@@ -13,6 +13,7 @@ import galleryRoutes from './routes/gallery.js';
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,9 +21,15 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '.env') });
 
 const app = express();
-// Use PORT and HOST from environment (set by hosting) or fallback values
-const PORT = process.env.PORT || 3001;
-const HOST = process.env.HOST || '0.0.0.0';
+// Use PORT and HOST from environment (set by hosting) or fallback values.
+// Some hostings provide HOST like "http://127.1.5.169:3000" — normalize it.
+const PORT = Number(process.env.PORT) || 3001;
+const HOST_RAW = (process.env.HOST || '').trim();
+const HOST = (HOST_RAW
+  .replace(/^https?:\/\//, '')
+  .split('/')[0]
+  .split(':')[0]
+  .trim()) || '0.0.0.0';
 
 // Middleware
 app.use(cors({
@@ -47,6 +54,21 @@ app.use('/api/faqs', faqsRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/gallery', galleryRoutes);
+
+// Serve frontend when the hosting proxies ALL traffic to Node.js.
+// Web root is one level up from /server → / (contains index.html, assets/, etc.)
+const WEB_ROOT = join(__dirname, '..');
+app.use(express.static(WEB_ROOT));
+
+// SPA fallback (do not hijack API routes)
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) return next();
+  const indexPath = join(WEB_ROOT, 'index.html');
+  if (!existsSync(indexPath)) {
+    return res.status(500).send('index.html not found on server');
+  }
+  res.sendFile(indexPath);
+});
 
 // Error handling
 app.use((err, req, res, next) => {
