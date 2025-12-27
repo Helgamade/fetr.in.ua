@@ -26,22 +26,24 @@
 
 ## Критически важно:
 
-🚨 **ВСЕГДА** копировать `dist/index.html` → `www/index.html` после деплоя!
+🚨 **ВСЕГДА** репозиторий и рабочая папка ОДНА И ТА ЖЕ: `/home/idesig02/fetr.in.ua/www/`
 
-🚨 **ВСЕГДА** файлы сохраняются ТОЛЬКО в `/home/idesig02/fetr.in.ua/www/`, в корень НИЧЕГО не копируется!
+🚨 **ВСЕГДА** копировать `dist/index.html` → `index.html` после деплоя!
 
-🚨 **ВСЕГДА** устанавливать права доступа: `chmod 755 www/assets && chmod 644 www/assets/*`
+🚨 **ВСЕГДА** в корень `/home/idesig02/fetr.in.ua/` НИЧЕГО не сохраняется!
 
-🚨 **ВСЕГДА** проверять что `www/index.html` ссылается на `/assets/index-*.js`, а НЕ на `/src/main.tsx`
+🚨 **ВСЕГДА** устанавливать права доступа: `chmod 755 assets && chmod 644 assets/*`
+
+🚨 **ВСЕГДА** проверять что `index.html` ссылается на `/assets/index-*.js`, а НЕ на `/src/main.tsx`
 
 ## Полезные команды:
 
 ```bash
 # Проверка index.html на сервере
-ssh USER@SERVER "cd /path/to/fetr.in.ua && grep -E 'main\.tsx|index-.*\.js' www/index.html"
+ssh USER@SERVER "cd /home/idesig02/fetr.in.ua/www && grep -E 'main\.tsx|index-.*\.js' index.html"
 
 # Быстрый деплой
-ssh USER@SERVER "cd /path/to/fetr.in.ua && git fetch origin && git reset --hard origin/main && cp dist/index.html www/index.html && cp -r dist/assets/* www/assets/ && chmod 755 www/assets && chmod 644 www/assets/* && chmod 644 www/index.html"
+ssh USER@SERVER "cd /home/idesig02/fetr.in.ua/www && git fetch origin && git reset --hard origin/main && npm install && npm run build && cp dist/index.html index.html && cp -r dist/assets/* assets/ && chmod 755 assets && chmod 644 assets/* && chmod 644 index.html"
 ```
 
 ## Документация:

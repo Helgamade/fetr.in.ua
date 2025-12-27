@@ -1,5 +1,3 @@
-import { CartProvider } from "@/context/CartContext";
-import { AnalyticsProvider } from "@/context/AnalyticsContext";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { ProductsSection } from "@/components/ProductsSection";
@@ -20,16 +18,15 @@ import { Helmet } from "react-helmet-async";
 
 const Index = () => {
   return (
-    <AnalyticsProvider>
-      <CartProvider>
-        <Helmet>
-          <title>FetrInUA — Набори для творчості з фетру | Купити в Україні</title>
-          <meta name="description" content="Творчі набори з фетру для дітей та дорослих. 12+ років досвіду, 3000+ задоволених клієнтів. Швидка доставка по Україні. Замовляйте зараз!" />
-          <meta name="keywords" content="фетр, набори для творчості, рукоділля, діти, іграшки з фетру, Україна" />
-          <link rel="canonical" href="https://fetr.in.ua" />
-        </Helmet>
-        
-        <div className="min-h-screen bg-background">
+    <>
+      <Helmet>
+        <title>FetrInUA — Набори для творчості з фетру | Купити в Україні</title>
+        <meta name="description" content="Творчі набори з фетру для дітей та дорослих. 12+ років досвіду, 3000+ задоволених клієнтів. Швидка доставка по Україні. Замовляйте зараз!" />
+        <meta name="keywords" content="фетр, набори для творчості, рукоділля, діти, іграшки з фетру, Україна" />
+        <link rel="canonical" href="https://fetr.in.ua" />
+      </Helmet>
+      
+      <div className="min-h-screen bg-background">
           <Header />
           
           <main>
@@ -145,15 +142,14 @@ const Index = () => {
             <ContactSection />
           </main>
           
-          <Footer />
-          <CartDrawer />
-          <SocialProof />
-          <ChatWidget />
-          <ExitIntentPopup />
-          <StickyMobileCTA />
-        </div>
-      </CartProvider>
-    </AnalyticsProvider>
+        <Footer />
+        <CartDrawer />
+        <SocialProof />
+        <ChatWidget />
+        <ExitIntentPopup />
+        <StickyMobileCTA />
+      </div>
+    </>
   );
 };
 

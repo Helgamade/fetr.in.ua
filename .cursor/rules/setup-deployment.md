@@ -79,13 +79,16 @@ git push production main
 ```
 
 **Что происходит автоматически:**
-1. Код обновляется на сервере из GitHub
-2. Копируется `dist/index.html` → `www/index.html` (КРИТИЧНО!)
-3. Копируются `dist/assets/*` → `www/assets/`
-4. Устанавливаются права доступа
-5. Сайт обновлен!
+1. Код обновляется на сервере из GitHub (в папке www/)
+2. Выполняется `npm install && npm run build`
+3. Копируется `dist/index.html` → `index.html` (КРИТИЧНО!)
+4. Копируются `dist/assets/*` → `assets/`
+5. Устанавливаются права доступа
+6. Сайт обновлен!
 
-**⚠️ ВАЖНО: Файлы сохраняются ТОЛЬКО в `/home/idesig02/fetr.in.ua/www/`, в корень НИЧЕГО не копируется!**
+**⚠️ ВАЖНО: Репозиторий и рабочая папка ОДНА И ТА ЖЕ: `/home/idesig02/fetr.in.ua/www/`**
+
+**⚠️ ВАЖНО: В корень `/home/idesig02/fetr.in.ua/` НИЧЕГО не сохраняется!**
 
 ---
 
@@ -101,15 +104,17 @@ git init --bare ~/deploy.git
 cat > ~/deploy.git/hooks/post-receive << 'EOF'
 #!/bin/bash
 unset GIT_DIR
-cd /home/idesig02/fetr.in.ua
+cd /home/idesig02/fetr.in.ua/www
 git fetch origin
 git reset --hard origin/main
-mkdir -p www/assets
-cp dist/index.html www/index.html
-cp -r dist/assets/* www/assets/ 2>/dev/null || true
-chmod 755 www/assets
-chmod 644 www/assets/*
-chmod 644 www/index.html
+npm install
+npm run build
+mkdir -p assets
+cp dist/index.html index.html
+cp -r dist/assets/* assets/ 2>/dev/null || true
+chmod 755 assets
+chmod 644 assets/*
+chmod 644 index.html
 EOF
 
 # 3. Установить права на выполнение
@@ -193,8 +198,9 @@ ssh idesig02@idesig02.ftp.tools "bash -n ~/deploy.git/hooks/post-receive"
 1. **КРИТИЧНО:** Hook ДОЛЖЕН содержать `unset GIT_DIR` перед git командами
 2. **КРИТИЧНО:** Hook должен быть в Unix формате (LF), не Windows (CRLF)
 3. **КРИТИЧНО:** Hook должен быть исполняемым (`chmod +x`)
-4. После каждого деплоя проверять что `www/index.html` ссылается на `/assets/index-*.js`
-5. **КРИТИЧНО:** Файлы сохраняются ТОЛЬКО в `/home/idesig02/fetr.in.ua/www/`, в корень НИЧЕГО не копируется!
+4. После каждого деплоя проверять что `index.html` ссылается на `/assets/index-*.js`
+5. **КРИТИЧНО:** Репозиторий и рабочая папка ОДНА И ТА ЖЕ: `/home/idesig02/fetr.in.ua/www/`
+6. **КРИТИЧНО:** В корень `/home/idesig02/fetr.in.ua/` НИЧЕГО не сохраняется!
 
 ---
 

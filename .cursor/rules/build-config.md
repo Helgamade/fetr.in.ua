@@ -107,22 +107,24 @@ du -sh dist/assets/
 
 ## Деплой на сервер
 
-### ⚠️ КРИТИЧНО: Файлы сохраняются ТОЛЬКО в `/home/idesig02/fetr.in.ua/www/`!
+### ⚠️ КРИТИЧНО: Репозиторий и рабочая папка ОДНА И ТА ЖЕ!
 
-**В корень `/home/idesig02/fetr.in.ua/` НИЧЕГО не копируется!**
+**Репозиторий Git находится в `/home/idesig02/fetr.in.ua/www/`**
 
-### Файлы для копирования:
-1. ✅ `dist/index.html` → `www/index.html` (КРИТИЧНО!)
-2. ✅ `dist/assets/*` → `www/assets/`
-3. ✅ `dist/public/*` → `www/public/` (если есть)
+**В корень `/home/idesig02/fetr.in.ua/` НИЧЕГО не сохраняется!**
+
+### Файлы для копирования (внутри папки www/):
+1. ✅ `dist/index.html` → `index.html` (КРИТИЧНО!)
+2. ✅ `dist/assets/*` → `assets/`
+3. ✅ `dist/public/*` → `public/` (если есть)
 
 ### После копирования на сервере:
 ```bash
 # Установить права доступа
-chmod 755 www/assets
-chmod 644 www/assets/*
-chmod 644 www/index.html
-chmod 644 www/public/* 2>/dev/null || true
+chmod 755 assets
+chmod 644 assets/*
+chmod 644 index.html
+chmod 644 public/* 2>/dev/null || true
 ```
 
 ### В браузере:
@@ -142,9 +144,9 @@ chmod 644 www/public/* 2>/dev/null || true
 
 ### Проблема: Ошибка "Failed to load module script"
 **Решение:** 
-- Проверь что `www/index.html` скопирован из `dist/index.html`
-- Проверь что `www/index.html` ссылается на `/assets/index-*.js`, а не на `/src/main.tsx`
-- Выполни: `cp dist/index.html www/index.html` на сервере
+- Проверь что `index.html` скопирован из `dist/index.html` (в папке www/)
+- Проверь что `index.html` ссылается на `/assets/index-*.js`, а не на `/src/main.tsx`
+- Выполни: `cd /home/idesig02/fetr.in.ua/www && cp dist/index.html index.html` на сервере
 
 ### Проблема: Файлы не минифицированы
 **Решение:** 

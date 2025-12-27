@@ -1,22 +1,89 @@
 # Правила деплоя для fetr.in.ua
 
+## 📍 КРИТИЧНО: Структура на сервере
+
+**Репозиторий Git и рабочая папка - ОДНА И ТА ЖЕ:**
+```
+/home/idesig02/fetr.in.ua/www/
+```
+
+**В корень `/home/idesig02/fetr.in.ua/` НИЧЕГО не сохраняется!**
+
+### Структура файлов после деплоя:
+```
+/home/idesig02/fetr.in.ua/www/
+├── .git/                    ← Git репозиторий здесь
+├── src/                     ← Исходники
+├── dist/                    ← Результат сборки (npm run build)
+│   ├── index.html
+│   └── assets/
+│       ├── index-*.js
+│       └── index-*.css
+├── index.html              ← Скопирован из dist/index.html (КРИТИЧНО!)
+├── assets/                  ← Скопировано из dist/assets/
+│   ├── index-*.js
+│   └── index-*.css
+├── package.json
+└── ...
+```
+
+### 🎯 Что куда копируется (все внутри `/home/idesig02/fetr.in.ua/www/`):
+
+| Откуда | Куда | Описание |
+|--------|------|----------|
+| `dist/index.html` | `index.html` | Главный HTML файл (в корень www/) |
+| `dist/assets/*` | `assets/` | JS и CSS файлы (в папку assets/) |
+
+---
+
 ## 🚀 Как деплоить изменения на production сервер
+
+## 📍 КРИТИЧНО: Структура на сервере
+
+**Репозиторий Git и рабочая папка - ОДНА И ТА ЖЕ:**
+```
+/home/idesig02/fetr.in.ua/www/
+```
+
+**В корень `/home/idesig02/fetr.in.ua/` НИЧЕГО не сохраняется!**
+
+### Структура файлов после деплоя:
+```
+/home/idesig02/fetr.in.ua/www/
+├── .git/                    ← Git репозиторий здесь
+├── src/                     ← Исходники
+├── dist/                    ← Результат сборки (npm run build)
+│   ├── index.html
+│   └── assets/
+│       ├── index-*.js
+│       └── index-*.css
+├── index.html              ← Скопирован из dist/index.html (КРИТИЧНО!)
+├── assets/                  ← Скопировано из dist/assets/
+│   ├── index-*.js
+│   └── index-*.css
+├── package.json
+└── ...
+```
+
+---
 
 ### ✅ ПРАВИЛЬНЫЙ способ (Git Deploy):
 
 После любых изменений в коде **ВСЕГДА** используй эту последовательность команд:
 
 ```powershell
+# ЛОКАЛЬНО (на вашем компьютере):
+
 # 1. Если изменен фронтенд - собрать проект
 npm run build
 
-# 2. Добавить все изменения (включая dist/ если изменился фронтенд)
+# 2. Добавить все изменения
 git add .
 
 # 3. Закоммитить с описанием
 git commit -m "Описание изменений"
 
-# 4. Загрузить в GitHub (бэкап)
+# 4. Загрузить в GitHub
 git push origin main
 
 # 5. На сервере выполнить деплой (см. команды ниже)
@@ -24,36 +91,57 @@ git push origin main
 
 ---
 
-## 🔄 Что происходит при деплое:
+## 🔄 Процедура деплоя на сервер:
 
-### ⚠️ КРИТИЧНО: Файлы сохраняются ТОЛЬКО в `/home/idesig02/fetr.in.ua/www/`!
+### ⚠️ КРИТИЧНО: Репозиторий и рабочая папка ОДНА И ТА ЖЕ!
 
-**В корень `/home/idesig02/fetr.in.ua/` НИЧЕГО не копируется!**
+**Репозиторий Git находится в `/home/idesig02/fetr.in.ua/www/`**
 
-### На сервере автоматически (через Git hook или скрипт):
+**В корень `/home/idesig02/fetr.in.ua/` НИЧЕГО не сохраняется!**
+
+### 📋 Пошаговая процедура деплоя:
+
+**НА СЕРВЕРЕ выполнить:**
 
 ```bash
-# 1. Обновление кода
-cd /home/idesig02/fetr.in.ua
+# 1. Перейти в рабочую директорию (репозиторий)
+cd /home/idesig02/fetr.in.ua/www
+
+# 2. Обновить код из GitHub
 git fetch origin
 git reset --hard origin/main
 
-# 2. КРИТИЧНО: Копирование index.html ПЕРВЫМ в директорию www!
-mkdir -p www/assets
-cp dist/index.html www/index.html
+# 3. Установить зависимости (если изменились)
+npm install
 
-# 3. Копирование assets в директорию www
-cp -r dist/assets/* www/assets/
+# 4. Собрать проект
+npm run build
 
-# 4. Установка прав доступа (ОБЯЗАТЕЛЬНО!)
-chmod 755 www/assets
-chmod 644 www/assets/*
-chmod 644 www/index.html
-chmod 644 www/public/* 2>/dev/null || true
+# 5. КРИТИЧНО: Копирование index.html ПЕРВЫМ!
+mkdir -p assets
+cp dist/index.html index.html
 
-# 5. Проверка результата
+# 6. Копирование assets
+cp -r dist/assets/* assets/
+
+# 7. Установка прав доступа (ОБЯЗАТЕЛЬНО!)
+chmod 755 assets
+chmod 644 assets/*
+chmod 644 index.html
+chmod 644 public/* 2>/dev/null || true
+
+# 8. Проверка результата
 echo "=== DEPLOYED ==="
 ```
+
+### 🎯 Что куда копируется:
+
+| Откуда | Куда | Описание |
+|--------|------|----------|
+| `dist/index.html` | `index.html` | Главный HTML файл (в корень www/) |
+| `dist/assets/*` | `assets/` | JS и CSS файлы (в папку assets/) |
+
+**ВАЖНО:** Все копирование происходит ВНУТРИ папки `/home/idesig02/fetr.in.ua/www/`
 
 ---
 
@@ -62,14 +150,30 @@ echo "=== DEPLOYED ==="
 **После внесения изменений выполни:**
 
 ```powershell
-# Локально
+# ЛОКАЛЬНО (на вашем компьютере):
 npm run build
 git add .
 git commit -m "Update"
 git push origin main
 
-# На сервере (одна команда)
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && git fetch origin && git reset --hard origin/main && mkdir -p www/assets && cp dist/index.html www/index.html && cp -r dist/assets/* www/assets/ && chmod 755 www/assets && chmod 644 www/assets/* && chmod 644 www/index.html && echo '=== DEPLOYED ==='"
+# НА СЕРВЕРЕ (одна команда через SSH):
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git fetch origin && git reset --hard origin/main && npm install && npm run build && mkdir -p assets && cp dist/index.html index.html && cp -r dist/assets/* assets/ && chmod 755 assets && chmod 644 assets/* && chmod 644 index.html && echo '=== DEPLOYED ==='"
+```
+
+### 📝 Разбор команды деплоя:
+
+```bash
+cd /home/idesig02/fetr.in.ua/www          # Перейти в рабочую папку (репозиторий)
+git fetch origin                           # Получить изменения из GitHub
+git reset --hard origin/main               # Обновить код до последнего коммита
+npm install                                # Установить зависимости
+npm run build                              # Собрать проект (создаст dist/)
+mkdir -p assets                            # Создать папку assets если нет
+cp dist/index.html index.html              # КРИТИЧНО! Копировать index.html
+cp -r dist/assets/* assets/                # Копировать все файлы из dist/assets/
+chmod 755 assets                           # Права на папку
+chmod 644 assets/*                         # Права на файлы в assets/
+chmod 644 index.html                       # Права на index.html
 ```
 
 ---
@@ -78,9 +182,10 @@ ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && git fetch origi
 
 ### Production remote:
 - **SSH хост:** `idesig02@idesig02.ftp.tools`
-- **Репозиторий:** `~/deploy.git` (bare)
-- **Рабочая директория:** `/home/idesig02/fetr.in.ua`
-- **Hook:** `~/deploy.git/hooks/post-receive`
+- **Репозиторий Git:** `/home/idesig02/fetr.in.ua/www/` (рабочая папка = репозиторий)
+- **Корень проекта:** `/home/idesig02/fetr.in.ua/` (НИЧЕГО не сохраняется!)
+- **Файлы для веб-сервера:** `/home/idesig02/fetr.in.ua/www/index.html` и `/home/idesig02/fetr.in.ua/www/assets/`
+- **GitHub репозиторий:** `https://github.com/Helgamade/fetr.in.ua.git`
 
 ### Проверка настройки:
 
@@ -98,19 +203,19 @@ git remote -v
 
 **Решение:**
 ```bash
-# КРИТИЧНО: Скопировать правильный index.html из dist/ в www/
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && cp dist/index.html www/index.html && echo '=== INDEX.HTML FIXED ==='"
+# КРИТИЧНО: Скопировать правильный index.html из dist/ в корень www/
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && cp dist/index.html index.html && echo '=== INDEX.HTML FIXED ==='"
 
 # Проверить, что index.html правильный
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && tail -5 www/index.html"
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && tail -5 index.html"
 # Должно быть: <script type="module" crossorigin src="/assets/index-*.js"></script>
 # НЕ должно быть: <script type="module" src="/src/main.tsx"></script>
 ```
 
 **Проверка:**
 ```bash
-# Проверить содержимое index.html в www/
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && grep -E 'main\.tsx|index-.*\.js' www/index.html"
+# Проверить содержимое index.html
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && grep -E 'main\.tsx|index-.*\.js' index.html"
 # Должно быть: /assets/index-*.js (скомпилированный файл)
 # НЕ должно быть: /src/main.tsx (исходный файл)
 ```
@@ -128,14 +233,14 @@ ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && grep -E 'main\.
 
 **Решение:**
 ```bash
-# Установить правильные права для www/assets/ и файлов
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && chmod 755 www/assets && chmod 644 www/assets/* && chmod 644 www/index.html && echo '=== PERMISSIONS FIXED ==='"
+# Установить правильные права для assets/ и файлов
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && chmod 755 assets && chmod 644 assets/* && chmod 644 index.html && echo '=== PERMISSIONS FIXED ==='"
 ```
 
 **Проверка:**
 ```bash
-# Проверить права доступа в www/
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && ls -la www/assets/"
+# Проверить права доступа
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && ls -la assets/"
 # Должно быть: drwxr-xr-x для папки, -rw-r--r-- для файлов
 ```
 
@@ -148,7 +253,7 @@ ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && ls -la www/asse
 **Решение:**
 ```bash
 # Использовать жесткий reset
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && git fetch origin && git reset --hard origin/main"
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git fetch origin && git reset --hard origin/main"
 ```
 
 ---
@@ -160,10 +265,10 @@ ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && git fetch origi
 **Решение:**
 ```bash
 # 1. Проверить, что файлы обновились на сервере
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && ls -la dist/assets/ | head -5"
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && ls -la dist/assets/ | head -5"
 
-# 2. Проверить, что index.html обновлен в www/
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && head -5 www/index.html"
+# 2. Проверить, что index.html обновлен
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && head -5 index.html"
 
 # 3. Если файлы не обновились - повторить деплой
 ```
@@ -191,16 +296,16 @@ ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && head -5 www/ind
 
 ```bash
 # 1. Проверьте последние коммиты на сервере
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && git log --oneline -5"
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git log --oneline -5"
 
 # 2. Проверьте статус Git на сервере
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && git status"
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git status"
 
 # 3. Проверьте права доступа
-ssh idesig02@idesig02.ftp.tools "ls -la /home/idesig02/fetr.in.ua/"
+ssh idesig02@idesig02.ftp.tools "ls -la /home/idesig02/fetr.in.ua/www/"
 
-# 4. Проверьте содержимое index.html в www/
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && cat www/index.html | grep -E 'main\.tsx|index-.*\.js'"
+# 4. Проверьте содержимое index.html
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && cat index.html | grep -E 'main\.tsx|index-.*\.js'"
 ```
 
 ---
@@ -211,34 +316,50 @@ ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && cat www/index.h
 
 ```bash
 # 1. Посмотреть последние коммиты
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && git log --oneline -5"
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git log --oneline -5"
 
 # 2. Откатить на предыдущий коммит (ОСТОРОЖНО!)
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && git reset --hard HEAD~1"
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git reset --hard HEAD~1"
 
 # 3. Или откатить на конкретный коммит
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && git reset --hard <commit-hash>"
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git reset --hard <commit-hash>"
 
-# 4. После отката скопировать файлы заново в www/
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua && cp dist/index.html www/index.html && cp -r dist/assets/* www/assets/ && chmod 755 www/assets && chmod 644 www/assets/* && chmod 644 www/index.html"
+# 4. После отката собрать и скопировать файлы заново
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && npm run build && cp dist/index.html index.html && cp -r dist/assets/* assets/ && chmod 755 assets && chmod 644 assets/* && chmod 644 index.html"
 ```
 
 ---
 
 ## ✅ ЧЕКЛИСТ УСПЕШНОГО ДЕПЛОЯ:
 
-**🚨 ПЕРВЫЙ ПРИОРИТЕТ - index.html:**
+### 📍 Структура на сервере:
+- [ ] **Репозиторий Git находится в `/home/idesig02/fetr.in.ua/www/`**
+- [ ] **В корень `/home/idesig02/fetr.in.ua/` НИЧЕГО не сохраняется!**
 
+### 🔄 Процедура деплоя:
+
+**ЛОКАЛЬНО (на вашем компьютере):**
 - [ ] `npm run build` выполнен успешно
-- [ ] **🚨🚨🚨 `cp dist/index.html www/index.html` выполнено ПЕРВЫМ (КРИТИЧНО! Без этого сайт НЕ ЗАГРУЗИТСЯ!)** 🚨🚨🚨
-- [ ] **🚨 ВАЖНО: Файлы сохраняются ТОЛЬКО в `/home/idesig02/fetr.in.ua/www/`, в корень НИЧЕГО не копируется!** 🚨
-- [ ] **🚨 Проверено, что `www/index.html` ссылается на `/assets/index-*.js`, а НЕ на `/src/main.tsx`** 🚨
-- [ ] Изменения закоммичены и запушены в Git
-- [ ] `git reset --hard origin/main` выполнен на сервере без ошибок
-- [ ] `cp -r dist/assets/* www/assets/` выполнен (если изменился фронтенд)
-- [ ] **`chmod 755 www/assets && chmod 644 www/assets/* && chmod 644 www/index.html` выполнено (ОБЯЗАТЕЛЬНО!)** 
+- [ ] Изменения закоммичены: `git commit -m "..."`  
+- [ ] Изменения запушены: `git push origin main`
+
+**НА СЕРВЕРЕ (в папке `/home/idesig02/fetr.in.ua/www/`):**
+- [ ] `cd /home/idesig02/fetr.in.ua/www` (переход в рабочую папку)
+- [ ] `git fetch origin && git reset --hard origin/main` (обновление кода)
+- [ ] `npm install` (установка зависимостей)
+- [ ] `npm run build` (сборка проекта, создается dist/)
+- [ ] **🚨🚨🚨 `cp dist/index.html index.html` выполнено ПЕРВЫМ (КРИТИЧНО! Без этого сайт НЕ ЗАГРУЗИТСЯ!)** 🚨🚨🚨
+- [ ] `cp -r dist/assets/* assets/` (копирование assets)
+- [ ] `chmod 755 assets && chmod 644 assets/* && chmod 644 index.html` (права доступа)
+
+### 📋 Что куда копируется (все внутри `/home/idesig02/fetr.in.ua/www/`):
+- [ ] `dist/index.html` → `index.html` (в корень www/)
+- [ ] `dist/assets/*` → `assets/` (в папку assets/)
+
+### ✅ Проверка после деплоя:
+- [ ] **🚨 Проверено, что `index.html` ссылается на `/assets/index-*.js`, а НЕ на `/src/main.tsx`** 🚨
 - [ ] Сайт открывается: `curl https://fetr.in.ua/ | head -30`
-- [ ] Новые файлы видны на сайте (очистить кеш браузера)
+- [ ] Новые файлы видны на сайте (очистить кеш браузера Ctrl+Shift+R)
 - [ ] Нет ошибок 403 Forbidden в консоли браузера
 - [ ] **🚨 НЕТ ОШИБКИ "Failed to load module script: Expected a JavaScript-or-Wasm module script" в консоли браузера** 🚨
 
