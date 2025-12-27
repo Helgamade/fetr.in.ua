@@ -1,11 +1,11 @@
 // API client for backend
 import { Product, Order } from '@/types/store';
 
-// Always use /api for production (proxied to Node.js backend)
-// In development, VITE_API_URL can override this
-const API_BASE_URL = import.meta.env.PROD 
-  ? '/api' 
-  : (import.meta.env.VITE_API_URL || '/api');
+// Always use /api (proxied to Node.js backend)
+// In development mode, can be overridden via VITE_API_URL
+const API_BASE_URL = import.meta.env.MODE === 'development' && import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL
+  : '/api';
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
