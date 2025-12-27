@@ -109,7 +109,7 @@ export const ComparisonSection: React.FC = () => {
             </thead>
             <tbody>
               {comparisonFeatures.map((feature, rowIdx) => {
-                const rowBg = rowIdx % 2 === 0 ? 'bg-muted/30' : 'bg-card';
+                const rowBg = rowIdx % 2 === 0 ? 'bg-muted' : 'bg-card';
                 return (
                   <tr key={feature.key} className={rowBg}>
                     <td className={cn(
