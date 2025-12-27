@@ -1,21 +1,11 @@
 // API client for backend
 import { Product, Order } from '@/types/store';
 
-// Use environment variable or relative path /api for proxy
-// In production with proxying, always use /api
-// In development, use VITE_API_URL if set, otherwise /api
-const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (!envUrl) return '/api';
-  // If it's a full URL (http://...), extract path only
-  if (envUrl.startsWith('http://') || envUrl.startsWith('https://')) {
-    const url = new URL(envUrl);
-    return url.pathname || '/api';
-  }
-  // Otherwise use as-is (should be /api)
-  return envUrl;
-};
-const API_BASE_URL = getApiBaseUrl();
+// Always use /api for production (proxied to Node.js backend)
+// In development, VITE_API_URL can override this
+const API_BASE_URL = import.meta.env.PROD 
+  ? '/api' 
+  : (import.meta.env.VITE_API_URL || '/api');
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
