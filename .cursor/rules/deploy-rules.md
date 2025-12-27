@@ -121,13 +121,17 @@ npm run build
 mkdir -p assets
 cp dist/index.html index.html
 
-# 6. Копирование assets
+# 6. КРИТИЧНО: Копирование .htaccess для SPA роутинга!
+cp dist/.htaccess .htaccess 2>/dev/null || true
+
+# 7. Копирование assets
 cp -r dist/assets/* assets/
 
-# 7. Установка прав доступа (ОБЯЗАТЕЛЬНО!)
+# 8. Установка прав доступа (ОБЯЗАТЕЛЬНО!)
 chmod 755 assets
 chmod 644 assets/*
 chmod 644 index.html
+chmod 644 .htaccess 2>/dev/null || true
 chmod 644 public/* 2>/dev/null || true
 
 # 8. Проверка результата
@@ -157,7 +161,7 @@ git commit -m "Update"
 git push origin main
 
 # НА СЕРВЕРЕ (одна команда через SSH):
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git fetch origin && git reset --hard origin/main && npm install && npm run build && mkdir -p assets && cp dist/index.html index.html && cp -r dist/assets/* assets/ && chmod 755 assets && chmod 644 assets/* && chmod 644 index.html && echo '=== DEPLOYED ==='"
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git fetch origin && git reset --hard origin/main && npm install && npm run build && mkdir -p assets && cp dist/index.html index.html && cp dist/.htaccess .htaccess 2>/dev/null || true && cp -r dist/assets/* assets/ && chmod 755 assets && chmod 644 assets/* && chmod 644 index.html && chmod 644 .htaccess 2>/dev/null || true && echo '=== DEPLOYED ==='"
 ```
 
 ### 📝 Разбор команды деплоя:
@@ -325,7 +329,7 @@ ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git reset -
 ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git reset --hard <commit-hash>"
 
 # 4. После отката собрать и скопировать файлы заново
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && npm run build && cp dist/index.html index.html && cp -r dist/assets/* assets/ && chmod 755 assets && chmod 644 assets/* && chmod 644 index.html"
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && npm run build && cp dist/index.html index.html && cp dist/.htaccess .htaccess 2>/dev/null || true && cp -r dist/assets/* assets/ && chmod 755 assets && chmod 644 assets/* && chmod 644 index.html && chmod 644 .htaccess 2>/dev/null || true"
 ```
 
 ---
@@ -349,11 +353,13 @@ ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && npm run bui
 - [ ] `npm install` (установка зависимостей)
 - [ ] `npm run build` (сборка проекта, создается dist/)
 - [ ] **🚨🚨🚨 `cp dist/index.html index.html` выполнено ПЕРВЫМ (КРИТИЧНО! Без этого сайт НЕ ЗАГРУЗИТСЯ!)** 🚨🚨🚨
+- [ ] `cp dist/.htaccess .htaccess` (копирование .htaccess для SPA роутинга)
 - [ ] `cp -r dist/assets/* assets/` (копирование assets)
-- [ ] `chmod 755 assets && chmod 644 assets/* && chmod 644 index.html` (права доступа)
+- [ ] `chmod 755 assets && chmod 644 assets/* && chmod 644 index.html && chmod 644 .htaccess` (права доступа)
 
 ### 📋 Что куда копируется (все внутри `/home/idesig02/fetr.in.ua/www/`):
 - [ ] `dist/index.html` → `index.html` (в корень www/)
+- [ ] `dist/.htaccess` → `.htaccess` (в корень www/, для SPA роутинга)
 - [ ] `dist/assets/*` → `assets/` (в папку assets/)
 
 ### ✅ Проверка после деплоя:
