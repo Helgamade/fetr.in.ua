@@ -61,7 +61,7 @@ const WEB_ROOT = join(__dirname, '..');
 app.use(express.static(WEB_ROOT));
 
 // SPA fallback (do not hijack API routes)
-app.get('*', (req, res, next) => {
+app.use((req, res, next) => {
   if (req.path.startsWith('/api/')) return next();
   const indexPath = join(WEB_ROOT, 'index.html');
   if (!existsSync(indexPath)) {
