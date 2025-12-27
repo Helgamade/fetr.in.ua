@@ -26,12 +26,14 @@ router.get('/', async (req, res, next) => {
     // Build result: features with values for each product
     const result = features.map(feature => {
       const featureValues = {};
+      const featureType = feature.type || 'text'; // Default to 'text' if type is null/undefined
+      
       products.forEach(product => {
         const value = values.find(v => 
           v.feature_key === feature.key_name && v.product_id === product.id
         );
         if (value) {
-          if (feature.type === 'boolean' || value.is_boolean) {
+          if (featureType === 'boolean' || value.is_boolean) {
             featureValues[product.code] = value.value === 'true';
           } else {
             featureValues[product.code] = value.value;
@@ -40,11 +42,12 @@ router.get('/', async (req, res, next) => {
           featureValues[product.code] = null;
         }
       });
+      
       return {
         id: feature.id,
         key: feature.key_name,
         label: feature.label,
-        type: (feature.type || 'text'),
+        type: featureType,
         sortOrder: feature.sort_order,
         values: featureValues
       };
