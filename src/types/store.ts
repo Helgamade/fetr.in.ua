@@ -1,5 +1,6 @@
 export interface ProductOption {
-  id: string;
+  id: number; // INT AUTO_INCREMENT
+  code: string; // Code like 'gift-wrap', 'card', etc.
   name: string;
   price: number;
   description?: string;
