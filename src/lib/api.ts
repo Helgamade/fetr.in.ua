@@ -2,10 +2,8 @@
 import { Product, Order } from '@/types/store';
 
 // Always use /api (proxied to Node.js backend)
-// In development mode, can be overridden via VITE_API_URL
-const API_BASE_URL = import.meta.env.MODE === 'development' && import.meta.env.VITE_API_URL
-  ? import.meta.env.VITE_API_URL
-  : '/api';
+// Hardcoded to /api to avoid any environment variable issues
+const API_BASE_URL = '/api';
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
