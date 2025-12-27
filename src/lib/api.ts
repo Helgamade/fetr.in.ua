@@ -1,7 +1,8 @@
 // API client for backend
 import { Product, Order } from '@/types/store';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// Use relative path in production, or full URL from env in development
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
