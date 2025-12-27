@@ -111,7 +111,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const productPrice = product.basePrice; // Используем basePrice для subtotal
       const optionsPrice = item.selectedOptions.reduce((optTotal, optId) => {
-        const option = product.options.find(o => o.id === optId);
+        const option = product.options.find(o => o.code === optId);
         return optTotal + (option?.price || 0);
       }, 0);
       

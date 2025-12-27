@@ -114,7 +114,7 @@ const Checkout = () => {
 
   // Get full product data for cart items
   const cartItemsWithProducts = items.map(item => {
-    const product = products.find(p => p.id === item.productId);
+    const product = products.find(p => p.code === item.productId);
     return { ...item, product };
   }).filter(item => item.product);
 
@@ -397,7 +397,7 @@ const Checkout = () => {
                   {cartItemsWithProducts.map((item) => {
                     const product = item.product!;
                     const productOptions = item.selectedOptions.map(optId => 
-                      product.options.find(o => o.id === optId)
+                      product.options.find(o => o.code === optId)
                     ).filter(Boolean);
                     const optionsTotal = productOptions.reduce((sum, opt) => sum + (opt?.price || 0), 0);
                     

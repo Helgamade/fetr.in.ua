@@ -40,7 +40,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
   const basePrice = product.salePrice || product.basePrice;
   const optionsTotal = selectedOptions.reduce((sum, optId) => {
-    const option = product.options.find(o => o.id === optId);
+    const option = product.options.find(o => o.code === optId);
     return sum + (option?.price || 0);
   }, 0);
   const totalPrice = basePrice + optionsTotal;
@@ -54,8 +54,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   };
 
   const handleAddToCart = () => {
-    addToCart(product.id, selectedOptions);
-    trackEvent('add_to_cart_modal', { productId: product.id, options: selectedOptions });
+    addToCart(product.code || String(product.id), selectedOptions);
+    trackEvent('add_to_cart_modal', { productId: product.code || String(product.id), options: selectedOptions });
     onClose();
   };
 
@@ -245,14 +245,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                       key={option.id}
                       className={cn(
                         'flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors',
-                        selectedOptions.includes(option.id)
+                        selectedOptions.includes(option.code)
                           ? 'border-primary bg-peach'
                           : 'border-border hover:border-primary/50'
                       )}
                     >
                       <Checkbox
-                        checked={selectedOptions.includes(option.id)}
-                        onCheckedChange={() => toggleOption(option.id)}
+                        checked={selectedOptions.includes(option.code)}
+                        onCheckedChange={() => toggleOption(option.code)}
                         className="mt-0.5"
                       />
                       <div className="flex-1">
