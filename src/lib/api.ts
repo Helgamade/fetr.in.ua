@@ -196,10 +196,10 @@ export const comparisonAPI = {
       method: 'PUT',
       body: JSON.stringify({ featureKey, productId, value }),
     }),
-  createFeature: (key: string, label: string, type: 'text' | 'boolean', sortOrder?: number) =>
+  createFeature: (data: { key: string; label: string; type: 'text' | 'boolean'; sortOrder?: number }) =>
     fetchAPI<{ id: number; key: string; label: string; type: 'text' | 'boolean'; sortOrder: number }>('/comparison/feature', {
       method: 'POST',
-      body: JSON.stringify({ key, label, type, sortOrder }),
+      body: JSON.stringify({ key: data.key, label: data.label, type: data.type, sortOrder: data.sortOrder }),
     }),
   updateFeature: (data: { key: string; label: string; type: 'text' | 'boolean'; sortOrder?: number }) =>
     fetchAPI<void>(`/comparison/feature/${data.key}`, {
