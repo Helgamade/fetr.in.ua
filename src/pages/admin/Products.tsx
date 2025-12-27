@@ -82,10 +82,11 @@ export function Products() {
   const handleSave = () => {
     if (!editingProduct) return;
 
-    // Prepare data for API - convert options to array of IDs
+    // Prepare data for API - convert options to array of IDs, filter empty images
     const dataToSave = {
       ...editingProduct,
       options: editingProduct.options.map(opt => opt.id),
+      images: editingProduct.images.filter(img => img && img.trim()),
     };
 
     updateProduct.mutate(
