@@ -140,7 +140,12 @@ export function Comparison() {
       return;
     }
 
-    createFeature.mutate(newFeature, {
+    createFeature.mutate({
+      key: newFeature.key,
+      label: newFeature.label,
+      type: newFeature.type,
+      sortOrder: newFeature.sortOrder,
+    }, {
       onSuccess: () => {
         toast({
           title: 'Успіх',
@@ -167,7 +172,12 @@ export function Comparison() {
   const handleUpdateFeature = () => {
     if (!editingFeature) return;
 
-    updateFeature.mutate(editingFeature, {
+    updateFeature.mutate({
+      key: editingFeature.key,
+      label: editingFeature.label,
+      type: editingFeature.type,
+      sortOrder: editingFeature.sortOrder,
+    }, {
       onSuccess: () => {
         toast({
           title: 'Успіх',

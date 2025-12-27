@@ -201,10 +201,10 @@ export const comparisonAPI = {
       method: 'POST',
       body: JSON.stringify({ key, label, type, sortOrder }),
     }),
-  updateFeature: (key: string, label: string, type: 'text' | 'boolean', sortOrder?: number) =>
-    fetchAPI<void>(`/comparison/feature/${key}`, {
+  updateFeature: (data: { key: string; label: string; type: 'text' | 'boolean'; sortOrder?: number }) =>
+    fetchAPI<void>(`/comparison/feature/${data.key}`, {
       method: 'PUT',
-      body: JSON.stringify({ label, type, sortOrder }),
+      body: JSON.stringify({ label: data.label, type: data.type, sortOrder: data.sortOrder }),
     }),
   deleteFeature: (key: string) =>
     fetchAPI<void>(`/comparison/feature/${key}`, { method: 'DELETE' }),
