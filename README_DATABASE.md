@@ -28,17 +28,17 @@ mysql -u idesig02 -p idesig02_fetrinua < database/seed.sql
 Создайте файл `server/.env` на основе `server/.env.example`:
 
 ```env
-DB_HOST=localhost
-DB_USER=idesig02
-DB_PASSWORD=your_password_here
+DB_HOST=idesig02.mysql.tools
+DB_USER=idesig02_fetrinua
+DB_PASSWORD=7%j-7EyzF8
 DB_NAME=idesig02_fetrinua
 DB_PORT=3306
-
 PORT=3001
-NODE_ENV=development
-
-CORS_ORIGIN=http://localhost:8080
+NODE_ENV=production
+CORS_ORIGIN=https://fetr.in.ua
 ```
+
+**Примечание:** Хостинг автоматически устанавливает `PORT=3000` и `HOST=127.1.5.169` через переменные окружения, переопределяя значения из `.env`.
 
 ## Шаг 3: Запуск backend сервера
 
@@ -51,17 +51,12 @@ npm run server
 npm run server:dev
 ```
 
-Сервер будет доступен на `http://localhost:3001`
+Сервер будет доступен на внутреннем адресе `127.1.5.169:3000` (хостинг автоматически устанавливает порт 3000).
+Доступ извне через прокси: `https://fetr.in.ua/api/*`
 
 ## Шаг 4: Настройка frontend
 
-Создайте файл `.env` в корне проекта (для Vite):
-
-```env
-VITE_API_URL=http://localhost:3001/api
-```
-
-Для production измените на соответствующий URL вашего сервера.
+**Примечание:** В коде `src/lib/api.ts` используется захардкоженное значение `API_BASE_URL = '/api'`. Дополнительная настройка не требуется.
 
 ## API Endpoints
 

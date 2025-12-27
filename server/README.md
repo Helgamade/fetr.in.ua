@@ -33,7 +33,9 @@ pkill -f "node.*server/index.js"
 Или вручную:
 ```bash
 ps aux | grep "node.*server/index.js"
-curl http://localhost:3001/api/health
+curl http://127.1.5.169:3000/api/health
+# Или через прокси:
+curl https://fetr.in.ua/api/health
 ```
 
 ## Просмотр логов
@@ -66,8 +68,8 @@ crontab -e
 ## Проверка порта
 
 ```bash
-netstat -tlnp | grep 3001
+netstat -tlnp | grep 3000
 # или
-lsof -i :3001
+lsof -i :3000
 ```
 

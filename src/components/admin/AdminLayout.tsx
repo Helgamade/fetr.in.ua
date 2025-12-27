@@ -4,7 +4,8 @@ import {
   ShoppingCart, 
   Package, 
   Settings, 
-  LogOut
+  LogOut,
+  Table2
 } from 'lucide-react';
 import {
   Sidebar,
@@ -27,6 +28,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: 'Дашборд', path: '/admin' },
   { icon: ShoppingCart, label: 'Замовлення', path: '/admin/orders' },
   { icon: Package, label: 'Товари', path: '/admin/products' },
+  { icon: Table2, label: 'Порівняння', path: '/admin/comparison' },
   { icon: Settings, label: 'Налаштування', path: '/admin/settings' },
 ];
 

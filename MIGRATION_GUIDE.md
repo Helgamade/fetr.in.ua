@@ -57,15 +57,17 @@ mysql -u idesig02 -p idesig02_fetrinua < database/seed.sql
 
 Создайте файл `server/.env`:
 ```env
-DB_HOST=localhost
-DB_USER=idesig02
-DB_PASSWORD=your_password
+DB_HOST=idesig02.mysql.tools
+DB_USER=idesig02_fetrinua
+DB_PASSWORD=7%j-7EyzF8
 DB_NAME=idesig02_fetrinua
 DB_PORT=3306
 PORT=3001
-NODE_ENV=development
-CORS_ORIGIN=http://localhost:8080
+NODE_ENV=production
+CORS_ORIGIN=https://fetr.in.ua
 ```
+
+**Примечание:** Хостинг автоматически устанавливает `PORT=3000` и `HOST=127.1.5.169` через переменные окружения, переопределяя значения из `.env`.
 
 Запустите сервер:
 ```bash
@@ -74,10 +76,7 @@ npm run server
 
 ### 3. Настройка frontend
 
-Создайте файл `.env` в корне проекта:
-```env
-VITE_API_URL=http://localhost:3001/api
-```
+**Примечание:** В коде `src/lib/api.ts` используется захардкоженное значение `API_BASE_URL = '/api'`. Дополнительная настройка не требуется.
 
 ## Миграция компонентов
 
@@ -166,11 +165,12 @@ export function Products() {
 
 ## Проверка работы
 
-1. Запустите backend: `npm run server`
-2. Проверьте health check: `curl http://localhost:3001/api/health`
-3. Проверьте получение товаров: `curl http://localhost:3001/api/products`
-4. Запустите frontend: `npm run dev`
-5. Откройте админ-панель и проверьте загрузку данных
+1. Запустите backend: `./server/start.sh`
+2. Проверьте health check:
+   - Внутренний доступ: `curl http://127.1.5.169:3000/api/health`
+   - Через прокси: `curl https://fetr.in.ua/api/health`
+3. Проверьте получение товаров: `curl https://fetr.in.ua/api/products`
+4. Откройте сайт в браузере и проверьте работу админ-панели
 
 ## Следующие шаги
 

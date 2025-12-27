@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Plus, 
   Edit, 
@@ -6,7 +6,8 @@ import {
   Search,
   Package,
   Eye,
-  ShoppingCart
+  ShoppingCart,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,9 +22,12 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Product } from '@/types/store';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Product, ProductOption } from '@/types/store';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts, useUpdateProduct, useDeleteProduct } from '@/hooks/useProducts';
+import { productsAPI } from '@/lib/api';
 
 const badgeLabels = {
   hit: 'Хіт',
@@ -44,7 +48,23 @@ export function Products() {
   const [searchQuery, setSearchQuery] = useState('');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [availableOptions, setAvailableOptions] = useState<ProductOption[]>([]);
   const { toast } = useToast();
+
+  // Load available options when dialog opens
+  useEffect(() => {
+    if (isDialogOpen) {
+      productsAPI.getAllOptions()
+        .then(setAvailableOptions)
+        .catch(() => {
+          toast({
+            title: 'Помилка',
+            description: 'Не вдалося завантажити опції',
+            variant: 'destructive',
+          });
+        });
+    }
+  }, [isDialogOpen, toast]);
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -59,8 +79,14 @@ export function Products() {
   const handleSave = () => {
     if (!editingProduct) return;
 
+    // Prepare data for API - convert options to array of IDs
+    const dataToSave = {
+      ...editingProduct,
+      options: editingProduct.options.map(opt => opt.id),
+    };
+
     updateProduct.mutate(
-      { id: editingProduct.id, data: editingProduct },
+      { id: editingProduct.id, data: dataToSave },
       {
         onSuccess: () => {
           toast({
@@ -247,82 +273,260 @@ export function Products() {
 
       {/* Edit dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Редагувати товар</DialogTitle>
           </DialogHeader>
 
           {editingProduct && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Назва</Label>
-                <Input
-                  id="name"
-                  value={editingProduct.name}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
-                />
-              </div>
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-6">
+                <TabsTrigger value="basic">Основне</TabsTrigger>
+                <TabsTrigger value="features">Що входить</TabsTrigger>
+                <TabsTrigger value="materials">Матеріали</TabsTrigger>
+                <TabsTrigger value="canMake">Що можна зробити</TabsTrigger>
+                <TabsTrigger value="suitableFor">Підходить для</TabsTrigger>
+                <TabsTrigger value="options">Опції</TabsTrigger>
+              </TabsList>
 
-              <div className="space-y-2">
-                <Label htmlFor="shortDescription">Короткий опис</Label>
-                <Textarea
-                  id="shortDescription"
-                  value={editingProduct.shortDescription}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, shortDescription: e.target.value })}
-                  rows={2}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="fullDescription">Повний опис</Label>
-                <Textarea
-                  id="fullDescription"
-                  value={editingProduct.fullDescription}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, fullDescription: e.target.value })}
-                  rows={4}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              {/* Basic Info Tab */}
+              <TabsContent value="basic" className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="basePrice">Базова ціна</Label>
+                  <Label htmlFor="name">Назва</Label>
                   <Input
-                    id="basePrice"
-                    type="number"
-                    value={editingProduct.basePrice}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, basePrice: parseInt(e.target.value) || 0 })}
+                    id="name"
+                    value={editingProduct.name}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="salePrice">Ціна зі знижкою</Label>
-                  <Input
-                    id="salePrice"
-                    type="number"
-                    value={editingProduct.salePrice || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, salePrice: parseInt(e.target.value) || undefined })}
+                  <Label htmlFor="shortDescription">Короткий опис</Label>
+                  <Textarea
+                    id="shortDescription"
+                    value={editingProduct.shortDescription}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, shortDescription: e.target.value })}
+                    rows={2}
                   />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="stock">Кількість на складі</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  value={editingProduct.stock}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, stock: parseInt(e.target.value) || 0 })}
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fullDescription">Повний опис</Label>
+                  <Textarea
+                    id="fullDescription"
+                    value={editingProduct.fullDescription}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, fullDescription: e.target.value })}
+                    rows={4}
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label>Особливості (по одній на рядок)</Label>
-                <Textarea
-                  value={editingProduct.features.join('\n')}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, features: e.target.value.split('\n').filter(Boolean) })}
-                  rows={4}
-                />
-              </div>
-            </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="basePrice">Базова ціна (₴)</Label>
+                    <Input
+                      id="basePrice"
+                      type="number"
+                      value={editingProduct.basePrice}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, basePrice: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="salePrice">Ціна зі знижкою (₴)</Label>
+                    <Input
+                      id="salePrice"
+                      type="number"
+                      value={editingProduct.salePrice || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, salePrice: e.target.value ? parseFloat(e.target.value) : undefined })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="stock">Кількість на складі</Label>
+                    <Input
+                      id="stock"
+                      type="number"
+                      value={editingProduct.stock}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, stock: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="badge">Бейдж</Label>
+                    <select
+                      id="badge"
+                      value={editingProduct.badge || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, badge: e.target.value as 'hit' | 'recommended' | 'limited' | undefined })}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="">Без бейджа</option>
+                      <option value="hit">Хіт продажів</option>
+                      <option value="recommended">Рекомендовано</option>
+                      <option value="limited">Обмежено</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="displayOrder">Порядок відображення</Label>
+                  <Input
+                    id="displayOrder"
+                    type="number"
+                    value={editingProduct.displayOrder || 0}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, displayOrder: parseInt(e.target.value) || 0 })}
+                    placeholder="0"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Менше значення = вище в списку. Рекомендовано: Стартовий=1, Оптимальний=2, Преміум=3
+                  </p>
+                </div>
+              </TabsContent>
+
+              {/* Features Tab */}
+              <TabsContent value="features" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>Що входить (по одній на рядок)</Label>
+                  <Textarea
+                    value={editingProduct.features.join('\n')}
+                    onChange={(e) => setEditingProduct({ 
+                      ...editingProduct, 
+                      features: e.target.value.split('\n').filter(Boolean) 
+                    })}
+                    rows={8}
+                    placeholder="20 кольорів фетру (20×20 см)&#10;Повний набір інструментів&#10;20+ шаблонів різної складності"
+                  />
+                </div>
+              </TabsContent>
+
+              {/* Materials Tab */}
+              <TabsContent value="materials" className="space-y-4 mt-4">
+                <div className="space-y-3">
+                  {editingProduct.materials.map((material, index) => (
+                    <div key={index} className="flex gap-2 items-start p-3 border rounded-lg">
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          placeholder="Назва матеріалу"
+                          value={material.name}
+                          onChange={(e) => {
+                            const newMaterials = [...editingProduct.materials];
+                            newMaterials[index] = { ...material, name: e.target.value };
+                            setEditingProduct({ ...editingProduct, materials: newMaterials });
+                          }}
+                        />
+                        <Textarea
+                          placeholder="Опис"
+                          value={material.description || ''}
+                          onChange={(e) => {
+                            const newMaterials = [...editingProduct.materials];
+                            newMaterials[index] = { ...material, description: e.target.value };
+                            setEditingProduct({ ...editingProduct, materials: newMaterials });
+                          }}
+                          rows={2}
+                        />
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const newMaterials = editingProduct.materials.filter((_, i) => i !== index);
+                          setEditingProduct({ ...editingProduct, materials: newMaterials });
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setEditingProduct({
+                        ...editingProduct,
+                        materials: [...editingProduct.materials, { name: '', description: '' }]
+                      });
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Додати матеріал
+                  </Button>
+                </div>
+              </TabsContent>
+
+              {/* CanMake Tab */}
+              <TabsContent value="canMake" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>Що можна зробити (по одній на рядок)</Label>
+                  <Textarea
+                    value={editingProduct.canMake.join('\n')}
+                    onChange={(e) => setEditingProduct({ 
+                      ...editingProduct, 
+                      canMake: e.target.value.split('\n').filter(Boolean) 
+                    })}
+                    rows={8}
+                    placeholder="М'які іграшки&#10;Мобілі для малюків&#10;Розвиваючі книжки"
+                  />
+                </div>
+              </TabsContent>
+
+              {/* SuitableFor Tab */}
+              <TabsContent value="suitableFor" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>Підходить для (по одній на рядок)</Label>
+                  <Textarea
+                    value={editingProduct.suitableFor.join('\n')}
+                    onChange={(e) => setEditingProduct({ 
+                      ...editingProduct, 
+                      suitableFor: e.target.value.split('\n').filter(Boolean) 
+                    })}
+                    rows={6}
+                    placeholder="Вся родина&#10;Садочок&#10;Школа&#10;Подарунок"
+                  />
+                </div>
+              </TabsContent>
+
+              {/* Options Tab */}
+              <TabsContent value="options" className="space-y-4 mt-4">
+                <div className="space-y-3">
+                  <Label>Додаткові опції</Label>
+                  {availableOptions.map((option) => {
+                    const isSelected = editingProduct.options.some(opt => opt.id === option.id);
+                    return (
+                      <div key={option.id} className="flex items-start gap-3 p-3 border rounded-lg">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setEditingProduct({
+                                ...editingProduct,
+                                options: [...editingProduct.options, option]
+                              });
+                            } else {
+                              setEditingProduct({
+                                ...editingProduct,
+                                options: editingProduct.options.filter(opt => opt.id !== option.id)
+                              });
+                            }
+                          }}
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium">{option.name}</div>
+                          {option.description && (
+                            <div className="text-sm text-muted-foreground">{option.description}</div>
+                          )}
+                          <div className="text-sm font-semibold text-primary mt-1">
+                            +{option.price} ₴
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {availableOptions.length === 0 && (
+                    <div className="text-sm text-muted-foreground py-4">
+                      Опції не знайдено. Створіть опції в налаштуваннях.
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           )}
 
           <DialogFooter>

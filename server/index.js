@@ -10,6 +10,7 @@ import faqsRoutes from './routes/faqs.js';
 import reviewsRoutes from './routes/reviews.js';
 import teamRoutes from './routes/team.js';
 import galleryRoutes from './routes/gallery.js';
+import comparisonRoutes from './routes/comparison.js';
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -54,6 +55,7 @@ app.use('/api/faqs', faqsRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/gallery', galleryRoutes);
+app.use('/api/comparison', comparisonRoutes);
 
 // Serve frontend when the hosting proxies ALL traffic to Node.js.
 // Web root is one level up from /server → / (contains index.html, assets/, etc.)

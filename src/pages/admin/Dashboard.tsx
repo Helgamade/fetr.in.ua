@@ -8,7 +8,7 @@ import {
   ArrowDownRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockStats } from '@/data/mockOrders';
+import { useOrders } from '@/hooks/useOrders';
 import {
   BarChart,
   Bar,
@@ -21,37 +21,6 @@ import {
   Line,
 } from 'recharts';
 
-const statsCards = [
-  {
-    title: 'Загальний дохід',
-    value: `₴${mockStats.totalRevenue.toLocaleString()}`,
-    change: '+12.5%',
-    trend: 'up',
-    icon: DollarSign,
-  },
-  {
-    title: 'Замовлень',
-    value: mockStats.totalOrders,
-    change: '+8.2%',
-    trend: 'up',
-    icon: ShoppingCart,
-  },
-  {
-    title: 'Середній чек',
-    value: `₴${mockStats.averageOrderValue}`,
-    change: '+3.1%',
-    trend: 'up',
-    icon: TrendingUp,
-  },
-  {
-    title: 'Постійних клієнтів',
-    value: mockStats.repeatCustomers,
-    change: '-2.4%',
-    trend: 'down',
-    icon: Users,
-  },
-];
-
 const statusLabels: Record<string, string> = {
   created: 'Нові',
   processing: 'В обробці',
@@ -62,6 +31,74 @@ const statusLabels: Record<string, string> = {
 };
 
 export function Dashboard() {
+  const { data: orders = [], isLoading } = useOrders();
+  
+  // Calculate stats from real orders
+  const totalOrders = orders.length;
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
+  const completedOrders = orders.filter(o => o.status === 'completed').length;
+  const repeatCustomers = new Set(orders.map(o => o.customer?.email).filter(Boolean)).size;
+  
+  const statsCards = [
+    {
+      title: 'Загальний дохід',
+      value: `₴${totalRevenue.toLocaleString()}`,
+      change: '+0%',
+      trend: 'up' as const,
+      icon: DollarSign,
+    },
+    {
+      title: 'Замовлень',
+      value: totalOrders,
+      change: '+0%',
+      trend: 'up' as const,
+      icon: ShoppingCart,
+    },
+    {
+      title: 'Середній чек',
+      value: `₴${averageOrderValue}`,
+      change: '+0%',
+      trend: 'up' as const,
+      icon: TrendingUp,
+    },
+    {
+      title: 'Постійних клієнтів',
+      value: repeatCustomers,
+      change: '+0%',
+      trend: 'up' as const,
+      icon: Users,
+    },
+  ];
+  
+  // Group orders by status
+  const ordersByStatus = orders.reduce((acc, order) => {
+    acc[order.status] = (acc[order.status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  // Get top products (simplified - would need product data)
+  const topProducts: { name: string; count: number; revenue: number }[] = [];
+  
+  // Daily revenue (last 7 days)
+  const dailyRevenue = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - i));
+    const dayOrders = orders.filter(o => {
+      const orderDate = new Date(o.createdAt);
+      return orderDate.toDateString() === date.toDateString();
+    });
+    return {
+      date: date.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' }),
+      revenue: dayOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+      orders: dayOrders.length,
+    };
+  });
+  
+  if (isLoading) {
+    return <div className="p-6">Завантаження...</div>;
+  }
+  
   return (
     <div className="space-y-6">
       {/* Stats cards */}
@@ -101,7 +138,7 @@ export function Dashboard() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={mockStats.dailyRevenue}>
+                <LineChart data={dailyRevenue}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="date" className="text-xs" />
                   <YAxis className="text-xs" />
@@ -134,7 +171,7 @@ export function Dashboard() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={mockStats.dailyRevenue}>
+                <BarChart data={dailyRevenue}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="date" className="text-xs" />
                   <YAxis className="text-xs" />
@@ -167,7 +204,7 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockStats.topProducts.map((product, index) => (
+              {topProducts.length > 0 ? topProducts.map((product, index) => (
                 <div key={product.name} className="flex items-center gap-4">
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold">
                     {index + 1}
@@ -182,7 +219,11 @@ export function Dashboard() {
                     <div className="font-semibold">₴{product.revenue.toLocaleString()}</div>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center text-muted-foreground py-8">
+                  Немає даних про топ товари
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -194,7 +235,7 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {Object.entries(mockStats.ordersByStatus).map(([status, count]) => (
+              {Object.entries(ordersByStatus).map(([status, count]) => (
                 <div key={status} className="flex items-center gap-4">
                   <Package className="h-4 w-4 text-muted-foreground" />
                   <div className="flex-1">
@@ -204,7 +245,7 @@ export function Dashboard() {
                     <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-primary rounded-full"
-                        style={{ width: `${(count / mockStats.totalOrders) * 100}%` }}
+                        style={{ width: `${totalOrders > 0 ? (count / totalOrders) * 100 : 0}%` }}
                       />
                     </div>
                     <span className="text-sm font-medium w-8 text-right">{count}</span>

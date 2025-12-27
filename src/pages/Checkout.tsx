@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, getTotal, clearCart } = useCart();
+  const { items, getSubtotal, getDiscount, getDeliveryCost, getTotal, clearCart } = useCart();
   const { data: products = [] } = useProducts();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -50,19 +50,32 @@ const Checkout = () => {
     setIsSubmitting(true);
     
     try {
-      // Prepare order data
+      // Calculate order totals
+      const subtotal = getSubtotal();
+      const discount = getDiscount();
+      const deliveryCost = getDeliveryCost();
+      const orderTotal = getTotal();
+      
+      // Add COD commission if needed
+      const finalTotal = orderTotal + (formData.paymentMethod === "cod" ? 20 : 0);
+      
+      // Generate order ID
+      const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
+      // Prepare order data - convert undefined/empty strings to null for SQL
       const orderData = {
+        id: orderId,
         customer: {
           name: formData.name,
           phone: formData.phone,
-          email: formData.email || undefined,
+          email: formData.email && formData.email.trim() ? formData.email.trim() : null,
         },
         delivery: {
           method: formData.deliveryMethod,
-          city: formData.city,
-          warehouse: formData.warehouse || undefined,
-          address: formData.address || undefined,
-          postalCode: formData.postalCode || undefined,
+          city: formData.deliveryMethod !== "pickup" && formData.city ? formData.city.trim() : null,
+          warehouse: formData.deliveryMethod === "nova_poshta" && formData.warehouse ? formData.warehouse.trim() : null,
+          postIndex: formData.deliveryMethod === "ukr_poshta" && formData.postalCode ? formData.postalCode.trim() : null,
+          address: formData.deliveryMethod === "ukr_poshta" && formData.address ? formData.address.trim() : null,
         },
         payment: {
           method: formData.paymentMethod,
@@ -70,10 +83,12 @@ const Checkout = () => {
         items: items.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
-          selectedOptions: item.selectedOptions,
+          selectedOptions: item.selectedOptions || [],
         })),
-        comment: formData.comment || undefined,
-        status: 'created' as const,
+        subtotal: subtotal || 0,
+        discount: discount || 0,
+        deliveryCost: deliveryCost || 0,
+        total: finalTotal || 0,
       };
 
       // Submit order to API

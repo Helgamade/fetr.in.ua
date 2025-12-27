@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { CartItem, CartState } from '@/types/store';
-import { products, FREE_DELIVERY_THRESHOLD, DELIVERY_COST } from '@/data/products';
+import { useProducts } from '@/hooks/useProducts';
+import { useSettings } from '@/hooks/useSettings';
 import { toast } from 'sonner';
 
 interface CartContextType extends CartState {
@@ -23,6 +24,12 @@ interface CartContextType extends CartState {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { data: products = [] } = useProducts();
+  const { data: settings = {} } = useSettings();
+  
+  const FREE_DELIVERY_THRESHOLD = parseInt(settings.free_delivery_threshold) || 1500;
+  const DELIVERY_COST = parseInt(settings.delivery_cost) || 70;
+
   const [items, setItems] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('fetr-cart');
     return saved ? JSON.parse(saved) : [];
@@ -46,7 +53,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return [...prev, { productId, quantity: 1, selectedOptions }];
     });
     
-    const product = products.find(p => p.id === productId);
+    // productId is now code (string like 'starter'), not id (number)
+    const product = products.find(p => p.code === productId || String(p.id) === productId);
     toast.success(`${product?.name} додано до кошика!`, {
       description: 'Перейдіть до оформлення замовлення',
       action: {
@@ -59,7 +67,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.dispatchEvent(new CustomEvent('analytics', {
       detail: { event: 'add_to_cart', productId, selectedOptions }
     }));
-  }, []);
+  }, [products]);
 
   const removeFromCart = useCallback((productId: string) => {
     setItems(prev => prev.filter(item => item.productId !== productId));
@@ -94,12 +102,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
 
+  // Subtotal = сумма basePrice (цена БЕЗ скидки) + опции
   const getSubtotal = useCallback(() => {
     return items.reduce((total, item) => {
-      const product = products.find(p => p.id === item.productId);
+      // productId in cart is code (string), find by code
+      const product = products.find(p => p.code === item.productId || String(p.id) === item.productId);
       if (!product) return total;
       
-      const productPrice = product.salePrice || product.basePrice;
+      const productPrice = product.basePrice; // Используем basePrice для subtotal
       const optionsPrice = item.selectedOptions.reduce((optTotal, optId) => {
         const option = product.options.find(o => o.id === optId);
         return optTotal + (option?.price || 0);
@@ -107,24 +117,33 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return total + (productPrice + optionsPrice) * item.quantity;
     }, 0);
-  }, [items]);
+  }, [items, products]);
 
+  // Discount = разница между basePrice и salePrice
   const getDiscount = useCallback(() => {
     return items.reduce((total, item) => {
-      const product = products.find(p => p.id === item.productId);
+      // productId in cart is code (string), find by code
+      const product = products.find(p => p.code === item.productId || String(p.id) === item.productId);
       if (!product || !product.salePrice) return total;
       return total + (product.basePrice - product.salePrice) * item.quantity;
     }, 0);
-  }, [items]);
+  }, [items, products]);
 
+  // Delivery cost based on final price (after discount)
   const getDeliveryCost = useCallback(() => {
     const subtotal = getSubtotal();
-    return subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_COST;
-  }, [getSubtotal]);
+    const discount = getDiscount();
+    const finalSubtotal = subtotal - discount; // Цена после скидки
+    return finalSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_COST;
+  }, [getSubtotal, getDiscount]);
 
+  // Total = Subtotal - Discount + Delivery
   const getTotal = useCallback(() => {
-    return getSubtotal() + getDeliveryCost();
-  }, [getSubtotal, getDeliveryCost]);
+    const subtotal = getSubtotal();
+    const discount = getDiscount();
+    const deliveryCost = getDeliveryCost();
+    return subtotal - discount + deliveryCost;
+  }, [getSubtotal, getDiscount, getDeliveryCost]);
 
   const getItemCount = useCallback(() => {
     return items.reduce((total, item) => total + item.quantity, 0);
@@ -132,8 +151,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const amountToFreeDelivery = useCallback(() => {
     const subtotal = getSubtotal();
-    return Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal);
-  }, [getSubtotal]);
+    const discount = getDiscount();
+    const finalSubtotal = subtotal - discount; // Цена после скидки
+    return Math.max(0, FREE_DELIVERY_THRESHOLD - finalSubtotal);
+  }, [getSubtotal, getDiscount]);
 
   return (
     <CartContext.Provider

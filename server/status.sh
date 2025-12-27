@@ -10,7 +10,17 @@ fi
 
 echo "✅ Server is running (PID: $PID)"
 echo ""
+
+# Определяем порт из переменной окружения или используем дефолтный
+PORT=${PORT:-3001}
+HOST=${HOST:-127.0.0.1}
+
+# Если HOST содержит IP адрес, извлекаем только IP
+if [[ "$HOST" == *":"* ]]; then
+    HOST=$(echo "$HOST" | cut -d: -f1)
+fi
+
 echo "Health check:"
-curl -s http://localhost:3001/api/health | head -1
+curl -s http://${HOST}:${PORT}/api/health | head -1
 echo ""
 

@@ -1,5 +1,5 @@
 // API client for backend
-import { Product, Order } from '@/types/store';
+import { Product, Order, ProductOption } from '@/types/store';
 
 // Always use /api (proxied to Node.js backend)
 // Hardcoded to /api to avoid any environment variable issues
@@ -26,6 +26,7 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
 export const productsAPI = {
   getAll: () => fetchAPI<Product[]>('/products'),
   getById: (id: string) => fetchAPI<Product>(`/products/${id}`),
+  getAllOptions: () => fetchAPI<ProductOption[]>('/products/options/all'),
   create: (data: any) => fetchAPI<any>('/products', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -171,5 +172,40 @@ export const galleryAPI = {
   delete: (id: number) => fetchAPI<any>(`/gallery/${id}`, {
     method: 'DELETE',
   }),
+};
+
+// Comparison API
+export interface ComparisonFeature {
+  id: number;
+  key: string;
+  label: string;
+  sortOrder: number;
+  values: Record<string, string | boolean | null>;
+}
+
+export interface ComparisonData {
+  features: ComparisonFeature[];
+  products: Array<{ id: number; code: string; name: string }>;
+}
+
+export const comparisonAPI = {
+  getAll: () => fetchAPI<ComparisonData>('/comparison'),
+  updateValue: (featureKey: string, productId: number, value: string | boolean | null, isBoolean: boolean) =>
+    fetchAPI<void>('/comparison/value', {
+      method: 'PUT',
+      body: JSON.stringify({ featureKey, productId, value, isBoolean }),
+    }),
+  createFeature: (key: string, label: string, sortOrder?: number) =>
+    fetchAPI<{ id: number; key: string; label: string; sortOrder: number }>('/comparison/feature', {
+      method: 'POST',
+      body: JSON.stringify({ key, label, sortOrder }),
+    }),
+  updateFeature: (key: string, label: string, sortOrder?: number) =>
+    fetchAPI<void>(`/comparison/feature/${key}`, {
+      method: 'PUT',
+      body: JSON.stringify({ label, sortOrder }),
+    }),
+  deleteFeature: (key: string) =>
+    fetchAPI<void>(`/comparison/feature/${key}`, { method: 'DELETE' }),
 };
 

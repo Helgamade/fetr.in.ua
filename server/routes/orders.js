@@ -162,53 +162,87 @@ router.post('/', async (req, res, next) => {
       id, customer, delivery, payment, items, subtotal, discount, deliveryCost, total
     } = req.body;
 
+    // Validate required fields
+    if (!id || !customer?.name || !customer?.phone || !delivery?.method || !payment?.method || !items || items.length === 0) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
     const connection = await pool.getConnection();
     await connection.beginTransaction();
 
     try {
-      // Insert order
-      await connection.execute(`
-        INSERT INTO orders (id, customer_name, customer_phone, customer_email,
+      // Helper function to convert undefined/empty to null
+      const toNull = (val) => (val === undefined || val === null || val === '') ? null : val;
+      
+      // Insert order - id is AUTO_INCREMENT, use order_number for string identifier
+      // customer_email can be NULL, but provide empty string if needed
+      const [orderResult] = await connection.execute(`
+        INSERT INTO orders (order_number, customer_name, customer_phone, customer_email,
           delivery_method, delivery_city, delivery_warehouse, delivery_post_index, delivery_address,
           payment_method, subtotal, discount, delivery_cost, total, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'created')
       `, [
-        id, customer.name, customer.phone, customer.email,
-        delivery.method, delivery.city || null, delivery.warehouse || null,
-        delivery.postIndex || null, delivery.address || null,
-        payment.method, subtotal, discount, deliveryCost, total
+        id, // order_number (VARCHAR)
+        customer.name || null, 
+        customer.phone || null, 
+        toNull(customer.email),
+        delivery.method || null, 
+        toNull(delivery.city), 
+        toNull(delivery.warehouse),
+        toNull(delivery.postIndex), 
+        toNull(delivery.address),
+        payment.method || null, 
+        Number(subtotal) || 0, 
+        Number(discount) || 0, 
+        Number(deliveryCost) || 0, 
+        Number(total) || 0
       ]);
+
+      const orderId = orderResult.insertId; // Get the AUTO_INCREMENT id (INT)
 
       // Insert items
       for (const item of items) {
-        // Get product price
+        // Get product price by code (productId is now code, not id)
         const [products] = await connection.execute(`
-          SELECT sale_price, base_price FROM products WHERE id = ?
+          SELECT id, sale_price, base_price FROM products WHERE code = ?
         `, [item.productId]);
         
         const product = products[0];
-        const itemPrice = product?.sale_price || product?.base_price || 0;
+        if (!product) {
+          throw new Error(`Product with code ${item.productId} not found`);
+        }
         
-        const [result] = await connection.execute(`
+        const itemPrice = product.sale_price || product.base_price || 0;
+        const productIdInt = product.id; // Use INT id from products table
+        
+        const [itemResult] = await connection.execute(`
           INSERT INTO order_items (order_id, product_id, quantity, price)
           VALUES (?, ?, ?, ?)
-        `, [id, item.productId, item.quantity, itemPrice]);
+        `, [orderId, productIdInt, item.quantity, itemPrice]);
 
-        const orderItemId = result.insertId;
+        const orderItemId = itemResult.insertId;
 
-        // Insert item options
+        // Insert item options (optionId is now code, need to get INT id)
         if (item.selectedOptions && item.selectedOptions.length > 0) {
-          for (const optionId of item.selectedOptions) {
-            await connection.execute(`
-              INSERT INTO order_item_options (order_item_id, option_id)
-              VALUES (?, ?)
-            `, [orderItemId, optionId]);
+          for (const optionCode of item.selectedOptions) {
+            // Get option id by code
+            const [options] = await connection.execute(`
+              SELECT id FROM product_options WHERE code = ?
+            `, [optionCode]);
+            
+            if (options.length > 0) {
+              const optionIdInt = options[0].id;
+              await connection.execute(`
+                INSERT INTO order_item_options (order_item_id, option_id)
+                VALUES (?, ?)
+              `, [orderItemId, optionIdInt]);
+            }
           }
         }
       }
 
       await connection.commit();
-      res.status(201).json({ id, message: 'Order created' });
+      res.status(201).json({ id: orderId, orderNumber: id, message: 'Order created' });
     } catch (error) {
       await connection.rollback();
       throw error;
@@ -243,6 +277,9 @@ router.put('/:id', async (req, res, next) => {
     const { id } = req.params;
     const { customer, delivery, payment, status, subtotal, discount, deliveryCost, total } = req.body;
 
+    // Helper function to convert undefined/empty to null
+    const toNull = (val) => (val === undefined || val === null || val === '') ? null : val;
+
     await pool.execute(`
       UPDATE orders SET
         customer_name = ?, customer_phone = ?, customer_email = ?,
@@ -252,9 +289,9 @@ router.put('/:id', async (req, res, next) => {
         delivery_cost = ?, total = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `, [
-      customer.name, customer.phone, customer.email,
-      delivery.method, delivery.city || null, delivery.warehouse || null,
-      delivery.postIndex || null, delivery.address || null,
+      customer.name, customer.phone, toNull(customer.email),
+      delivery.method, toNull(delivery.city), toNull(delivery.warehouse),
+      toNull(delivery.postIndex), toNull(delivery.address),
       payment.method, status, subtotal, discount, deliveryCost, total, id
     ]);
 

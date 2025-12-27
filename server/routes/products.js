@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res, next) => {
   try {
     const [products] = await pool.execute(`
-      SELECT * FROM products ORDER BY created_at DESC
+      SELECT * FROM products ORDER BY display_order ASC, created_at DESC
     `);
 
     // Get images for each product
@@ -26,7 +26,12 @@ router.get('/', async (req, res, next) => {
         WHERE ppo.product_id = ?
         ORDER BY po.id
       `, [product.id]);
-      product.options = options;
+      product.options = options.map(opt => ({
+        id: opt.id,
+        name: opt.name,
+        price: parseFloat(opt.price) || 0,
+        description: opt.description || null,
+      }));
 
       // Get features
       const [features] = await pool.execute(`
@@ -63,6 +68,28 @@ router.get('/', async (req, res, next) => {
         ORDER BY sort_order ASC
       `, [product.id]);
       product.suitableFor = suitableFor.map(f => f.value);
+
+      // Transform snake_case to camelCase for frontend
+      product.basePrice = parseFloat(product.base_price) || 0;
+      product.salePrice = product.sale_price ? parseFloat(product.sale_price) : null;
+      product.purchaseCount = parseInt(product.purchase_count) || 0;
+      product.viewCount = parseInt(product.view_count) || 0;
+      product.displayOrder = parseInt(product.display_order) || 0;
+      product.shortDescription = product.short_description;
+      product.fullDescription = product.full_description;
+      // Keep code field for comparison and cart
+      product.code = product.code;
+      
+      // Remove snake_case fields
+      delete product.base_price;
+      delete product.sale_price;
+      delete product.purchase_count;
+      delete product.view_count;
+      delete product.display_order;
+      delete product.short_description;
+      delete product.full_description;
+      delete product.created_at;
+      delete product.updated_at;
     }
 
     res.json(products);
@@ -100,7 +127,12 @@ router.get('/:id', async (req, res, next) => {
       WHERE ppo.product_id = ?
       ORDER BY po.id
     `, [product.id]);
-    product.options = options;
+    product.options = options.map(opt => ({
+      id: opt.id,
+      name: opt.name,
+      price: parseFloat(opt.price) || 0,
+      description: opt.description || null,
+    }));
 
     // Get features
     const [features] = await pool.execute(`
@@ -136,6 +168,28 @@ router.get('/:id', async (req, res, next) => {
       ORDER BY sort_order ASC
     `, [product.id]);
     product.suitableFor = suitableFor.map(f => f.value);
+
+    // Transform snake_case to camelCase for frontend
+      product.basePrice = parseFloat(product.base_price) || 0;
+      product.salePrice = product.sale_price ? parseFloat(product.sale_price) : null;
+      product.purchaseCount = parseInt(product.purchase_count) || 0;
+      product.viewCount = parseInt(product.view_count) || 0;
+      product.displayOrder = parseInt(product.display_order) || 0;
+      product.shortDescription = product.short_description;
+      product.fullDescription = product.full_description;
+      // Keep code field for comparison and cart
+      product.code = product.code;
+      
+      // Remove snake_case fields
+      delete product.base_price;
+      delete product.sale_price;
+      delete product.purchase_count;
+      delete product.view_count;
+      delete product.display_order;
+      delete product.short_description;
+      delete product.full_description;
+      delete product.created_at;
+      delete product.updated_at;
 
     res.json(product);
   } catch (error) {
@@ -184,18 +238,97 @@ router.put('/:id', async (req, res, next) => {
     const { id } = req.params;
     const {
       name, slug, shortDescription, fullDescription,
-      basePrice, salePrice, badge, stock, viewCount, purchaseCount
+      basePrice, salePrice, badge, stock, viewCount, purchaseCount, displayOrder,
+      features, materials, canMake, suitableFor, options
     } = req.body;
 
+    // Update main product fields
     await pool.execute(`
       UPDATE products SET
         name = ?, slug = ?, short_description = ?, full_description = ?,
         base_price = ?, sale_price = ?, badge = ?, stock = ?,
-        view_count = ?, purchase_count = ?
+        view_count = ?, purchase_count = ?, display_order = ?
       WHERE id = ?
-    `, [name, slug, shortDescription, fullDescription, basePrice, salePrice, badge, stock, viewCount, purchaseCount, id]);
+    `, [name, slug, shortDescription, fullDescription, basePrice, salePrice, badge, stock, viewCount || 0, purchaseCount || 0, displayOrder || 0, id]);
+
+    // Update features (type = 'feature')
+    await pool.execute('DELETE FROM product_features WHERE product_id = ? AND type = ?', [id, 'feature']);
+    if (features && Array.isArray(features)) {
+      for (let i = 0; i < features.length; i++) {
+        await pool.execute(`
+          INSERT INTO product_features (product_id, type, value, sort_order)
+          VALUES (?, 'feature', ?, ?)
+        `, [id, features[i], i]);
+      }
+    }
+
+    // Update materials (type = 'material')
+    await pool.execute('DELETE FROM product_features WHERE product_id = ? AND type = ?', [id, 'material']);
+    if (materials && Array.isArray(materials)) {
+      for (let i = 0; i < materials.length; i++) {
+        const material = materials[i];
+        await pool.execute(`
+          INSERT INTO product_features (product_id, type, value, description, sort_order)
+          VALUES (?, 'material', ?, ?, ?)
+        `, [id, material.name || material, material.description || null, i]);
+      }
+    }
+
+    // Update canMake (type = 'can_make')
+    await pool.execute('DELETE FROM product_features WHERE product_id = ? AND type = ?', [id, 'can_make']);
+    if (canMake && Array.isArray(canMake)) {
+      for (let i = 0; i < canMake.length; i++) {
+        await pool.execute(`
+          INSERT INTO product_features (product_id, type, value, sort_order)
+          VALUES (?, 'can_make', ?, ?)
+        `, [id, canMake[i], i]);
+      }
+    }
+
+    // Update suitableFor (type = 'suitable_for')
+    await pool.execute('DELETE FROM product_features WHERE product_id = ? AND type = ?', [id, 'suitable_for']);
+    if (suitableFor && Array.isArray(suitableFor)) {
+      for (let i = 0; i < suitableFor.length; i++) {
+        await pool.execute(`
+          INSERT INTO product_features (product_id, type, value, sort_order)
+          VALUES (?, 'suitable_for', ?, ?)
+        `, [id, suitableFor[i], i]);
+      }
+    }
+
+    // Update options (many-to-many relationship)
+    await pool.execute('DELETE FROM product_product_options WHERE product_id = ?', [id]);
+    if (options && Array.isArray(options)) {
+      for (const optionId of options) {
+        await pool.execute(`
+          INSERT INTO product_product_options (product_id, option_id)
+          VALUES (?, ?)
+        `, [id, optionId]);
+      }
+    }
 
     res.json({ id, message: 'Product updated' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get all product options (for admin)
+router.get('/options/all', async (req, res, next) => {
+  try {
+    const [options] = await pool.execute(`
+      SELECT * FROM product_options ORDER BY name ASC
+    `);
+    
+    // Transform price to number
+    const transformedOptions = options.map(opt => ({
+      id: opt.id,
+      name: opt.name,
+      price: parseFloat(opt.price) || 0,
+      description: opt.description || null,
+    }));
+    
+    res.json(transformedOptions);
   } catch (error) {
     next(error);
   }

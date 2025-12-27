@@ -6,7 +6,8 @@ export interface ProductOption {
 }
 
 export interface Product {
-  id: string;
+  id: number; // Changed to number (INT AUTO_INCREMENT)
+  code: string; // Product code like 'starter', 'optimal', 'premium'
   name: string;
   slug: string;
   shortDescription: string;
@@ -23,6 +24,7 @@ export interface Product {
   stock: number;
   viewCount: number;
   purchaseCount: number;
+  displayOrder?: number;
 }
 
 export interface CartItem {

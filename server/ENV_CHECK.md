@@ -48,8 +48,10 @@ node server/db.js
 
 Или запустить сервер и проверить health check:
 ```bash
-npm run server
-# В другом терминале
-curl http://localhost:3001/api/health
+./server/start.sh
+# Проверка:
+curl http://127.1.5.169:3000/api/health
+# Или через прокси:
+curl https://fetr.in.ua/api/health
 ```
 

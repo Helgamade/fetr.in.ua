@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { products } from '@/data/products';
+import { useProducts } from '@/hooks/useProducts';
 import { Eye, ShoppingBag, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,10 +18,13 @@ interface Notification {
 }
 
 export const SocialProof: React.FC = () => {
+  const { data: products = [] } = useProducts();
   const [notification, setNotification] = useState<Notification | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    if (products.length === 0) return;
+    
     const showNotification = () => {
       const type = Math.random() > 0.5 ? 'purchased' : 'viewing';
       const product = products[Math.floor(Math.random() * products.length)];
@@ -58,7 +61,7 @@ export const SocialProof: React.FC = () => {
       clearTimeout(initialTimeout);
       clearInterval(interval);
     };
-  }, []);
+  }, [products]);
 
   if (!notification) return null;
 

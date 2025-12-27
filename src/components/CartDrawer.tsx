@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCart } from '@/context/CartContext';
-import { products, FREE_DELIVERY_THRESHOLD } from '@/data/products';
+import { useProducts } from '@/hooks/useProducts';
+import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
 import { X, Plus, Minus, Trash2, ShoppingBag, Truck, Clock, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +9,10 @@ import { cn } from '@/lib/utils';
 
 export const CartDrawer: React.FC = () => {
   const navigate = useNavigate();
+  const { data: products = [] } = useProducts();
+  const { data: settings = {} } = useSettings();
+  const FREE_DELIVERY_THRESHOLD = parseInt(settings.free_delivery_threshold) || 1500;
+  
   const {
     items,
     isOpen,
