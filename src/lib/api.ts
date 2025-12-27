@@ -1,9 +1,9 @@
 // API client for backend
 import { Product, Order } from '@/types/store';
 
-// Use environment variable or fallback to relative path
-// In production with proxy: always use relative path /api
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+// Use environment variable or relative path /api for proxy
+// When proxying is enabled, always use /api
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/^https?:\/\/[^/]+/, '');
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
