@@ -53,8 +53,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return [...prev, { productId, quantity: 1, selectedOptions }];
     });
     
-    // productId is now code (string like 'starter'), not id (number)
-    const product = products.find(p => p.code === productId || String(p.id) === productId);
+    // productId is code (string like 'starter')
+    const product = products.find(p => p.code === productId);
     toast.success(`${product?.name} додано до кошика!`, {
       description: 'Перейдіть до оформлення замовлення',
       action: {
@@ -105,8 +105,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Subtotal = сумма basePrice (цена БЕЗ скидки) + опции
   const getSubtotal = useCallback(() => {
     return items.reduce((total, item) => {
-      // productId in cart is code (string), find by code
-      const product = products.find(p => p.code === item.productId || String(p.id) === item.productId);
+      const product = products.find(p => p.code === item.productId);
       if (!product) return total;
       
       const productPrice = product.basePrice; // Используем basePrice для subtotal
@@ -122,8 +121,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Discount = разница между basePrice и salePrice
   const getDiscount = useCallback(() => {
     return items.reduce((total, item) => {
-      // productId in cart is code (string), find by code
-      const product = products.find(p => p.code === item.productId || String(p.id) === item.productId);
+      const product = products.find(p => p.code === item.productId);
       if (!product || !product.salePrice) return total;
       return total + (product.basePrice - product.salePrice) * item.quantity;
     }, 0);

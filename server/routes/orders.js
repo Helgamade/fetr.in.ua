@@ -202,7 +202,7 @@ router.post('/', async (req, res, next) => {
 
       // Insert items
       for (const item of items) {
-        // Get product price by code (productId is now code, not id)
+        // Get product price by code
         const [products] = await connection.execute(`
           SELECT id, sale_price, base_price FROM products WHERE code = ?
         `, [item.productId]);

@@ -84,7 +84,8 @@ git push production main
 3. Копируется `dist/index.html` → `index.html` (КРИТИЧНО!)
 4. Копируются `dist/assets/*` → `assets/`
 5. Устанавливаются права доступа
-6. Сайт обновлен!
+6. Перезапускается API сервер
+7. Сайт обновлен!
 
 **⚠️ ВАЖНО: Репозиторий и рабочая папка ОДНА И ТА ЖЕ: `/home/idesig02/fetr.in.ua/www/`**
 
@@ -103,18 +104,53 @@ git init --bare ~/deploy.git
 # 2. Создать post-receive hook
 cat > ~/deploy.git/hooks/post-receive << 'EOF'
 #!/bin/bash
-unset GIT_DIR
-cd /home/idesig02/fetr.in.ua/www
-git fetch origin
-git reset --hard origin/main
-npm install
-npm run build
-mkdir -p assets
-cp dist/index.html index.html
-cp -r dist/assets/* assets/ 2>/dev/null || true
-chmod 755 assets
-chmod 644 assets/*
-chmod 644 index.html
+echo "===== Deploying fetr.in.ua ====="
+
+TARGET="/home/idesig02/fetr.in.ua/www"
+
+while read oldrev newrev ref
+do
+    if [[ $ref =~ .*/main$ ]] || [[ $ref =~ .*/master$ ]]; then
+        echo "Deploying main branch to production..."
+        
+        # Unset GIT_DIR from bare repo context
+        unset GIT_DIR
+        
+        cd "$TARGET" || exit 1
+        
+        echo "Updating code from git..."
+        git fetch origin
+        git reset --hard origin/main
+        
+        echo "Installing dependencies..."
+        npm install
+        
+        echo "Building frontend..."
+        npm run build
+        
+        echo "Copying files..."
+        # КРИТИЧНО: Копируем index.html ПЕРВЫМ
+        mkdir -p assets
+        cp dist/index.html index.html
+        cp -r dist/assets/* assets/ 2>/dev/null || true
+        
+        echo "Setting permissions..."
+        chmod 755 assets
+        chmod 644 assets/* 2>/dev/null || true
+        chmod 644 index.html
+        
+        echo "Restarting server..."
+        cd server
+        pkill -f "node.*index.js" || true
+        sleep 1
+        nohup node index.js > /dev/null 2>&1 &
+        cd ..
+        
+        echo "===== Deployment complete! ====="
+    else
+        echo "Ref $ref received. Not deploying."
+    fi
+done
 EOF
 
 # 3. Установить права на выполнение
