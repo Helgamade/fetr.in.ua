@@ -7,7 +7,7 @@ const stats = [
   { icon: Star, value: '12+', label: 'років досвіду' },
   { icon: Users, value: '3000+', label: 'щасливих клієнтів' },
   { icon: Truck, value: '24 год', label: 'швидка відправка' },
-  { icon: HeartHandshake, value: '100%', label: 'підтримка майстра' },
+  { icon: HeartHandshake, value: '100%', label: 'український бренд' },
 ];
 
 export const HeroSection: React.FC = () => {
