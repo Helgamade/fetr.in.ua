@@ -39,14 +39,6 @@ export function Comparison() {
   const [localValues, setLocalValues] = useState<Record<string, Record<number, string | boolean | null>>>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  // Initialize local values from server data (only once when data first loads)
-  const [isInitialized, setIsInitialized] = useState(false);
-  useEffect(() => {
-    if (data && !isInitialized) {
-      setIsInitialized(true);
-    }
-  }, [data, isInitialized]);
-
   if (isLoading || !data) {
     return (
       <div className="flex items-center justify-center py-12">
