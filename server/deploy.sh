@@ -1,7 +1,14 @@
 #!/bin/bash
 # Скрипт для деплоя фронтенда после обновления кода
 
-cd /home/idesig02/fetr.in.ua/www || exit 1
+#!/bin/bash
+# Скрипт для деплоя фронтенда после обновления кода
+# Использование: cd /home/idesig02/fetr.in.ua/www && server/deploy.sh
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+cd "$PROJECT_ROOT" || exit 1
 
 echo "Building frontend..."
 npm run build
