@@ -2,8 +2,20 @@
 import { Product, Order } from '@/types/store';
 
 // Use environment variable or relative path /api for proxy
-// When proxying is enabled, always use /api
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/^https?:\/\/[^/]+/, '');
+// In production with proxying, always use /api
+// In development, use VITE_API_URL if set, otherwise /api
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl) return '/api';
+  // If it's a full URL (http://...), extract path only
+  if (envUrl.startsWith('http://') || envUrl.startsWith('https://')) {
+    const url = new URL(envUrl);
+    return url.pathname || '/api';
+  }
+  // Otherwise use as-is (should be /api)
+  return envUrl;
+};
+const API_BASE_URL = getApiBaseUrl();
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
