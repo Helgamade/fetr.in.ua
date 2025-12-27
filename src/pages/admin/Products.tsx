@@ -51,6 +51,8 @@ export function Products() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [availableOptions, setAvailableOptions] = useState<ProductOption[]>([]);
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const fileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
   const { toast } = useToast();
 
   // Load available options when dialog opens
@@ -451,9 +453,31 @@ export function Products() {
                             newImages[index] = e.target.value;
                             setEditingProduct({ ...editingProduct, images: newImages });
                           }}
-                          placeholder="https://example.com/image.jpg"
+                          placeholder="https://example.com/image.jpg або завантажте файл"
                           className="flex-1"
                         />
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                          ref={(el) => fileInputRefs.current[index] = el}
+                          onChange={(e) => handleFileInputChange(index, e)}
+                          className="hidden"
+                          id={`file-upload-${index}`}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => fileInputRefs.current[index]?.click()}
+                          disabled={uploadingIndex === index}
+                          title="Завантажити зображення"
+                        >
+                          {uploadingIndex === index ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Upload className="h-4 w-4" />
+                          )}
+                        </Button>
                         <div className="flex gap-1">
                           {index > 0 && (
                             <Button
