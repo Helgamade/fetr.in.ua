@@ -10,7 +10,7 @@ cd "$PROJECT_ROOT" || exit 1
 echo "=== DEPLOYMENT STARTED ==="
 echo "Project root: $PROJECT_ROOT"
 
-# 1. Сборка фронтенда (если есть изменения)
+# 1. Сборка фронтенда
 echo "Building frontend..."
 npm run build
 
@@ -26,22 +26,23 @@ rm -f assets/index-*.js assets/index-*.css 2>/dev/null || true
 
 # Копируем index.html ПЕРВЫМ (КРИТИЧНО!)
 echo "Copying index.html..."
-cp dist/index.html index.html
+cp -f dist/index.html index.html
 
 # Копируем assets
 echo "Copying assets..."
 if [ -d "dist/assets" ]; then
   cp -r dist/assets/* assets/ 2>/dev/null || true
 else
-  echo "WARNING: dist/assets directory not found!"
+  echo "ERROR: dist/assets directory not found!"
+  exit 1
 fi
 
 # Копируем другие файлы из dist (favicon, robots.txt и т.д.)
 if [ -f "dist/favicon.ico" ]; then
-  cp dist/favicon.ico favicon.ico 2>/dev/null || true
+  cp -f dist/favicon.ico favicon.ico 2>/dev/null || true
 fi
 if [ -f "dist/robots.txt" ]; then
-  cp dist/robots.txt robots.txt 2>/dev/null || true
+  cp -f dist/robots.txt robots.txt 2>/dev/null || true
 fi
 
 # 3. Установка прав доступа
@@ -50,7 +51,26 @@ chmod 755 assets
 chmod 644 assets/* 2>/dev/null || true
 chmod 644 index.html
 
-# 4. Перезапуск сервера
+# 4. КРИТИЧНО: Проверка, что файлы скопированы правильно
+echo "Verifying deployment..."
+if grep -q "main.tsx" index.html; then
+  echo "ERROR: index.html still references main.tsx! Deployment failed!"
+  exit 1
+fi
+
+if ! grep -q "index-.*\.js" index.html; then
+  echo "ERROR: index.html doesn't reference compiled JS file! Deployment failed!"
+  exit 1
+fi
+
+if [ ! -d "assets" ] || [ -z "$(ls -A assets 2>/dev/null)" ]; then
+  echo "ERROR: assets directory is empty! Deployment failed!"
+  exit 1
+fi
+
+echo "✓ Deployment verification passed"
+
+# 5. Перезапуск сервера
 echo "Restarting server..."
 cd server
 pkill -f "node.*index.js" || true
@@ -62,3 +82,4 @@ echo "=== DEPLOYMENT COMPLETE ==="
 echo "Files copied:"
 echo "  - dist/index.html -> index.html"
 echo "  - dist/assets/* -> assets/"
+echo "✓ Server restarted"
