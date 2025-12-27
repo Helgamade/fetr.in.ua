@@ -29,7 +29,7 @@ router.get('/', async (req, res, next) => {
           v.feature_key === feature.key_name && v.product_id === product.id
         );
         if (value) {
-          if (value.is_boolean) {
+          if (feature.type === 'boolean' || value.is_boolean) {
             featureValues[product.code] = value.value === 'true';
           } else {
             featureValues[product.code] = value.value;
@@ -42,6 +42,7 @@ router.get('/', async (req, res, next) => {
         id: feature.id,
         key: feature.key_name,
         label: feature.label,
+        type: feature.type || 'text',
         sortOrder: feature.sort_order,
         values: featureValues
       };
@@ -65,13 +66,20 @@ router.put('/value', async (req, res, next) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const valueToStore = isBoolean ? (value ? 'true' : null) : value;
+    // Get feature type to determine is_boolean
+    const [features] = await pool.execute(`
+      SELECT type FROM comparison_features WHERE key_name = ?
+    `, [featureKey]);
+    
+    const featureType = features[0]?.type || 'text';
+    const isBooleanValue = featureType === 'boolean' || isBoolean;
+    const valueToStore = isBooleanValue ? (value ? 'true' : null) : value;
 
     await pool.execute(`
       INSERT INTO comparison_values (feature_key, product_id, value, is_boolean)
       VALUES (?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE value = VALUES(value), is_boolean = VALUES(is_boolean)
-    `, [featureKey, productId, valueToStore, isBoolean || false]);
+    `, [featureKey, productId, valueToStore, isBooleanValue]);
 
     res.json({ message: 'Value updated' });
   } catch (error) {
@@ -82,18 +90,18 @@ router.put('/value', async (req, res, next) => {
 // Create new feature
 router.post('/feature', async (req, res, next) => {
   try {
-    const { key, label, sortOrder } = req.body;
+    const { key, label, type, sortOrder } = req.body;
 
-    if (!key || !label) {
+    if (!key || !label || !type) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     const [result] = await pool.execute(`
-      INSERT INTO comparison_features (key_name, label, sort_order)
-      VALUES (?, ?, ?)
-    `, [key, label, sortOrder || 0]);
+      INSERT INTO comparison_features (key_name, label, type, sort_order)
+      VALUES (?, ?, ?, ?)
+    `, [key, label, type, sortOrder || 0]);
 
-    res.status(201).json({ id: result.insertId, key, label, sortOrder: sortOrder || 0 });
+    res.status(201).json({ id: result.insertId, key, label, type, sortOrder: sortOrder || 0 });
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ error: 'Feature with this key already exists' });
@@ -106,13 +114,13 @@ router.post('/feature', async (req, res, next) => {
 router.put('/feature/:key', async (req, res, next) => {
   try {
     const { key } = req.params;
-    const { label, sortOrder } = req.body;
+    const { label, type, sortOrder } = req.body;
 
     await pool.execute(`
       UPDATE comparison_features
-      SET label = ?, sort_order = ?
+      SET label = ?, type = ?, sort_order = ?
       WHERE key_name = ?
-    `, [label, sortOrder || 0, key]);
+    `, [label, type, sortOrder || 0, key]);
 
     res.json({ message: 'Feature updated' });
   } catch (error) {

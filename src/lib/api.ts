@@ -179,6 +179,7 @@ export interface ComparisonFeature {
   id: number;
   key: string;
   label: string;
+  type: 'text' | 'boolean';
   sortOrder: number;
   values: Record<string, string | boolean | null>;
 }
@@ -195,15 +196,15 @@ export const comparisonAPI = {
       method: 'PUT',
       body: JSON.stringify({ featureKey, productId, value, isBoolean }),
     }),
-  createFeature: (key: string, label: string, sortOrder?: number) =>
-    fetchAPI<{ id: number; key: string; label: string; sortOrder: number }>('/comparison/feature', {
+  createFeature: (key: string, label: string, type: 'text' | 'boolean', sortOrder?: number) =>
+    fetchAPI<{ id: number; key: string; label: string; type: 'text' | 'boolean'; sortOrder: number }>('/comparison/feature', {
       method: 'POST',
-      body: JSON.stringify({ key, label, sortOrder }),
+      body: JSON.stringify({ key, label, type, sortOrder }),
     }),
-  updateFeature: (key: string, label: string, sortOrder?: number) =>
+  updateFeature: (key: string, label: string, type: 'text' | 'boolean', sortOrder?: number) =>
     fetchAPI<void>(`/comparison/feature/${key}`, {
       method: 'PUT',
-      body: JSON.stringify({ label, sortOrder }),
+      body: JSON.stringify({ label, type, sortOrder }),
     }),
   deleteFeature: (key: string) =>
     fetchAPI<void>(`/comparison/feature/${key}`, { method: 'DELETE' }),

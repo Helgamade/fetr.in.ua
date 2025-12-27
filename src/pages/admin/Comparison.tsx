@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -31,9 +32,9 @@ export function Comparison() {
   const updateFeature = useUpdateComparisonFeature();
   const deleteFeature = useDeleteComparisonFeature();
 
-  const [editingFeature, setEditingFeature] = useState<{ key: string; label: string; sortOrder: number } | null>(null);
+  const [editingFeature, setEditingFeature] = useState<{ key: string; label: string; type: 'text' | 'boolean'; sortOrder: number } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newFeature, setNewFeature] = useState({ key: '', label: '', sortOrder: 0 });
+  const [newFeature, setNewFeature] = useState({ key: '', label: '', type: 'text' as 'text' | 'boolean', sortOrder: 0 });
   
   // Local state for values that haven't been saved yet
   const [localValues, setLocalValues] = useState<Record<string, Record<number, string | boolean | null>>>({});
@@ -70,12 +71,12 @@ export function Comparison() {
     
     const changes: Array<{ featureKey: string; productId: number; value: string | boolean | null; isBoolean: boolean }> = [];
     
-    // Collect all changes
-    Object.entries(localValues).forEach(([featureKey, productValues]) => {
-      const feature = features.find(f => f.key === featureKey);
-      if (!feature) return;
-      
-      const isBoolean = isBooleanFeature(feature);
+      // Collect all changes
+      Object.entries(localValues).forEach(([featureKey, productValues]) => {
+        const feature = features.find(f => f.key === featureKey);
+        if (!feature) return;
+        
+        const isBoolean = feature.type === 'boolean';
       
       Object.entries(productValues).forEach(([productIdStr, value]) => {
         const productId = parseInt(productIdStr);
@@ -148,7 +149,7 @@ export function Comparison() {
           title: 'Успіх',
           description: 'Параметр додано',
         });
-        setNewFeature({ key: '', label: '', sortOrder: 0 });
+        setNewFeature({ key: '', label: '', type: 'text', sortOrder: 0 });
         setIsDialogOpen(false);
       },
       onError: (error: Error) => {
@@ -161,7 +162,7 @@ export function Comparison() {
     });
   };
 
-  const handleEditFeature = (feature: { key: string; label: string; sortOrder: number }) => {
+  const handleEditFeature = (feature: { key: string; label: string; type: 'text' | 'boolean'; sortOrder: number }) => {
     setEditingFeature(feature);
     setIsDialogOpen(true);
   };
@@ -208,10 +209,9 @@ export function Comparison() {
     });
   };
 
-  // Determine if feature is boolean based on first non-null value
-  const isBooleanFeature = (feature: typeof features[0]): boolean => {
-    const firstValue = Object.values(feature.values).find(v => v !== null);
-    return typeof firstValue === 'boolean';
+  // Get feature type
+  const getFeatureType = (feature: typeof features[0]): 'text' | 'boolean' => {
+    return feature.type || 'text';
   };
 
   // Check if there are unsaved changes
@@ -268,7 +268,7 @@ export function Comparison() {
               </thead>
               <tbody>
                 {features.map((feature, idx) => {
-                  const isBoolean = isBooleanFeature(feature);
+                  const isBoolean = feature.type === 'boolean';
                   return (
                     <tr key={feature.key} className={idx % 2 === 0 ? 'bg-muted/50' : ''}>
                       <td className="p-3 sticky left-0 bg-inherit z-10 font-medium">
@@ -374,6 +374,27 @@ export function Comparison() {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="type">Тип параметра</Label>
+              <Select
+                value={editingFeature?.type || newFeature.type}
+                onValueChange={(value: 'text' | 'boolean') => {
+                  if (editingFeature) {
+                    setEditingFeature({ ...editingFeature, type: value });
+                  } else {
+                    setNewFeature({ ...newFeature, type: value });
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Виберіть тип" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="text">Текст</SelectItem>
+                  <SelectItem value="boolean">Булеве значення (Так/Ні)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="sortOrder">Порядок сортування</Label>
               <Input
                 id="sortOrder"
@@ -394,7 +415,7 @@ export function Comparison() {
             <Button variant="outline" onClick={() => {
               setIsDialogOpen(false);
               setEditingFeature(null);
-              setNewFeature({ key: '', label: '', sortOrder: 0 });
+              setNewFeature({ key: '', label: '', type: 'text', sortOrder: 0 });
             }}>
               Скасувати
             </Button>

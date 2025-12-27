@@ -28,8 +28,8 @@ export function useCreateComparisonFeature() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ key, label, sortOrder }: { key: string; label: string; sortOrder?: number }) =>
-      comparisonAPI.createFeature(key, label, sortOrder),
+    mutationFn: ({ key, label, type, sortOrder }: { key: string; label: string; type: 'text' | 'boolean'; sortOrder?: number }) =>
+      comparisonAPI.createFeature(key, label, type, sortOrder),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comparison'] });
     },
@@ -40,8 +40,8 @@ export function useUpdateComparisonFeature() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ key, label, sortOrder }: { key: string; label: string; sortOrder?: number }) =>
-      comparisonAPI.updateFeature(key, label, sortOrder),
+    mutationFn: ({ key, label, type, sortOrder }: { key: string; label: string; type: 'text' | 'boolean'; sortOrder?: number }) =>
+      comparisonAPI.updateFeature(key, label, type, sortOrder),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comparison'] });
     },
