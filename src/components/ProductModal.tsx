@@ -287,9 +287,16 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
               {/* Total & Add to cart */}
               <div className="sticky bottom-0 bg-card pt-4 border-t border-border">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-lg font-medium">Разом:</span>
-                  <span className="text-2xl font-heading font-bold text-primary">{totalPrice} ₴</span>
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-medium">Разом:</span>
+                    <span className="text-2xl font-heading font-bold text-primary">{totalPrice} ₴</span>
+                  </div>
+                  {optionsTotal > 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      Набір {basePrice} грн + додатково {optionsTotal} грн
+                    </div>
+                  )}
                 </div>
                 <Button variant="cta" size="xl" className="w-full" onClick={handleAddToCart}>
                   <ShoppingBag className="w-5 h-5" />
