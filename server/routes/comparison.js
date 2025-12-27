@@ -8,7 +8,7 @@ router.get('/', async (req, res, next) => {
   try {
     // Get all features
     const [features] = await pool.execute(`
-      SELECT id, key_name, label, type, sort_order, created_at, updated_at 
+      SELECT id, key_name, label, COALESCE(type, 'text') as type, sort_order, created_at, updated_at 
       FROM comparison_features 
       ORDER BY sort_order ASC
     `);
