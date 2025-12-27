@@ -1,6 +1,6 @@
 import React from 'react';
-import { teamMembers } from '@/data/products';
 import { Heart, Star, Users, Award, CheckCircle } from 'lucide-react';
+import { useTeam } from '@/hooks/useTeam';
 
 const values = [
   { icon: Heart, title: 'Любов до справи', description: 'Кожен набір створюємо з любов\'ю та турботою' },
@@ -10,6 +10,8 @@ const values = [
 ];
 
 export const AboutSection: React.FC = () => {
+  const { data: teamMembers = [], isLoading } = useTeam();
+
   return (
     <section id="about" className="py-20">
       <div className="container-tight">
@@ -64,8 +66,13 @@ export const AboutSection: React.FC = () => {
         {/* Team */}
         <div className="mb-16">
           <h3 className="text-2xl font-heading font-bold text-center mb-8">Наша команда</h3>
-          <div className="grid md:grid-cols-3 gap-8">
-            {teamMembers.map((member, index) => (
+          {isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Завантаження інформації про команду...
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-8">
+              {teamMembers.map((member, index) => (
               <div
                 key={member.id}
                 className="glass-card overflow-hidden hover-lift animate-fade-in"
@@ -84,8 +91,9 @@ export const AboutSection: React.FC = () => {
                   <p className="text-muted-foreground text-sm">{member.description}</p>
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Why trust us */}

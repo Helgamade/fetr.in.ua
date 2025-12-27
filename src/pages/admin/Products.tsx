@@ -21,9 +21,9 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { products as initialProducts } from '@/data/products';
 import { Product } from '@/types/store';
 import { useToast } from '@/hooks/use-toast';
+import { useProducts, useUpdateProduct, useDeleteProduct } from '@/hooks/useProducts';
 
 const badgeLabels = {
   hit: 'Хіт',
@@ -38,7 +38,9 @@ const badgeColors = {
 };
 
 export function Products() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const { data: products = [], isLoading } = useProducts();
+  const updateProduct = useUpdateProduct();
+  const deleteProduct = useDeleteProduct();
   const [searchQuery, setSearchQuery] = useState('');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -57,35 +59,66 @@ export function Products() {
   const handleSave = () => {
     if (!editingProduct) return;
 
-    setProducts(prev => prev.map(p => 
-      p.id === editingProduct.id ? editingProduct : p
-    ));
-    
-    toast({
-      title: 'Збережено',
-      description: `Товар "${editingProduct.name}" оновлено`,
-    });
-    
-    setIsDialogOpen(false);
-    setEditingProduct(null);
+    updateProduct.mutate(
+      { id: editingProduct.id, data: editingProduct },
+      {
+        onSuccess: () => {
+          toast({
+            title: 'Збережено',
+            description: `Товар "${editingProduct.name}" оновлено`,
+          });
+          setIsDialogOpen(false);
+          setEditingProduct(null);
+        },
+        onError: (error: Error) => {
+          toast({
+            title: 'Помилка',
+            description: error.message || 'Не вдалося зберегти товар',
+            variant: 'destructive',
+          });
+        },
+      }
+    );
   };
 
   const handleDelete = (productId: string) => {
     const product = products.find(p => p.id === productId);
-    setProducts(prev => prev.filter(p => p.id !== productId));
     
-    toast({
-      title: 'Видалено',
-      description: `Товар "${product?.name}" видалено`,
-      variant: 'destructive',
+    deleteProduct.mutate(productId, {
+      onSuccess: () => {
+        toast({
+          title: 'Видалено',
+          description: `Товар "${product?.name}" видалено`,
+          variant: 'destructive',
+        });
+      },
+      onError: (error: Error) => {
+        toast({
+          title: 'Помилка',
+          description: error.message || 'Не вдалося видалити товар',
+          variant: 'destructive',
+        });
+      },
     });
   };
 
   const handleStockChange = (productId: string, newStock: number) => {
-    setProducts(prev => prev.map(p => 
-      p.id === productId ? { ...p, stock: Math.max(0, newStock) } : p
-    ));
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
+    updateProduct.mutate({
+      id: productId,
+      data: { ...product, stock: Math.max(0, newStock) },
+    });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Завантаження товарів...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

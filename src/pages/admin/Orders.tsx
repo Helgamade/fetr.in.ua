@@ -25,9 +25,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { mockOrders } from '@/data/mockOrders';
-import { products } from '@/data/products';
 import { Order, OrderStatus } from '@/types/store';
+import { useOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
+import { useProducts } from '@/hooks/useProducts';
 
 const statusLabels: Record<OrderStatus, string> = {
   created: 'Новий',
@@ -64,7 +64,9 @@ const deliveryLabels = {
 };
 
 export function Orders() {
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const { data: orders = [], isLoading } = useOrders();
+  const { data: products = [] } = useProducts();
+  const updateStatus = useUpdateOrderStatus();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -81,19 +83,29 @@ export function Orders() {
   });
 
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId 
-        ? { ...order, status: newStatus, updatedAt: new Date() }
-        : order
-    ));
-    if (selectedOrder?.id === orderId) {
-      setSelectedOrder(prev => prev ? { ...prev, status: newStatus, updatedAt: new Date() } : null);
-    }
+    updateStatus.mutate(
+      { id: orderId, status: newStatus },
+      {
+        onSuccess: () => {
+          if (selectedOrder?.id === orderId) {
+            setSelectedOrder(prev => prev ? { ...prev, status: newStatus, updatedAt: new Date() } : null);
+          }
+        },
+      }
+    );
   };
 
   const getProductName = (productId: string) => {
     return products.find(p => p.id === productId)?.name || productId;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Завантаження замовлень...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

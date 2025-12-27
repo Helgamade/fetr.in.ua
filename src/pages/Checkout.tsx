@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
-import { products } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
+import { ordersAPI } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, getTotal, clearCart } = useCart();
+  const { data: products = [] } = useProducts();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -47,13 +49,48 @@ const Checkout = () => {
 
     setIsSubmitting(true);
     
-    // Simulate order submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const orderId = `FTR-${Date.now().toString(36).toUpperCase()}`;
-    
-    clearCart();
-    navigate(`/thank-you?order=${orderId}`);
+    try {
+      // Prepare order data
+      const orderData = {
+        customer: {
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email || undefined,
+        },
+        delivery: {
+          method: formData.deliveryMethod,
+          city: formData.city,
+          warehouse: formData.warehouse || undefined,
+          address: formData.address || undefined,
+          postalCode: formData.postalCode || undefined,
+        },
+        payment: {
+          method: formData.paymentMethod,
+        },
+        items: items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          selectedOptions: item.selectedOptions,
+        })),
+        comment: formData.comment || undefined,
+        status: 'created' as const,
+      };
+
+      // Submit order to API
+      const order = await ordersAPI.create(orderData);
+      
+      clearCart();
+      navigate(`/thank-you?order=${order.id}`);
+    } catch (error) {
+      console.error('Order submission error:', error);
+      toast({
+        title: "Помилка",
+        description: error instanceof Error ? error.message : "Не вдалося оформити замовлення. Спробуйте пізніше.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const total = getTotal();

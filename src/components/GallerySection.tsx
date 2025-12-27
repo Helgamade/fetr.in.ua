@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
-import { galleryImages } from '@/data/products';
 import { X, ChevronLeft, ChevronRight, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useGallery } from '@/hooks/useGallery';
 
 export const GallerySection: React.FC = () => {
+  const { data: galleryImages = [], isLoading } = useGallery();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const openLightbox = (index: number) => setSelectedIndex(index);
   const closeLightbox = () => setSelectedIndex(null);
   
   const goNext = () => {
-    if (selectedIndex !== null) {
+    if (selectedIndex !== null && galleryImages.length > 0) {
       setSelectedIndex((selectedIndex + 1) % galleryImages.length);
     }
   };
   
   const goPrev = () => {
-    if (selectedIndex !== null) {
+    if (selectedIndex !== null && galleryImages.length > 0) {
       setSelectedIndex((selectedIndex - 1 + galleryImages.length) % galleryImages.length);
     }
   };
@@ -39,27 +40,35 @@ export const GallerySection: React.FC = () => {
         </div>
 
         {/* Gallery grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {galleryImages.map((image, index) => (
-            <button
-              key={image.id}
-              onClick={() => openLightbox(index)}
-              className={cn(
-                'relative aspect-square overflow-hidden rounded-2xl group',
-                index === 0 && 'md:col-span-2 md:row-span-2'
-              )}
-            >
-              <img
-                src={image.url}
-                alt={image.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                <span className="text-primary-foreground font-medium">{image.title}</span>
-              </div>
-            </button>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center py-12 text-muted-foreground">
+            Завантаження галереї...
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {galleryImages.map((image, index) => (
+              <button
+                key={image.id}
+                onClick={() => openLightbox(index)}
+                className={cn(
+                  'relative aspect-square overflow-hidden rounded-2xl group',
+                  index === 0 && 'md:col-span-2 md:row-span-2'
+                )}
+              >
+                <img
+                  src={image.url}
+                  alt={image.title || `Gallery image ${index + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                {image.title && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                    <span className="text-primary-foreground font-medium">{image.title}</span>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Lightbox */}
@@ -89,13 +98,15 @@ export const GallerySection: React.FC = () => {
           <div className="max-w-4xl max-h-[80vh] mx-4">
             <img
               src={galleryImages[selectedIndex].url}
-              alt={galleryImages[selectedIndex].title}
+              alt={galleryImages[selectedIndex].title || `Gallery image ${selectedIndex + 1}`}
               className="max-w-full max-h-[80vh] object-contain rounded-xl"
             />
             <div className="text-center mt-4">
-              <p className="text-primary-foreground font-medium text-lg">
-                {galleryImages[selectedIndex].title}
-              </p>
+              {galleryImages[selectedIndex].title && (
+                <p className="text-primary-foreground font-medium text-lg">
+                  {galleryImages[selectedIndex].title}
+                </p>
+              )}
               <p className="text-primary-foreground/60 text-sm">
                 {selectedIndex + 1} / {galleryImages.length}
               </p>

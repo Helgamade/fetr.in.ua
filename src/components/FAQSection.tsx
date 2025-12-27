@@ -1,6 +1,6 @@
 import React from 'react';
-import { faqs } from '@/data/products';
-import { HelpCircle, ChevronDown } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
+import { useFAQs } from '@/hooks/useFAQs';
 import {
   Accordion,
   AccordionContent,
@@ -9,6 +9,8 @@ import {
 } from '@/components/ui/accordion';
 
 export const FAQSection: React.FC = () => {
+  const { data: faqs = [], isLoading } = useFAQs();
+
   return (
     <section id="faq" className="py-20">
       <div className="container-tight">
@@ -28,8 +30,13 @@ export const FAQSection: React.FC = () => {
 
         {/* FAQ Accordion */}
         <div className="max-w-3xl mx-auto">
-          <Accordion type="single" collapsible className="space-y-4">
-            {faqs.map((faq, index) => (
+          {isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Завантаження питань...
+            </div>
+          ) : (
+            <Accordion type="single" collapsible className="space-y-4">
+              {faqs.map((faq) => (
               <AccordionItem
                 key={faq.id}
                 value={faq.id}
@@ -44,8 +51,9 @@ export const FAQSection: React.FC = () => {
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
-            ))}
-          </Accordion>
+              ))}
+            </Accordion>
+          )}
         </div>
 
         {/* Contact CTA */}

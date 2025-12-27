@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, Store, Truck, CreditCard, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,41 +8,95 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { useSettings, useUpdateSettings } from '@/hooks/useSettings';
 
 export function Settings() {
   const { toast } = useToast();
+  const { data: settings = {}, isLoading } = useSettings();
+  const updateSettings = useUpdateSettings();
   
-  const [storeSettings, setStoreSettings] = useState({
-    storeName: 'FeltMagic',
-    email: 'info@feltmagic.ua',
-    phone: '+380501234567',
-    address: 'м. Київ, вул. Урлівська 30',
-    workingHours: 'Пн-Пт 10:00-18:00, Сб 10:00-14:00',
-  });
+  const storeSettings = {
+    storeName: settings.store_name || 'FeltMagic',
+    email: settings.store_email || 'info@feltmagic.ua',
+    phone: settings.store_phone || '+380501234567',
+    address: settings.store_address || 'м. Київ, вул. Урлівська 30',
+    workingHours: settings.store_working_hours || 'Пн-Пт 10:00-18:00, Сб 10:00-14:00',
+  };
 
-  const [deliverySettings, setDeliverySettings] = useState({
-    freeDeliveryThreshold: 1500,
-    deliveryCost: 70,
-    novaPoshtaEnabled: true,
-    ukrposhtaEnabled: true,
-    pickupEnabled: true,
-  });
+  const deliverySettings = {
+    freeDeliveryThreshold: settings.free_delivery_threshold || 1500,
+    deliveryCost: settings.delivery_cost || 70,
+    novaPoshtaEnabled: settings.nova_poshta_enabled ?? true,
+    ukrposhtaEnabled: settings.ukrposhta_enabled ?? true,
+    pickupEnabled: settings.pickup_enabled ?? true,
+  };
 
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    smsNotifications: false,
-    telegramNotifications: true,
-    notifyOnNewOrder: true,
-    notifyOnPayment: true,
-    notifyOnDelivery: false,
-  });
+  const notificationSettings = {
+    emailNotifications: settings.email_notifications ?? true,
+    smsNotifications: settings.sms_notifications ?? false,
+    telegramNotifications: settings.telegram_notifications ?? true,
+    notifyOnNewOrder: settings.notify_on_new_order ?? true,
+    notifyOnPayment: settings.notify_on_payment ?? true,
+    notifyOnDelivery: settings.notify_on_delivery ?? false,
+  };
+
+  const [localStoreSettings, setLocalStoreSettings] = useState(storeSettings);
+  const [localDeliverySettings, setLocalDeliverySettings] = useState(deliverySettings);
+  const [localNotificationSettings, setLocalNotificationSettings] = useState(notificationSettings);
+
+  // Update local state when settings load
+  useEffect(() => {
+    if (!isLoading && Object.keys(settings).length > 0) {
+      setLocalStoreSettings(storeSettings);
+      setLocalDeliverySettings(deliverySettings);
+      setLocalNotificationSettings(notificationSettings);
+    }
+  }, [isLoading, settings]);
 
   const handleSave = () => {
-    toast({
-      title: 'Налаштування збережено',
-      description: 'Всі зміни успішно збережено',
+    const allSettings = {
+      store_name: localStoreSettings.storeName,
+      store_email: localStoreSettings.email,
+      store_phone: localStoreSettings.phone,
+      store_address: localStoreSettings.address,
+      store_working_hours: localStoreSettings.workingHours,
+      free_delivery_threshold: localDeliverySettings.freeDeliveryThreshold,
+      delivery_cost: localDeliverySettings.deliveryCost,
+      nova_poshta_enabled: localDeliverySettings.novaPoshtaEnabled,
+      ukrposhta_enabled: localDeliverySettings.ukrposhtaEnabled,
+      pickup_enabled: localDeliverySettings.pickupEnabled,
+      email_notifications: localNotificationSettings.emailNotifications,
+      sms_notifications: localNotificationSettings.smsNotifications,
+      telegram_notifications: localNotificationSettings.telegramNotifications,
+      notify_on_new_order: localNotificationSettings.notifyOnNewOrder,
+      notify_on_payment: localNotificationSettings.notifyOnPayment,
+      notify_on_delivery: localNotificationSettings.notifyOnDelivery,
+    };
+
+    updateSettings.mutate(allSettings, {
+      onSuccess: () => {
+        toast({
+          title: 'Налаштування збережено',
+          description: 'Всі зміни успішно збережено',
+        });
+      },
+      onError: (error: Error) => {
+        toast({
+          title: 'Помилка',
+          description: error.message || 'Не вдалося зберегти налаштування',
+          variant: 'destructive',
+        });
+      },
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">Завантаження налаштувань...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -63,8 +117,8 @@ export function Settings() {
               <Label htmlFor="storeName">Назва магазину</Label>
               <Input
                 id="storeName"
-                value={storeSettings.storeName}
-                onChange={(e) => setStoreSettings({ ...storeSettings, storeName: e.target.value })}
+                value={localStoreSettings.storeName}
+                onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, storeName: e.target.value })}
               />
             </div>
             <div className="space-y-2">
@@ -72,24 +126,24 @@ export function Settings() {
               <Input
                 id="email"
                 type="email"
-                value={storeSettings.email}
-                onChange={(e) => setStoreSettings({ ...storeSettings, email: e.target.value })}
+                value={localStoreSettings.email}
+                onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, email: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Телефон</Label>
               <Input
                 id="phone"
-                value={storeSettings.phone}
-                onChange={(e) => setStoreSettings({ ...storeSettings, phone: e.target.value })}
+                value={localStoreSettings.phone}
+                onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, phone: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="workingHours">Години роботи</Label>
               <Input
                 id="workingHours"
-                value={storeSettings.workingHours}
-                onChange={(e) => setStoreSettings({ ...storeSettings, workingHours: e.target.value })}
+                value={localStoreSettings.workingHours}
+                onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, workingHours: e.target.value })}
               />
             </div>
           </div>
@@ -97,8 +151,8 @@ export function Settings() {
             <Label htmlFor="address">Адреса</Label>
             <Textarea
               id="address"
-              value={storeSettings.address}
-              onChange={(e) => setStoreSettings({ ...storeSettings, address: e.target.value })}
+              value={localStoreSettings.address}
+              onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, address: e.target.value })}
               rows={2}
             />
           </div>
@@ -123,9 +177,9 @@ export function Settings() {
               <Input
                 id="freeDeliveryThreshold"
                 type="number"
-                value={deliverySettings.freeDeliveryThreshold}
-                onChange={(e) => setDeliverySettings({ 
-                  ...deliverySettings, 
+                value={localDeliverySettings.freeDeliveryThreshold}
+                onChange={(e) => setLocalDeliverySettings({ 
+                  ...localDeliverySettings, 
                   freeDeliveryThreshold: parseInt(e.target.value) || 0 
                 })}
               />
@@ -135,9 +189,9 @@ export function Settings() {
               <Input
                 id="deliveryCost"
                 type="number"
-                value={deliverySettings.deliveryCost}
-                onChange={(e) => setDeliverySettings({ 
-                  ...deliverySettings, 
+                value={localDeliverySettings.deliveryCost}
+                onChange={(e) => setLocalDeliverySettings({ 
+                  ...localDeliverySettings, 
                   deliveryCost: parseInt(e.target.value) || 0 
                 })}
               />
@@ -155,9 +209,9 @@ export function Settings() {
                   <p className="text-sm text-muted-foreground">Доставка у відділення або поштомат</p>
                 </div>
                 <Switch
-                  checked={deliverySettings.novaPoshtaEnabled}
-                  onCheckedChange={(checked) => setDeliverySettings({ 
-                    ...deliverySettings, 
+                  checked={localDeliverySettings.novaPoshtaEnabled}
+                  onCheckedChange={(checked) => setLocalDeliverySettings({ 
+                    ...localDeliverySettings, 
                     novaPoshtaEnabled: checked 
                   })}
                 />
@@ -168,9 +222,9 @@ export function Settings() {
                   <p className="text-sm text-muted-foreground">Доставка Укрпоштою</p>
                 </div>
                 <Switch
-                  checked={deliverySettings.ukrposhtaEnabled}
-                  onCheckedChange={(checked) => setDeliverySettings({ 
-                    ...deliverySettings, 
+                  checked={localDeliverySettings.ukrposhtaEnabled}
+                  onCheckedChange={(checked) => setLocalDeliverySettings({ 
+                    ...localDeliverySettings, 
                     ukrposhtaEnabled: checked 
                   })}
                 />
@@ -181,9 +235,9 @@ export function Settings() {
                   <p className="text-sm text-muted-foreground">Забрати з магазину</p>
                 </div>
                 <Switch
-                  checked={deliverySettings.pickupEnabled}
-                  onCheckedChange={(checked) => setDeliverySettings({ 
-                    ...deliverySettings, 
+                  checked={localDeliverySettings.pickupEnabled}
+                  onCheckedChange={(checked) => setLocalDeliverySettings({ 
+                    ...localDeliverySettings, 
                     pickupEnabled: checked 
                   })}
                 />
@@ -211,9 +265,9 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <Label>Email сповіщення</Label>
                 <Switch
-                  checked={notificationSettings.emailNotifications}
-                  onCheckedChange={(checked) => setNotificationSettings({ 
-                    ...notificationSettings, 
+                  checked={localNotificationSettings.emailNotifications}
+                  onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                    ...localNotificationSettings, 
                     emailNotifications: checked 
                   })}
                 />
@@ -221,9 +275,9 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <Label>SMS сповіщення</Label>
                 <Switch
-                  checked={notificationSettings.smsNotifications}
-                  onCheckedChange={(checked) => setNotificationSettings({ 
-                    ...notificationSettings, 
+                  checked={localNotificationSettings.smsNotifications}
+                  onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                    ...localNotificationSettings, 
                     smsNotifications: checked 
                   })}
                 />
@@ -231,9 +285,9 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <Label>Telegram сповіщення</Label>
                 <Switch
-                  checked={notificationSettings.telegramNotifications}
-                  onCheckedChange={(checked) => setNotificationSettings({ 
-                    ...notificationSettings, 
+                  checked={localNotificationSettings.telegramNotifications}
+                  onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                    ...localNotificationSettings, 
                     telegramNotifications: checked 
                   })}
                 />
@@ -249,9 +303,9 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <Label>Нове замовлення</Label>
                 <Switch
-                  checked={notificationSettings.notifyOnNewOrder}
-                  onCheckedChange={(checked) => setNotificationSettings({ 
-                    ...notificationSettings, 
+                  checked={localNotificationSettings.notifyOnNewOrder}
+                  onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                    ...localNotificationSettings, 
                     notifyOnNewOrder: checked 
                   })}
                 />
@@ -259,9 +313,9 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <Label>Оплата отримана</Label>
                 <Switch
-                  checked={notificationSettings.notifyOnPayment}
-                  onCheckedChange={(checked) => setNotificationSettings({ 
-                    ...notificationSettings, 
+                  checked={localNotificationSettings.notifyOnPayment}
+                  onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                    ...localNotificationSettings, 
                     notifyOnPayment: checked 
                   })}
                 />
@@ -269,9 +323,9 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <Label>Замовлення доставлено</Label>
                 <Switch
-                  checked={notificationSettings.notifyOnDelivery}
-                  onCheckedChange={(checked) => setNotificationSettings({ 
-                    ...notificationSettings, 
+                  checked={localNotificationSettings.notifyOnDelivery}
+                  onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                    ...localNotificationSettings, 
                     notifyOnDelivery: checked 
                   })}
                 />

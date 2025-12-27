@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { sampleReviews } from '@/data/products';
 import { Button } from '@/components/ui/button';
+import { useReviews, useCreateReview } from '@/hooks/useReviews';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Star, MessageSquarePlus, X, Send, Quote } from 'lucide-react';
@@ -8,16 +8,35 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export const ReviewsSection: React.FC = () => {
+  const { data: reviews = [], isLoading } = useReviews();
+  const createReview = useCreateReview();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', text: '', rating: 5 });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Дякуємо за відгук!', {
-      description: 'Ваш відгук буде опублікований після модерації',
-    });
-    setIsModalOpen(false);
-    setFormData({ name: '', text: '', rating: 5 });
+    createReview.mutate(
+      {
+        name: formData.name,
+        text: formData.text,
+        rating: formData.rating,
+        is_approved: false,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Дякуємо за відгук!', {
+            description: 'Ваш відгук буде опублікований після модерації',
+          });
+          setIsModalOpen(false);
+          setFormData({ name: '', text: '', rating: 5 });
+        },
+        onError: () => {
+          toast.error('Помилка', {
+            description: 'Не вдалося відправити відгук. Спробуйте пізніше.',
+          });
+        },
+      }
+    );
   };
 
   return (
@@ -38,8 +57,13 @@ export const ReviewsSection: React.FC = () => {
         </div>
 
         {/* Reviews grid */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {sampleReviews.map((review, index) => (
+        {isLoading ? (
+          <div className="text-center py-12 text-muted-foreground mb-8">
+            Завантаження відгуків...
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            {reviews.map((review, index) => (
             <div
               key={review.id}
               className="glass-card p-6 hover-lift animate-fade-in"
@@ -77,8 +101,9 @@ export const ReviewsSection: React.FC = () => {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Add review button */}
         <div className="text-center">

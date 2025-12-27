@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { products } from '@/data/products';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductModal } from '@/components/ProductModal';
 import { Product } from '@/types/store';
 import { Sparkles } from 'lucide-react';
+import { useProducts } from '@/hooks/useProducts';
 
 export const ProductsSection: React.FC = () => {
+  const { data: products = [], isLoading } = useProducts();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   return (
@@ -29,8 +30,13 @@ export const ProductsSection: React.FC = () => {
         </div>
 
         {/* Products grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {products.map((product, index) => (
+        {isLoading ? (
+          <div className="text-center py-12 text-muted-foreground">
+            Завантаження товарів...
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {products.map((product, index) => (
             <div
               key={product.id}
               className="animate-fade-in"
@@ -42,7 +48,8 @@ export const ProductsSection: React.FC = () => {
               />
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Bottom CTA */}
         <div className="mt-12 text-center p-6 rounded-2xl bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10">
