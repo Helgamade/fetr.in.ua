@@ -130,7 +130,7 @@ export const ComparisonSection: React.FC = () => {
                   >
                     <Button
                       variant={idx === 1 ? 'hero' : 'outline'}
-                      onClick={() => addToCart(product.code || String(product.id), [])}
+                      onClick={() => addToCart(product.code, [])}
                       className="w-full"
                     >
                       <ShoppingBag className="w-4 h-4" />
@@ -152,7 +152,7 @@ export const ComparisonSection: React.FC = () => {
           {(() => {
             const optimalProduct = sortedProducts.find(p => p.code === 'optimal');
             return (
-              <Button variant="hero" onClick={() => optimalProduct && addToCart(optimalProduct.code || String(optimalProduct.id), [])}>
+              <Button variant="hero" onClick={() => optimalProduct && addToCart(optimalProduct.code, [])}>
                 Замовити зараз
                 <ArrowRight className="w-4 h-4" />
               </Button>

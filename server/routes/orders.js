@@ -90,8 +90,9 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
+    // id is order_number (VARCHAR), not INT id
     const [orders] = await pool.execute(`
-      SELECT * FROM orders WHERE id = ?
+      SELECT * FROM orders WHERE order_number = ?
     `, [id]);
 
     if (orders.length === 0) {

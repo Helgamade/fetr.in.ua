@@ -54,8 +54,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   };
 
   const handleAddToCart = () => {
-    addToCart(product.code || String(product.id), selectedOptions);
-    trackEvent('add_to_cart_modal', { productId: product.code || String(product.id), options: selectedOptions });
+    addToCart(product.code, selectedOptions);
+    trackEvent('add_to_cart_modal', { productId: product.code, options: selectedOptions });
     onClose();
   };
 
