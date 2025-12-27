@@ -71,8 +71,8 @@ git add .
 git commit -m "Update"
 git push origin main
 
-# На сервере (одна команда)
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git fetch origin && git reset --hard origin/main && npm install && npm run build && mkdir -p assets && cp dist/index.html index.html && cp -r dist/assets/* assets/ && chmod 755 assets && chmod 644 assets/* && chmod 644 index.html && cd server && pkill -f 'node.*index.js' || true && sleep 1 && nohup node index.js > /dev/null 2>&1 & && echo '=== DEPLOYED ==='"
+# На сервере (одна команда с использованием deploy скрипта)
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git fetch origin && git reset --hard origin/main && npm install && server/deploy.sh"
 ```
 
 ---
