@@ -13,21 +13,38 @@ const __dirname = dirname(__filename);
 const router = express.Router();
 
 // Настройка multer для загрузки изображений
-const uploadsDir = path.join(__dirname, '..', 'uploads', 'products');
-console.log('Uploads directory:', uploadsDir);
+// КРИТИЧНО: Путь должен быть абсолютным относительно server/routes/products.js
+// server/routes/products.js -> server/ -> www/ -> www/uploads/products
+const uploadsDir = path.join(__dirname, '..', '..', 'uploads', 'products');
+console.log('=== MULTER CONFIG ===');
+console.log('__dirname:', __dirname);
+console.log('uploadsDir (relative):', path.join(__dirname, '..', '..', 'uploads', 'products'));
+console.log('uploadsDir (absolute):', path.resolve(uploadsDir));
+console.log('uploadsDir exists:', existsSync(uploadsDir));
+
 if (!existsSync(uploadsDir)) {
   console.log('Creating uploads directory:', uploadsDir);
   mkdirSync(uploadsDir, { recursive: true });
+  console.log('Directory created, exists now:', existsSync(uploadsDir));
 }
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadsDir);
+    // Убеждаемся, что папка существует
+    if (!existsSync(uploadsDir)) {
+      console.log('Directory missing in destination callback, creating:', uploadsDir);
+      mkdirSync(uploadsDir, { recursive: true });
+    }
+    const absPath = path.resolve(uploadsDir);
+    console.log('Multer destination callback:', absPath);
+    cb(null, absPath);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
-    cb(null, `product-${uniqueSuffix}${ext}`);
+    const filename = `product-${uniqueSuffix}${ext}`;
+    console.log('Multer filename:', filename);
+    cb(null, filename);
   }
 });
 
@@ -38,6 +55,7 @@ const upload = multer({
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
+    console.log('File filter:', { originalname: file.originalname, mimetype: file.mimetype, extname, mimetypeMatch: mimetype });
     if (mimetype && extname) {
       return cb(null, true);
     } else {
@@ -397,37 +415,102 @@ router.get('/options/all', async (req, res, next) => {
 // Upload product image
 router.post('/upload-image', upload.single('image'), async (req, res, next) => {
   try {
-    console.log('Upload request received:', {
-      file: req.file,
-      body: req.body,
-      uploadsDir: uploadsDir
-    });
+    console.log('=== UPLOAD REQUEST ===');
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file);
+    console.log('UploadsDir:', uploadsDir);
+    console.log('Absolute uploadsDir:', path.resolve(uploadsDir));
     
     if (!req.file) {
-      console.error('No file in request');
+      console.error('ERROR: No file in request');
       return res.status(400).json({ error: 'Файл не завантажено' });
     }
     
-    console.log('File uploaded successfully:', {
-      filename: req.file.filename,
-      path: req.file.path,
+    console.log('File object:', {
+      fieldname: req.file.fieldname,
+      originalname: req.file.originalname,
+      encoding: req.file.encoding,
+      mimetype: req.file.mimetype,
       size: req.file.size,
-      destination: req.file.destination
+      destination: req.file.destination,
+      filename: req.file.filename,
+      path: req.file.path
     });
     
+    // Проверяем реальный путь, где файл сохранен
+    const savedPath = req.file.path;
+    const expectedPath = path.join(uploadsDir, req.file.filename);
+    
+    console.log('Saved path:', savedPath);
+    console.log('Expected path:', expectedPath);
+    console.log('Path exists:', existsSync(savedPath));
+    console.log('Expected path exists:', existsSync(expectedPath));
+    
     // Проверяем, что файл действительно существует
-    const filePath = path.join(uploadsDir, req.file.filename);
-    if (!existsSync(filePath)) {
-      console.error('File was not saved! Expected path:', filePath);
-      return res.status(500).json({ error: 'Файл не збережено на сервері' });
+    if (!existsSync(savedPath)) {
+      console.error('ERROR: File was not saved! Path does not exist:', savedPath);
+      return res.status(500).json({ error: 'Файл не збережено на сервері. Шлях: ' + savedPath });
     }
     
-    console.log('File exists at:', filePath);
+    // Проверяем размер файла
+    const fs = await import('fs/promises');
+    const stats = await fs.stat(savedPath);
+    console.log('File stats:', {
+      size: stats.size,
+      isFile: stats.isFile(),
+      mode: stats.mode.toString(8)
+    });
+    
+    if (stats.size === 0) {
+      console.error('ERROR: File is empty!');
+      return res.status(500).json({ error: 'Файл порожній' });
+    }
+    
+    console.log('SUCCESS: File uploaded and verified');
     const fileUrl = `/uploads/products/${req.file.filename}`;
+    console.log('Returning URL:', fileUrl);
+    
     res.json({ url: fileUrl, filename: req.file.filename });
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('ERROR: Upload failed:', error);
+    console.error('Error stack:', error.stack);
     next(error);
+  }
+});
+
+// Test upload endpoint (для тестирования загрузки)
+router.post('/upload-test', upload.single('testImage'), async (req, res) => {
+  try {
+    console.log('=== TEST UPLOAD ===');
+    console.log('File:', req.file);
+    console.log('Body:', req.body);
+    
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    const fs = await import('fs/promises');
+    const stats = await fs.stat(req.file.path);
+    
+    res.json({
+      success: true,
+      message: 'Test upload successful',
+      file: {
+        filename: req.file.filename,
+        path: req.file.path,
+        size: stats.size,
+        mimetype: req.file.mimetype,
+        url: `/uploads/products/${req.file.filename}`
+      },
+      uploadsDir: uploadsDir,
+      uploadsDirAbsolute: path.resolve(uploadsDir),
+      uploadsDirExists: existsSync(uploadsDir),
+      fileExists: existsSync(req.file.path),
+      filesInDir: (await fs.readdir(uploadsDir)).length
+    });
+  } catch (error) {
+    console.error('Test upload error:', error);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 
