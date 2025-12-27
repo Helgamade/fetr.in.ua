@@ -122,12 +122,12 @@ export const CartDrawer: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {items.map((item) => {
-                const product = products.find(p => p.id === item.productId);
+                const product = products.find(p => p.code === item.productId);
                 if (!product) return null;
 
                 const price = product.salePrice || product.basePrice;
                 const optionsPrice = item.selectedOptions.reduce((sum, optId) => {
-                  const option = product.options.find(o => o.id === optId);
+                  const option = product.options.find(o => o.code === optId);
                   return sum + (option?.price || 0);
                 }, 0);
                 const itemTotal = (price + optionsPrice) * item.quantity;
@@ -146,7 +146,7 @@ export const CartDrawer: React.FC = () => {
                       {item.selectedOptions.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
                           {item.selectedOptions.map(optId => {
-                            const option = product.options.find(o => o.id === optId);
+                            const option = product.options.find(o => o.code === optId);
                             return option ? (
                               <span key={optId} className="text-xs px-2 py-0.5 bg-primary/10 rounded-full">
                                 {option.name}
