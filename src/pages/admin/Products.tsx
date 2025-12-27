@@ -72,7 +72,10 @@ export function Products() {
   );
 
   const handleEdit = (product: Product) => {
-    setEditingProduct({ ...product });
+    setEditingProduct({ 
+      ...product,
+      images: product.images && product.images.length > 0 ? [...product.images] : ['']
+    });
     setIsDialogOpen(true);
   };
 
@@ -280,8 +283,9 @@ export function Products() {
 
           {editingProduct && (
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="basic">Основне</TabsTrigger>
+                <TabsTrigger value="images">Зображення</TabsTrigger>
                 <TabsTrigger value="features">Що входить</TabsTrigger>
                 <TabsTrigger value="materials">Матеріали</TabsTrigger>
                 <TabsTrigger value="canMake">Що можна зробити</TabsTrigger>
@@ -379,6 +383,88 @@ export function Products() {
                   <p className="text-xs text-muted-foreground">
                     Менше значення = вище в списку. Рекомендовано: Стартовий=1, Оптимальний=2, Преміум=3
                   </p>
+                </div>
+              </TabsContent>
+
+              {/* Images Tab */}
+              <TabsContent value="images" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>Зображення товару</Label>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Додайте URL зображень. Перше зображення буде основним. Можна додавати необмежену кількість.
+                  </p>
+                  <div className="space-y-3">
+                    {editingProduct.images.map((image, index) => (
+                      <div key={index} className="flex gap-2 items-start">
+                        <Input
+                          value={image}
+                          onChange={(e) => {
+                            const newImages = [...editingProduct.images];
+                            newImages[index] = e.target.value;
+                            setEditingProduct({ ...editingProduct, images: newImages });
+                          }}
+                          placeholder="https://example.com/image.jpg"
+                          className="flex-1"
+                        />
+                        <div className="flex gap-1">
+                          {index > 0 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                const newImages = [...editingProduct.images];
+                                [newImages[index - 1], newImages[index]] = [newImages[index], newImages[index - 1]];
+                                setEditingProduct({ ...editingProduct, images: newImages });
+                              }}
+                            >
+                              ↑
+                            </Button>
+                          )}
+                          {index < editingProduct.images.length - 1 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                const newImages = [...editingProduct.images];
+                                [newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]];
+                                setEditingProduct({ ...editingProduct, images: newImages });
+                              }}
+                            >
+                              ↓
+                            </Button>
+                          )}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              const newImages = editingProduct.images.filter((_, i) => i !== index);
+                              setEditingProduct({ ...editingProduct, images: newImages });
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {image && (
+                          <div className="w-20 h-20 border rounded overflow-hidden flex-shrink-0">
+                            <img src={image} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingProduct({ ...editingProduct, images: [...editingProduct.images, ''] });
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Додати зображення
+                    </Button>
+                  </div>
                 </div>
               </TabsContent>
 

@@ -241,7 +241,7 @@ router.put('/:id', async (req, res, next) => {
     const {
       name, slug, shortDescription, fullDescription,
       basePrice, salePrice, badge, stock, viewCount, purchaseCount, displayOrder,
-      features, materials, canMake, suitableFor, options
+      features, materials, canMake, suitableFor, options, images
     } = req.body;
 
     // Update main product fields
@@ -295,6 +295,20 @@ router.put('/:id', async (req, res, next) => {
           INSERT INTO product_features (product_id, type, value, sort_order)
           VALUES (?, 'suitable_for', ?, ?)
         `, [id, suitableFor[i], i]);
+      }
+    }
+
+    // Update images
+    await pool.execute('DELETE FROM product_images WHERE product_id = ?', [id]);
+    if (images && Array.isArray(images)) {
+      for (let i = 0; i < images.length; i++) {
+        const imageUrl = images[i];
+        if (imageUrl && imageUrl.trim()) {
+          await pool.execute(`
+            INSERT INTO product_images (product_id, url, sort_order)
+            VALUES (?, ?, ?)
+          `, [id, imageUrl.trim(), i]);
+        }
       }
     }
 
