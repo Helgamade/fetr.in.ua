@@ -88,11 +88,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
         <div className="h-full overflow-y-auto">
           <div className="md:grid md:grid-cols-2">
             {/* Image Gallery */}
-            <div className="relative aspect-square md:aspect-auto md:h-full bg-muted">
+            <div className="relative aspect-square md:aspect-square bg-muted flex items-center justify-center">
               <img
                 src={product.images[currentImageIndex]}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
               
               {/* Image navigation */}
