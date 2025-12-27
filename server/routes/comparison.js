@@ -33,7 +33,7 @@ router.get('/', async (req, res, next) => {
           v.feature_key === feature.key_name && v.product_id === product.id
         );
         if (value) {
-          if (featureType === 'boolean' || value.is_boolean) {
+          if (featureType === 'boolean') {
             featureValues[product.code] = value.value === 'true';
           } else {
             featureValues[product.code] = value.value;
@@ -90,10 +90,10 @@ router.put('/value', async (req, res, next) => {
       : String(value || '');
 
     await pool.execute(`
-      INSERT INTO comparison_values (feature_key, product_id, value, is_boolean)
-      VALUES (?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE value = VALUES(value), is_boolean = VALUES(is_boolean)
-    `, [featureKey, productId, valueToStore, isBooleanValue]);
+      INSERT INTO comparison_values (feature_key, product_id, value)
+      VALUES (?, ?, ?)
+      ON DUPLICATE KEY UPDATE value = VALUES(value)
+    `, [featureKey, productId, valueToStore]);
 
     res.json({ message: 'Value updated' });
   } catch (error) {
