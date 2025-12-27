@@ -1,8 +1,5 @@
 #!/bin/bash
 # Скрипт для деплоя фронтенда после обновления кода
-
-#!/bin/bash
-# Скрипт для деплоя фронтенда после обновления кода
 # Использование: cd /home/idesig02/fetr.in.ua/www && server/deploy.sh
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
