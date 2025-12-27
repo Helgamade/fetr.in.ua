@@ -99,15 +99,18 @@ router.get('/:id', async (req, res, next) => {
     }
 
     const order = orders[0];
+    const orderIdInt = order.id; // Save INT id before renaming
 
-    // Get items
+    // Get items using INT id (order_items.order_id references orders.id INT)
+    // JOIN products to get code instead of INT id
     const [items] = await pool.execute(`
-      SELECT oi.*, oio.option_id 
+      SELECT oi.*, oio.option_id, p.code as product_code
       FROM order_items oi
       LEFT JOIN order_item_options oio ON oi.id = oio.order_item_id
+      LEFT JOIN products p ON oi.product_id = p.id
       WHERE oi.order_id = ?
       ORDER BY oi.id
-    `, [id]);
+    `, [orderIdInt]);
 
     const itemsMap = new Map();
     items.forEach(item => {
