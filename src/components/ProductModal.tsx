@@ -86,9 +86,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
         </button>
 
         <div className="h-full overflow-y-auto">
-          <div className="md:grid md:grid-cols-2">
+          <div className="md:flex">
             {/* Image Gallery */}
-            <div className="relative aspect-square md:aspect-square bg-muted flex items-center justify-center">
+            <div className="relative aspect-square md:aspect-auto md:w-2/3 md:h-[90vh] bg-muted flex items-center justify-center">
               <img
                 src={product.images[currentImageIndex]}
                 alt={product.name}
@@ -138,7 +138,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
             </div>
 
             {/* Content */}
-            <div className="p-6 md:overflow-y-auto md:max-h-[90vh]">
+            <div className="p-6 md:w-1/3 md:overflow-y-auto md:max-h-[90vh]">
               {/* Header */}
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
