@@ -76,7 +76,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
       />
 
       {/* Modal */}
-      <div className="relative w-full h-full md:h-auto md:max-h-[90vh] md:max-w-4xl md:mx-4 bg-card md:rounded-2xl overflow-hidden animate-scale-in">
+      <div className="relative w-full h-full md:h-auto md:max-h-[90vh] md:max-w-6xl md:mx-4 bg-card md:rounded-2xl overflow-hidden animate-scale-in">
         {/* Close button */}
         <button
           onClick={onClose}
