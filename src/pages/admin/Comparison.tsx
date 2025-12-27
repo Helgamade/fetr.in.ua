@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, Plus, Trash2, Edit2, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,9 +20,11 @@ import {
   useUpdateComparisonFeature,
   useDeleteComparisonFeature,
 } from '@/hooks/useComparison';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function Comparison() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { data, isLoading } = useComparison();
   const updateValue = useUpdateComparisonValue();
   const createFeature = useCreateComparisonFeature();
@@ -32,6 +34,18 @@ export function Comparison() {
   const [editingFeature, setEditingFeature] = useState<{ key: string; label: string; sortOrder: number } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newFeature, setNewFeature] = useState({ key: '', label: '', sortOrder: 0 });
+  
+  // Local state for values that haven't been saved yet
+  const [localValues, setLocalValues] = useState<Record<string, Record<number, string | boolean | null>>>({});
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Initialize local values from server data (only once when data first loads)
+  const [isInitialized, setIsInitialized] = useState(false);
+  useEffect(() => {
+    if (data && !isInitialized) {
+      setIsInitialized(true);
+    }
+  }, [data, isInitialized]);
 
   if (isLoading || !data) {
     return (
@@ -43,30 +57,87 @@ export function Comparison() {
 
   const { features, products } = data;
 
-  const handleValueChange = async (
+  // Update local state only (no API call)
+  const handleValueChange = (
     featureKey: string,
     productId: number,
-    value: string | boolean | null,
-    isBoolean: boolean
+    value: string | boolean | null
   ) => {
-    updateValue.mutate(
-      { featureKey, productId, value, isBoolean },
-      {
-        onSuccess: () => {
-          toast({
-            title: 'Збережено',
-            description: 'Значення успішно оновлено',
+    setLocalValues(prev => ({
+      ...prev,
+      [featureKey]: {
+        ...prev[featureKey],
+        [productId]: value,
+      },
+    }));
+  };
+
+  // Save all changes
+  const handleSaveAll = async () => {
+    if (!data) return;
+    
+    const changes: Array<{ featureKey: string; productId: number; value: string | boolean | null; isBoolean: boolean }> = [];
+    
+    // Collect all changes
+    Object.entries(localValues).forEach(([featureKey, productValues]) => {
+      const feature = features.find(f => f.key === featureKey);
+      if (!feature) return;
+      
+      const isBoolean = isBooleanFeature(feature);
+      
+      Object.entries(productValues).forEach(([productIdStr, value]) => {
+        const productId = parseInt(productIdStr);
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+        
+        const originalValue = feature.values[product.code] ?? null;
+        
+        // Only save if value changed
+        if (value !== originalValue) {
+          changes.push({
+            featureKey,
+            productId,
+            value,
+            isBoolean,
           });
-        },
-        onError: (error: Error) => {
-          toast({
-            title: 'Помилка',
-            description: error.message || 'Не вдалося зберегти значення',
-            variant: 'destructive',
-          });
-        },
+        }
+      });
+    });
+
+    if (changes.length === 0) {
+      toast({
+        title: 'Немає змін',
+        description: 'Немає незбережених змін',
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Save all changes sequentially to avoid overwhelming the server
+      for (const change of changes) {
+        await updateValue.mutateAsync(change);
       }
-    );
+      
+      toast({
+        title: 'Збережено',
+        description: `Успішно збережено ${changes.length} ${changes.length === 1 ? 'значення' : 'значень'}`,
+      });
+      
+      // Clear local changes after successful save
+      setLocalValues({});
+      
+      // Refresh data from server
+      await queryClient.invalidateQueries({ queryKey: ['comparison'] });
+    } catch (error: any) {
+      toast({
+        title: 'Помилка',
+        description: error.message || 'Не вдалося зберегти значення',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCreateFeature = () => {
@@ -151,6 +222,10 @@ export function Comparison() {
     return typeof firstValue === 'boolean';
   };
 
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = Object.keys(localValues).length > 0 && 
+    Object.values(localValues).some(productValues => Object.keys(productValues).length > 0);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -158,10 +233,22 @@ export function Comparison() {
           <h2 className="text-2xl font-bold">Таблиця порівняння</h2>
           <p className="text-muted-foreground">Керування параметрами порівняння товарів</p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Додати параметр
-        </Button>
+        <div className="flex gap-2">
+          {hasUnsavedChanges && (
+            <Button 
+              variant="outline" 
+              onClick={handleSaveAll}
+              disabled={isSaving}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {isSaving ? 'Збереження...' : 'Зберегти зміни'}
+            </Button>
+          )}
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Додати параметр
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -204,7 +291,14 @@ export function Comparison() {
                         </Button>
                       </td>
                       {products.map((product) => {
-                        const currentValue = feature.values[product.code] ?? null;
+                        // Use local value if exists, otherwise use server value
+                        const localValue = localValues[feature.key]?.[product.id];
+                        const serverValue = feature.values[product.code] ?? null;
+                        const currentValue = localValue !== undefined ? localValue : serverValue;
+                        
+                        // Check if this value has been changed
+                        const isChanged = localValue !== undefined && localValue !== serverValue;
+                        
                         return (
                           <td key={product.id} className="p-3">
                             {isBoolean ? (
@@ -212,19 +306,24 @@ export function Comparison() {
                                 <Switch
                                   checked={currentValue === true}
                                   onCheckedChange={(checked) =>
-                                    handleValueChange(feature.key, product.id, checked, true)
+                                    handleValueChange(feature.key, product.id, checked)
                                   }
                                 />
                               </div>
                             ) : (
-                              <Input
-                                value={currentValue?.toString() || ''}
-                                onChange={(e) =>
-                                  handleValueChange(feature.key, product.id, e.target.value || null, false)
-                                }
-                                placeholder="Введіть значення"
-                                className="w-full"
-                              />
+                              <div className="relative">
+                                <Input
+                                  value={currentValue?.toString() || ''}
+                                  onChange={(e) =>
+                                    handleValueChange(feature.key, product.id, e.target.value || null)
+                                  }
+                                  placeholder="Введіть значення"
+                                  className={`w-full ${isChanged ? 'ring-2 ring-primary' : ''}`}
+                                />
+                                {isChanged && (
+                                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
+                                )}
+                              </div>
                             )}
                           </td>
                         );
