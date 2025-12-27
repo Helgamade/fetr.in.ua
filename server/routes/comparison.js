@@ -8,7 +8,9 @@ router.get('/', async (req, res, next) => {
   try {
     // Get all features
     const [features] = await pool.execute(`
-      SELECT * FROM comparison_features ORDER BY sort_order ASC
+      SELECT id, key_name, label, type, sort_order, created_at, updated_at 
+      FROM comparison_features 
+      ORDER BY sort_order ASC
     `);
 
     // Get all products
@@ -42,7 +44,7 @@ router.get('/', async (req, res, next) => {
         id: feature.id,
         key: feature.key_name,
         label: feature.label,
-        type: feature.type || 'text',
+        type: (feature.type || 'text'),
         sortOrder: feature.sort_order,
         values: featureValues
       };
