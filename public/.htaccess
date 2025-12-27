@@ -3,8 +3,10 @@
   RewriteBase /
   
   # Proxy API requests to Node.js server
+  # Note: If proxying is configured via hosting panel, this rule may not be needed
+  # Use internal IP and port provided by hosting (127.1.5.169:3000)
   RewriteCond %{REQUEST_URI} ^/api/
-  RewriteRule ^api/(.*)$ http://localhost:3001/api/$1 [P,L]
+  RewriteRule ^api/(.*)$ http://127.1.5.169:3000/api/$1 [P,L]
   
   # Don't rewrite files or directories that exist
   RewriteCond %{REQUEST_FILENAME} !-f
