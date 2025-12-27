@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
+import { writeFileSync, readFileSync } from 'fs';
 import pool from '../db.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -410,9 +411,18 @@ router.post('/upload-image', upload.single('image'), async (req, res, next) => {
     console.log('File uploaded successfully:', {
       filename: req.file.filename,
       path: req.file.path,
-      size: req.file.size
+      size: req.file.size,
+      destination: req.file.destination
     });
     
+    // Проверяем, что файл действительно существует
+    const filePath = path.join(uploadsDir, req.file.filename);
+    if (!existsSync(filePath)) {
+      console.error('File was not saved! Expected path:', filePath);
+      return res.status(500).json({ error: 'Файл не збережено на сервері' });
+    }
+    
+    console.log('File exists at:', filePath);
     const fileUrl = `/uploads/products/${req.file.filename}`;
     res.json({ url: fileUrl, filename: req.file.filename });
   } catch (error) {
