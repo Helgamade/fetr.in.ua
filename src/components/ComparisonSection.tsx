@@ -78,7 +78,7 @@ export const ComparisonSection: React.FC = () => {
           <table className="w-full min-w-[700px]">
             <thead>
               <tr>
-                <th className="text-left p-4 bg-card rounded-tl-xl sticky left-0 z-10 min-w-[180px]">
+                <th className="text-left p-4 bg-card rounded-tl-xl sticky left-0 z-20 min-w-[180px] shadow-[2px_0_4px_rgba(0,0,0,0.05)]">
                   <span className="text-lg font-heading font-bold">Параметри</span>
                 </th>
                 {products.map((product, idx) => (
@@ -108,11 +108,17 @@ export const ComparisonSection: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {comparisonFeatures.map((feature, rowIdx) => (
-                <tr key={feature.key} className={rowIdx % 2 === 0 ? 'bg-muted/30' : 'bg-card'}>
-                  <td className="p-4 font-medium sticky left-0 bg-inherit z-10">
-                    {feature.label}
-                  </td>
+              {comparisonFeatures.map((feature, rowIdx) => {
+                const rowBg = rowIdx % 2 === 0 ? 'bg-muted/30' : 'bg-card';
+                return (
+                  <tr key={feature.key} className={rowBg}>
+                    <td className={cn(
+                      "p-4 font-medium sticky left-0 z-20",
+                      rowBg,
+                      "shadow-[2px_0_4px_rgba(0,0,0,0.05)]"
+                    )}>
+                      {feature.label}
+                    </td>
                   {products.map((product, colIdx) => {
                     const value = productData[product.id]?.[feature.key];
                     return (
@@ -135,11 +141,12 @@ export const ComparisonSection: React.FC = () => {
                       </td>
                     );
                   })}
-                </tr>
-              ))}
+                  </tr>
+                );
+              })}
               {/* CTA row */}
               <tr>
-                <td className="p-4 sticky left-0 bg-card rounded-bl-xl z-10"></td>
+                <td className="p-4 sticky left-0 bg-card rounded-bl-xl z-20 shadow-[2px_0_4px_rgba(0,0,0,0.05)]"></td>
                 {products.map((product, idx) => (
                   <td
                     key={product.id}
