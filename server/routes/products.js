@@ -13,7 +13,9 @@ const router = express.Router();
 
 // Настройка multer для загрузки изображений
 const uploadsDir = path.join(__dirname, '..', 'uploads', 'products');
+console.log('Uploads directory:', uploadsDir);
 if (!existsSync(uploadsDir)) {
+  console.log('Creating uploads directory:', uploadsDir);
   mkdirSync(uploadsDir, { recursive: true });
 }
 
@@ -394,12 +396,27 @@ router.get('/options/all', async (req, res, next) => {
 // Upload product image
 router.post('/upload-image', upload.single('image'), async (req, res, next) => {
   try {
+    console.log('Upload request received:', {
+      file: req.file,
+      body: req.body,
+      uploadsDir: uploadsDir
+    });
+    
     if (!req.file) {
+      console.error('No file in request');
       return res.status(400).json({ error: 'Файл не завантажено' });
     }
+    
+    console.log('File uploaded successfully:', {
+      filename: req.file.filename,
+      path: req.file.path,
+      size: req.file.size
+    });
+    
     const fileUrl = `/uploads/products/${req.file.filename}`;
     res.json({ url: fileUrl, filename: req.file.filename });
   } catch (error) {
+    console.error('Upload error:', error);
     next(error);
   }
 });
