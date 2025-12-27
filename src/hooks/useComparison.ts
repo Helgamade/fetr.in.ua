@@ -12,12 +12,11 @@ export function useUpdateComparisonValue() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ featureKey, productId, value, isBoolean }: {
+    mutationFn: ({ featureKey, productId, value }: {
       featureKey: string;
       productId: number;
       value: string | boolean | null;
-      isBoolean: boolean;
-    }) => comparisonAPI.updateValue(featureKey, productId, value, isBoolean),
+    }) => comparisonAPI.updateValue(featureKey, productId, value),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comparison'] });
     },

@@ -60,7 +60,7 @@ router.get('/', async (req, res, next) => {
 // Update comparison value
 router.put('/value', async (req, res, next) => {
   try {
-    const { featureKey, productId, value, isBoolean } = req.body;
+    const { featureKey, productId, value } = req.body;
 
     if (!featureKey || !productId) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -71,9 +71,18 @@ router.put('/value', async (req, res, next) => {
       SELECT type FROM comparison_features WHERE key_name = ?
     `, [featureKey]);
     
-    const featureType = features[0]?.type || 'text';
-    const isBooleanValue = featureType === 'boolean' || isBoolean;
-    const valueToStore = isBooleanValue ? (value ? 'true' : null) : value;
+    if (features.length === 0) {
+      return res.status(404).json({ error: 'Feature not found' });
+    }
+    
+    const featureType = features[0].type || 'text';
+    const isBooleanValue = featureType === 'boolean';
+    
+    // For boolean type: store 'true' if value is truthy, null if falsy
+    // For text type: store the string value directly
+    const valueToStore = isBooleanValue 
+      ? (value === true || value === 'true' ? 'true' : null)
+      : String(value || '');
 
     await pool.execute(`
       INSERT INTO comparison_values (feature_key, product_id, value, is_boolean)

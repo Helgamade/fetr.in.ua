@@ -191,10 +191,10 @@ export interface ComparisonData {
 
 export const comparisonAPI = {
   getAll: () => fetchAPI<ComparisonData>('/comparison'),
-  updateValue: (featureKey: string, productId: number, value: string | boolean | null, isBoolean: boolean) =>
+  updateValue: (featureKey: string, productId: number, value: string | boolean | null) =>
     fetchAPI<void>('/comparison/value', {
       method: 'PUT',
-      body: JSON.stringify({ featureKey, productId, value, isBoolean }),
+      body: JSON.stringify({ featureKey, productId, value }),
     }),
   createFeature: (key: string, label: string, type: 'text' | 'boolean', sortOrder?: number) =>
     fetchAPI<{ id: number; key: string; label: string; type: 'text' | 'boolean'; sortOrder: number }>('/comparison/feature', {

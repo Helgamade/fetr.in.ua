@@ -69,14 +69,12 @@ export function Comparison() {
   const handleSaveAll = async () => {
     if (!data) return;
     
-    const changes: Array<{ featureKey: string; productId: number; value: string | boolean | null; isBoolean: boolean }> = [];
+    const changes: Array<{ featureKey: string; productId: number; value: string | boolean | null }> = [];
     
       // Collect all changes
       Object.entries(localValues).forEach(([featureKey, productValues]) => {
         const feature = features.find(f => f.key === featureKey);
         if (!feature) return;
-        
-        const isBoolean = feature.type === 'boolean';
       
       Object.entries(productValues).forEach(([productIdStr, value]) => {
         const productId = parseInt(productIdStr);
@@ -91,7 +89,6 @@ export function Comparison() {
             featureKey,
             productId,
             value,
-            isBoolean,
           });
         }
       });
