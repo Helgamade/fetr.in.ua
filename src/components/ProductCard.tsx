@@ -33,7 +33,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addToCart(product.id, []);
+    addToCart(product.code || String(product.id), []);
     trackEvent('quick_add_to_cart', { productId: product.id });
   };
 
