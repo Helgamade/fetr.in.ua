@@ -2,10 +2,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { instagramAPI } from '@/lib/api';
 import { InstagramPost } from '@/types/store';
 
-export function useInstagramPosts() {
+export function useInstagramPosts(activeOnly: boolean = false) {
   return useQuery<InstagramPost[]>({
-    queryKey: ['instagram'],
-    queryFn: () => instagramAPI.getAll(),
+    queryKey: ['instagram', activeOnly ? 'active' : 'all'],
+    queryFn: async () => {
+      const url = activeOnly ? '/api/instagram?active=true' : '/api/instagram';
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch Instagram posts');
+      return response.json();
+    },
   });
 }
 
