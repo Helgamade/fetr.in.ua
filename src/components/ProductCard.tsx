@@ -5,6 +5,7 @@ import { CountdownTimer } from '@/components/CountdownTimer';
 import { ShoppingBag, Eye, Users, ChevronRight, Sparkles, Flame, Crown } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAnalytics } from '@/context/AnalyticsContext';
+import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
@@ -12,12 +13,17 @@ interface ProductCardProps {
   onOpenModal: (product: Product) => void;
 }
 
-// badgeConfig will be created inside component to use translations
-
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }) => {
+  const { t } = useTranslation('product');
   const { addToCart } = useCart();
   const { trackEvent } = useAnalytics();
   const [isHovered, setIsHovered] = useState(false);
+
+  const badgeConfig = {
+    hit: { icon: Flame, label: t('badge.hit'), className: 'badge-hit' },
+    recommended: { icon: Sparkles, label: t('badge.recommended'), className: 'bg-secondary text-secondary-foreground text-xs font-semibold px-3 py-1 rounded-full' },
+    limited: { icon: Crown, label: t('badge.limited'), className: 'badge-limited' },
+  };
 
   // Mock data for social proof
   const viewingNow = Math.floor(Math.random() * 8) + 2;
