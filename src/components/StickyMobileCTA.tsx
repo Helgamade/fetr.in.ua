@@ -36,7 +36,7 @@ export const StickyMobileCTA: React.FC = () => {
       <button
         onClick={scrollToTop}
         className={cn(
-          'fixed bottom-24 right-4 z-30 w-12 h-12 rounded-full bg-card shadow-medium flex items-center justify-center transition-all duration-300 md:hidden',
+          'fixed bottom-36 right-4 z-30 w-12 h-12 rounded-full bg-card shadow-medium flex items-center justify-center transition-all duration-300 md:hidden',
           showScrollTop ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'
         )}
       >

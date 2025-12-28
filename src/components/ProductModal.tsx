@@ -76,7 +76,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
       />
 
       {/* Modal */}
-      <div className="relative w-full h-full xl:h-auto xl:max-h-[90vh] xl:mx-4 bg-card xl:rounded-2xl overflow-hidden animate-scale-in" style={{ maxWidth: 'calc(660px + min(90vh, 100vw - 660px - 2rem))' }}>
+      <div className="relative w-full h-full md:h-auto md:max-h-[90vh] md:mx-4 bg-card md:rounded-2xl overflow-hidden animate-scale-in" style={{ maxWidth: 'calc(660px + min(90vh, 100vw - 660px - 2rem))' }}>
         {/* Close button */}
         <button
           onClick={onClose}

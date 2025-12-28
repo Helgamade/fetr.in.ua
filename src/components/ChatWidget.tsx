@@ -12,7 +12,7 @@ export const ChatWidget: React.FC = () => {
       <button
         onClick={() => setIsOpen(true)}
         className={cn(
-          'fixed bottom-4 right-4 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-glow flex items-center justify-center transition-all duration-300 hover:scale-110',
+          'fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-glow flex items-center justify-center transition-all duration-300 hover:scale-110 md:bottom-4',
           isOpen && 'scale-0 opacity-0'
         )}
       >
@@ -22,7 +22,7 @@ export const ChatWidget: React.FC = () => {
       {/* Chat popup */}
       <div
         className={cn(
-          'fixed bottom-4 right-4 z-40 w-[320px] bg-card rounded-2xl shadow-large transition-all duration-300 overflow-hidden',
+          'fixed bottom-20 right-4 z-40 w-[320px] bg-card rounded-2xl shadow-large transition-all duration-300 overflow-hidden md:bottom-4',
           isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
         )}
       >
