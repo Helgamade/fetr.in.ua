@@ -146,6 +146,10 @@ export function Reviews() {
       return;
     }
 
+    const createdAtDate = editingReview.createdAt instanceof Date 
+      ? editingReview.createdAt 
+      : new Date(editingReview.createdAt);
+    
     const data = {
       name: editingReview.name,
       text: editingReview.text,
@@ -153,11 +157,7 @@ export function Reviews() {
       photo: editingReview.photo,
       is_approved: editingReview.is_approved,
       featured: editingReview.featured,
-      created_at: editingReview.createdAt instanceof Date 
-        ? editingReview.createdAt.toISOString().split('T')[0] + ' ' + editingReview.createdAt.toTimeString().split(' ')[0]
-        : typeof editingReview.createdAt === 'string'
-        ? new Date(editingReview.createdAt).toISOString().slice(0, 19).replace('T', ' ')
-        : new Date().toISOString().slice(0, 19).replace('T', ' '),
+      created_at: createdAtDate.toISOString().slice(0, 19).replace('T', ' '),
     };
 
     if (editingReview.id === 0) {

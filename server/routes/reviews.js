@@ -27,10 +27,11 @@ router.get('/', async (req, res, next) => {
 
     const reviews = [...featuredReviews, ...otherReviews].slice(0, 4);
     
-    // Convert dates
+    // Convert dates and ensure featured field
     reviews.forEach(review => {
       review.createdAt = new Date(review.created_at);
       review.updatedAt = new Date(review.updated_at);
+      review.featured = review.featured || false;
       delete review.created_at;
       delete review.updated_at;
     });
