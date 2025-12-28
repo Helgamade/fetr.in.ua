@@ -68,7 +68,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex md:items-center md:justify-center">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-foreground/60 backdrop-blur-sm"
@@ -76,7 +76,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
       />
 
       {/* Modal */}
-      <div className="relative w-full h-full md:h-auto md:max-h-[90vh] md:mx-4 bg-card md:rounded-2xl overflow-hidden animate-scale-in" style={{ maxWidth: 'calc(660px + min(90vh, 100vw - 660px - 2rem))' }}>
+      <div className="relative w-full h-full md:h-auto md:max-h-[90vh] md:mx-4 bg-card md:rounded-2xl overflow-hidden animate-scale-in md:max-w-[calc(660px+min(90vh,100vw-660px-2rem))]">
         {/* Close button */}
         <button
           onClick={onClose}
