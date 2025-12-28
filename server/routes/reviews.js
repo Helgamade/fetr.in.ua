@@ -7,12 +7,25 @@ const router = express.Router();
 // Get all reviews (published only for public, all for admin)
 router.get('/', async (req, res, next) => {
   try {
-    const [reviews] = await pool.execute(`
-      SELECT id, name, text, rating, photo, is_approved, created_at, updated_at
+    // Get featured reviews first (max 4), then others
+    const [featuredReviews] = await pool.execute(`
+      SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
       FROM reviews
-      WHERE is_approved = TRUE
-      ORDER BY created_at DESC
+      WHERE is_approved = TRUE AND featured = TRUE
+      ORDER BY RAND()
+      LIMIT 4
     `);
+
+    // Get other approved reviews if we have less than 4 featured
+    const [otherReviews] = await pool.execute(`
+      SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
+      FROM reviews
+      WHERE is_approved = TRUE AND (featured = FALSE OR featured IS NULL)
+      ORDER BY created_at DESC
+      LIMIT ?
+    `, [Math.max(0, 4 - featuredReviews.length)]);
+
+    const reviews = [...featuredReviews, ...otherReviews].slice(0, 4);
     
     // Convert dates
     reviews.forEach(review => {
@@ -32,7 +45,7 @@ router.get('/', async (req, res, next) => {
 router.get('/all', async (req, res, next) => {
   try {
     const [reviews] = await pool.execute(`
-      SELECT id, name, text, rating, photo, is_approved, created_at, updated_at
+      SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
       FROM reviews
       ORDER BY created_at DESC
     `);
@@ -121,13 +134,21 @@ router.post('/', async (req, res, next) => {
       photo = null;
     }
 
-    // Force is_approved to false for user-submitted reviews (security)
-    is_approved = false;
+    // For user-submitted reviews, force is_approved to false (security)
+    // For admin-created reviews, use provided value
+    if (is_approved === undefined) {
+      is_approved = false;
+    }
+
+    const featured = req.body.featured === true ? true : false;
+    const created_at = req.body.created_at 
+      ? new Date(req.body.created_at).toISOString().slice(0, 19).replace('T', ' ')
+      : new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     const [result] = await pool.execute(`
-      INSERT INTO reviews (name, text, rating, photo, is_approved)
-      VALUES (?, ?, ?, ?, ?)
-    `, [name, text, rating, photo, is_approved]);
+      INSERT INTO reviews (name, text, rating, photo, is_approved, featured, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [name, text, rating, photo, is_approved, featured, created_at]);
 
     res.status(201).json({ id: result.insertId, message: 'Review created' });
   } catch (error) {
@@ -139,7 +160,7 @@ router.post('/', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    let { name, text, rating, photo, is_approved } = req.body;
+    let { name, text, rating, photo, is_approved, featured, created_at } = req.body;
 
     // Sanitize and validate inputs
     if (name !== undefined) {
@@ -171,15 +192,35 @@ router.put('/:id', async (req, res, next) => {
       }
     }
 
+    // Handle created_at if provided
+    let createdAtValue = null;
+    if (created_at) {
+      const createdAtDate = new Date(created_at);
+      if (!isNaN(createdAtDate.getTime())) {
+        createdAtValue = createdAtDate.toISOString().slice(0, 19).replace('T', ' ');
+      }
+    }
+
     await pool.execute(`
       UPDATE reviews SET
         name = COALESCE(?, name),
         text = COALESCE(?, text),
         rating = ?,
         photo = ?,
-        is_approved = COALESCE(?, is_approved)
+        is_approved = COALESCE(?, is_approved),
+        featured = COALESCE(?, featured),
+        created_at = COALESCE(?, created_at)
       WHERE id = ?
-    `, [name || null, text || null, rating, photo, is_approved !== undefined ? is_approved : null, id]);
+    `, [
+      name || null, 
+      text || null, 
+      rating, 
+      photo, 
+      is_approved !== undefined ? is_approved : null,
+      featured !== undefined ? featured : null,
+      createdAtValue,
+      id
+    ]);
 
     res.json({ id, message: 'Review updated' });
   } catch (error) {

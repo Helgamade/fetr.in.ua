@@ -1,10 +1,19 @@
 import { useState } from 'react';
-import { Search, Check, X as XIcon, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Search, Check, X as XIcon, Trash2, Eye, EyeOff, Plus, Edit, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { reviewsAPI } from '@/lib/api';
@@ -17,6 +26,7 @@ interface Review {
   rating: number | null;
   photo: string | null;
   is_approved: boolean;
+  featured: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -26,12 +36,13 @@ export function Reviews() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending'>('all');
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Get all reviews (including unapproved)
   const { data: reviews = [], isLoading } = useQuery<Review[]>({
     queryKey: ['reviews', 'all'],
     queryFn: async () => {
-      // Fetch all reviews by calling API without is_approved filter
       const response = await fetch('/api/reviews/all');
       if (!response.ok) throw new Error('Failed to fetch reviews');
       const data = await response.json();
@@ -52,11 +63,33 @@ export function Reviews() {
         title: 'Оновлено',
         description: 'Відгук успішно оновлено',
       });
+      setIsDialogOpen(false);
+      setEditingReview(null);
     },
     onError: (error: Error) => {
       toast({
         title: 'Помилка',
         description: error.message || 'Не вдалося оновити відгук',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const createReview = useMutation({
+    mutationFn: (data: Partial<Review>) => reviewsAPI.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+      toast({
+        title: 'Створено',
+        description: 'Відгук успішно створено',
+      });
+      setIsDialogOpen(false);
+      setEditingReview(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Помилка',
+        description: error.message || 'Не вдалося створити відгук',
         variant: 'destructive',
       });
     },
@@ -80,6 +113,59 @@ export function Reviews() {
       });
     },
   });
+
+  const handleCreate = () => {
+    setEditingReview({
+      id: 0,
+      name: '',
+      text: '',
+      rating: 5,
+      photo: null,
+      is_approved: true,
+      featured: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (review: Review) => {
+    setEditingReview({ ...review });
+    setIsDialogOpen(true);
+  };
+
+  const handleSave = () => {
+    if (!editingReview) return;
+
+    if (!editingReview.name || !editingReview.text) {
+      toast({
+        title: 'Помилка',
+        description: 'Заповніть всі обов\'язкові поля',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const data = {
+      name: editingReview.name,
+      text: editingReview.text,
+      rating: editingReview.rating,
+      photo: editingReview.photo,
+      is_approved: editingReview.is_approved,
+      featured: editingReview.featured,
+      created_at: editingReview.createdAt instanceof Date 
+        ? editingReview.createdAt.toISOString().split('T')[0] + ' ' + editingReview.createdAt.toTimeString().split(' ')[0]
+        : typeof editingReview.createdAt === 'string'
+        ? new Date(editingReview.createdAt).toISOString().slice(0, 19).replace('T', ' ')
+        : new Date().toISOString().slice(0, 19).replace('T', ' '),
+    };
+
+    if (editingReview.id === 0) {
+      createReview.mutate(data);
+    } else {
+      updateReview.mutate({ id: editingReview.id, data });
+    }
+  };
 
   const handleApprove = (review: Review) => {
     updateReview.mutate({
@@ -121,6 +207,16 @@ export function Reviews() {
     );
   }
 
+  const formatDateForInput = (date: Date | string) => {
+    const d = date instanceof Date ? date : new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -135,6 +231,10 @@ export function Reviews() {
                 className="pl-9"
               />
             </div>
+            <Button onClick={handleCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              Додати відгук
+            </Button>
             <div className="flex gap-2">
               <Button
                 variant={statusFilter === 'all' ? 'default' : 'outline'}
@@ -178,6 +278,9 @@ export function Reviews() {
                           {!review.is_approved && (
                             <Badge variant="secondary">На модерації</Badge>
                           )}
+                          {review.featured && (
+                            <Badge variant="default">На головній</Badge>
+                          )}
                         </div>
                         {review.rating && (
                           <div className="flex items-center gap-1 mt-1">
@@ -208,6 +311,14 @@ export function Reviews() {
                     </p>
                   </div>
                   <div className="flex flex-col gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(review)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Редагувати
+                    </Button>
                     {!review.is_approved && (
                       <Button
                         variant="default"
@@ -252,7 +363,113 @@ export function Reviews() {
           </Card>
         )}
       </div>
+
+      {/* Edit/Create Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingReview?.id === 0 ? 'Додати новий відгук' : 'Редагувати відгук'}
+            </DialogTitle>
+          </DialogHeader>
+          {editingReview && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Ім'я *</Label>
+                <Input
+                  id="name"
+                  value={editingReview.name}
+                  onChange={(e) => setEditingReview({ ...editingReview, name: e.target.value })}
+                  placeholder="Олена"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Оцінка</Label>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      type="button"
+                      onClick={() => setEditingReview({ ...editingReview, rating })}
+                      className="p-1"
+                    >
+                      <Star
+                        className={cn(
+                          'w-8 h-8 transition-colors',
+                          rating <= (editingReview.rating || 0)
+                            ? 'text-yellow-400 fill-yellow-400'
+                            : 'text-muted-foreground hover:text-yellow-400/50'
+                        )}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="text">Текст відгуку *</Label>
+                <Textarea
+                  id="text"
+                  value={editingReview.text}
+                  onChange={(e) => setEditingReview({ ...editingReview, text: e.target.value })}
+                  placeholder="Розкажіть про ваш досвід..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="created_at">Дата створення</Label>
+                <Input
+                  id="created_at"
+                  type="datetime-local"
+                  value={formatDateForInput(editingReview.createdAt)}
+                  onChange={(e) => {
+                    const date = new Date(e.target.value);
+                    setEditingReview({ ...editingReview, createdAt: date });
+                  }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="photo">Фото (URL)</Label>
+                <Input
+                  id="photo"
+                  value={editingReview.photo || ''}
+                  onChange={(e) => setEditingReview({ ...editingReview, photo: e.target.value || null })}
+                  placeholder="https://example.com/photo.jpg"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="is_approved"
+                  checked={editingReview.is_approved}
+                  onCheckedChange={(checked) => setEditingReview({ ...editingReview, is_approved: checked })}
+                />
+                <Label htmlFor="is_approved">Опубліковано</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="featured"
+                  checked={editingReview.featured}
+                  onCheckedChange={(checked) => setEditingReview({ ...editingReview, featured: checked })}
+                />
+                <Label htmlFor="featured">Показувати на головній (максимум 4)</Label>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Скасувати
+            </Button>
+            <Button onClick={handleSave}>
+              Зберегти
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
