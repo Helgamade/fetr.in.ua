@@ -173,7 +173,7 @@ export const teamAPI = {
   }),
 };
 
-// Gallery API
+// Gallery API (legacy - for backward compatibility)
 export const galleryAPI = {
   getAll: () => fetchAPI<any[]>('/gallery'),
   getById: (id: number) => fetchAPI<any>(`/gallery/${id}`),
@@ -186,6 +186,71 @@ export const galleryAPI = {
     body: JSON.stringify(data),
   }),
   delete: (id: number) => fetchAPI<any>(`/gallery/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
+// Galleries API (new structure)
+export interface Gallery {
+  id: number;
+  name: string;
+  sort_order: number;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+  imagesCount?: number;
+  images?: GalleryImage[];
+}
+
+export interface GalleryImage {
+  id: number;
+  gallery_id: number;
+  url: string;
+  title: string | null;
+  description: string | null;
+  sort_order: number;
+  is_published: boolean;
+  created_at: string;
+}
+
+export const galleriesAPI = {
+  getAll: (publishedOnly: boolean = false) => fetchAPI<Gallery[]>(`/galleries?published=${publishedOnly}`),
+  getById: (id: number, publishedOnly: boolean = false) => fetchAPI<Gallery>(`/galleries/${id}?published=${publishedOnly}`),
+  create: (data: { name: string; sort_order?: number; is_published?: boolean }) => fetchAPI<{ id: number; message: string }>('/galleries', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  update: (id: number, data: { name: string; sort_order?: number; is_published?: boolean }) => fetchAPI<any>(`/galleries/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  delete: (id: number) => fetchAPI<any>(`/galleries/${id}`, {
+    method: 'DELETE',
+  }),
+  uploadImage: async (galleryId: number, file: File, title?: string, description?: string, sortOrder?: number): Promise<{ id: number; url: string; message: string }> => {
+    const formData = new FormData();
+    formData.append('image', file);
+    if (title) formData.append('title', title);
+    if (description) formData.append('description', description);
+    if (sortOrder !== undefined) formData.append('sort_order', sortOrder.toString());
+
+    const response = await fetch(`${API_BASE_URL}/galleries/${galleryId}/images`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Network error' }));
+      throw new Error(error.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  },
+  updateImage: (galleryId: number, imageId: number, data: { title?: string; description?: string; sort_order?: number; is_published?: boolean }) => fetchAPI<any>(`/galleries/${galleryId}/images/${imageId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  deleteImage: (galleryId: number, imageId: number) => fetchAPI<any>(`/galleries/${galleryId}/images/${imageId}`, {
     method: 'DELETE',
   }),
 };

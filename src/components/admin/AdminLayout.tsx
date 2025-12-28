@@ -6,7 +6,8 @@ import {
   Settings, 
   LogOut,
   Table2,
-  GripVertical
+  GripVertical,
+  Images
 } from 'lucide-react';
 import {
   Sidebar,
@@ -30,6 +31,7 @@ const menuItems = [
   { icon: ShoppingCart, label: 'Замовлення', path: '/admin/orders' },
   { icon: Package, label: 'Товари', path: '/admin/products' },
   { icon: GripVertical, label: 'Опції', path: '/admin/options' },
+  { icon: Images, label: 'Галерея', path: '/admin/galleries' },
   { icon: Table2, label: 'Порівняння', path: '/admin/comparison' },
   { icon: Settings, label: 'Налаштування', path: '/admin/settings' },
 ];

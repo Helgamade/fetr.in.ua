@@ -1,26 +1,45 @@
 import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useGallery } from '@/hooks/useGallery';
+import { useGalleries } from '@/hooks/useGalleries';
+import { Gallery, GalleryImage } from '@/lib/api';
 
 export const GallerySection: React.FC = () => {
-  const { data: galleryImages = [], isLoading } = useGallery();
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const { data: galleries = [], isLoading } = useGalleries(true); // Only published galleries
+  const [selectedGallery, setSelectedGallery] = useState<Gallery | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
-  const openLightbox = (index: number) => setSelectedIndex(index);
-  const closeLightbox = () => setSelectedIndex(null);
-  
+  const openLightbox = (gallery: Gallery, index: number) => {
+    setSelectedGallery(gallery);
+    setSelectedImageIndex(index);
+  };
+
+  const closeLightbox = () => {
+    setSelectedGallery(null);
+    setSelectedImageIndex(null);
+  };
+
   const goNext = () => {
-    if (selectedIndex !== null && galleryImages.length > 0) {
-      setSelectedIndex((selectedIndex + 1) % galleryImages.length);
+    if (selectedGallery && selectedImageIndex !== null && selectedGallery.images) {
+      setSelectedImageIndex((selectedImageIndex + 1) % selectedGallery.images.length);
     }
   };
-  
+
   const goPrev = () => {
-    if (selectedIndex !== null && galleryImages.length > 0) {
-      setSelectedIndex((selectedIndex - 1 + galleryImages.length) % galleryImages.length);
+    if (selectedGallery && selectedImageIndex !== null && selectedGallery.images) {
+      const images = selectedGallery.images;
+      setSelectedImageIndex((selectedImageIndex - 1 + images.length) % images.length);
     }
   };
+
+  // Get first image from each gallery (limit to 6 galleries)
+  const galleryPreviews = galleries
+    .filter(gallery => gallery.images && gallery.images.length > 0)
+    .slice(0, 6)
+    .map(gallery => ({
+      gallery,
+      previewImage: gallery.images![0],
+    }));
 
   return (
     <section id="gallery" className="py-20">
@@ -46,33 +65,47 @@ export const GallerySection: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {galleryImages.map((image, index) => (
-              <button
-                key={image.id}
-                onClick={() => openLightbox(index)}
-                className={cn(
-                  'relative aspect-square overflow-hidden rounded-2xl group',
-                  index === 0 && 'md:col-span-2 md:row-span-2'
-                )}
-              >
-                <img
-                  src={image.url}
-                  alt={image.title || `Gallery image ${index + 1}`}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                {image.title && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                    <span className="text-primary-foreground font-medium">{image.title}</span>
+            {galleryPreviews.map(({ gallery, previewImage }, index) => {
+              const imageCount = gallery.images?.length || 0;
+              return (
+                <button
+                  key={gallery.id}
+                  onClick={() => openLightbox(gallery, 0)}
+                  className={cn(
+                    'relative aspect-square overflow-hidden rounded-2xl group',
+                    index === 0 && 'md:col-span-2 md:row-span-2'
+                  )}
+                >
+                  <img
+                    src={previewImage.url}
+                    alt={previewImage.title || gallery.name || `Gallery image ${index + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  {/* Title overlay - always visible on first image */}
+                  {previewImage.title && index === 0 && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent flex items-end p-4">
+                      <span className="text-primary-foreground font-medium">{previewImage.title}</span>
+                    </div>
+                  )}
+                  {/* Title on hover for other images */}
+                  {previewImage.title && index !== 0 && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                      <span className="text-primary-foreground font-medium">{previewImage.title}</span>
+                    </div>
+                  )}
+                  {/* Image count badge */}
+                  <div className="absolute top-4 right-4 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium">
+                    {imageCount} фото
                   </div>
-                )}
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Lightbox */}
-      {selectedIndex !== null && (
+      {selectedGallery && selectedImageIndex !== null && selectedGallery.images && (
         <div className="fixed inset-0 z-50 bg-foreground/90 backdrop-blur-sm flex items-center justify-center">
           <button
             onClick={closeLightbox}
@@ -97,18 +130,23 @@ export const GallerySection: React.FC = () => {
 
           <div className="max-w-4xl max-h-[80vh] mx-4">
             <img
-              src={galleryImages[selectedIndex].url}
-              alt={galleryImages[selectedIndex].title || `Gallery image ${selectedIndex + 1}`}
+              src={selectedGallery.images[selectedImageIndex].url}
+              alt={selectedGallery.images[selectedImageIndex].title || `Gallery image ${selectedImageIndex + 1}`}
               className="max-w-full max-h-[80vh] object-contain rounded-xl"
             />
             <div className="text-center mt-4">
-              {galleryImages[selectedIndex].title && (
+              {selectedGallery.images[selectedImageIndex].title && (
                 <p className="text-primary-foreground font-medium text-lg">
-                  {galleryImages[selectedIndex].title}
+                  {selectedGallery.images[selectedImageIndex].title}
                 </p>
               )}
-              <p className="text-primary-foreground/60 text-sm">
-                {selectedIndex + 1} / {galleryImages.length}
+              {selectedGallery.images[selectedImageIndex].description && (
+                <p className="text-primary-foreground/80 text-sm mt-2">
+                  {selectedGallery.images[selectedImageIndex].description}
+                </p>
+              )}
+              <p className="text-primary-foreground/60 text-sm mt-2">
+                {selectedImageIndex + 1} / {selectedGallery.images.length}
               </p>
             </div>
           </div>
