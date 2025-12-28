@@ -93,6 +93,7 @@ router.get('/', async (req, res, next) => {
         name: opt.name,
         price: parseFloat(opt.price) || 0,
         description: opt.description || null,
+        icon: opt.icon || null,
       }));
 
       // Get features
