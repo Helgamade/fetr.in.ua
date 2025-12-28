@@ -12,11 +12,7 @@ interface ProductCardProps {
   onOpenModal: (product: Product) => void;
 }
 
-const badgeConfig = {
-  hit: { icon: Flame, label: 'Хіт продажів', className: 'badge-hit' },
-  recommended: { icon: Sparkles, label: 'Рекомендовано', className: 'bg-secondary text-secondary-foreground text-xs font-semibold px-3 py-1 rounded-full' },
-  limited: { icon: Crown, label: 'Обмежено', className: 'badge-limited' },
-};
+// badgeConfig will be created inside component to use translations
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }) => {
   const { addToCart } = useCart();
