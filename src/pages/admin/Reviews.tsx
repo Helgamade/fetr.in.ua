@@ -14,6 +14,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { reviewsAPI } from '@/lib/api';
@@ -207,15 +208,6 @@ export function Reviews() {
     );
   }
 
-  const formatDateForInput = (date: Date | string) => {
-    const d = date instanceof Date ? date : new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
 
   return (
     <div className="space-y-6">
@@ -419,15 +411,15 @@ export function Reviews() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="created_at">Дата створення</Label>
-                <Input
-                  id="created_at"
-                  type="datetime-local"
-                  value={formatDateForInput(editingReview.createdAt)}
-                  onChange={(e) => {
-                    const date = new Date(e.target.value);
-                    setEditingReview({ ...editingReview, createdAt: date });
+                <DateTimePicker
+                  label="Дата створення"
+                  value={editingReview.createdAt instanceof Date 
+                    ? editingReview.createdAt 
+                    : new Date(editingReview.createdAt)}
+                  onChange={(date) => {
+                    setEditingReview({ ...editingReview, createdAt: date || new Date() });
                   }}
+                  id="created_at"
                 />
               </div>
 
