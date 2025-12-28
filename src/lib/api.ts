@@ -137,19 +137,6 @@ export const faqsAPI = {
   delete: (id: number) => fetchAPI<any>(`/faqs/${id}`, {
     method: 'DELETE',
   }),
-};,
-  getById: (id: number) => fetchAPI<any>(`/faqs/${id}`),
-  create: (data: any) => fetchAPI<any>('/faqs', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-  update: (id: number, data: any) => fetchAPI<any>(`/faqs/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
-  delete: (id: number) => fetchAPI<any>(`/faqs/${id}`, {
-    method: 'DELETE',
-  }),
 };
 
 // Reviews API
