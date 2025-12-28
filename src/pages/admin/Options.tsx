@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Edit, Trash2, Search, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,70 +14,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ProductOption } from '@/types/store';
-
-// API client functions
-async function fetchOptions(): Promise<ProductOption[]> {
-  const response = await fetch('/api/options');
-  if (!response.ok) throw new Error('Failed to fetch options');
-  return response.json();
-}
-
-async function createOption(data: { name: string; price: number; description?: string }): Promise<ProductOption> {
-  const response = await fetch('/api/options', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) throw new Error('Failed to create option');
-  return response.json();
-}
-
-async function updateOption(id: number, data: { name: string; price: number; description?: string }): Promise<void> {
-  const response = await fetch(`/api/options/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) throw new Error('Failed to update option');
-}
-
-async function deleteOption(id: number): Promise<void> {
-  const response = await fetch(`/api/options/${id}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to delete option');
-  }
-}
+import { useOptions, useCreateOption, useUpdateOption, useDeleteOption } from '@/hooks/useOptions';
 
 export function Options() {
-  const [options, setOptions] = useState<ProductOption[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: options = [], isLoading } = useOptions();
+  const createOption = useCreateOption();
+  const updateOption = useUpdateOption();
+  const deleteOption = useDeleteOption();
   const [searchQuery, setSearchQuery] = useState('');
   const [editingOption, setEditingOption] = useState<ProductOption | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    loadOptions();
-  }, []);
-
-  const loadOptions = async () => {
-    try {
-      setIsLoading(true);
-      const data = await fetchOptions();
-      setOptions(data);
-    } catch (error: any) {
-      toast({
-        title: 'Помилка',
-        description: error.message || 'Не вдалося завантажити опції',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const filteredOptions = options.filter(option =>
     option.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -94,7 +41,7 @@ export function Options() {
     setIsDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!editingOption) return;
 
     if (!editingOption.name || editingOption.price === undefined) {
@@ -106,58 +53,73 @@ export function Options() {
       return;
     }
 
-    try {
-      if (editingOption.id === 0) {
-        await createOption({
-          name: editingOption.name,
-          price: editingOption.price,
-          description: editingOption.description,
-        });
-        toast({
-          title: 'Створено',
-          description: 'Опцію успішно створено',
-        });
-      } else {
-        await updateOption(editingOption.id, {
-          name: editingOption.name,
-          price: editingOption.price,
-          description: editingOption.description,
-        });
-        toast({
-          title: 'Збережено',
-          description: 'Опцію успішно оновлено',
-        });
-      }
-      setIsDialogOpen(false);
-      setEditingOption(null);
-      loadOptions();
-    } catch (error: any) {
-      toast({
-        title: 'Помилка',
-        description: error.message || 'Не вдалося зберегти опцію',
-        variant: 'destructive',
+    const data = {
+      name: editingOption.name,
+      price: editingOption.price,
+      description: editingOption.description,
+    };
+
+    if (editingOption.id === 0) {
+      createOption.mutate(data, {
+        onSuccess: () => {
+          toast({
+            title: 'Створено',
+            description: 'Опцію успішно створено',
+          });
+          setIsDialogOpen(false);
+          setEditingOption(null);
+        },
+        onError: (error: Error) => {
+          toast({
+            title: 'Помилка',
+            description: error.message || 'Не вдалося створити опцію',
+            variant: 'destructive',
+          });
+        },
       });
+    } else {
+      updateOption.mutate(
+        { id: editingOption.id, data },
+        {
+          onSuccess: () => {
+            toast({
+              title: 'Збережено',
+              description: 'Опцію успішно оновлено',
+            });
+            setIsDialogOpen(false);
+            setEditingOption(null);
+          },
+          onError: (error: Error) => {
+            toast({
+              title: 'Помилка',
+              description: error.message || 'Не вдалося оновити опцію',
+              variant: 'destructive',
+            });
+          },
+        }
+      );
     }
   };
 
-  const handleDelete = async (option: ProductOption) => {
+  const handleDelete = (option: ProductOption) => {
     if (!confirm(`Видалити опцію "${option.name}"?`)) return;
 
-    try {
-      await deleteOption(option.id);
-      toast({
-        title: 'Видалено',
-        description: `Опцію "${option.name}" видалено`,
-        variant: 'destructive',
-      });
-      loadOptions();
-    } catch (error: any) {
-      toast({
-        title: 'Помилка',
-        description: error.message || 'Не вдалося видалити опцію',
-        variant: 'destructive',
-      });
-    }
+    deleteOption.mutate(option.id, {
+      onSuccess: () => {
+        toast({
+          title: 'Видалено',
+          description: `Опцію "${option.name}" видалено`,
+          variant: 'destructive',
+        });
+      },
+      onError: (error: Error) => {
+        toast({
+          title: 'Помилка',
+          description: error.message || 'Не вдалося видалити опцію',
+          variant: 'destructive',
+        });
+      },
+    });
   };
 
   if (isLoading) {
