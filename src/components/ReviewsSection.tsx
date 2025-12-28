@@ -154,7 +154,7 @@ export const ReviewsSection: React.FC = () => {
             <div className="mt-12 flex flex-wrap items-center justify-center gap-8">
               {/* Average Rating */}
               <div className="text-center">
-                <div className="text-4xl font-bold text-foreground">{averageRating.toFixed(1)}</div>
+                <div className="text-4xl font-heading font-bold text-foreground">{averageRating.toFixed(1)}</div>
                 <div className="flex gap-0.5 justify-center my-1">
                   {[...Array(5)].map((_, i) => (
                     <Star
@@ -171,13 +171,13 @@ export const ReviewsSection: React.FC = () => {
 
               {/* Reviews Count */}
               <div className="text-center">
-                <div className="text-4xl font-bold text-foreground">{reviewsCount}{reviewsCount >= 500 ? '+' : ''}</div>
+                <div className="text-4xl font-heading font-bold text-foreground">{reviewsCount}{reviewsCount >= 500 ? '+' : ''}</div>
                 <div className="text-sm text-muted-foreground">{t('stats.reviews_count') || 'Відгуків'}</div>
               </div>
 
               {/* Satisfied Clients */}
               <div className="text-center">
-                <div className="text-4xl font-bold text-foreground">{satisfiedPercent}%</div>
+                <div className="text-4xl font-heading font-bold text-foreground">{satisfiedPercent}%</div>
                 <div className="text-sm text-muted-foreground">{t('stats.satisfied_clients') || 'Задоволених клієнтів'}</div>
               </div>
             </div>
