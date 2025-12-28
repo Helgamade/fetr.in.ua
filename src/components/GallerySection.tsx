@@ -97,18 +97,10 @@ export const GallerySection: React.FC = () => {
                     alt={previewImage.title || gallery.name || `Gallery image ${index + 1}`}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
-                  {/* Gallery name overlay - always visible on first image */}
-                  {index === 0 && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent flex items-end p-4">
-                      <span className="text-primary-foreground font-medium">{gallery.name}</span>
-                    </div>
-                  )}
-                  {/* Gallery name on hover for other images */}
-                  {index !== 0 && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                      <span className="text-primary-foreground font-medium">{gallery.name}</span>
-                    </div>
-                  )}
+                  {/* Gallery name overlay - always visible on all images */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent flex items-end p-4">
+                    <span className="text-primary-foreground font-medium">{gallery.name}</span>
+                  </div>
                   {/* Image count badge */}
                   <div className="absolute top-4 right-4 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium">
                     {imageCount} фото
