@@ -49,6 +49,8 @@ export function Reviews() {
       const data = await response.json();
       return data.map((review: any) => ({
         ...review,
+        is_approved: Boolean(review.is_approved),
+        featured: Boolean(review.featured),
         createdAt: new Date(review.created_at || review.createdAt),
         updatedAt: new Date(review.updated_at || review.updatedAt),
       }));
@@ -331,7 +333,7 @@ export function Reviews() {
                         Опублікувати
                       </Button>
                     )}
-                    {review.is_approved && (
+                    {!!review.is_approved && (
                       <Button
                         variant="outline"
                         size="sm"
