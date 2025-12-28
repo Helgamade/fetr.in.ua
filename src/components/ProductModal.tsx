@@ -15,6 +15,7 @@ interface ProductModalProps {
 }
 
 export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose }) => {
+  const { t } = useTranslation('product');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const { addToCart } = useCart();
