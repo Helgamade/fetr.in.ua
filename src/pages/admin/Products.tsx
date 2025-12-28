@@ -41,6 +41,7 @@ const badgeColors = {
 };
 
 export function Products() {
+  const { t } = useTranslation('product');
   const { data: products = [], isLoading } = useProducts();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
@@ -51,6 +52,12 @@ export function Products() {
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const fileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
   const { toast } = useToast();
+
+  const badgeLabels = {
+    hit: t('badge.hit'),
+    recommended: t('badge.recommended'),
+    limited: t('badge.limited'),
+  };
 
   // Load available options when dialog opens
   useEffect(() => {
