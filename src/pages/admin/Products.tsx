@@ -414,9 +414,9 @@ export function Products() {
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <option value="">Без бейджа</option>
-                      <option value="hit">Хіт продажів</option>
-                      <option value="recommended">Рекомендовано</option>
-                      <option value="limited">Обмежено</option>
+                      <option value="hit">{t('badge.hit')}</option>
+                      <option value="recommended">{t('badge.recommended')}</option>
+                      <option value="limited">{t('badge.limited')}</option>
                     </select>
                   </div>
                 </div>
