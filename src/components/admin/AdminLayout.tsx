@@ -8,7 +8,8 @@ import {
   Table2,
   GripVertical,
   Images,
-  MessageSquare
+  MessageSquare,
+  Users
 } from 'lucide-react';
 import {
   Sidebar,
@@ -34,6 +35,7 @@ const menuItems = [
   { icon: GripVertical, label: 'Опції', path: '/admin/options' },
   { icon: Images, label: 'Галерея', path: '/admin/galleries' },
   { icon: MessageSquare, label: 'Відгуки', path: '/admin/reviews' },
+  { icon: Users, label: 'Наша команда', path: '/admin/team' },
   { icon: Table2, label: 'Порівняння', path: '/admin/comparison' },
   { icon: Settings, label: 'Налаштування', path: '/admin/settings' },
 ];
