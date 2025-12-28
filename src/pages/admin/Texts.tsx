@@ -269,14 +269,14 @@ export function Texts() {
             </div>
           ) : (
             // Обычный режим - группировка по namespace
-            <Tabs defaultValue={namespaces[0] || ''}>
-              <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(namespaces.length, 5)}, 1fr)` }}>
-                {namespaces.map(ns => (
-                  <TabsTrigger key={ns} value={ns}>
-                    {ns}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+                  <Tabs defaultValue={namespaces[0] || ''}>
+                    <TabsList className="flex flex-wrap gap-2 w-full mb-6">
+                      {namespaces.map(ns => (
+                        <TabsTrigger key={ns} value={ns} className="flex-shrink-0">
+                          {ns}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
               
               {namespaces.map(namespace => (
                 <TabsContent key={namespace} value={namespace} className="space-y-4 mt-4">
