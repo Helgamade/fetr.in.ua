@@ -52,7 +52,7 @@ export const ComparisonSection: React.FC = () => {
             <thead>
               <tr>
                 <th className="text-left p-4 bg-card rounded-tl-xl sticky left-0 z-20 min-w-[180px] shadow-[2px_0_4px_rgba(0,0,0,0.05)]">
-                  <span className="text-lg font-heading font-bold">Параметри</span>
+                  <span className="text-lg font-heading font-bold">{t('parameters')}</span>
                 </th>
                 {sortedProducts.map((product, idx) => (
                   <th
