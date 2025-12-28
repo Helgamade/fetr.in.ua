@@ -285,20 +285,18 @@ export function Instagram() {
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
-                        size="sm"
+                        size="icon"
                         onClick={() => handleEdit(post)}
                       >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Редагувати
+                        <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="destructive"
-                        size="sm"
+                        size="icon"
                         onClick={() => handleDelete(post)}
                         disabled={deletePost.isPending}
                       >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Видалити
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
