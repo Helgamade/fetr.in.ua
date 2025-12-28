@@ -38,11 +38,14 @@ export function useTranslation(namespace?: string) {
     return (key: string, options?: TranslationOptions) => {
       // Поддержка namespace:key или key с префиксом namespace
       let fullKey = key;
-      if (namespace && !key.includes('.')) {
-        fullKey = `${namespace}.${key}`;
-      } else if (namespace && !key.startsWith(namespace + '.')) {
-        // Если namespace задан, но ключ уже содержит другой namespace, используем как есть
-        fullKey = key;
+      if (namespace) {
+        // Если ключ уже начинается с namespace, используем как есть
+        if (key.startsWith(namespace + '.')) {
+          fullKey = key;
+        } else {
+          // Добавляем namespace к ключу (даже если в ключе есть точки)
+          fullKey = `${namespace}.${key}`;
+        }
       }
 
       const value = translations[fullKey] || options?.defaultValue || key;
