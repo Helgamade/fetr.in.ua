@@ -2,17 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowDown, Star, Users, Truck, HeartHandshake, Sparkles } from 'lucide-react';
 import { useAnalytics } from '@/context/AnalyticsContext';
-
-const stats = [
-  { icon: Star, value: '12+', label: 'років досвіду' },
-  { icon: Users, value: '3000+', label: 'щасливих клієнтів' },
-  { icon: Truck, value: '24 год', label: 'швидка відправка' },
-  { icon: HeartHandshake, value: '100%', label: 'український бренд' },
-];
+import { useTranslation } from '@/hooks/useTranslation';
 
 export const HeroSection: React.FC = () => {
   const { trackEvent } = useAnalytics();
+  const { t } = useTranslation('hero');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const stats = [
+    { icon: Star, value: t('stat1.value'), label: t('stat1.label') },
+    { icon: Users, value: t('stat2.value'), label: t('stat2.label') },
+    { icon: Truck, value: t('stat3.value'), label: t('stat3.label') },
+    { icon: HeartHandshake, value: t('stat4.value'), label: t('stat4.label') },
+  ];
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -79,28 +81,28 @@ export const HeroSection: React.FC = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6 animate-fade-in">
             <Sparkles className="w-4 h-4" />
-            <span className="text-sm font-medium">Творчість для всієї родини</span>
+            <span className="text-sm font-medium">{t('badge')}</span>
           </div>
 
           {/* Main Heading */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-bold text-foreground mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            Набори для творчості{' '}
-            <span className="gradient-text">з фетру</span>
+            {t('title')}{' '}
+            <span className="gradient-text">{t('titleHighlight')}</span>
           </h1>
 
           {/* Subheading */}
           <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            Все необхідне для створення чарівних виробів власноруч. Ідеально для мам, дітей та всіх, хто любить творити!
+            {t('subtitle')}
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <Button variant="cta" size="xl" onClick={handleCTAClick} className="w-full sm:w-auto">
-              Обрати набір
+              {t('ctaChoose')}
               <ArrowDown className="w-5 h-5 animate-bounce-subtle" />
             </Button>
             <Button variant="outline" size="lg" onClick={() => document.querySelector('#comparison')?.scrollIntoView({ behavior: 'smooth' })}>
-              Порівняти набори
+              {t('ctaCompare')}
             </Button>
           </div>
 

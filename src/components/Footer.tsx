@@ -1,7 +1,10 @@
 import React from 'react';
 import { Instagram, Send, Phone, Mail, CreditCard, Truck, Shield } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export const Footer: React.FC = () => {
+  const { t } = useTranslation('footer');
+  const { t: tNav } = useTranslation('nav');
   const currentYear = new Date().getFullYear();
 
   return (
@@ -12,23 +15,23 @@ export const Footer: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div className="flex flex-col items-center gap-2">
               <Truck className="w-8 h-8 text-primary" />
-              <span className="text-sm font-medium">Безкоштовна доставка</span>
-              <span className="text-xs text-primary-foreground/60">від 1500 ₴</span>
+              <span className="text-sm font-medium">{t('freeDelivery.title')}</span>
+              <span className="text-xs text-primary-foreground/60">{t('freeDelivery.subtitle')}</span>
             </div>
             <div className="flex flex-col items-center gap-2">
               <Shield className="w-8 h-8 text-primary" />
-              <span className="text-sm font-medium">Гарантія якості</span>
-              <span className="text-xs text-primary-foreground/60">100% сертифіковано</span>
+              <span className="text-sm font-medium">{t('quality.title')}</span>
+              <span className="text-xs text-primary-foreground/60">{t('quality.subtitle')}</span>
             </div>
             <div className="flex flex-col items-center gap-2">
               <CreditCard className="w-8 h-8 text-primary" />
-              <span className="text-sm font-medium">Оплата</span>
-              <span className="text-xs text-primary-foreground/60">Карта або післяплата</span>
+              <span className="text-sm font-medium">{t('payment.title')}</span>
+              <span className="text-xs text-primary-foreground/60">{t('payment.subtitle')}</span>
             </div>
             <div className="flex flex-col items-center gap-2">
               <Phone className="w-8 h-8 text-primary" />
-              <span className="text-sm font-medium">Підтримка</span>
-              <span className="text-xs text-primary-foreground/60">Щодня 10:00-18:00</span>
+              <span className="text-sm font-medium">{t('support.title')}</span>
+              <span className="text-xs text-primary-foreground/60">{t('support.subtitle')}</span>
             </div>
           </div>
         </div>
@@ -46,7 +49,7 @@ export const Footer: React.FC = () => {
               <span className="font-heading font-bold text-xl">FetrInUA</span>
             </div>
             <p className="text-primary-foreground/60 text-sm mb-4">
-              Набори для творчості з фетру. Творимо разом з 2012 року.
+              {t('description')}
             </p>
             <div className="flex items-center gap-3">
               <a
@@ -70,12 +73,19 @@ export const Footer: React.FC = () => {
 
           {/* Quick links */}
           <div>
-            <h4 className="font-heading font-bold mb-4">Навігація</h4>
+            <h4 className="font-heading font-bold mb-4">{t('menu.title')}</h4>
             <ul className="space-y-2">
-              {['Головна', 'Набори', 'Порівняння', 'Галерея', 'Відгуки', 'FAQ'].map(item => (
-                <li key={item}>
-                  <a href={`#${item.toLowerCase()}`} className="text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
-                    {item}
+              {[
+                { key: 'home', href: '#hero' },
+                { key: 'products', href: '#products' },
+                { key: 'comparison', href: '#comparison' },
+                { key: 'gallery', href: '#gallery' },
+                { key: 'reviews', href: '#reviews' },
+                { key: 'faq', href: '#faq' },
+              ].map(item => (
+                <li key={item.key}>
+                  <a href={item.href} className="text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
+                    {tNav(item.key)}
                   </a>
                 </li>
               ))}
@@ -84,7 +94,7 @@ export const Footer: React.FC = () => {
 
           {/* Contact */}
           <div>
-            <h4 className="font-heading font-bold mb-4">Контакти</h4>
+            <h4 className="font-heading font-bold mb-4">{t('contact.title')}</h4>
             <ul className="space-y-3">
               <li>
                 <a href="tel:+380501234567" className="flex items-center gap-2 text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
@@ -138,7 +148,7 @@ export const Footer: React.FC = () => {
         <div className="container-tight py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-primary-foreground/40 text-sm">
-              © {currentYear} FetrInUA. Усі права захищено.
+              © {currentYear} FetrInUA. {t('copyright')}
             </p>
             <p className="text-primary-foreground/40 text-sm">
               Зроблено з ❤️ в Україні

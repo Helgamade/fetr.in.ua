@@ -3,23 +3,26 @@ import { ShoppingBag, Menu, X, Phone, Instagram } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
-
-const navLinks = [
-  { href: '#hero', label: 'Головна' },
-  { href: '#products', label: 'Набори' },
-  { href: '#comparison', label: 'Порівняння' },
-  { href: '#gallery', label: 'Галерея' },
-  { href: '#reviews', label: 'Відгуки' },
-  { href: '#faq', label: 'FAQ' },
-  { href: '#about', label: 'Про нас' },
-  { href: '#contact', label: 'Контакти' },
-];
+import { useTranslation } from '@/hooks/useTranslation';
 
 export const Header: React.FC = () => {
+  const { t } = useTranslation('nav');
+  const { t: tCommon } = useTranslation('common');
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { getItemCount, openCart } = useCart();
   const itemCount = getItemCount();
+
+  const navLinks = [
+    { href: '#hero', label: t('home') },
+    { href: '#products', label: t('products') },
+    { href: '#comparison', label: t('comparison') },
+    { href: '#gallery', label: t('gallery') },
+    { href: '#reviews', label: t('reviews') },
+    { href: '#faq', label: t('faq') },
+    { href: '#about', label: t('about') },
+    { href: '#contact', label: t('contact') },
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -148,7 +151,7 @@ export const Header: React.FC = () => {
         )}
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <span className="font-heading font-bold text-lg">Меню</span>
+          <span className="font-heading font-bold text-lg">{tCommon('menu')}</span>
           <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
             <X className="w-5 h-5" />
           </Button>
