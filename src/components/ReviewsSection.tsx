@@ -76,9 +76,21 @@ export const ReviewsSection: React.FC = () => {
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
             {t('title')}
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
             {t('subtitle')}
           </p>
+
+          {/* Add review button */}
+          <div className="text-center">
+            <Button 
+              variant="outline" 
+              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground" 
+              onClick={() => setIsModalOpen(true)}
+            >
+              <MessageSquarePlus className="w-5 h-5 mr-2" />
+              {t('add_button') || '+ Додати відгук'}
+            </Button>
+          </div>
         </div>
 
         {/* Reviews grid */}
@@ -126,13 +138,51 @@ export const ReviewsSection: React.FC = () => {
           </div>
         )}
 
-        {/* Add review button */}
-        <div className="text-center">
-          <Button variant="hero" onClick={() => setIsModalOpen(true)}>
-            <MessageSquarePlus className="w-5 h-5" />
-            Залишити відгук
-          </Button>
-        </div>
+        {/* Statistics */}
+        {reviews.length > 0 && (() => {
+          const approvedReviews = reviews.filter(r => r.isApproved !== false);
+          const averageRating = approvedReviews.length > 0
+            ? approvedReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / approvedReviews.length
+            : 0;
+          const satisfiedCount = approvedReviews.filter(r => (r.rating || 0) >= 4).length;
+          const satisfiedPercent = approvedReviews.length > 0
+            ? Math.round((satisfiedCount / approvedReviews.length) * 100)
+            : 0;
+          const reviewsCount = approvedReviews.length;
+
+          return (
+            <div className="mt-12 flex flex-wrap items-center justify-center gap-8">
+              {/* Average Rating */}
+              <div className="text-center">
+                <div className="text-4xl font-bold text-foreground">{averageRating.toFixed(1)}</div>
+                <div className="flex gap-0.5 justify-center my-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={cn(
+                        'w-4 h-4',
+                        i < Math.round(averageRating) ? 'text-warning fill-warning' : 'text-muted'
+                      )}
+                    />
+                  ))}
+                </div>
+                <div className="text-sm text-muted-foreground">{t('stats.average_rating') || 'Середня оцінка'}</div>
+              </div>
+
+              {/* Reviews Count */}
+              <div className="text-center">
+                <div className="text-4xl font-bold text-foreground">{reviewsCount}{reviewsCount >= 500 ? '+' : ''}</div>
+                <div className="text-sm text-muted-foreground">{t('stats.reviews_count') || 'Відгуків'}</div>
+              </div>
+
+              {/* Satisfied Clients */}
+              <div className="text-center">
+                <div className="text-4xl font-bold text-foreground">{satisfiedPercent}%</div>
+                <div className="text-sm text-muted-foreground">{t('stats.satisfied_clients') || 'Задоволених клієнтів'}</div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Review modal */}
