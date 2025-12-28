@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Star, MessageSquarePlus, X, Send, Quote } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { sanitizeName, sanitizeString, validateRating } from '@/utils/sanitize';
 
 export const ReviewsSection: React.FC = () => {
   const { data: reviews = [], isLoading } = useReviews();
@@ -15,11 +16,32 @@ export const ReviewsSection: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Client-side validation and sanitization
+    const sanitizedName = sanitizeName(formData.name.trim());
+    const sanitizedText = sanitizeString(formData.text.trim(), 2000);
+    const validatedRating = validateRating(formData.rating);
+
+    // Validate
+    if (!sanitizedName || sanitizedName.length < 2) {
+      toast.error('Помилка', {
+        description: 'Ім\'я має містити мінімум 2 символи (тільки літери)',
+      });
+      return;
+    }
+
+    if (!sanitizedText || sanitizedText.length < 10) {
+      toast.error('Помилка', {
+        description: 'Текст відгуку має містити мінімум 10 символів',
+      });
+      return;
+    }
+
     createReview.mutate(
       {
-        name: formData.name,
-        text: formData.text,
-        rating: formData.rating,
+        name: sanitizedName,
+        text: sanitizedText,
+        rating: validatedRating,
         is_approved: false,
       },
       {
@@ -30,9 +52,9 @@ export const ReviewsSection: React.FC = () => {
           setIsModalOpen(false);
           setFormData({ name: '', text: '', rating: 5 });
         },
-        onError: () => {
+        onError: (error: Error) => {
           toast.error('Помилка', {
-            description: 'Не вдалося відправити відгук. Спробуйте пізніше.',
+            description: error.message || 'Не вдалося відправити відгук. Спробуйте пізніше.',
           });
         },
       }
@@ -136,10 +158,18 @@ export const ReviewsSection: React.FC = () => {
                 <label className="block text-sm font-medium mb-1">Ваше ім'я</label>
                 <Input
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => {
+                    // Sanitize on input to prevent dangerous characters
+                    const sanitized = sanitizeName(e.target.value);
+                    setFormData({ ...formData, name: sanitized });
+                  }}
                   placeholder="Олена"
                   required
+                  maxLength={100}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Мінімум 2 символи, тільки літери, пробіли, дефіси та апострофи
+                </p>
               </div>
 
               <div>
@@ -169,11 +199,22 @@ export const ReviewsSection: React.FC = () => {
                 <label className="block text-sm font-medium mb-1">Ваш відгук</label>
                 <Textarea
                   value={formData.text}
-                  onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                  onChange={(e) => {
+                    // Limit length and remove HTML
+                    let value = e.target.value;
+                    if (value.length > 2000) {
+                      value = value.substring(0, 2000);
+                    }
+                    setFormData({ ...formData, text: value });
+                  }}
                   placeholder="Розкажіть про ваш досвід..."
                   rows={4}
                   required
+                  maxLength={2000}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Мінімум 10 символів, максимум 2000 символів ({formData.text.length}/2000)
+                </p>
               </div>
 
               <Button type="submit" variant="hero" className="w-full">

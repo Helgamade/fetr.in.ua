@@ -18,6 +18,7 @@ import { Settings } from "./pages/admin/Settings";
 import { Comparison } from "./pages/admin/Comparison";
 import { Options } from "./pages/admin/Options";
 import { Galleries } from "./pages/admin/Galleries";
+import { Reviews } from "./pages/admin/Reviews";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
                   <Route path="products" element={<Products />} />
                   <Route path="options" element={<Options />} />
                   <Route path="galleries" element={<Galleries />} />
+                  <Route path="reviews" element={<Reviews />} />
                   <Route path="settings" element={<Settings />} />
                   <Route path="comparison" element={<Comparison />} />
                 </Route>
