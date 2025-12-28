@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Save, Plus, Trash2 } from 'lucide-react';
+import { Save, Plus, Trash2, Search } from 'lucide-react';
 import { useTexts, useUpdateText, useCreateText, useDeleteText, SiteText } from '@/hooks/useTexts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,9 +23,22 @@ export function Texts() {
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newText, setNewText] = useState({ key: '', value: '', namespace: '', description: '' });
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Группируем по namespace
-  const namespaces = Array.from(new Set(texts.map(t => t.namespace))).sort();
+  // Фильтруем тексты по поисковому запросу
+  const filteredTexts = texts.filter(text => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      text.key.toLowerCase().includes(query) ||
+      text.value.toLowerCase().includes(query) ||
+      text.namespace.toLowerCase().includes(query) ||
+      (text.description && text.description.toLowerCase().includes(query))
+    );
+  });
+
+  // Группируем по namespace (только для отфильтрованных текстов)
+  const namespaces = Array.from(new Set(filteredTexts.map(t => t.namespace))).sort();
 
   const handleEdit = (text: SiteText) => {
     setEditingId(text.id);
@@ -134,116 +147,239 @@ export function Texts() {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue={namespaces[0] || ''}>
-            <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(namespaces.length, 5)}, 1fr)` }}>
-              {namespaces.map(ns => (
-                <TabsTrigger key={ns} value={ns}>
-                  {ns}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            
-            {namespaces.map(namespace => (
-              <TabsContent key={namespace} value={namespace} className="space-y-4 mt-4">
-                {texts
-                  .filter(t => t.namespace === namespace)
-                  .map(text => (
-                    <Card key={text.id}>
-                      <CardContent className="pt-6">
-                        <div className="space-y-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <Label className="text-xs text-muted-foreground">Ключ</Label>
-                              <p className="font-mono text-sm font-semibold">{text.key}</p>
+          {/* Поиск */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Пошук по ключу, значенню, namespace або опису..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            {searchQuery && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Знайдено текстів: {filteredTexts.length}
+              </p>
+            )}
+          </div>
+
+          {searchQuery ? (
+            // Режим поиска - показываем все результаты сразу
+            <div className="space-y-4">
+              {filteredTexts.length > 0 ? (
+                filteredTexts.map((text) => (
+                  <Card key={text.id}>
+                    <CardContent className="pt-6">
+                      <div className="space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Label className="text-xs text-muted-foreground">Namespace</Label>
+                              <span className="text-xs font-semibold px-2 py-1 bg-secondary rounded">{text.namespace}</span>
                             </div>
-                            {editingId !== text.id && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(text)}
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
+                            <Label className="text-xs text-muted-foreground">Ключ</Label>
+                            <p className="font-mono text-sm font-semibold">{text.key}</p>
                           </div>
-                          
-                          {editingId === text.id ? (
-                            <>
-                              <div className="space-y-2">
-                                <Label>Текст</Label>
-                                <Textarea
-                                  value={editedValue}
-                                  onChange={(e) => setEditedValue(e.target.value)}
-                                  rows={4}
-                                />
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <Label>Опис (для справки)</Label>
-                                <Input
-                                  value={editedDescription}
-                                  onChange={(e) => setEditedDescription(e.target.value)}
-                                  placeholder="Де використовується цей текст"
-                                />
-                              </div>
-                              
-                              <div className="flex gap-2">
-                                <Button 
-                                  onClick={() => handleSave(text)}
-                                  size="sm"
-                                  disabled={updateText.isPending}
-                                >
-                                  <Save className="h-4 w-4 mr-2" />
-                                  Зберегти
-                                </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => setEditingId(null)}
-                                >
-                                  Скасувати
-                                </Button>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div>
-                                <Label>Текст</Label>
-                                <p className="text-sm mt-1 whitespace-pre-wrap">{text.value}</p>
-                              </div>
-                              
-                              {text.description && (
-                                <div>
-                                  <Label className="text-xs text-muted-foreground">Опис</Label>
-                                  <p className="text-xs text-muted-foreground mt-1">{text.description}</p>
-                                </div>
-                              )}
-                              
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => handleEdit(text)}
-                              >
-                                Редагувати
-                              </Button>
-                            </>
+                          {editingId !== text.id && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(text)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                
-                {texts.filter(t => t.namespace === namespace).length === 0 && (
-                  <Card>
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                      Немає текстів у цьому namespace
+                        
+                        {editingId === text.id ? (
+                          <>
+                            <div className="space-y-2">
+                              <Label>Текст</Label>
+                              <Textarea
+                                value={editedValue}
+                                onChange={(e) => setEditedValue(e.target.value)}
+                                rows={4}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Опис (для справки)</Label>
+                              <Input
+                                value={editedDescription}
+                                onChange={(e) => setEditedDescription(e.target.value)}
+                                placeholder="Де використовується цей текст"
+                              />
+                            </div>
+                            
+                            <div className="flex gap-2">
+                              <Button 
+                                onClick={() => handleSave(text)}
+                                size="sm"
+                                disabled={updateText.isPending}
+                              >
+                                <Save className="h-4 w-4 mr-2" />
+                                Зберегти
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setEditingId(null)}
+                              >
+                                Скасувати
+                              </Button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div>
+                              <Label>Текст</Label>
+                              <p className="text-sm mt-1 whitespace-pre-wrap">{text.value}</p>
+                            </div>
+                            
+                            {text.description && (
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Опис</Label>
+                                <p className="text-xs text-muted-foreground mt-1">{text.description}</p>
+                              </div>
+                            )}
+                            
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEdit(text)}
+                            >
+                              Редагувати
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
-                )}
-              </TabsContent>
-            ))}
-          </Tabs>
+                ))
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    Текстів не знайдено
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : (
+            // Обычный режим - группировка по namespace
+            <Tabs defaultValue={namespaces[0] || ''}>
+              <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(namespaces.length, 5)}, 1fr)` }}>
+                {namespaces.map(ns => (
+                  <TabsTrigger key={ns} value={ns}>
+                    {ns}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              
+              {namespaces.map(namespace => (
+                <TabsContent key={namespace} value={namespace} className="space-y-4 mt-4">
+                  {filteredTexts
+                    .filter(t => t.namespace === namespace)
+                    .map(text => (
+                      <Card key={text.id}>
+                        <CardContent className="pt-6">
+                          <div className="space-y-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <Label className="text-xs text-muted-foreground">Ключ</Label>
+                                <p className="font-mono text-sm font-semibold">{text.key}</p>
+                              </div>
+                              {editingId !== text.id && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDelete(text)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            
+                            {editingId === text.id ? (
+                              <>
+                                <div className="space-y-2">
+                                  <Label>Текст</Label>
+                                  <Textarea
+                                    value={editedValue}
+                                    onChange={(e) => setEditedValue(e.target.value)}
+                                    rows={4}
+                                  />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label>Опис (для справки)</Label>
+                                  <Input
+                                    value={editedDescription}
+                                    onChange={(e) => setEditedDescription(e.target.value)}
+                                    placeholder="Де використовується цей текст"
+                                  />
+                                </div>
+                                
+                                <div className="flex gap-2">
+                                  <Button 
+                                    onClick={() => handleSave(text)}
+                                    size="sm"
+                                    disabled={updateText.isPending}
+                                  >
+                                    <Save className="h-4 w-4 mr-2" />
+                                    Зберегти
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => setEditingId(null)}
+                                  >
+                                    Скасувати
+                                  </Button>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div>
+                                  <Label>Текст</Label>
+                                  <p className="text-sm mt-1 whitespace-pre-wrap">{text.value}</p>
+                                </div>
+                                
+                                {text.description && (
+                                  <div>
+                                    <Label className="text-xs text-muted-foreground">Опис</Label>
+                                    <p className="text-xs text-muted-foreground mt-1">{text.description}</p>
+                                  </div>
+                                )}
+                                
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleEdit(text)}
+                                >
+                                  Редагувати
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  
+                  {filteredTexts.filter(t => t.namespace === namespace).length === 0 && (
+                    <Card>
+                      <CardContent className="py-12 text-center text-muted-foreground">
+                        Немає текстів у цьому namespace
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
+          )}
         </CardContent>
       </Card>
 
@@ -315,4 +451,3 @@ export function Texts() {
     </div>
   );
 }
-
