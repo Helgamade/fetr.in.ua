@@ -17,7 +17,7 @@ export const ComparisonSection: React.FC = () => {
     return (
       <section id="comparison" className="py-20 bg-sage/30">
         <div className="container-tight text-center">
-          <div className="text-muted-foreground">Завантаження таблиці порівняння...</div>
+          <div className="text-muted-foreground">{t('loading')}</div>
         </div>
       </section>
     );
@@ -39,10 +39,10 @@ export const ComparisonSection: React.FC = () => {
         {/* Section header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
-            Порівняння наборів
+            {t('title')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Детальне порівняння допоможе обрати саме той набір, який підходить вам найкраще
+            {t('subtitle')}
           </p>
         </div>
 

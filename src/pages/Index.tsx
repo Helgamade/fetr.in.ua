@@ -102,9 +102,9 @@ const Index = () => {
                     {t('guarantee.text')}
                   </p>
                   <div className="flex flex-wrap justify-center gap-4 text-sm">
-                    <span className="flex items-center gap-2">✅ Безпечна оплата</span>
-                    <span className="flex items-center gap-2">✅ Швидка доставка</span>
-                    <span className="flex items-center gap-2">✅ Підтримка майстра</span>
+                    <span className="flex items-center gap-2">✅ {t('guarantee.safe_payment')}</span>
+                    <span className="flex items-center gap-2">✅ {t('guarantee.fast_delivery')}</span>
+                    <span className="flex items-center gap-2">✅ {t('guarantee.master_support')}</span>
                   </div>
                 </div>
               </div>

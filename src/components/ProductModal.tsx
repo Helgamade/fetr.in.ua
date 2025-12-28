@@ -213,7 +213,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
               {/* What you can make */}
               <div className="mb-6">
-                <h3 className="font-heading font-semibold mb-3">Що можна зробити:</h3>
+                <h3 className="font-heading font-semibold mb-3">{t('what_can_make')}</h3>
                 <div className="flex flex-wrap gap-2">
                   {product.canMake.map((item, idx) => (
                     <span key={idx} className="px-3 py-1 rounded-full bg-muted text-sm">

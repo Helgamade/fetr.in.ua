@@ -84,7 +84,7 @@ export const ReviewsSection: React.FC = () => {
         {/* Reviews grid */}
         {isLoading ? (
           <div className="text-center py-12 text-muted-foreground mb-8">
-            Завантаження відгуків...
+            {t('loading')}
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-6 mb-8">
