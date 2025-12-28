@@ -245,6 +245,37 @@ export function Options() {
                   rows={3}
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="icon">SVG іконка (код або URL)</Label>
+                <Textarea
+                  id="icon"
+                  value={editingOption.icon || ''}
+                  onChange={(e) => setEditingOption({ ...editingOption, icon: e.target.value })}
+                  placeholder="Вставте SVG код або URL іконки"
+                  rows={4}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Можна вставити SVG код або URL до зображення. Іконка буде відображатися в кольорі primary.
+                </p>
+                {/* Preview */}
+                {editingOption.icon && (
+                  <div className="mt-2 p-3 border rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground mb-2">Попередній перегляд:</p>
+                    <div className="flex items-center gap-2 text-primary">
+                      {editingOption.icon.trim().startsWith('<svg') ? (
+                        <div 
+                          className="w-4 h-4 [&_svg]:w-full [&_svg]:h-full [&_svg]:text-primary [&_svg]:stroke-current"
+                          dangerouslySetInnerHTML={{ __html: editingOption.icon }}
+                        />
+                      ) : (editingOption.icon.startsWith('http') || editingOption.icon.startsWith('/')) ? (
+                        <img src={editingOption.icon} alt="Icon" className="w-4 h-4 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      ) : null}
+                      <span className="text-sm">Тестовий текст</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <DialogFooter>
