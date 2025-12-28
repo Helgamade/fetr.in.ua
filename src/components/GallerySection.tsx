@@ -89,10 +89,7 @@ export const GallerySection: React.FC = () => {
                 <button
                   key={gallery.id}
                   onClick={() => openLightbox(gallery, 0)}
-                  className={cn(
-                    'relative aspect-square overflow-hidden rounded-2xl group',
-                    index === 0 && 'md:col-span-2 md:row-span-2'
-                  )}
+                  className="relative aspect-square overflow-hidden rounded-2xl group"
                 >
                   <img
                     src={previewImage.url}
