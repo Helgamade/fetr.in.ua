@@ -7,25 +7,39 @@ const router = express.Router();
 // Get all reviews (published only for public, all for admin)
 router.get('/', async (req, res, next) => {
   try {
-    // Get featured reviews first (max 4), then others
-    const [featuredReviews] = await pool.execute(`
-      SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
-      FROM reviews
-      WHERE is_approved = TRUE AND featured = TRUE
-      ORDER BY RAND()
-      LIMIT 4
-    `);
+    // Check if featured column exists by trying a simple query
+    let reviews;
+    try {
+      // Try to get featured reviews (if column exists)
+      const [featuredReviews] = await pool.execute(`
+        SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
+        FROM reviews
+        WHERE is_approved = TRUE AND featured = TRUE
+        ORDER BY RAND()
+        LIMIT 4
+      `);
 
-    // Get other approved reviews if we have less than 4 featured
-    const [otherReviews] = await pool.execute(`
-      SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
-      FROM reviews
-      WHERE is_approved = TRUE AND (featured = FALSE OR featured IS NULL)
-      ORDER BY created_at DESC
-      LIMIT ?
-    `, [Math.max(0, 4 - featuredReviews.length)]);
+      // Get other approved reviews if we have less than 4 featured
+      const [otherReviews] = await pool.execute(`
+        SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
+        FROM reviews
+        WHERE is_approved = TRUE AND (featured = FALSE OR featured IS NULL)
+        ORDER BY created_at DESC
+        LIMIT ?
+      `, [Math.max(0, 4 - featuredReviews.length)]);
 
-    const reviews = [...featuredReviews, ...otherReviews].slice(0, 4);
+      reviews = [...featuredReviews, ...otherReviews].slice(0, 4);
+    } catch (error) {
+      // If featured column doesn't exist, fallback to regular query
+      const [allReviews] = await pool.execute(`
+        SELECT id, name, text, rating, photo, is_approved, created_at, updated_at
+        FROM reviews
+        WHERE is_approved = TRUE
+        ORDER BY created_at DESC
+        LIMIT 4
+      `);
+      reviews = allReviews.map(r => ({ ...r, featured: false }));
+    }
     
     // Convert dates and ensure featured field
     reviews.forEach(review => {
@@ -45,11 +59,24 @@ router.get('/', async (req, res, next) => {
 // Get all reviews (for admin - includes unapproved)
 router.get('/all', async (req, res, next) => {
   try {
-    const [reviews] = await pool.execute(`
-      SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
-      FROM reviews
-      ORDER BY created_at DESC
-    `);
+    // Check if featured column exists
+    let reviews;
+    try {
+      const [result] = await pool.execute(`
+        SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
+        FROM reviews
+        ORDER BY created_at DESC
+      `);
+      reviews = result;
+    } catch (error) {
+      // If featured column doesn't exist, fallback to query without it
+      const [result] = await pool.execute(`
+        SELECT id, name, text, rating, photo, is_approved, created_at, updated_at
+        FROM reviews
+        ORDER BY created_at DESC
+      `);
+      reviews = result.map(r => ({ ...r, featured: false }));
+    }
     
     // Convert dates
     reviews.forEach(review => {
@@ -141,15 +168,25 @@ router.post('/', async (req, res, next) => {
       is_approved = false;
     }
 
-    const featured = req.body.featured === true ? true : false;
     const created_at = req.body.created_at 
       ? new Date(req.body.created_at).toISOString().slice(0, 19).replace('T', ' ')
       : new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-    const [result] = await pool.execute(`
-      INSERT INTO reviews (name, text, rating, photo, is_approved, featured, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [name, text, rating, photo, is_approved, featured, created_at]);
+    // Try with featured column, fallback if it doesn't exist
+    let result;
+    try {
+      const featured = req.body.featured === true ? true : false;
+      [result] = await pool.execute(`
+        INSERT INTO reviews (name, text, rating, photo, is_approved, featured, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `, [name, text, rating, photo, is_approved, featured, created_at]);
+    } catch (error) {
+      // Fallback without featured column
+      [result] = await pool.execute(`
+        INSERT INTO reviews (name, text, rating, photo, is_approved, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `, [name, text, rating, photo, is_approved, created_at]);
+    }
 
     res.status(201).json({ id: result.insertId, message: 'Review created' });
   } catch (error) {
@@ -202,26 +239,49 @@ router.put('/:id', async (req, res, next) => {
       }
     }
 
-    await pool.execute(`
-      UPDATE reviews SET
-        name = COALESCE(?, name),
-        text = COALESCE(?, text),
-        rating = ?,
-        photo = ?,
-        is_approved = COALESCE(?, is_approved),
-        featured = COALESCE(?, featured),
-        created_at = COALESCE(?, created_at)
-      WHERE id = ?
-    `, [
-      name || null, 
-      text || null, 
-      rating, 
-      photo, 
-      is_approved !== undefined ? is_approved : null,
-      featured !== undefined ? featured : null,
-      createdAtValue,
-      id
-    ]);
+    // Try with featured column, fallback if it doesn't exist
+    try {
+      await pool.execute(`
+        UPDATE reviews SET
+          name = COALESCE(?, name),
+          text = COALESCE(?, text),
+          rating = ?,
+          photo = ?,
+          is_approved = COALESCE(?, is_approved),
+          featured = COALESCE(?, featured),
+          created_at = COALESCE(?, created_at)
+        WHERE id = ?
+      `, [
+        name || null, 
+        text || null, 
+        rating, 
+        photo, 
+        is_approved !== undefined ? is_approved : null,
+        featured !== undefined ? featured : null,
+        createdAtValue,
+        id
+      ]);
+    } catch (error) {
+      // Fallback without featured column
+      await pool.execute(`
+        UPDATE reviews SET
+          name = COALESCE(?, name),
+          text = COALESCE(?, text),
+          rating = ?,
+          photo = ?,
+          is_approved = COALESCE(?, is_approved),
+          created_at = COALESCE(?, created_at)
+        WHERE id = ?
+      `, [
+        name || null, 
+        text || null, 
+        rating, 
+        photo, 
+        is_approved !== undefined ? is_approved : null,
+        createdAtValue,
+        id
+      ]);
+    }
 
     res.json({ id, message: 'Review updated' });
   } catch (error) {
