@@ -82,11 +82,7 @@ export const ReviewsSection: React.FC = () => {
 
           {/* Add review button */}
           <div className="text-center">
-            <Button 
-              variant="outline" 
-              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground" 
-              onClick={() => setIsModalOpen(true)}
-            >
+            <Button variant="hero" onClick={() => setIsModalOpen(true)}>
               <MessageSquarePlus className="w-5 h-5 mr-2" />
               {t('add_button') || '+ Додати відгук'}
             </Button>
