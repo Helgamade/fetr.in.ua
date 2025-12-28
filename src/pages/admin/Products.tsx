@@ -31,7 +31,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Product, ProductOption } from '@/types/store';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts, useUpdateProduct, useDeleteProduct } from '@/hooks/useProducts';
-import { productsAPI } from '@/lib/api';
+import { optionsAPI } from '@/lib/api';
 
 const badgeLabels = {
   hit: 'Хіт',
