@@ -6,6 +6,7 @@ import { X, ChevronLeft, ChevronRight, ShoppingBag, Check, Users, Eye, Truck, Sh
 import { useCart } from '@/context/CartContext';
 import { useAnalytics } from '@/context/AnalyticsContext';
 import { CountdownTimer } from '@/components/CountdownTimer';
+import { OptionIcon } from '@/components/OptionIcon';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 
