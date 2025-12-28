@@ -21,3 +21,4 @@ echo "To stop server: kill $PID"
 echo "To check status: ps aux | grep 'node.*server/index.js'"
 echo "To view logs: tail -f server/api.log"
 
+

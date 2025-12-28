@@ -6,3 +6,4 @@ ADD COLUMN featured BOOLEAN NOT NULL DEFAULT FALSE AFTER is_approved;
 ALTER TABLE reviews
 ADD INDEX idx_featured (featured);
 
+

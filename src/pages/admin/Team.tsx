@@ -208,7 +208,7 @@ export function Team() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {filteredMembers.map((member) => (
           <Card key={member.id} className="overflow-hidden">
             <div className="aspect-square relative bg-muted">
@@ -230,17 +230,16 @@ export function Team() {
               )}
             </div>
             <CardContent className="pt-4">
-              <h3 className="font-semibold text-lg mb-1">{member.name}</h3>
-              <p className="text-sm text-muted-foreground mb-2">{member.role}</p>
+              <h3 className="font-semibold text-base mb-1">{member.name}</h3>
+              <p className="text-xs text-muted-foreground mb-2">{member.role}</p>
               {member.description && (
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-3">{member.description}</p>
+                <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{member.description}</p>
               )}
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-2 pt-2 border-t">
                 <div className="flex items-center gap-1">
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8"
                     onClick={() => handleMoveUp(member)}
                     disabled={members.findIndex(m => m.id === member.id) === 0}
                   >
@@ -249,28 +248,23 @@ export function Team() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8"
                     onClick={() => handleMoveDown(member)}
                     disabled={members.findIndex(m => m.id === member.id) === members.length - 1}
                   >
                     <ChevronDown className="h-4 w-4" />
                   </Button>
-                  <span className="text-xs text-muted-foreground ml-2">
-                    Порядок: {member.sort_order}
-                  </span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
                     onClick={() => handleEdit(member)}
                   >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Редагувати
+                    <Edit className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="destructive"
-                    size="sm"
+                    size="icon"
                     onClick={() => handleDelete(member)}
                     disabled={deleteMember.isPending}
                   >

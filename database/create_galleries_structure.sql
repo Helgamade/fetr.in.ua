@@ -25,3 +25,4 @@ FOREIGN KEY (gallery_id) REFERENCES galleries(id) ON DELETE CASCADE;
 ALTER TABLE gallery_images
 ADD INDEX idx_gallery_id (gallery_id);
 
+

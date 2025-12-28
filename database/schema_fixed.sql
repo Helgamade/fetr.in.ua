@@ -217,3 +217,4 @@ CREATE TABLE IF NOT EXISTS gallery_images (
   INDEX idx_is_published (is_published)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+

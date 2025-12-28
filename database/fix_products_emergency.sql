@@ -25,3 +25,4 @@ SELECT id, code, name FROM products;
 -- ALTER TABLE products ADD UNIQUE KEY idx_code (code);
 -- ALTER TABLE products ADD PRIMARY KEY (code);
 
+

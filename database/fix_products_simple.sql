@@ -27,3 +27,4 @@ ALTER TABLE products ADD COLUMN id INT AUTO_INCREMENT PRIMARY KEY FIRST;
 -- 7. Проверьте результат:
 SELECT id, code, name FROM products;
 
+

@@ -12,3 +12,4 @@ WHERE TABLE_SCHEMA = 'idesig02_fetrinua'
   AND TABLE_NAME IN ('orders', 'order_items', 'products', 'product_images', 'product_features', 'product_product_options', 'product_options', 'order_item_options')
 ORDER BY TABLE_NAME, CONSTRAINT_NAME;
 
+

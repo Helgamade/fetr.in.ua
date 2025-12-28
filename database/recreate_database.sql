@@ -29,3 +29,4 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ШАГ 3: Заполнение данными (выполните содержимое database/seed_fixed.sql)
 -- Скопируйте и выполните SQL из файла seed_fixed.sql
 
+

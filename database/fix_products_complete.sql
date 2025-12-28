@@ -78,3 +78,4 @@ ALTER TABLE order_items DROP COLUMN product_code;
 ALTER TABLE order_items CHANGE COLUMN product_id product_id INT NOT NULL;
 ALTER TABLE order_items ADD FOREIGN KEY (product_id) REFERENCES products(id);
 
+

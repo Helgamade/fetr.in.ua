@@ -61,3 +61,4 @@ CORS_ORIGIN=https://fetr.in.ua
 - API должен быть доступен по адресу `https://fetr.in.ua/api/health`
 - Фронтенд должен загружать данные без ошибок
 
+

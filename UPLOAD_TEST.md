@@ -84,3 +84,4 @@ curl -I https://www.fetr.in.ua/uploads/products/product-*.jpg
 - Это другая проблема, связанная с деплоем фронтенда
 - См. `server/deploy.sh` и `.cursor/rules/deploy-rules.md`
 
+

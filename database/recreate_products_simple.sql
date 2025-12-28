@@ -94,3 +94,4 @@ DROP TABLE products_backup;
 -- ALTER TABLE product_product_options ADD FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE;
 -- ALTER TABLE order_items ADD FOREIGN KEY (product_id) REFERENCES products(id);
 
+

@@ -13,3 +13,4 @@ SELECT id, code, name FROM products LIMIT 3;
 -- 4. Показать полную структуру с ключами:
 SHOW CREATE TABLE products;
 
+

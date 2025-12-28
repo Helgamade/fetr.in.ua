@@ -145,3 +145,4 @@ SET oi.product_id = p.id;
 -- Проверка результата:
 SELECT id, code, name, display_order FROM products ORDER BY id;
 
+

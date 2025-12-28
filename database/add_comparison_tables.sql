@@ -75,3 +75,4 @@ INSERT INTO comparison_values (feature_key, product_id, value, is_boolean) VALUE
 ('suitable', 3, 'Професіонали, ентузіасти', FALSE)
 ON DUPLICATE KEY UPDATE value=VALUES(value), is_boolean=VALUES(is_boolean);
 
+

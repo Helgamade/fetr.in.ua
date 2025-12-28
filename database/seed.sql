@@ -207,3 +207,4 @@ INSERT INTO settings (key_name, value, type, description) VALUES
 ('notify_on_delivery', 'false', 'boolean', 'Сповіщення про доставку')
 ON DUPLICATE KEY UPDATE value=VALUES(value), type=VALUES(type), description=VALUES(description);
 
+

@@ -12,3 +12,4 @@ ALTER TABLE products ADD COLUMN id INT AUTO_INCREMENT PRIMARY KEY FIRST;
 
 -- Проверка: SELECT * FROM products; - должно показать id с автоинкрементными значениями
 
+
