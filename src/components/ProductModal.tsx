@@ -191,7 +191,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
               {/* Suitable for */}
               <div className="mb-6">
-                <h3 className="font-heading font-semibold mb-2">Підходить для:</h3>
+                <h3 className="font-heading font-semibold mb-2 flex items-center gap-2">
+                  {product.sectionIconSuitableFor && (
+                    <OptionIcon icon={product.sectionIconSuitableFor} className="w-5 h-5" />
+                  )}
+                  Підходить для:
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {product.suitableFor.map((item, idx) => (
                     <span key={idx} className="px-3 py-1 rounded-full bg-sage text-sm font-medium">
@@ -203,7 +208,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
               {/* What's included */}
               <div className="mb-6">
-                <h3 className="font-heading font-semibold mb-3">Що входить:</h3>
+                <h3 className="font-heading font-semibold mb-3 flex items-center gap-2">
+                  {product.sectionIconFeatures && (
+                    <OptionIcon icon={product.sectionIconFeatures} className="w-5 h-5" />
+                  )}
+                  Що входить:
+                </h3>
                 <ul className="space-y-2">
                   {product.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2">
@@ -216,7 +226,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
               {/* What you can make */}
               <div className="mb-6">
-                <h3 className="font-heading font-semibold mb-3">{t('what_can_make')}</h3>
+                <h3 className="font-heading font-semibold mb-3 flex items-center gap-2">
+                  {product.sectionIconCanMake && (
+                    <OptionIcon icon={product.sectionIconCanMake} className="w-5 h-5" />
+                  )}
+                  {t('what_can_make')}
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {product.canMake.map((item, idx) => (
                     <span key={idx} className="px-3 py-1 rounded-full bg-muted text-sm">
@@ -228,7 +243,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
               {/* Materials */}
               <div className="mb-6">
-                <h3 className="font-heading font-semibold mb-3">Матеріали:</h3>
+                <h3 className="font-heading font-semibold mb-3 flex items-center gap-2">
+                  {product.sectionIconMaterials && (
+                    <OptionIcon icon={product.sectionIconMaterials} className="w-5 h-5" />
+                  )}
+                  Матеріали:
+                </h3>
                 <div className="space-y-2">
                   {product.materials.map((material, idx) => (
                     <div key={idx} className="p-3 rounded-lg bg-muted">
@@ -241,7 +261,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
               {/* Additional options */}
               <div className="mb-6">
-                <h3 className="font-heading font-semibold mb-3">Додаткові опції:</h3>
+                <h3 className="font-heading font-semibold mb-3 flex items-center gap-2">
+                  {product.sectionIconOptions && (
+                    <OptionIcon icon={product.sectionIconOptions} className="w-5 h-5" />
+                  )}
+                  Додаткові опції:
+                </h3>
                 <div className="space-y-3">
                   {product.options.map(option => (
                     <label

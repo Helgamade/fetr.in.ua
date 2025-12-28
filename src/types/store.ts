@@ -27,6 +27,11 @@ export interface Product {
   viewCount: number;
   purchaseCount: number;
   displayOrder?: number;
+  sectionIconFeatures?: string; // SVG код или URL иконки для секции "Що входить"
+  sectionIconMaterials?: string; // SVG код или URL иконки для секции "Матеріали"
+  sectionIconCanMake?: string; // SVG код или URL иконки для секции "Що можна зробити"
+  sectionIconSuitableFor?: string; // SVG код или URL иконки для секции "Підходить для"
+  sectionIconOptions?: string; // SVG код или URL иконки для секции "Додаткові опції"
 }
 
 export interface CartItem {

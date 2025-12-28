@@ -549,22 +549,55 @@ export function Products() {
 
               {/* Features Tab */}
               <TabsContent value="features" className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label>Що входить (по одній на рядок)</Label>
-                  <Textarea
-                    value={editingProduct.features.join('\n')}
-                    onChange={(e) => setEditingProduct({ 
-                      ...editingProduct, 
-                      features: e.target.value.split('\n').filter(Boolean) 
-                    })}
-                    rows={8}
-                    placeholder="20 кольорів фетру (20×20 см)&#10;Повний набір інструментів&#10;20+ шаблонів різної складності"
-                  />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>SVG іконка для заголовка "Що входить"</Label>
+                    <Textarea
+                      value={editingProduct.sectionIconFeatures || ''}
+                      onChange={(e) => setEditingProduct({ 
+                        ...editingProduct, 
+                        sectionIconFeatures: e.target.value 
+                      })}
+                      placeholder="Вставте SVG код або URL іконки"
+                      rows={4}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Можна вставити SVG код або URL до зображення. Іконка буде відображатися перед заголовком секції.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Що входить (по одній на рядок)</Label>
+                    <Textarea
+                      value={editingProduct.features.join('\n')}
+                      onChange={(e) => setEditingProduct({ 
+                        ...editingProduct, 
+                        features: e.target.value.split('\n').filter(Boolean) 
+                      })}
+                      rows={8}
+                      placeholder="20 кольорів фетру (20×20 см)&#10;Повний набір інструментів&#10;20+ шаблонів різної складності"
+                    />
+                  </div>
                 </div>
               </TabsContent>
 
               {/* Materials Tab */}
               <TabsContent value="materials" className="space-y-4 mt-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>SVG іконка для заголовка "Матеріали"</Label>
+                    <Textarea
+                      value={editingProduct.sectionIconMaterials || ''}
+                      onChange={(e) => setEditingProduct({ 
+                        ...editingProduct, 
+                        sectionIconMaterials: e.target.value 
+                      })}
+                      placeholder="Вставте SVG код або URL іконки"
+                      rows={4}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Можна вставити SVG код або URL до зображення. Іконка буде відображатися перед заголовком секції.
+                    </p>
+                  </div>
                 <div className="space-y-3">
                   {editingProduct.materials.map((material, index) => (
                     <div key={index} className="flex gap-2 items-start p-3 border rounded-lg">
@@ -614,37 +647,72 @@ export function Products() {
                     Додати матеріал
                   </Button>
                 </div>
+                </div>
               </TabsContent>
 
               {/* CanMake Tab */}
               <TabsContent value="canMake" className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label>Що можна зробити (по одній на рядок)</Label>
-                  <Textarea
-                    value={editingProduct.canMake.join('\n')}
-                    onChange={(e) => setEditingProduct({ 
-                      ...editingProduct, 
-                      canMake: e.target.value.split('\n').filter(Boolean) 
-                    })}
-                    rows={8}
-                    placeholder="М'які іграшки&#10;Мобілі для малюків&#10;Розвиваючі книжки"
-                  />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>SVG іконка для заголовка "Що можна зробити"</Label>
+                    <Textarea
+                      value={editingProduct.sectionIconCanMake || ''}
+                      onChange={(e) => setEditingProduct({ 
+                        ...editingProduct, 
+                        sectionIconCanMake: e.target.value 
+                      })}
+                      placeholder="Вставте SVG код або URL іконки"
+                      rows={4}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Можна вставити SVG код або URL до зображення. Іконка буде відображатися перед заголовком секції.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Що можна зробити (по одній на рядок)</Label>
+                    <Textarea
+                      value={editingProduct.canMake.join('\n')}
+                      onChange={(e) => setEditingProduct({ 
+                        ...editingProduct, 
+                        canMake: e.target.value.split('\n').filter(Boolean) 
+                      })}
+                      rows={8}
+                      placeholder="М'які іграшки&#10;Мобілі для малюків&#10;Розвиваючі книжки"
+                    />
+                  </div>
                 </div>
               </TabsContent>
 
               {/* SuitableFor Tab */}
               <TabsContent value="suitableFor" className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label>Підходить для (по одній на рядок)</Label>
-                  <Textarea
-                    value={editingProduct.suitableFor.join('\n')}
-                    onChange={(e) => setEditingProduct({ 
-                      ...editingProduct, 
-                      suitableFor: e.target.value.split('\n').filter(Boolean) 
-                    })}
-                    rows={6}
-                    placeholder="Вся родина&#10;Садочок&#10;Школа&#10;Подарунок"
-                  />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>SVG іконка для заголовка "Підходить для"</Label>
+                    <Textarea
+                      value={editingProduct.sectionIconSuitableFor || ''}
+                      onChange={(e) => setEditingProduct({ 
+                        ...editingProduct, 
+                        sectionIconSuitableFor: e.target.value 
+                      })}
+                      placeholder="Вставте SVG код або URL іконки"
+                      rows={4}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Можна вставити SVG код або URL до зображення. Іконка буде відображатися перед заголовком секції.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Підходить для (по одній на рядок)</Label>
+                    <Textarea
+                      value={editingProduct.suitableFor.join('\n')}
+                      onChange={(e) => setEditingProduct({ 
+                        ...editingProduct, 
+                        suitableFor: e.target.value.split('\n').filter(Boolean) 
+                      })}
+                      rows={6}
+                      placeholder="Вся родина&#10;Садочок&#10;Школа&#10;Подарунок"
+                    />
+                  </div>
                 </div>
               </TabsContent>
 

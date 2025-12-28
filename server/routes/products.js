@@ -140,6 +140,11 @@ router.get('/', async (req, res, next) => {
       product.displayOrder = parseInt(product.display_order) || 0;
       product.shortDescription = product.short_description;
       product.fullDescription = product.full_description;
+      product.sectionIconFeatures = product.section_icon_features || null;
+      product.sectionIconMaterials = product.section_icon_materials || null;
+      product.sectionIconCanMake = product.section_icon_can_make || null;
+      product.sectionIconSuitableFor = product.section_icon_suitable_for || null;
+      product.sectionIconOptions = product.section_icon_options || null;
       // Keep code field for comparison and cart
       product.code = product.code;
       
@@ -151,6 +156,11 @@ router.get('/', async (req, res, next) => {
       delete product.display_order;
       delete product.short_description;
       delete product.full_description;
+      delete product.section_icon_features;
+      delete product.section_icon_materials;
+      delete product.section_icon_can_make;
+      delete product.section_icon_suitable_for;
+      delete product.section_icon_options;
       delete product.created_at;
       delete product.updated_at;
     }
@@ -303,7 +313,8 @@ router.put('/:id', async (req, res, next) => {
     const {
       name, slug, shortDescription, fullDescription,
       basePrice, salePrice, badge, stock, viewCount, purchaseCount, displayOrder,
-      features, materials, canMake, suitableFor, options, images
+      features, materials, canMake, suitableFor, options, images,
+      sectionIconFeatures, sectionIconMaterials, sectionIconCanMake, sectionIconSuitableFor, sectionIconOptions
     } = req.body;
 
     // Update main product fields
@@ -311,9 +322,17 @@ router.put('/:id', async (req, res, next) => {
       UPDATE products SET
         name = ?, slug = ?, short_description = ?, full_description = ?,
         base_price = ?, sale_price = ?, badge = ?, stock = ?,
-        view_count = ?, purchase_count = ?, display_order = ?
+        view_count = ?, purchase_count = ?, display_order = ?,
+        section_icon_features = ?, section_icon_materials = ?, section_icon_can_make = ?,
+        section_icon_suitable_for = ?, section_icon_options = ?
       WHERE id = ?
-    `, [name, slug, shortDescription, fullDescription, basePrice, salePrice, badge, stock, viewCount || 0, purchaseCount || 0, displayOrder || 0, id]);
+    `, [
+      name, slug, shortDescription, fullDescription, basePrice, salePrice, badge, stock,
+      viewCount || 0, purchaseCount || 0, displayOrder || 0,
+      sectionIconFeatures || null, sectionIconMaterials || null, sectionIconCanMake || null,
+      sectionIconSuitableFor || null, sectionIconOptions || null,
+      id
+    ]);
 
     // Update features (type = 'feature')
     await pool.execute('DELETE FROM product_features WHERE product_id = ? AND type = ?', [id, 'feature']);
