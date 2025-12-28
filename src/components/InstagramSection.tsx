@@ -80,6 +80,9 @@ export const InstagramSection: React.FC = () => {
               <ExternalLink className="w-4 h-4" />
             </a>
           </Button>
+          <p className="text-sm text-muted-foreground mt-4">
+            {t('subscribers_count')}
+          </p>
         </div>
       </div>
     </section>
