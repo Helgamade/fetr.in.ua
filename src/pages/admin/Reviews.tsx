@@ -281,7 +281,7 @@ export function Reviews() {
                           {!review.is_approved && (
                             <Badge variant="secondary">На модерації</Badge>
                           )}
-                          {review.featured && (
+                          {!!review.featured && (
                             <Badge variant="default">На головній</Badge>
                           )}
                         </div>
