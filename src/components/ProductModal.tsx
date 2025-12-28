@@ -257,15 +257,18 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                         onCheckedChange={() => toggleOption(option.code)}
                         className="mt-0.5"
                       />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{option.name}</span>
-                          <span className="font-semibold text-primary">+{option.price} ₴</span>
+                      <div className="flex-grow">
+                        <div className="flex items-center gap-2">
+                          {option.icon && (
+                            <OptionIcon icon={option.icon} />
+                          )}
+                          <span className="font-medium text-foreground">{option.name}</span>
                         </div>
                         {option.description && (
                           <p className="text-sm text-muted-foreground mt-1">{option.description}</p>
                         )}
                       </div>
+                      <span className="font-bold text-primary whitespace-nowrap">+{option.price} ₴</span>
                     </label>
                   ))}
                 </div>

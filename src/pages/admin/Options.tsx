@@ -32,7 +32,7 @@ export function Options() {
   );
 
   const handleCreate = () => {
-    setEditingOption({ id: 0, code: '', name: '', price: 0, description: '' });
+    setEditingOption({ id: 0, code: '', name: '', price: 0, description: '', icon: '' });
     setIsDialogOpen(true);
   };
 
@@ -57,6 +57,7 @@ export function Options() {
       name: editingOption.name,
       price: editingOption.price,
       description: editingOption.description,
+      icon: editingOption.icon || null,
     };
 
     if (editingOption.id === 0) {

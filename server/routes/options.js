@@ -16,6 +16,7 @@ router.get('/', async (req, res, next) => {
       name: opt.name,
       price: parseFloat(opt.price) || 0,
       description: opt.description || null,
+      icon: opt.icon || null,
     }));
     
     res.json(transformedOptions);
@@ -43,6 +44,7 @@ router.get('/:id', async (req, res, next) => {
       name: option.name,
       price: parseFloat(option.price) || 0,
       description: option.description || null,
+      icon: option.icon || null,
     });
   } catch (error) {
     next(error);
@@ -52,7 +54,7 @@ router.get('/:id', async (req, res, next) => {
 // Create option
 router.post('/', async (req, res, next) => {
   try {
-    const { name, price, description } = req.body;
+    const { name, price, description, icon } = req.body;
     
     if (!name || price === undefined) {
       return res.status(400).json({ error: 'Name and price are required' });
@@ -67,9 +69,9 @@ router.post('/', async (req, res, next) => {
       .replace(/^-|-$/g, '') + '-' + Date.now().toString().slice(-6);
     
     const [result] = await pool.execute(`
-      INSERT INTO product_options (code, name, price, description)
-      VALUES (?, ?, ?, ?)
-    `, [code, name, parseFloat(price), description || null]);
+      INSERT INTO product_options (code, name, price, description, icon)
+      VALUES (?, ?, ?, ?, ?)
+    `, [code, name, parseFloat(price), description || null, icon || null]);
     
     res.status(201).json({ id: result.insertId, code, message: 'Option created' });
   } catch (error) {
@@ -81,7 +83,7 @@ router.post('/', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, price, description } = req.body;
+    const { name, price, description, icon } = req.body;
     
     if (!name || price === undefined) {
       return res.status(400).json({ error: 'Name and price are required' });
@@ -89,9 +91,9 @@ router.put('/:id', async (req, res, next) => {
     
     await pool.execute(`
       UPDATE product_options
-      SET name = ?, price = ?, description = ?
+      SET name = ?, price = ?, description = ?, icon = ?
       WHERE id = ?
-    `, [name, parseFloat(price), description || null, id]);
+    `, [name, parseFloat(price), description || null, icon || null, id]);
     
     res.json({ id, message: 'Option updated' });
   } catch (error) {

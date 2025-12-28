@@ -4,6 +4,7 @@ export interface ProductOption {
   name: string;
   price: number;
   description?: string;
+  icon?: string; // SVG код или URL иконки
 }
 
 export interface Product {
