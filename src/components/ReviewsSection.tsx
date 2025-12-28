@@ -7,6 +7,7 @@ import { Star, MessageSquarePlus, X, Send, Quote } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { sanitizeName, sanitizeString, validateRating } from '@/utils/sanitize';
+import { formatRelativeTime } from '@/utils/dateFormat';
 
 export const ReviewsSection: React.FC = () => {
   const { data: reviews = [], isLoading } = useReviews();
