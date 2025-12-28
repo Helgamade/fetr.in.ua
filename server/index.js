@@ -14,6 +14,7 @@ import galleriesRoutes from './routes/galleries.js';
 import comparisonRoutes from './routes/comparison.js';
 import optionsRoutes from './routes/options.js';
 import instagramRoutes from './routes/instagram.js';
+import textsRoutes from './routes/texts.js';
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -62,6 +63,7 @@ app.use('/api/galleries', galleriesRoutes);
 app.use('/api/comparison', comparisonRoutes);
 app.use('/api/options', optionsRoutes);
 app.use('/api/instagram', instagramRoutes);
+app.use('/api/texts', textsRoutes);
 
 // Serve uploaded files
 const UPLOADS_DIR = join(__dirname, '..', 'uploads');

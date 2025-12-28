@@ -21,6 +21,7 @@ import { Galleries } from "./pages/admin/Galleries";
 import { Reviews } from "./pages/admin/Reviews";
 import { Team } from "./pages/admin/Team";
 import { Instagram } from "./pages/admin/Instagram";
+import { Texts } from "./pages/admin/Texts";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
                   <Route path="reviews" element={<Reviews />} />
                   <Route path="team" element={<Team />} />
                   <Route path="instagram" element={<Instagram />} />
+                  <Route path="texts" element={<Texts />} />
                   <Route path="settings" element={<Settings />} />
                   <Route path="comparison" element={<Comparison />} />
                 </Route>

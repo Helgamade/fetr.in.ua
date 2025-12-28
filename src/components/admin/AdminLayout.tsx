@@ -10,7 +10,8 @@ import {
   Images,
   MessageSquare,
   Users,
-  Instagram
+  Instagram,
+  FileText
 } from 'lucide-react';
 import {
   Sidebar,
@@ -38,6 +39,7 @@ const menuItems = [
   { icon: MessageSquare, label: 'Відгуки', path: '/admin/reviews' },
   { icon: Users, label: 'Наша команда', path: '/admin/team' },
   { icon: Instagram, label: 'Слідкуйте за нами', path: '/admin/instagram' },
+  { icon: FileText, label: 'Тексти сайту', path: '/admin/texts' },
   { icon: Table2, label: 'Порівняння', path: '/admin/comparison' },
   { icon: Settings, label: 'Налаштування', path: '/admin/settings' },
 ];
