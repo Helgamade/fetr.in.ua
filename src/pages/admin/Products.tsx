@@ -719,6 +719,21 @@ export function Products() {
               {/* Options Tab */}
               <TabsContent value="options" className="space-y-4 mt-4">
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>SVG іконка для заголовка "Додаткові опції"</Label>
+                    <Textarea
+                      value={editingProduct.sectionIconOptions || ''}
+                      onChange={(e) => setEditingProduct({ 
+                        ...editingProduct, 
+                        sectionIconOptions: e.target.value 
+                      })}
+                      placeholder="Вставте SVG код або URL іконки"
+                      rows={4}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Можна вставити SVG код або URL до зображення. Іконка буде відображатися перед заголовком секції.
+                    </p>
+                  </div>
                   <div>
                     <Label>Вибрані опції (відсортовані для цього товару)</Label>
                     <p className="text-xs text-muted-foreground mb-3">
