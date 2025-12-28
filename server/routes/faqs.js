@@ -65,11 +65,38 @@ router.put('/:id', async (req, res, next) => {
     const { id } = req.params;
     const { question, answer, sort_order, is_published } = req.body;
 
+    // Строим запрос динамически, обновляя только переданные поля
+    const updateFields = [];
+    const updateValues = [];
+
+    if (question !== undefined) {
+      updateFields.push('question = ?');
+      updateValues.push(question);
+    }
+    if (answer !== undefined) {
+      updateFields.push('answer = ?');
+      updateValues.push(answer);
+    }
+    if (sort_order !== undefined) {
+      updateFields.push('sort_order = ?');
+      updateValues.push(sort_order);
+    }
+    if (is_published !== undefined) {
+      updateFields.push('is_published = ?');
+      updateValues.push(is_published);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    updateValues.push(id);
+
     await pool.execute(`
       UPDATE faqs SET
-        question = ?, answer = ?, sort_order = ?, is_published = ?
+        ${updateFields.join(', ')}
       WHERE id = ?
-    `, [question, answer, sort_order, is_published, id]);
+    `, updateValues);
 
     res.json({ id, message: 'FAQ updated' });
   } catch (error) {
