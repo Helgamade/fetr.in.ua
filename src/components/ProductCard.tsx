@@ -59,27 +59,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
         
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
-          {product.badge && (
-            <div className={cn('flex items-center gap-1', badgeConfig[product.badge].className)}>
-              {React.createElement(badgeConfig[product.badge].icon, { className: 'w-3 h-3' })}
-              {badgeConfig[product.badge].label}
-            </div>
-          )}
-          {discount > 0 && (
-            <div className="badge-discount">
-              -{discount}%
-            </div>
-          )}
-        </div>
-
-        {/* Stock warning */}
-        {product.stock <= 10 && (
-          <div className="absolute top-3 right-3 bg-destructive/90 text-destructive-foreground text-xs font-semibold px-2 py-1 rounded-full">
-            Залишилось {product.stock} шт
+        {/* Badge - top-left */}
+        {product.badge && (
+          <div className={cn('absolute top-4 left-4 flex items-center gap-1', badgeConfig[product.badge].className)}>
+            {React.createElement(badgeConfig[product.badge].icon, { className: 'w-3 h-3' })}
+            {badgeConfig[product.badge].label}
           </div>
         )}
+
+        {/* Discount badge - top-right */}
+        {discount > 0 && (
+          <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-bold">
+            -{discount}%
+          </div>
+        )}
+
+        {/* Purchases count - bottom-right */}
+        <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-card/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium">
+          <Users className="w-3 h-3 text-sage-dark" />
+          <span>{product.purchaseCount}+ купили</span>
+        </div>
 
         {/* Quick actions overlay */}
         <div className={cn(
@@ -143,15 +142,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
           )}
         </div>
 
-        {/* Social proof */}
+        {/* Social proof - viewing count */}
         <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <Eye className="w-4 h-4" />
             <span>{viewingNow} переглядають</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            <span>{product.purchaseCount}+ купили</span>
           </div>
         </div>
 
