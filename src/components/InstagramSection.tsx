@@ -6,8 +6,8 @@ import { useInstagramPosts } from '@/hooks/useInstagram';
 export const InstagramSection: React.FC = () => {
   const { data: instagramPosts = [], isLoading } = useInstagramPosts(true);
   
-  // Limit to 6 posts
-  const displayedPosts = instagramPosts.slice(0, 6);
+  // Limit to 5 posts
+  const displayedPosts = instagramPosts.slice(0, 5);
 
   return (
     <section className="py-20 bg-gradient-to-b from-peach/20 to-sage/20">
@@ -32,7 +32,7 @@ export const InstagramSection: React.FC = () => {
             Завантаження постів Instagram...
           </div>
         ) : displayedPosts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 mb-8">
             {displayedPosts.map((post) => (
               <a
                 key={post.id}
