@@ -71,7 +71,7 @@ export const AboutSection: React.FC = () => {
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-center mb-4">
             Про нас
           </h2>
-          <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-center text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             FetrInUA — це команда мам, які знають, як важливо творити разом з дітьми
           </p>
           
@@ -114,7 +114,7 @@ export const AboutSection: React.FC = () => {
           <h3 className="text-2xl sm:text-3xl font-heading font-bold text-center mb-4 text-foreground">
             Наша команда
           </h3>
-          <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-center text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             Ми завжди раді допомогти вам з вибором та порадою
           </p>
           
