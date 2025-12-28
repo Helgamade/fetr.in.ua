@@ -141,9 +141,12 @@ export const ComparisonSection: React.FC = () => {
                   </td>
                 ))}
               </tr>
-            </tbody>
-          </table>
-        </div>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-center text-sm text-muted-foreground mt-4 md:hidden">
+                ← Прокрутіть таблицю вбік →
+              </p>
 
         {/* Recommendation */}
         <div className="mt-8 p-6 rounded-2xl bg-primary/10 flex flex-col sm:flex-row items-center justify-between gap-4">
