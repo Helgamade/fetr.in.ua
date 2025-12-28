@@ -4,8 +4,10 @@ import { ProductModal } from '@/components/ProductModal';
 import { Product } from '@/types/store';
 import { Sparkles } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export const ProductsSection: React.FC = () => {
+  const { t } = useTranslation('products');
   const { data: products = [], isLoading } = useProducts();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
@@ -19,20 +21,20 @@ export const ProductsSection: React.FC = () => {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4">
             <Sparkles className="w-4 h-4" />
-            <span className="text-sm font-medium">Наші набори</span>
+            <span className="text-sm font-medium">{t('badge')}</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
-            Оберіть свій ідеальний набір
+            {t('title')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Три набори для будь-якого рівня майстерності. Від початківців до професіоналів — знайдеться щось для кожного!
+            {t('subtitle')}
           </p>
         </div>
 
         {/* Products grid */}
         {isLoading ? (
           <div className="text-center py-12 text-muted-foreground">
-            Завантаження товарів...
+            {t('loading')}
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -54,10 +56,10 @@ export const ProductsSection: React.FC = () => {
         {/* Bottom CTA */}
         <div className="mt-12 text-center p-6 rounded-2xl bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10">
           <p className="text-lg font-medium text-foreground mb-2">
-            🎁 Безкоштовна доставка при замовленні від 1500 ₴
+            {t('cta.title')}
           </p>
           <p className="text-muted-foreground">
-            Не можете обрати? Порівняйте всі набори нижче!
+            {t('cta.subtitle')}
           </p>
         </div>
       </div>

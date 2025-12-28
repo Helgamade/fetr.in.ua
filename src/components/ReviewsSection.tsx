@@ -8,8 +8,10 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { sanitizeName, sanitizeString, validateRating } from '@/utils/sanitize';
 import { formatRelativeTime } from '@/utils/dateFormat';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export const ReviewsSection: React.FC = () => {
+  const { t } = useTranslation('reviews');
   const { data: reviews = [], isLoading } = useReviews();
   const createReview = useCreateReview();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -69,13 +71,13 @@ export const ReviewsSection: React.FC = () => {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-accent-foreground mb-4">
             <Quote className="w-4 h-4" />
-            <span className="text-sm font-medium">Відгуки</span>
+            <span className="text-sm font-medium">{t('badge')}</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
-            Що кажуть наші клієнти
+            {t('title')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Реальні відгуки від щасливих мам та їхніх діток
+            {t('subtitle')}
           </p>
         </div>
 

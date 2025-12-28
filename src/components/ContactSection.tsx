@@ -1,8 +1,10 @@
 import React from 'react';
 import { MapPin, Phone, Mail, Clock, Instagram, MessageCircle, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export const ContactSection: React.FC = () => {
+  const { t } = useTranslation('contact');
   return (
     <section id="contact" className="py-20 bg-sage/30">
       <div className="container-tight">
@@ -10,13 +12,13 @@ export const ContactSection: React.FC = () => {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4">
             <MapPin className="w-4 h-4" />
-            <span className="text-sm font-medium">Контакти</span>
+            <span className="text-sm font-medium">{t('badge')}</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
-            Зв'яжіться з нами
+            {t('title')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Ми завжди раді відповісти на ваші запитання
+            {t('subtitle')}
           </p>
         </div>
 

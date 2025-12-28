@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Check, X, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export const ComparisonSection: React.FC = () => {
+  const { t } = useTranslation('comparison');
   const { data: products = [] } = useProducts();
   const { data: comparisonData, isLoading: isLoadingComparison } = useComparison();
   const { addToCart } = useCart();
@@ -146,14 +148,14 @@ export const ComparisonSection: React.FC = () => {
         {/* Recommendation */}
         <div className="mt-8 p-6 rounded-2xl bg-primary/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h3 className="font-heading font-bold text-lg mb-1">Рекомендуємо: Оптимальний набір</h3>
-            <p className="text-muted-foreground">Найкраще співвідношення ціни та можливостей</p>
+            <h3 className="font-heading font-bold text-lg mb-1">{t('recommend.title')}</h3>
+            <p className="text-muted-foreground">{t('recommend.subtitle')}</p>
           </div>
           {(() => {
             const optimalProduct = sortedProducts.find(p => p.code === 'optimal');
             return (
               <Button variant="hero" onClick={() => optimalProduct && addToCart(optimalProduct.code, [])}>
-                Замовити зараз
+                {t('recommend.button')}
                 <ArrowRight className="w-4 h-4" />
               </Button>
             );

@@ -120,12 +120,12 @@ export const Footer: React.FC = () => {
             <ul className="space-y-2">
               <li>
                 <a href="#" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
-                  Політика конфіденційності
+                  {t('legal.privacy')}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
-                  Умови використання
+                  {t('legal.terms')}
                 </a>
               </li>
               <li>

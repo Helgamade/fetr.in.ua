@@ -3,8 +3,10 @@ import { X, ChevronLeft, ChevronRight, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGalleries } from '@/hooks/useGalleries';
 import { Gallery, GalleryImage } from '@/lib/api';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export const GallerySection: React.FC = () => {
+  const { t } = useTranslation('gallery');
   const { data: galleries = [], isLoading } = useGalleries(true); // Only published galleries
   const [selectedGallery, setSelectedGallery] = useState<Gallery | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
@@ -64,20 +66,20 @@ export const GallerySection: React.FC = () => {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary mb-4">
             <Palette className="w-4 h-4" />
-            <span className="text-sm font-medium">Натхнення</span>
+            <span className="text-sm font-medium">{t('badge')}</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
-            Що можна зробити
+            {t('title')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Ось лише деякі ідеї того, що можна створити з наших наборів. Ваша фантазія — єдине обмеження!
+            {t('subtitle')}
           </p>
         </div>
 
         {/* Gallery grid */}
         {isLoading ? (
           <div className="text-center py-12 text-muted-foreground">
-            Завантаження галереї...
+            {t('loading')}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

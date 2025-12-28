@@ -15,8 +15,10 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { ExitIntentPopup } from "@/components/ExitIntentPopup";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { Helmet } from "react-helmet-async";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const Index = () => {
+  const { t } = useTranslation('index');
   return (
     <>
         <Helmet>
@@ -73,16 +75,16 @@ const Index = () => {
             <section className="py-12 bg-gradient-to-br from-accent/20 to-secondary/20">
               <div className="container mx-auto px-4 text-center space-y-4">
                 <h2 className="text-2xl md:text-3xl font-display font-bold">
-                  Готові розпочати творчу подорож? ✨
+                  {t('cta_mid.title')}
                 </h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Приєднуйтесь до тисяч задоволених мам, які вже обрали наші набори для розвитку своїх діток
+                  {t('cta_mid.subtitle')}
                 </p>
                 <a 
                   href="#products" 
                   className="inline-block bg-primary text-primary-foreground px-8 py-3 rounded-full font-semibold hover:bg-primary/90 transition-colors"
                 >
-                  Обрати набір зараз
+                  {t('cta_mid.button')}
                 </a>
               </div>
             </section>
@@ -95,10 +97,9 @@ const Index = () => {
               <div className="container mx-auto px-4">
                 <div className="bg-card rounded-2xl p-8 shadow-elegant text-center max-w-3xl mx-auto">
                   <div className="text-4xl mb-4">🛡️</div>
-                  <h3 className="text-xl font-bold mb-2">Гарантія задоволення</h3>
+                  <h3 className="text-xl font-bold mb-2">{t('guarantee.title')}</h3>
                   <p className="text-muted-foreground mb-4">
-                    Якщо набір вам не підійде — повернемо гроші протягом 14 днів без зайвих питань. 
-                    Ми впевнені в якості наших матеріалів!
+                    {t('guarantee.text')}
                   </p>
                   <div className="flex flex-wrap justify-center gap-4 text-sm">
                     <span className="flex items-center gap-2">✅ Безпечна оплата</span>
@@ -117,10 +118,10 @@ const Index = () => {
             <section className="py-16 bg-gradient-to-r from-primary via-primary/90 to-accent">
               <div className="container mx-auto px-4 text-center space-y-6">
                 <h2 className="text-2xl md:text-4xl font-display font-bold text-primary-foreground">
-                  Не відкладайте творчість на потім! 🎨
+                  {t('cta_final.title')}
                 </h2>
                 <p className="text-primary-foreground/90 max-w-2xl mx-auto text-lg">
-                  Замовте набір сьогодні та отримайте безкоштовний майстер-клас у подарунок
+                  {t('cta_final.subtitle')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <a 

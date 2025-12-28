@@ -2,8 +2,10 @@ import React from 'react';
 import { Instagram, Heart, MessageCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useInstagramPosts } from '@/hooks/useInstagram';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export const InstagramSection: React.FC = () => {
+  const { t } = useTranslation('instagram');
   const { data: instagramPosts = [], isLoading } = useInstagramPosts(true);
   
   // Limit to 6 posts
@@ -16,20 +18,20 @@ export const InstagramSection: React.FC = () => {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-orange-500/20 mb-4">
             <Instagram className="w-4 h-4 text-pink-500" />
-            <span className="text-sm font-medium">Слідкуйте за нами</span>
+            <span className="text-sm font-medium">{t('badge')}</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
-            @helgamade_ua
+            {t('title')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Ідеї, натхнення та закулісся нашої майстерні в Instagram
+            {t('subtitle')}
           </p>
         </div>
 
         {/* Instagram grid */}
         {isLoading ? (
           <div className="text-center py-12 text-muted-foreground">
-            Завантаження постів Instagram...
+            {t('loading')}
           </div>
         ) : displayedPosts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
@@ -74,7 +76,7 @@ export const InstagramSection: React.FC = () => {
               rel="noopener noreferrer"
             >
               <Instagram className="w-5 h-5" />
-              Підписатися
+              {t('button')}
               <ExternalLink className="w-4 h-4" />
             </a>
           </Button>
