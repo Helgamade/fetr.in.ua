@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { useAnalytics } from '@/context/AnalyticsContext';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ProductModalProps {
   product: Product | null;
