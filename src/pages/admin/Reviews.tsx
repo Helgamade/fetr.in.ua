@@ -279,11 +279,11 @@ export function Reviews() {
                           {!review.is_approved && (
                             <Badge variant="secondary">На модерації</Badge>
                           )}
-                          {review.featured && (
+                          {review.featured && review.is_approved && (
                             <Badge variant="default">На головній</Badge>
                           )}
                         </div>
-                        {review.rating && review.rating > 0 && (
+                        {review.rating && review.rating > 0 && review.is_approved && (
                           <div className="flex items-center gap-1 mt-1">
                             {[...Array(5)].map((_, i) => (
                               <Star
