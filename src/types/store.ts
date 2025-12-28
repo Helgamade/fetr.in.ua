@@ -102,11 +102,27 @@ export interface FAQ {
 }
 
 export interface TeamMember {
-  id: string;
+  id: number;
   name: string;
   role: string;
-  photo: string;
-  description: string;
+  photo: string | null;
+  description: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InstagramPost {
+  id: number;
+  image_url: string;
+  instagram_url: string;
+  likes_count: number;
+  comments_count: number;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SocialProof {

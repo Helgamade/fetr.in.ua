@@ -173,6 +173,23 @@ export const teamAPI = {
   }),
 };
 
+// Instagram API
+export const instagramAPI = {
+  getAll: () => fetchAPI<any[]>('/instagram'),
+  getById: (id: number) => fetchAPI<any>(`/instagram/${id}`),
+  create: (data: { image_url: string; instagram_url: string; likes_count?: number; comments_count?: number; sort_order?: number; is_active?: boolean }) => fetchAPI<any>('/instagram', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  update: (id: number, data: { image_url?: string; instagram_url?: string; likes_count?: number; comments_count?: number; sort_order?: number; is_active?: boolean }) => fetchAPI<any>(`/instagram/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  delete: (id: number) => fetchAPI<any>(`/instagram/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
 // Gallery API (legacy - for backward compatibility)
 export const galleryAPI = {
   getAll: () => fetchAPI<any[]>('/gallery'),

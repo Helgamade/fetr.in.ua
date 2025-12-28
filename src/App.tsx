@@ -20,6 +20,7 @@ import { Options } from "./pages/admin/Options";
 import { Galleries } from "./pages/admin/Galleries";
 import { Reviews } from "./pages/admin/Reviews";
 import { Team } from "./pages/admin/Team";
+import { Instagram } from "./pages/admin/Instagram";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
                   <Route path="galleries" element={<Galleries />} />
                   <Route path="reviews" element={<Reviews />} />
                   <Route path="team" element={<Team />} />
+                  <Route path="instagram" element={<Instagram />} />
                   <Route path="settings" element={<Settings />} />
                   <Route path="comparison" element={<Comparison />} />
                 </Route>
