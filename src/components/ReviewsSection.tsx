@@ -115,11 +115,7 @@ export const ReviewsSection: React.FC = () => {
                   </div>
                   <p className="text-muted-foreground">{review.text}</p>
                   <p className="text-sm text-muted-foreground/60 mt-2">
-                    {new Date(review.createdAt).toLocaleDateString('uk-UA', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
+                    {formatRelativeTime(review.createdAt)}
                   </p>
                 </div>
               </div>
