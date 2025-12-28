@@ -38,7 +38,7 @@ const Index = () => {
             <section className="bg-gradient-to-r from-primary to-primary/80 py-4">
               <div className="container mx-auto px-4 text-center">
                 <p className="text-primary-foreground font-medium">
-                  🎁 {t('banner.text')} 🚀 💝
+                  {t('banner.text')}
                 </p>
               </div>
             </section>
