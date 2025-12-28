@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGalleries } from '@/hooks/useGalleries';
@@ -18,6 +18,22 @@ export const GallerySection: React.FC = () => {
     setSelectedGallery(null);
     setSelectedImageIndex(null);
   };
+
+  // Handle Esc key to close lightbox
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && selectedGallery) {
+        closeLightbox();
+      }
+    };
+
+    if (selectedGallery) {
+      document.addEventListener('keydown', handleEsc);
+      return () => {
+        document.removeEventListener('keydown', handleEsc);
+      };
+    }
+  }, [selectedGallery]);
 
   const goNext = () => {
     if (selectedGallery && selectedImageIndex !== null && selectedGallery.images) {
@@ -81,16 +97,16 @@ export const GallerySection: React.FC = () => {
                     alt={previewImage.title || gallery.name || `Gallery image ${index + 1}`}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
-                  {/* Title overlay - always visible on first image */}
-                  {previewImage.title && index === 0 && (
+                  {/* Gallery name overlay - always visible on first image */}
+                  {index === 0 && (
                     <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent flex items-end p-4">
-                      <span className="text-primary-foreground font-medium">{previewImage.title}</span>
+                      <span className="text-primary-foreground font-medium">{gallery.name}</span>
                     </div>
                   )}
-                  {/* Title on hover for other images */}
-                  {previewImage.title && index !== 0 && (
+                  {/* Gallery name on hover for other images */}
+                  {index !== 0 && (
                     <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                      <span className="text-primary-foreground font-medium">{previewImage.title}</span>
+                      <span className="text-primary-foreground font-medium">{gallery.name}</span>
                     </div>
                   )}
                   {/* Image count badge */}
@@ -106,29 +122,46 @@ export const GallerySection: React.FC = () => {
 
       {/* Lightbox */}
       {selectedGallery && selectedImageIndex !== null && selectedGallery.images && (
-        <div className="fixed inset-0 z-50 bg-foreground/90 backdrop-blur-sm flex items-center justify-center">
+        <div 
+          className="fixed inset-0 z-50 bg-foreground/90 backdrop-blur-sm flex items-center justify-center"
+          onClick={(e) => {
+            // Close on click outside image
+            if (e.target === e.currentTarget) {
+              closeLightbox();
+            }
+          }}
+        >
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors"
+            className="absolute top-4 right-4 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
           >
             <X className="w-6 h-6 text-primary-foreground" />
           </button>
 
           <button
-            onClick={goPrev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              goPrev();
+            }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
           >
             <ChevronLeft className="w-6 h-6 text-primary-foreground" />
           </button>
 
           <button
-            onClick={goNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              goNext();
+            }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
           >
             <ChevronRight className="w-6 h-6 text-primary-foreground" />
           </button>
 
-          <div className="max-w-4xl max-h-[80vh] mx-4">
+          <div 
+            className="max-w-4xl max-h-[80vh] mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <img
               src={selectedGallery.images[selectedImageIndex].url}
               alt={selectedGallery.images[selectedImageIndex].title || `Gallery image ${selectedImageIndex + 1}`}
