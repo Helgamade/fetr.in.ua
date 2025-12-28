@@ -168,9 +168,35 @@ router.post('/', async (req, res, next) => {
       is_approved = false;
     }
 
-    const created_at = req.body.created_at 
-      ? new Date(req.body.created_at).toISOString().slice(0, 19).replace('T', ' ')
-      : new Date().toISOString().slice(0, 19).replace('T', ' ');
+    // Handle created_at - if it's already in YYYY-MM-DD HH:mm:ss format, use it directly
+    // Otherwise, parse it and format as local time
+    let created_at;
+    if (req.body.created_at) {
+      if (typeof req.body.created_at === 'string' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(req.body.created_at)) {
+        // Already in correct format (YYYY-MM-DD HH:mm:ss), use directly
+        created_at = req.body.created_at;
+      } else {
+        // Parse and format as local time
+        const date = new Date(req.body.created_at);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        created_at = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      }
+    } else {
+      // Use current time in local format
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      created_at = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
 
     // Try with featured column, fallback if it doesn't exist
     let result;
@@ -230,12 +256,24 @@ router.put('/:id', async (req, res, next) => {
       }
     }
 
-    // Handle created_at if provided
+    // Handle created_at if provided - use directly if in correct format, otherwise parse
     let createdAtValue = null;
     if (created_at) {
-      const createdAtDate = new Date(created_at);
-      if (!isNaN(createdAtDate.getTime())) {
-        createdAtValue = createdAtDate.toISOString().slice(0, 19).replace('T', ' ');
+      if (typeof created_at === 'string' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(created_at)) {
+        // Already in correct format (YYYY-MM-DD HH:mm:ss), use directly
+        createdAtValue = created_at;
+      } else {
+        // Parse and format as local time
+        const createdAtDate = new Date(created_at);
+        if (!isNaN(createdAtDate.getTime())) {
+          const year = createdAtDate.getFullYear();
+          const month = String(createdAtDate.getMonth() + 1).padStart(2, '0');
+          const day = String(createdAtDate.getDate()).padStart(2, '0');
+          const hours = String(createdAtDate.getHours()).padStart(2, '0');
+          const minutes = String(createdAtDate.getMinutes()).padStart(2, '0');
+          const seconds = String(createdAtDate.getSeconds()).padStart(2, '0');
+          createdAtValue = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
       }
     }
 

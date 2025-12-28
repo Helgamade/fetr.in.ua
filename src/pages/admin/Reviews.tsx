@@ -151,6 +151,15 @@ export function Reviews() {
       ? editingReview.createdAt 
       : new Date(editingReview.createdAt);
     
+    // Format date as YYYY-MM-DD HH:mm:ss in local time (not UTC)
+    const year = createdAtDate.getFullYear();
+    const month = String(createdAtDate.getMonth() + 1).padStart(2, '0');
+    const day = String(createdAtDate.getDate()).padStart(2, '0');
+    const hours = String(createdAtDate.getHours()).padStart(2, '0');
+    const minutes = String(createdAtDate.getMinutes()).padStart(2, '0');
+    const seconds = String(createdAtDate.getSeconds()).padStart(2, '0');
+    const localDateTimeString = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    
     const data = {
       name: editingReview.name,
       text: editingReview.text,
@@ -158,7 +167,7 @@ export function Reviews() {
       photo: editingReview.photo,
       is_approved: editingReview.is_approved,
       featured: editingReview.featured,
-      created_at: createdAtDate.toISOString().slice(0, 19).replace('T', ' '),
+      created_at: localDateTimeString,
     };
 
     if (editingReview.id === 0) {
