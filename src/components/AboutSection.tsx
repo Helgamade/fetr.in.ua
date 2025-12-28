@@ -75,7 +75,7 @@ export const AboutSection: React.FC = () => {
             FetrInUA — це команда мам, які знають, як важливо творити разом з дітьми
           </p>
           
-          <div className="bg-card rounded-2xl p-8 md:p-12 shadow-elegant">
+          <div className="glass-card p-8 md:p-12">
             <div className="prose prose-lg max-w-none text-foreground space-y-4 mb-6">
               <p>
                 Все почалось 10 років тому, коли я шукала матеріали для творчості з донькою. Купувала все окремо, витрачала години на пошуки. Тоді й виникла ідея — зібрати все необхідне в один набір, щоб кожна мама могла просто відкрити коробку і почати творити!
