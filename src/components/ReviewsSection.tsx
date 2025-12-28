@@ -99,7 +99,7 @@ export const ReviewsSection: React.FC = () => {
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-heading font-bold">{review.name}</span>
-                    {review.rating && (
+                    {review.rating && review.rating > 0 && (
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
                           <Star

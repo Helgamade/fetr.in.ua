@@ -283,7 +283,7 @@ export function Reviews() {
                             <Badge variant="default">На головній</Badge>
                           )}
                         </div>
-                        {review.rating && (
+                        {review.rating && review.rating > 0 && (
                           <div className="flex items-center gap-1 mt-1">
                             {[...Array(5)].map((_, i) => (
                               <Star
