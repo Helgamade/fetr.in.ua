@@ -96,9 +96,13 @@ export interface Review {
 }
 
 export interface FAQ {
-  id: string;
+  id: number;
   question: string;
   answer: string;
+  sort_order?: number;
+  is_published?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface TeamMember {

@@ -11,7 +11,8 @@ import {
   MessageSquare,
   Users,
   Instagram,
-  FileText
+  FileText,
+  HelpCircle
 } from 'lucide-react';
 import {
   Sidebar,
@@ -37,6 +38,7 @@ const menuItems = [
   { icon: GripVertical, label: 'Опції', path: '/admin/options' },
   { icon: Images, label: 'Галерея', path: '/admin/galleries' },
   { icon: MessageSquare, label: 'Відгуки', path: '/admin/reviews' },
+  { icon: HelpCircle, label: 'Часті питання', path: '/admin/faq' },
   { icon: Users, label: 'Наша команда', path: '/admin/team' },
   { icon: Instagram, label: 'Слідкуйте за нами', path: '/admin/instagram' },
   { icon: FileText, label: 'Тексти сайту', path: '/admin/texts' },

@@ -37,8 +37,8 @@ export const FAQSection: React.FC = () => {
           ) : (
             <Accordion type="single" collapsible className="space-y-4">
               {faqs.map((faq) => (
-              <AccordionItem
-                key={faq.id}
+                <AccordionItem
+                  key={faq.id}
                 value={faq.id}
                 className="glass-card px-6 border-0 data-[state=open]:shadow-medium transition-shadow"
               >

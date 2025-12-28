@@ -19,6 +19,7 @@ import { Comparison } from "./pages/admin/Comparison";
 import { Options } from "./pages/admin/Options";
 import { Galleries } from "./pages/admin/Galleries";
 import { Reviews } from "./pages/admin/Reviews";
+import { FAQ } from "./pages/admin/FAQ";
 import { Team } from "./pages/admin/Team";
 import { Instagram } from "./pages/admin/Instagram";
 import { Texts } from "./pages/admin/Texts";
@@ -48,6 +49,7 @@ const App = () => (
                   <Route path="options" element={<Options />} />
                   <Route path="galleries" element={<Galleries />} />
                   <Route path="reviews" element={<Reviews />} />
+                  <Route path="faq" element={<FAQ />} />
                   <Route path="team" element={<Team />} />
                   <Route path="instagram" element={<Instagram />} />
                   <Route path="texts" element={<Texts />} />

@@ -3,15 +3,22 @@ import pool from '../db.js';
 
 const router = express.Router();
 
-// Get all FAQs
+// Get all FAQs (with optional filter for published only)
 router.get('/', async (req, res, next) => {
   try {
-    const [faqs] = await pool.execute(`
+    const publishedOnly = req.query.published === 'true';
+    let query = `
       SELECT id, question, answer, sort_order, is_published, created_at, updated_at
       FROM faqs
-      WHERE is_published = TRUE
-      ORDER BY sort_order ASC, created_at ASC
-    `);
+    `;
+    
+    if (publishedOnly) {
+      query += ` WHERE is_published = TRUE`;
+    }
+    
+    query += ` ORDER BY sort_order ASC, created_at ASC`;
+    
+    const [faqs] = await pool.execute(query);
     res.json(faqs);
   } catch (error) {
     next(error);
