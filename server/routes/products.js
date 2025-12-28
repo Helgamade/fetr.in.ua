@@ -82,10 +82,10 @@ router.get('/', async (req, res, next) => {
 
       // Get options
       const [options] = await pool.execute(`
-        SELECT po.* FROM product_options po
+        SELECT po.*, ppo.sort_order FROM product_options po
         INNER JOIN product_product_options ppo ON po.id = ppo.option_id
         WHERE ppo.product_id = ?
-        ORDER BY po.id
+        ORDER BY ppo.sort_order ASC, po.id ASC
       `, [product.id]);
       product.options = options.map(opt => ({
         id: opt.id,
@@ -184,10 +184,10 @@ router.get('/:id', async (req, res, next) => {
 
     // Get options
     const [options] = await pool.execute(`
-      SELECT po.* FROM product_options po
+      SELECT po.*, ppo.sort_order FROM product_options po
       INNER JOIN product_product_options ppo ON po.id = ppo.option_id
       WHERE ppo.product_id = ?
-      ORDER BY po.id
+      ORDER BY ppo.sort_order ASC, po.id ASC
     `, [product.id]);
     product.options = options.map(opt => ({
       id: opt.id,
@@ -373,14 +373,18 @@ router.put('/:id', async (req, res, next) => {
       }
     }
 
-    // Update options (many-to-many relationship)
+    // Update options (many-to-many relationship) with sort_order
     await pool.execute('DELETE FROM product_product_options WHERE product_id = ?', [id]);
     if (options && Array.isArray(options)) {
-      for (const optionId of options) {
+      for (let i = 0; i < options.length; i++) {
+        const option = options[i];
+        // Support both formats: array of IDs or array of {id, sortOrder} objects
+        const optionId = typeof option === 'object' && option !== null ? option.id : option;
+        const sortOrder = typeof option === 'object' && option !== null && option.sortOrder !== undefined ? option.sortOrder : i;
         await pool.execute(`
-          INSERT INTO product_product_options (product_id, option_id)
-          VALUES (?, ?)
-        `, [id, optionId]);
+          INSERT INTO product_product_options (product_id, option_id, sort_order)
+          VALUES (?, ?, ?)
+        `, [id, optionId, sortOrder]);
       }
     }
 

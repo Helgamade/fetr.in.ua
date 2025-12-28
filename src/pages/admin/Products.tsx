@@ -9,7 +9,9 @@ import {
   ShoppingCart,
   X,
   Upload,
-  Loader2
+  Loader2,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,7 +60,7 @@ export function Products() {
   // Load available options when dialog opens
   useEffect(() => {
     if (isDialogOpen) {
-      productsAPI.getAllOptions()
+      optionsAPI.getAll()
         .then(setAvailableOptions)
         .catch(() => {
           toast({
@@ -643,45 +645,118 @@ export function Products() {
 
               {/* Options Tab */}
               <TabsContent value="options" className="space-y-4 mt-4">
-                <div className="space-y-3">
-                  <Label>Додаткові опції</Label>
-                  {availableOptions.map((option) => {
-                    const isSelected = editingProduct.options.some(opt => opt.id === option.id);
-                    return (
-                      <div key={option.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setEditingProduct({
-                                ...editingProduct,
-                                options: [...editingProduct.options, option]
-                              });
-                            } else {
-                              setEditingProduct({
-                                ...editingProduct,
-                                options: editingProduct.options.filter(opt => opt.id !== option.id)
-                              });
-                            }
-                          }}
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium">{option.name}</div>
-                          {option.description && (
-                            <div className="text-sm text-muted-foreground">{option.description}</div>
-                          )}
-                          <div className="text-sm font-semibold text-primary mt-1">
-                            +{option.price} ₴
+                <div className="space-y-4">
+                  <div>
+                    <Label>Вибрані опції (відсортовані для цього товару)</Label>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Використовуйте кнопки ↑ ↓ для зміни порядку відображення
+                    </p>
+                    {editingProduct.options.length > 0 ? (
+                      <div className="space-y-2">
+                        {editingProduct.options.map((option, index) => (
+                          <div key={option.id} className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
+                            <div className="flex flex-col gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                disabled={index === 0}
+                                onClick={() => {
+                                  const newOptions = [...editingProduct.options];
+                                  [newOptions[index - 1], newOptions[index]] = [newOptions[index], newOptions[index - 1]];
+                                  setEditingProduct({ ...editingProduct, options: newOptions });
+                                }}
+                              >
+                                <ChevronUp className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                disabled={index === editingProduct.options.length - 1}
+                                onClick={() => {
+                                  const newOptions = [...editingProduct.options];
+                                  [newOptions[index], newOptions[index + 1]] = [newOptions[index + 1], newOptions[index]];
+                                  setEditingProduct({ ...editingProduct, options: newOptions });
+                                }}
+                              >
+                                <ChevronDown className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-medium">{option.name}</div>
+                              {option.description && (
+                                <div className="text-sm text-muted-foreground">{option.description}</div>
+                              )}
+                              <div className="text-sm font-semibold text-primary mt-1">
+                                +{option.price} ₴
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  options: editingProduct.options.filter(opt => opt.id !== option.id)
+                                });
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
-                        </div>
+                        ))}
                       </div>
-                    );
-                  })}
-                  {availableOptions.length === 0 && (
-                    <div className="text-sm text-muted-foreground py-4">
-                      Опції не знайдено. Створіть опції в налаштуваннях.
-                    </div>
-                  )}
+                    ) : (
+                      <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg">
+                        Опції не вибрані. Додайте опції зі списку нижче.
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>Доступні опції для додавання</Label>
+                    {availableOptions.filter(opt => !editingProduct.options.some(o => o.id === opt.id)).length > 0 ? (
+                      <div className="space-y-2 mt-3">
+                        {availableOptions
+                          .filter(opt => !editingProduct.options.some(o => o.id === opt.id))
+                          .map((option) => (
+                            <div key={option.id} className="flex items-start gap-3 p-3 border rounded-lg">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingProduct({
+                                    ...editingProduct,
+                                    options: [...editingProduct.options, option]
+                                  });
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Додати
+                              </Button>
+                              <div className="flex-1">
+                                <div className="font-medium">{option.name}</div>
+                                {option.description && (
+                                  <div className="text-sm text-muted-foreground">{option.description}</div>
+                                )}
+                                <div className="text-sm font-semibold text-primary mt-1">
+                                  +{option.price} ₴
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg mt-3">
+                        Всі доступні опції додано або опції відсутні. Створіть нові опції в розділі "Опції".
+                      </div>
+                    )}
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>

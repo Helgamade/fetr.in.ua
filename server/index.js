@@ -11,6 +11,7 @@ import reviewsRoutes from './routes/reviews.js';
 import teamRoutes from './routes/team.js';
 import galleryRoutes from './routes/gallery.js';
 import comparisonRoutes from './routes/comparison.js';
+import optionsRoutes from './routes/options.js';
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -56,6 +57,7 @@ app.use('/api/reviews', reviewsRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/comparison', comparisonRoutes);
+app.use('/api/options', optionsRoutes);
 
 // Serve uploaded files
 const UPLOADS_DIR = join(__dirname, '..', 'uploads');

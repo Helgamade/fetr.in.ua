@@ -26,7 +26,6 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
 export const productsAPI = {
   getAll: () => fetchAPI<Product[]>('/products'),
   getById: (id: string) => fetchAPI<Product>(`/products/${id}`),
-  getAllOptions: () => fetchAPI<ProductOption[]>('/products/options/all'),
   create: (data: any) => fetchAPI<any>('/products', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -36,6 +35,23 @@ export const productsAPI = {
     body: JSON.stringify(data),
   }),
   delete: (id: string) => fetchAPI<any>(`/products/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
+// Options API
+export const optionsAPI = {
+  getAll: () => fetchAPI<ProductOption[]>('/options'),
+  getById: (id: number) => fetchAPI<ProductOption>(`/options/${id}`),
+  create: (data: { name: string; price: number; description?: string }) => fetchAPI<ProductOption>('/options', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  update: (id: number, data: { name: string; price: number; description?: string }) => fetchAPI<any>(`/options/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  delete: (id: number) => fetchAPI<any>(`/options/${id}`, {
     method: 'DELETE',
   }),
 };
