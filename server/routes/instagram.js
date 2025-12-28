@@ -58,11 +58,17 @@ router.post('/upload-image', upload.single('image'), (req, res, next) => {
 // Get all Instagram posts
 router.get('/', async (req, res, next) => {
   try {
-    const [posts] = await pool.execute(`
-      SELECT id, image_url, instagram_url, likes_count, comments_count, sort_order, is_active, created_at, updated_at
-      FROM instagram_posts
-      ORDER BY sort_order ASC, created_at DESC
-    `);
+    const activeOnly = req.query.active === 'true';
+    const query = activeOnly
+      ? `SELECT id, image_url, instagram_url, likes_count, comments_count, sort_order, is_active, created_at, updated_at
+         FROM instagram_posts
+         WHERE is_active = TRUE
+         ORDER BY sort_order ASC, created_at DESC`
+      : `SELECT id, image_url, instagram_url, likes_count, comments_count, sort_order, is_active, created_at, updated_at
+         FROM instagram_posts
+         ORDER BY sort_order ASC, created_at DESC`;
+    
+    const [posts] = await pool.execute(query);
     res.json(posts);
   } catch (error) {
     next(error);
