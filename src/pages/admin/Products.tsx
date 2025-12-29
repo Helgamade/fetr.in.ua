@@ -632,6 +632,21 @@ export function Products() {
                     Додати матеріал
                   </Button>
                 </div>
+                  <div className="space-y-2 pt-4 border-t">
+                    <Label>SVG іконка для заголовка "Матеріали"</Label>
+                    <Textarea
+                      value={editingProduct.sectionIconMaterials || ''}
+                      onChange={(e) => setEditingProduct({ 
+                        ...editingProduct, 
+                        sectionIconMaterials: e.target.value 
+                      })}
+                      placeholder="Вставте SVG код або URL іконки"
+                      rows={4}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Можна вставити SVG код або URL до зображення. Іконка буде відображатися перед заголовком секції.
+                    </p>
+                  </div>
                 </div>
               </TabsContent>
 
