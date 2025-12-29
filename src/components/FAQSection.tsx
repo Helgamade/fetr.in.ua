@@ -8,10 +8,13 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePublicSettings } from '@/hooks/usePublicSettings';
 
 export const FAQSection: React.FC = () => {
   const { t } = useTranslation('faq');
   const { data: faqs = [], isLoading } = useFAQs();
+  const { data: settings = {} } = usePublicSettings();
+  const storePhone = settings.store_phone || '+380501234567';
 
   return (
     <section id="faq" className="py-20">
