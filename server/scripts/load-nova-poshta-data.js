@@ -181,27 +181,6 @@ async function loadWarehouses() {
     await connection.execute('SET FOREIGN_KEY_CHECKS = 1');
     console.log('🗑️  Старые данные отделений полностью удалены (TRUNCATE)');
 
-    // Используем временную таблицу для batch insert
-    await connection.execute(`
-      CREATE TEMPORARY TABLE temp_warehouses (
-        ref VARCHAR(36),
-        site_key INT,
-        description_ua VARCHAR(500),
-        description_ru VARCHAR(500),
-        short_address_ua VARCHAR(255),
-        short_address_ru VARCHAR(255),
-        city_ref VARCHAR(36),
-        city_description_ua VARCHAR(255),
-        city_description_ru VARCHAR(255),
-        type_of_warehouse VARCHAR(50),
-        number VARCHAR(20),
-        phone VARCHAR(50),
-        max_weight_allowed DECIMAL(10, 2),
-        longitude DECIMAL(10, 7),
-        latitude DECIMAL(10, 7)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    `);
-
     let totalInserted = 0;
     let processed = 0;
     let failedCities = 0;
@@ -209,7 +188,8 @@ async function loadWarehouses() {
     const MAX_RETRIES = 2; // Уменьшили до 2 попыток
     const BASE_DELAY = 200; // Уменьшили базовую задержку до 200ms
     const RATE_LIMIT_DELAY = 3000; // Уменьшили задержку при rate limit до 3 секунд
-    const BATCH_SIZE = 500; // Batch insert каждые 500 отделений
+    const BATCH_SIZE = 50; // Batch insert по 50 записей (чтобы не превысить лимит placeholders)
+    const warehouseBatch = []; // Накопление записей для batch insert
 
     for (const city of cities) {
       let retries = 0;
@@ -282,24 +262,27 @@ async function loadWarehouses() {
         }
       }
 
-      // Batch insert в временную таблицу
+      // Добавляем отделения в batch для вставки
       if (cityWarehouses.length > 0) {
-        const placeholders = cityWarehouses.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
-        const values = cityWarehouses.flat();
-
-        await connection.execute(`
-          INSERT INTO temp_warehouses VALUES ${placeholders}
-        `, values);
-
+        warehouseBatch.push(...cityWarehouses);
         totalInserted += cityWarehouses.length;
 
-        // Периодически переносим данные из временной таблицы в основную
-        if (totalInserted % BATCH_SIZE === 0) {
+        // Вставляем batch когда накопилось достаточно записей
+        if (warehouseBatch.length >= BATCH_SIZE) {
+          const placeholders = warehouseBatch.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+          const values = warehouseBatch.flat();
+
           await connection.execute(`
-            INSERT INTO nova_poshta_warehouses 
-            SELECT * FROM temp_warehouses
-          `);
-          await connection.execute('TRUNCATE TABLE temp_warehouses');
+            INSERT INTO nova_poshta_warehouses (
+              ref, site_key, description_ua, description_ru,
+              short_address_ua, short_address_ru,
+              city_ref, city_description_ua, city_description_ru,
+              type_of_warehouse, number, phone, max_weight_allowed,
+              longitude, latitude
+            ) VALUES ${placeholders}
+          `, values);
+
+          warehouseBatch.length = 0; // Очищаем batch
         }
       }
 
@@ -320,16 +303,21 @@ async function loadWarehouses() {
       }
     }
 
-    // Переносим оставшиеся данные из временной таблицы
-    const [remaining] = await connection.execute('SELECT COUNT(*) as count FROM temp_warehouses');
-    if (remaining[0].count > 0) {
-      await connection.execute(`
-        INSERT INTO nova_poshta_warehouses 
-        SELECT * FROM temp_warehouses
-      `);
-    }
+    // Вставляем оставшиеся данные из batch
+    if (warehouseBatch.length > 0) {
+      const placeholders = warehouseBatch.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+      const values = warehouseBatch.flat();
 
-    await connection.execute('DROP TEMPORARY TABLE temp_warehouses');
+      await connection.execute(`
+        INSERT INTO nova_poshta_warehouses (
+          ref, site_key, description_ua, description_ru,
+          short_address_ua, short_address_ru,
+          city_ref, city_description_ua, city_description_ru,
+          type_of_warehouse, number, phone, max_weight_allowed,
+          longitude, latitude
+        ) VALUES ${placeholders}
+      `, values);
+    }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`✅ Загружено ${totalInserted} отделений для ${processed} городов за ${duration}с`);
