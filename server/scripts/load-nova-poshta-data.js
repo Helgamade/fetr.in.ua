@@ -60,8 +60,8 @@ async function novaPoshtaRequest(modelName, calledMethod, methodProperties = {},
         methodProperties: methodProperties || {},
       };
 
-      // Для отладки - логируем только для getCities (большой запрос)
-      if (calledMethod === 'getCities') {
+      // Для отладки - логируем запросы
+      if (calledMethod === 'getCities' || calledMethod === 'getWarehouses') {
         console.log(`📡 Запрос к API: ${calledMethod}, размер body: ${JSON.stringify(requestBody).length} байт`);
       }
 
@@ -258,23 +258,28 @@ async function loadWarehouses() {
     }
 
     console.log('📥 Загрузка всех отделений одним запросом...');
-    const startTime = Date.now();
+    const apiStartTime = Date.now();
     
     let warehouses = [];
     try {
       // Загружаем ВСЕ отделения одним запросом (без CityRef)
+      console.log('📡 Запрос к API: getWarehouses (без параметров)...');
       warehouses = await novaPoshtaRequest('Address', 'getWarehouses', {});
       
       if (!warehouses || warehouses.length === 0) {
-        console.log('⚠️  Отделения не получены');
-        connection.release();
-        return;
+        console.log('⚠️  Отделения не получены. API может требовать CityRef. Пробуем альтернативный метод...');
+        // Если API не поддерживает загрузку всех отделений, используем параллельную загрузку
+        throw new Error('API requires CityRef parameter');
       }
 
-      console.log(`✅ Получено ${warehouses.length} отделений за ${((Date.now() - startTime) / 1000).toFixed(2)}с`);
+      const apiDuration = ((Date.now() - apiStartTime) / 1000).toFixed(2);
+      console.log(`✅ Получено ${warehouses.length} отделений за ${apiDuration}с`);
     } catch (error) {
-      console.error('❌ Ошибка при загрузке отделений:', error.message);
-      connection.release();
+      console.error(`❌ Ошибка при загрузке всех отделений: ${error.message}`);
+      console.log('🔄 Переключаемся на параллельную загрузку по городам...');
+      
+      // Fallback: параллельная загрузка по городам
+      await loadWarehousesByCities(connection, cities, startTime);
       return;
     }
 
