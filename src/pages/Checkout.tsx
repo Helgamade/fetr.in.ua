@@ -401,18 +401,20 @@ const Checkout = () => {
                         <div className="px-4 pb-4 border-t bg-accent/30">
                           <div className="font-medium mb-1">Адреса самовивозу:</div>
                           <div className="text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
-                          {storeSettings.store_working_hours_weekdays && (
-                        <div className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
-                          {storeSettings.store_working_hours_weekdays}
-                        </div>
-                      )}
-                      {storeSettings.store_working_hours_weekend && (
-                        <div className="text-sm text-muted-foreground/60 mt-1 whitespace-pre-line">
-                          {storeSettings.store_working_hours_weekend}
+                              {storeSettings.store_working_hours_weekdays && (
+                            <div className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
+                              {storeSettings.store_working_hours_weekdays}
+                            </div>
+                          )}
+                          {storeSettings.store_working_hours_weekend && (
+                            <div className="text-sm text-muted-foreground/60 mt-1 whitespace-pre-line">
+                              {storeSettings.store_working_hours_weekend}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
+                  </RadioGroup>
                 </div>
 
                 {/* Comment */}
