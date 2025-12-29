@@ -31,32 +31,59 @@ const POPULAR_CITIES = [
   'Миколаїв'
 ];
 
-// Функция для запроса к API Новой Почты
-async function novaPoshtaRequest(modelName, calledMethod, methodProperties = {}) {
-  const response = await fetch(NOVA_POSHTA_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      apiKey: API_KEY,
-      modelName,
-      calledMethod,
-      methodProperties,
-    }),
-  });
+// Функция для запроса к API Новой Почты с retry и таймаутами
+async function novaPoshtaRequest(modelName, calledMethod, methodProperties = {}, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 секунд таймаут
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+      const response = await fetch(NOVA_POSHTA_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          apiKey: API_KEY,
+          modelName,
+          calledMethod,
+          methodProperties,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(`API error: ${data.errors?.join(', ') || 'Unknown error'}`);
+      }
+
+      return data.data;
+    } catch (error) {
+      // Проверяем, является ли ошибка сетевой (соединение разорвано, таймаут и т.д.)
+      const isNetworkError = error.name === 'AbortError' || 
+                            error.code === 'UND_ERR_SOCKET' ||
+                            error.message?.includes('terminated') ||
+                            error.message?.includes('other side closed') ||
+                            error.cause?.code === 'UND_ERR_SOCKET';
+
+      if (isNetworkError && attempt < retries) {
+        const delay = attempt * 2000; // Увеличиваем задержку с каждой попыткой
+        console.log(`⚠️  Сетевая ошибка (попытка ${attempt}/${retries}), повтор через ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      // Если это не сетевая ошибка или попытки закончились - пробрасываем ошибку
+      throw error;
+    }
   }
-
-  const data = await response.json();
-  
-  if (!data.success) {
-    throw new Error(`API error: ${data.errors?.join(', ') || 'Unknown error'}`);
-  }
-
-  return data.data;
 }
 
 // Загрузка городов
