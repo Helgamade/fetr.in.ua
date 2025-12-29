@@ -231,6 +231,7 @@ async function loadWarehouses() {
   
   try {
     const connection = await pool.getConnection();
+    await connection.beginTransaction();
     
     // Получаем все города
     const [cities] = await connection.execute('SELECT ref, description_ua FROM nova_poshta_cities ORDER BY is_popular DESC, description_ua ASC');
@@ -241,7 +242,7 @@ async function loadWarehouses() {
       return;
     }
 
-    console.log(`📋 Найдено ${cities.length} городов для загрузки отделений`);
+    console.log(`📋 Найдено ${cities.length} городов для связи с отделениями`);
 
     // КРИТИЧНО: Полная очистка таблицы перед загрузкой новых данных
     // Отключаем проверку внешних ключей для TRUNCATE
@@ -250,16 +251,34 @@ async function loadWarehouses() {
     await connection.execute('SET FOREIGN_KEY_CHECKS = 1');
     console.log('🗑️  Старые данные отделений полностью удалены (TRUNCATE)');
 
-    let totalInserted = 0;
-    let processed = 0;
-    let failedCities = 0;
-    let rateLimitCount = 0;
-    const MAX_RETRIES = 3; // Оптимальное количество попыток
-    const BASE_DELAY = 100; // Небольшая задержка между батчами для стабильности
-    const RATE_LIMIT_DELAY = 1000; // Задержка при rate limit (1 секунда)
-    const BATCH_SIZE = 50; // Batch insert для эффективности
-    const CONCURRENT_CITIES = 20; // Уменьшаем до 20 параллельных запросов для стабильности
-    const warehouseBatch = []; // Накопление записей для batch insert
+    // Создаем Map для быстрого поиска городов по Ref
+    const citiesMap = new Map();
+    for (const city of cities) {
+      citiesMap.set(city.ref, city);
+    }
+
+    console.log('📥 Загрузка всех отделений одним запросом...');
+    const startTime = Date.now();
+    
+    let warehouses = [];
+    try {
+      // Загружаем ВСЕ отделения одним запросом (без CityRef)
+      warehouses = await novaPoshtaRequest('Address', 'getWarehouses', {});
+      
+      if (!warehouses || warehouses.length === 0) {
+        console.log('⚠️  Отделения не получены');
+        connection.release();
+        return;
+      }
+
+      console.log(`✅ Получено ${warehouses.length} отделений за ${((Date.now() - startTime) / 1000).toFixed(2)}с`);
+    } catch (error) {
+      console.error('❌ Ошибка при загрузке отделений:', error.message);
+      connection.release();
+      return;
+    }
+
+    const BATCH_SIZE = 1000; // Batch insert по 1000 записей для ускорения
     
     // Функция для вставки батча
     const insertBatch = async (batch) => {
@@ -288,152 +307,79 @@ async function loadWarehouses() {
       `, values);
     };
 
-    // Функция для обработки одного города
-    const processCity = async (city) => {
-      let retries = 0;
-      const cityWarehouses = [];
+    // Обрабатываем все отделения и связываем с городами
+    console.log('🔄 Обработка отделений и связывание с городами...');
+    const warehouseData = [];
+    let processed = 0;
+    let skipped = 0;
 
-      while (retries < MAX_RETRIES) {
-        try {
-          // Загружаем отделения для города
-          const warehouses = await novaPoshtaRequest('Address', 'getWarehouses', {
-            CityRef: city.ref
-          });
-
-          if (warehouses && warehouses.length > 0) {
-            for (const warehouse of warehouses) {
-              // Извлекаем номер отделения из описания
-              let number = null;
-              const numberMatch = warehouse.Description?.match(/№(\d+)/);
-              if (numberMatch) {
-                number = numberMatch[1];
-              }
-
-              cityWarehouses.push([
-                warehouse.Ref || null,
-                warehouse.SiteKey || null,
-                warehouse.Description || null,
-                warehouse.DescriptionRu || null,
-                warehouse.ShortAddress || null,
-                warehouse.ShortAddressRu || null,
-                city.ref,
-                city.description_ua,
-                null,
-                warehouse.TypeOfWarehouse || 'PostOffice',
-                number,
-                warehouse.Phone || null,
-                warehouse.TotalMaxWeightAllowed ? parseFloat(warehouse.TotalMaxWeightAllowed) : null,
-                warehouse.Longitude ? parseFloat(warehouse.Longitude) : null,
-                warehouse.Latitude ? parseFloat(warehouse.Latitude) : null
-              ]);
-            }
-          }
-
-          return { success: true, warehouses: cityWarehouses };
-
-        } catch (error) {
-          const errorMessage = error.message || String(error);
-          
-          // Проверяем, является ли ошибка rate limit
-          const isRateLimit = errorMessage && (
-            errorMessage.includes('To many requests') ||
-            errorMessage.includes('Too many requests') ||
-            errorMessage.includes('rate limit') ||
-            errorMessage.includes('429')
-          );
-          
-          // Проверяем сетевые ошибки
-          const isNetworkError = errorMessage && (
-            errorMessage.includes('ECONNRESET') ||
-            errorMessage.includes('ETIMEDOUT') ||
-            errorMessage.includes('ENOTFOUND') ||
-            errorMessage.includes('network') ||
-            errorMessage.includes('timeout') ||
-            errorMessage.includes('aborted') ||
-            error.name === 'AbortError'
-          );
-
-          if ((isRateLimit || isNetworkError) && retries < MAX_RETRIES) {
-            retries++;
-            if (isRateLimit) {
-              rateLimitCount++;
-            }
-            // Экспоненциальный backoff: 1s, 2s, 4s
-            const delay = RATE_LIMIT_DELAY * Math.pow(2, retries - 1);
-            await new Promise(resolve => setTimeout(resolve, delay));
-          } else {
-            // Если не rate limit/network error или превышены попытки - возвращаем ошибку
-            return { success: false, warehouses: [], error: errorMessage };
-          }
-        }
+    for (const warehouse of warehouses) {
+      const cityRef = warehouse.CityRef;
+      const city = citiesMap.get(cityRef);
+      
+      if (!city) {
+        skipped++;
+        continue; // Пропускаем отделения без города в базе
       }
 
-      return { success: false, warehouses: [] };
-    };
-
-    // Параллельная обработка городов батчами по CONCURRENT_CITIES
-    for (let i = 0; i < cities.length; i += CONCURRENT_CITIES) {
-      const batch = cities.slice(i, i + CONCURRENT_CITIES);
-      
-      // Обрабатываем батч параллельно
-      const results = await Promise.all(batch.map(city => processCity(city)));
-      
-      // Обрабатываем результаты
-      for (const result of results) {
-        if (result.success) {
-          if (result.warehouses.length > 0) {
-            totalInserted += result.warehouses.length;
-            
-            // Для больших городов вставляем сразу, для маленьких - накапливаем в batch
-            if (result.warehouses.length > BATCH_SIZE) {
-              await insertBatch(result.warehouses);
-            } else {
-              warehouseBatch.push(...result.warehouses);
-              
-              // Вставляем batch когда накопилось достаточно записей
-              if (warehouseBatch.length >= BATCH_SIZE) {
-                await insertBatch(warehouseBatch);
-                warehouseBatch.length = 0;
-              }
-            }
-          }
-        } else {
-          failedCities++;
-        }
-        processed++;
+      // Извлекаем номер отделения из описания
+      let number = null;
+      const numberMatch = warehouse.Description?.match(/№(\d+)/);
+      if (numberMatch) {
+        number = numberMatch[1];
       }
 
-      // Прогресс-бар
-      const warehousesCount = totalInserted;
-      const elapsed = (Date.now() - startTime) / 1000;
-      const rate = processed / elapsed;
-      const remaining = cities.length - processed;
-      const eta = remaining / rate;
-      showProgress(processed, cities.length, '📥 Загрузка отделений: ');
-      process.stdout.write(` | ${warehousesCount} отд. | ${rate.toFixed(1)} гор/с | ~${Math.round(eta)}с осталось | ошибок: ${failedCities}\n`);
+      warehouseData.push([
+        warehouse.Ref || null,
+        warehouse.SiteKey || null,
+        warehouse.Description || null,
+        warehouse.DescriptionRu || null,
+        warehouse.ShortAddress || null,
+        warehouse.ShortAddressRu || null,
+        cityRef,
+        city.description_ua,
+        null,
+        warehouse.TypeOfWarehouse || 'PostOffice',
+        number,
+        warehouse.Phone || null,
+        warehouse.TotalMaxWeightAllowed ? parseFloat(warehouse.TotalMaxWeightAllowed) : null,
+        warehouse.Longitude ? parseFloat(warehouse.Longitude) : null,
+        warehouse.Latitude ? parseFloat(warehouse.Latitude) : null
+      ]);
 
-      // Задержка между батчами для стабильности и избежания rate limit
-      if (i + CONCURRENT_CITIES < cities.length) {
-        await new Promise(resolve => setTimeout(resolve, BASE_DELAY));
+      processed++;
+      
+      // Показываем прогресс каждые 1000 записей
+      if (processed % 1000 === 0) {
+        showProgress(processed, warehouses.length, '🔄 Обработка отделений: ');
+        process.stdout.write(` | пропущено: ${skipped}\n`);
       }
     }
 
-    // Вставляем оставшиеся данные из batch
-    if (warehouseBatch.length > 0) {
-      await insertBatch(warehouseBatch);
-    }
+    console.log(`✅ Обработано ${processed} отделений, пропущено ${skipped} (без города в базе)`);
 
-    // Финальный прогресс-бар
-    showProgress(processed, cities.length, '📥 Загрузка отделений: ');
+    // Вставляем данные батчами
+    console.log('💾 Вставка отделений в базу данных...');
+    let totalInserted = 0;
     
+    for (let i = 0; i < warehouseData.length; i += BATCH_SIZE) {
+      const batch = warehouseData.slice(i, i + BATCH_SIZE);
+      await insertBatch(batch);
+      totalInserted += batch.length;
+      
+      showProgress(totalInserted, warehouseData.length, '💾 Вставка отделений: ');
+    }
+
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     const minutes = Math.floor(duration / 60);
     const seconds = (duration % 60).toFixed(0);
     const timeStr = minutes > 0 ? `${minutes}м ${seconds}с` : `${seconds}с`;
     
-    console.log(`\n✅ Загружено ${totalInserted} отделений для ${processed} городов за ${timeStr}`);
-    if (failedCities > 0) {
-      console.log(`⚠️  Не удалось загрузить отделения для ${failedCities} городов`);
+    await connection.commit();
+    
+    console.log(`\n✅ Загружено ${totalInserted} отделений за ${timeStr}`);
+    if (skipped > 0) {
+      console.log(`⚠️  Пропущено ${skipped} отделений (город не найден в базе)`);
     }
 
     connection.release();
