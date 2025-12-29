@@ -201,7 +201,7 @@ router.post('/', async (req, res, next) => {
         customer.phone || null, 
         toNull(customer.email),
         delivery.method || null, 
-        toNull(delivery.city),
+        toNull(delivery.city), 
         toNull(delivery.cityRef),
         toNull(delivery.warehouse),
         toNull(delivery.warehouseRef),

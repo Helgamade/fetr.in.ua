@@ -243,35 +243,6 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Payment */}
-                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
-                  <h2 className="text-lg font-bold flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-primary" />
-                    Спосіб оплати
-                  </h2>
-                  
-                  <RadioGroup
-                    value={formData.paymentMethod}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}
-                    className="space-y-3"
-                  >
-                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
-                      <RadioGroupItem value="card" id="card" />
-                      <div>
-                        <div className="font-medium">Оплата на карту</div>
-                        <div className="text-sm text-muted-foreground">Переказ на картку ПриватБанку</div>
-                      </div>
-                    </label>
-                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
-                      <RadioGroupItem value="cod" id="cod" />
-                      <div>
-                        <div className="font-medium">Накладений платіж</div>
-                        <div className="text-sm text-muted-foreground">Оплата при отриманні (+20 грн комісія)</div>
-                      </div>
-                    </label>
-                  </RadioGroup>
-                </div>
-
                 {/* Delivery */}
                 <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
                   <h2 className="text-lg font-bold flex items-center gap-2">
@@ -296,15 +267,15 @@ const Checkout = () => {
                     {/* Нова Пошта */}
                     <div className="border rounded-xl transition-all">
                       <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
-                        <RadioGroupItem value="nova_poshta" id="nova_poshta" />
-                        <div className="flex-1">
-                          <div className="font-medium">Нова Пошта</div>
-                          <div className="text-sm text-muted-foreground">1-2 дні по Україні</div>
-                        </div>
-                        <div className="text-sm font-medium">
-                          {total >= 1500 ? <span className="text-green-600">Безкоштовно</span> : "від 70 грн"}
-                        </div>
-                      </label>
+                      <RadioGroupItem value="nova_poshta" id="nova_poshta" />
+                      <div className="flex-1">
+                        <div className="font-medium">Нова Пошта</div>
+                        <div className="text-sm text-muted-foreground">1-2 дні по Україні</div>
+                      </div>
+                      <div className="text-sm font-medium">
+                        {total >= 1500 ? <span className="text-green-600">Безкоштовно</span> : "від 70 грн"}
+                      </div>
+                    </label>
                       {formData.deliveryMethod === "nova_poshta" && (
                         <div className="px-4 pb-4">
                           <NovaPoshtaDelivery
@@ -364,31 +335,31 @@ const Checkout = () => {
                     {/* Укрпошта */}
                     <div className="border rounded-xl transition-all">
                       <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
-                        <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
-                        <div className="flex-1">
-                          <div className="font-medium">Укрпошта</div>
-                          <div className="text-sm text-muted-foreground">3-5 днів по Україні</div>
-                        </div>
-                        <div className="text-sm font-medium">від 45 грн</div>
-                      </label>
+                      <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
+                      <div className="flex-1">
+                        <div className="font-medium">Укрпошта</div>
+                        <div className="text-sm text-muted-foreground">3-5 днів по Україні</div>
+                      </div>
+                      <div className="text-sm font-medium">від 45 грн</div>
+                    </label>
                       {formData.deliveryMethod === "ukr_poshta" && (
-                        <div className="px-4 pb-4 border-t bg-accent/30 space-y-4">
-                          <div className="grid sm:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="city">Місто *</Label>
-                              <div className="relative">
-                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <Input
-                                  id="city"
-                                  name="city"
-                                  value={formData.city}
-                                  onChange={handleInputChange}
-                                  placeholder="Введіть місто"
-                                  required
-                                  className="rounded-xl pl-10"
-                                />
-                              </div>
-                            </div>
+                        <div className="px-4 pb-4 space-y-4">
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="city">Місто *</Label>
+                          <div className="relative">
+                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                              id="city"
+                              name="city"
+                              value={formData.city}
+                              onChange={handleInputChange}
+                              placeholder="Введіть місто"
+                              required
+                              className="rounded-xl pl-10"
+                            />
+                          </div>
+                        </div>
                             <div className="space-y-2">
                               <Label htmlFor="postalCode">Індекс *</Label>
                               <Input
@@ -413,9 +384,9 @@ const Checkout = () => {
                                 className="rounded-xl"
                               />
                             </div>
-                          </div>
-                        </div>
-                      )}
+                      </div>
+                    </div>
+                  )}
                     </div>
 
                     {/* Самовивіз */}
@@ -428,23 +399,52 @@ const Checkout = () => {
                         </div>
                         <div className="text-sm font-medium text-green-600">Безкоштовно</div>
                       </label>
-                      {formData.deliveryMethod === "pickup" && (
+                  {formData.deliveryMethod === "pickup" && (
                         <div className="px-4 pb-4">
-                          <div className="font-medium mb-1">Адреса самовивозу:</div>
-                          <div className="text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
-                              {storeSettings.store_working_hours_weekdays && (
-                            <div className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
-                              {storeSettings.store_working_hours_weekdays}
-                            </div>
-                          )}
-                          {storeSettings.store_working_hours_weekend && (
-                            <div className="text-sm text-muted-foreground/60 mt-1 whitespace-pre-line">
-                              {storeSettings.store_working_hours_weekend}
-                            </div>
-                          )}
+                      <div className="font-medium mb-1">Адреса самовивозу:</div>
+                      <div className="text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
+                      {storeSettings.store_working_hours_weekdays && (
+                        <div className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
+                          {storeSettings.store_working_hours_weekdays}
+                        </div>
+                      )}
+                      {storeSettings.store_working_hours_weekend && (
+                        <div className="text-sm text-muted-foreground/60 mt-1 whitespace-pre-line">
+                          {storeSettings.store_working_hours_weekend}
                         </div>
                       )}
                     </div>
+                  )}
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Payment */}
+                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
+                  <h2 className="text-lg font-bold flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-primary" />
+                    Спосіб оплати
+                  </h2>
+                  
+                  <RadioGroup
+                    value={formData.paymentMethod}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}
+                    className="space-y-3"
+                  >
+                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
+                      <RadioGroupItem value="card" id="card" />
+                      <div>
+                        <div className="font-medium">Оплата на карту</div>
+                        <div className="text-sm text-muted-foreground">Переказ на картку ПриватБанку</div>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
+                      <RadioGroupItem value="cod" id="cod" />
+                      <div>
+                        <div className="font-medium">Накладений платіж</div>
+                        <div className="text-sm text-muted-foreground">Оплата при отриманні (+20 грн комісія)</div>
+                      </div>
+                    </label>
                   </RadioGroup>
                 </div>
 
