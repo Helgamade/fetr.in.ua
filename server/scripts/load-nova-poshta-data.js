@@ -159,64 +159,98 @@ async function loadWarehouses() {
 
       let totalInserted = 0;
       let processed = 0;
+      let retryCount = 0;
+      const MAX_RETRIES = 3;
+      const BASE_DELAY = 500; // Базовая задержка 500ms
+      const RATE_LIMIT_DELAY = 5000; // Задержка при rate limit 5 секунд
 
       for (const city of cities) {
-        try {
-          // Загружаем отделения для города
-          const warehouses = await novaPoshtaRequest('Address', 'getWarehouses', {
-            CityRef: city.ref
-          });
+        let retries = 0;
+        let success = false;
 
-          if (warehouses && warehouses.length > 0) {
-            for (const warehouse of warehouses) {
-              // Извлекаем номер отделения из описания (например, "№2: вул. Богатирська, 11")
-              let number = null;
-              const numberMatch = warehouse.Description?.match(/№(\d+)/);
-              if (numberMatch) {
-                number = numberMatch[1];
+        while (retries < MAX_RETRIES && !success) {
+          try {
+            // Загружаем отделения для города
+            const warehouses = await novaPoshtaRequest('Address', 'getWarehouses', {
+              CityRef: city.ref
+            });
+
+            if (warehouses && warehouses.length > 0) {
+              for (const warehouse of warehouses) {
+                // Извлекаем номер отделения из описания (например, "№2: вул. Богатирська, 11")
+                let number = null;
+                const numberMatch = warehouse.Description?.match(/№(\d+)/);
+                if (numberMatch) {
+                  number = numberMatch[1];
+                }
+
+                await connection.execute(`
+                  INSERT INTO nova_poshta_warehouses (
+                    ref, site_key, description_ua, description_ru,
+                    short_address_ua, short_address_ru,
+                    city_ref, city_description_ua, city_description_ru,
+                    type_of_warehouse, number, phone, max_weight_allowed,
+                    longitude, latitude
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `, [
+                  warehouse.Ref || null,
+                  warehouse.SiteKey || null,
+                  warehouse.Description || null,
+                  warehouse.DescriptionRu || null,
+                  warehouse.ShortAddress || null,
+                  warehouse.ShortAddressRu || null,
+                  city.ref,
+                  city.description_ua,
+                  null, // city_description_ru можно добавить позже
+                  warehouse.TypeOfWarehouse || 'PostOffice',
+                  number,
+                  warehouse.Phone || null,
+                  warehouse.TotalMaxWeightAllowed ? parseFloat(warehouse.TotalMaxWeightAllowed) : null,
+                  warehouse.Longitude ? parseFloat(warehouse.Longitude) : null,
+                  warehouse.Latitude ? parseFloat(warehouse.Latitude) : null
+                ]);
+
+                totalInserted++;
               }
+            }
 
-              await connection.execute(`
-                INSERT INTO nova_poshta_warehouses (
-                  ref, site_key, description_ua, description_ru,
-                  short_address_ua, short_address_ru,
-                  city_ref, city_description_ua, city_description_ru,
-                  type_of_warehouse, number, phone, max_weight_allowed,
-                  longitude, latitude
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `, [
-                warehouse.Ref || null,
-                warehouse.SiteKey || null,
-                warehouse.Description || null,
-                warehouse.DescriptionRu || null,
-                warehouse.ShortAddress || null,
-                warehouse.ShortAddressRu || null,
-                city.ref,
-                city.description_ua,
-                null, // city_description_ru можно добавить позже
-                warehouse.TypeOfWarehouse || 'PostOffice',
-                number,
-                warehouse.Phone || null,
-                warehouse.TotalMaxWeightAllowed ? parseFloat(warehouse.TotalMaxWeightAllowed) : null,
-                warehouse.Longitude ? parseFloat(warehouse.Longitude) : null,
-                warehouse.Latitude ? parseFloat(warehouse.Latitude) : null
-              ]);
+            success = true;
+            retryCount = 0; // Сброс счетчика при успехе
 
-              totalInserted++;
+          } catch (error) {
+            // Проверяем, является ли ошибка rate limit
+            const isRateLimit = error.message && (
+              error.message.includes('To many requests') ||
+              error.message.includes('Too many requests') ||
+              error.message.includes('rate limit') ||
+              error.message.includes('429')
+            );
+
+            if (isRateLimit && retries < MAX_RETRIES) {
+              retries++;
+              retryCount++;
+              const delay = RATE_LIMIT_DELAY * retryCount; // Увеличиваем задержку с каждой попыткой
+              console.log(`⏸️  Rate limit для города ${city.description_ua}. Ожидание ${delay}ms перед повтором (попытка ${retries}/${MAX_RETRIES})...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+            } else {
+              // Если не rate limit или превышены попытки - пропускаем город
+              console.error(`⚠️  Ошибка при загрузке отделений для города ${city.description_ua}:`, error.message);
+              success = true; // Пропускаем город и продолжаем
             }
           }
-
-          processed++;
-          if (processed % 50 === 0) {
-            console.log(`⏳ Обработано ${processed}/${cities.length} городов, загружено ${totalInserted} отделений...`);
-          }
-
-          // Небольшая задержка, чтобы не перегружать API
-          await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (error) {
-          console.error(`⚠️  Ошибка при загрузке отделений для города ${city.description_ua}:`, error.message);
-          // Продолжаем обработку других городов
         }
+
+        processed++;
+        
+        // Увеличиваем задержку при большом количестве ошибок rate limit
+        const delay = retryCount > 10 ? BASE_DELAY * 3 : BASE_DELAY;
+        
+        if (processed % 50 === 0) {
+          console.log(`⏳ Обработано ${processed}/${cities.length} городов, загружено ${totalInserted} отделений...`);
+        }
+
+        // Задержка между запросами, чтобы не перегружать API
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
 
       await connection.commit();
