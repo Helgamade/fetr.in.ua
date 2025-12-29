@@ -61,6 +61,7 @@ async function novaPoshtaRequest(modelName, calledMethod, methodProperties = {})
 
 // Загрузка городов
 async function loadCities() {
+  const startTime = Date.now();
   console.log('📥 Загрузка городов...');
   
   try {
@@ -68,7 +69,7 @@ async function loadCities() {
     
     if (!cities || cities.length === 0) {
       console.log('⚠️  Города не получены');
-      return;
+      return false;
     }
 
     console.log(`✅ Получено ${cities.length} городов`);
@@ -77,21 +78,51 @@ async function loadCities() {
     await connection.beginTransaction();
 
     try {
-      // Очистка таблицы
-      await connection.execute('DELETE FROM nova_poshta_cities');
-      console.log('🗑️  Старые данные удалены');
+      // КРИТИЧНО: Полная очистка таблицы перед загрузкой новых данных
+      await connection.execute('TRUNCATE TABLE nova_poshta_cities');
+      console.log('🗑️  Старые данные полностью удалены (TRUNCATE)');
 
       // Определение популярных городов
       const popularCityNames = new Set(POPULAR_CITIES.map(c => c.toLowerCase()));
 
+      // Batch insert для ускорения (по 1000 записей за раз)
+      const BATCH_SIZE = 1000;
+      const batches = [];
+      
+      for (let i = 0; i < cities.length; i += BATCH_SIZE) {
+        batches.push(cities.slice(i, i + BATCH_SIZE));
+      }
+
       let inserted = 0;
       let popularCount = 0;
 
-      for (const city of cities) {
-        const isPopular = popularCityNames.has(city.Description?.toLowerCase());
-        const sortOrder = isPopular ? POPULAR_CITIES.indexOf(
-          POPULAR_CITIES.find(c => c.toLowerCase() === city.Description?.toLowerCase())
-        ) : 0;
+      for (const batch of batches) {
+        const values = [];
+        const placeholders = [];
+
+        for (const city of batch) {
+          const isPopular = popularCityNames.has(city.Description?.toLowerCase());
+          const sortOrder = isPopular ? POPULAR_CITIES.indexOf(
+            POPULAR_CITIES.find(c => c.toLowerCase() === city.Description?.toLowerCase())
+          ) : 0;
+
+          values.push(
+            city.Ref || null,
+            city.Description || null,
+            city.DescriptionRu || null,
+            city.Area || null,
+            city.AreaDescription || null,
+            city.AreaDescriptionRu || null,
+            city.SettlementType || null,
+            city.SettlementTypeDescription || null,
+            city.SettlementTypeDescriptionRu || null,
+            isPopular,
+            sortOrder
+          );
+          placeholders.push('(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+          
+          if (isPopular) popularCount++;
+        }
 
         await connection.execute(`
           INSERT INTO nova_poshta_cities (
@@ -99,27 +130,16 @@ async function loadCities() {
             area_ref, area_description_ua, area_description_ru,
             settlement_type_ref, settlement_type_description_ua, settlement_type_description_ru,
             is_popular, sort_order
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-          city.Ref || null,
-          city.Description || null,
-          city.DescriptionRu || null,
-          city.Area || null,
-          city.AreaDescription || null,
-          city.AreaDescriptionRu || null,
-          city.SettlementType || null,
-          city.SettlementTypeDescription || null,
-          city.SettlementTypeDescriptionRu || null,
-          isPopular,
-          sortOrder
-        ]);
+          ) VALUES ${placeholders.join(', ')}
+        `, values);
 
-        inserted++;
-        if (isPopular) popularCount++;
+        inserted += batch.length;
       }
 
       await connection.commit();
-      console.log(`✅ Загружено ${inserted} городов (${popularCount} популярных)`);
+      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+      console.log(`✅ Загружено ${inserted} городов (${popularCount} популярных) за ${duration}с`);
+      return true;
     } catch (error) {
       await connection.rollback();
       throw error;
@@ -134,13 +154,14 @@ async function loadCities() {
 
 // Загрузка отделений для всех городов
 async function loadWarehouses() {
+  const startTime = Date.now();
   console.log('📥 Загрузка отделений...');
   
   try {
     const connection = await pool.getConnection();
     
     // Получаем все города
-    const [cities] = await connection.execute('SELECT ref, description_ua FROM nova_poshta_cities');
+    const [cities] = await connection.execute('SELECT ref, description_ua FROM nova_poshta_cities ORDER BY is_popular DESC, description_ua ASC');
     
     if (cities.length === 0) {
       console.log('⚠️  Нет городов в базе. Сначала загрузите города.');
@@ -150,117 +171,167 @@ async function loadWarehouses() {
 
     console.log(`📋 Найдено ${cities.length} городов для загрузки отделений`);
 
-    await connection.beginTransaction();
+    // КРИТИЧНО: Полная очистка таблицы перед загрузкой новых данных
+    await connection.execute('TRUNCATE TABLE nova_poshta_warehouses');
+    console.log('🗑️  Старые данные отделений полностью удалены (TRUNCATE)');
 
-    try {
-      // Очистка таблицы
-      await connection.execute('DELETE FROM nova_poshta_warehouses');
-      console.log('🗑️  Старые данные отделений удалены');
+    // Используем временную таблицу для batch insert
+    await connection.execute(`
+      CREATE TEMPORARY TABLE temp_warehouses (
+        ref VARCHAR(36),
+        site_key INT,
+        description_ua VARCHAR(500),
+        description_ru VARCHAR(500),
+        short_address_ua VARCHAR(255),
+        short_address_ru VARCHAR(255),
+        city_ref VARCHAR(36),
+        city_description_ua VARCHAR(255),
+        city_description_ru VARCHAR(255),
+        type_of_warehouse VARCHAR(50),
+        number VARCHAR(20),
+        phone VARCHAR(50),
+        max_weight_allowed DECIMAL(10, 2),
+        longitude DECIMAL(10, 7),
+        latitude DECIMAL(10, 7)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
 
-      let totalInserted = 0;
-      let processed = 0;
-      let retryCount = 0;
-      const MAX_RETRIES = 3;
-      const BASE_DELAY = 500; // Базовая задержка 500ms
-      const RATE_LIMIT_DELAY = 5000; // Задержка при rate limit 5 секунд
+    let totalInserted = 0;
+    let processed = 0;
+    let failedCities = 0;
+    let rateLimitCount = 0;
+    const MAX_RETRIES = 2; // Уменьшили до 2 попыток
+    const BASE_DELAY = 200; // Уменьшили базовую задержку до 200ms
+    const RATE_LIMIT_DELAY = 3000; // Уменьшили задержку при rate limit до 3 секунд
+    const BATCH_SIZE = 500; // Batch insert каждые 500 отделений
 
-      for (const city of cities) {
-        let retries = 0;
-        let success = false;
+    for (const city of cities) {
+      let retries = 0;
+      let success = false;
+      const cityWarehouses = [];
 
-        while (retries < MAX_RETRIES && !success) {
-          try {
-            // Загружаем отделения для города
-            const warehouses = await novaPoshtaRequest('Address', 'getWarehouses', {
-              CityRef: city.ref
-            });
+      while (retries < MAX_RETRIES && !success) {
+        try {
+          // Загружаем отделения для города
+          const warehouses = await novaPoshtaRequest('Address', 'getWarehouses', {
+            CityRef: city.ref
+          });
 
-            if (warehouses && warehouses.length > 0) {
-              for (const warehouse of warehouses) {
-                // Извлекаем номер отделения из описания (например, "№2: вул. Богатирська, 11")
-                let number = null;
-                const numberMatch = warehouse.Description?.match(/№(\d+)/);
-                if (numberMatch) {
-                  number = numberMatch[1];
-                }
-
-                await connection.execute(`
-                  INSERT INTO nova_poshta_warehouses (
-                    ref, site_key, description_ua, description_ru,
-                    short_address_ua, short_address_ru,
-                    city_ref, city_description_ua, city_description_ru,
-                    type_of_warehouse, number, phone, max_weight_allowed,
-                    longitude, latitude
-                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                `, [
-                  warehouse.Ref || null,
-                  warehouse.SiteKey || null,
-                  warehouse.Description || null,
-                  warehouse.DescriptionRu || null,
-                  warehouse.ShortAddress || null,
-                  warehouse.ShortAddressRu || null,
-                  city.ref,
-                  city.description_ua,
-                  null, // city_description_ru можно добавить позже
-                  warehouse.TypeOfWarehouse || 'PostOffice',
-                  number,
-                  warehouse.Phone || null,
-                  warehouse.TotalMaxWeightAllowed ? parseFloat(warehouse.TotalMaxWeightAllowed) : null,
-                  warehouse.Longitude ? parseFloat(warehouse.Longitude) : null,
-                  warehouse.Latitude ? parseFloat(warehouse.Latitude) : null
-                ]);
-
-                totalInserted++;
+          if (warehouses && warehouses.length > 0) {
+            for (const warehouse of warehouses) {
+              // Извлекаем номер отделения из описания
+              let number = null;
+              const numberMatch = warehouse.Description?.match(/№(\d+)/);
+              if (numberMatch) {
+                number = numberMatch[1];
               }
-            }
 
-            success = true;
-            retryCount = 0; // Сброс счетчика при успехе
-
-          } catch (error) {
-            // Проверяем, является ли ошибка rate limit
-            const isRateLimit = error.message && (
-              error.message.includes('To many requests') ||
-              error.message.includes('Too many requests') ||
-              error.message.includes('rate limit') ||
-              error.message.includes('429')
-            );
-
-            if (isRateLimit && retries < MAX_RETRIES) {
-              retries++;
-              retryCount++;
-              const delay = RATE_LIMIT_DELAY * retryCount; // Увеличиваем задержку с каждой попыткой
-              console.log(`⏸️  Rate limit для города ${city.description_ua}. Ожидание ${delay}ms перед повтором (попытка ${retries}/${MAX_RETRIES})...`);
-              await new Promise(resolve => setTimeout(resolve, delay));
-            } else {
-              // Если не rate limit или превышены попытки - пропускаем город
-              console.error(`⚠️  Ошибка при загрузке отделений для города ${city.description_ua}:`, error.message);
-              success = true; // Пропускаем город и продолжаем
+              cityWarehouses.push([
+                warehouse.Ref || null,
+                warehouse.SiteKey || null,
+                warehouse.Description || null,
+                warehouse.DescriptionRu || null,
+                warehouse.ShortAddress || null,
+                warehouse.ShortAddressRu || null,
+                city.ref,
+                city.description_ua,
+                null,
+                warehouse.TypeOfWarehouse || 'PostOffice',
+                number,
+                warehouse.Phone || null,
+                warehouse.TotalMaxWeightAllowed ? parseFloat(warehouse.TotalMaxWeightAllowed) : null,
+                warehouse.Longitude ? parseFloat(warehouse.Longitude) : null,
+                warehouse.Latitude ? parseFloat(warehouse.Latitude) : null
+              ]);
             }
           }
-        }
 
-        processed++;
-        
-        // Увеличиваем задержку при большом количестве ошибок rate limit
-        const delay = retryCount > 10 ? BASE_DELAY * 3 : BASE_DELAY;
-        
-        if (processed % 50 === 0) {
-          console.log(`⏳ Обработано ${processed}/${cities.length} городов, загружено ${totalInserted} отделений...`);
-        }
+          success = true;
 
-        // Задержка между запросами, чтобы не перегружать API
-        await new Promise(resolve => setTimeout(resolve, delay));
+        } catch (error) {
+          // Проверяем, является ли ошибка rate limit
+          const isRateLimit = error.message && (
+            error.message.includes('To many requests') ||
+            error.message.includes('Too many requests') ||
+            error.message.includes('rate limit') ||
+            error.message.includes('429')
+          );
+
+          if (isRateLimit && retries < MAX_RETRIES) {
+            retries++;
+            rateLimitCount++;
+            const delay = RATE_LIMIT_DELAY + (rateLimitCount * 1000); // Увеличиваем задержку при частых rate limit
+            if (retries === 1) {
+              console.log(`⏸️  Rate limit для города ${city.description_ua}. Ожидание ${delay}ms...`);
+            }
+            await new Promise(resolve => setTimeout(resolve, delay));
+          } else {
+            // Если не rate limit или превышены попытки - пропускаем город
+            if (retries === 0) {
+              console.error(`⚠️  Ошибка для города ${city.description_ua}:`, error.message);
+            }
+            failedCities++;
+            success = true; // Пропускаем город и продолжаем
+          }
+        }
       }
 
-      await connection.commit();
-      console.log(`✅ Загружено ${totalInserted} отделений для ${processed} городов`);
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
+      // Batch insert в временную таблицу
+      if (cityWarehouses.length > 0) {
+        const placeholders = cityWarehouses.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+        const values = cityWarehouses.flat();
+
+        await connection.execute(`
+          INSERT INTO temp_warehouses VALUES ${placeholders}
+        `, values);
+
+        totalInserted += cityWarehouses.length;
+
+        // Периодически переносим данные из временной таблицы в основную
+        if (totalInserted % BATCH_SIZE === 0) {
+          await connection.execute(`
+            INSERT INTO nova_poshta_warehouses 
+            SELECT * FROM temp_warehouses
+          `);
+          await connection.execute('TRUNCATE TABLE temp_warehouses');
+        }
+      }
+
+      processed++;
+      
+      // Адаптивная задержка: увеличиваем при частых rate limit
+      const delay = rateLimitCount > 20 ? BASE_DELAY * 2 : BASE_DELAY;
+      
+      if (processed % 100 === 0) {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+        const rate = (processed / ((Date.now() - startTime) / 1000)).toFixed(1);
+        console.log(`⏳ Обработано ${processed}/${cities.length} городов (${rate} гор/с), загружено ${totalInserted} отделений, ошибок: ${failedCities}...`);
+      }
+
+      // Задержка между запросами
+      if (processed < cities.length) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
+
+    // Переносим оставшиеся данные из временной таблицы
+    const [remaining] = await connection.execute('SELECT COUNT(*) as count FROM temp_warehouses');
+    if (remaining[0].count > 0) {
+      await connection.execute(`
+        INSERT INTO nova_poshta_warehouses 
+        SELECT * FROM temp_warehouses
+      `);
+    }
+
+    await connection.execute('DROP TEMPORARY TABLE temp_warehouses');
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`✅ Загружено ${totalInserted} отделений для ${processed} городов за ${duration}с`);
+    if (failedCities > 0) {
+      console.log(`⚠️  Не удалось загрузить отделения для ${failedCities} городов`);
+    }
+
+    connection.release();
   } catch (error) {
     console.error('❌ Ошибка при загрузке отделений:', error);
     throw error;
@@ -269,18 +340,25 @@ async function loadWarehouses() {
 
 // Главная функция
 async function main() {
-  console.log('🚀 Начало загрузки справочников Новой Почты\n');
+  const totalStartTime = Date.now();
+  console.log('🚀 Начало загрузки справочников Новой Почты');
+  console.log('📅 Рекомендуется запускать ежедневно (ночью) для актуальности данных\n');
 
   try {
     // Сначала загружаем города
-    await loadCities();
+    const citiesLoaded = await loadCities();
     console.log('');
 
-    // Затем загружаем отделения
-    await loadWarehouses();
-    console.log('');
+    if (citiesLoaded) {
+      // Затем загружаем отделения
+      await loadWarehouses();
+      console.log('');
+    }
 
-    console.log('✅ Загрузка завершена успешно!');
+    const totalDuration = ((Date.now() - totalStartTime) / 1000).toFixed(2);
+    console.log(`✅ Загрузка завершена успешно за ${totalDuration}с`);
+    console.log('💡 Для автоматического ежедневного обновления настройте cron:');
+    console.log('   0 3 * * * cd /home/idesig02/fetr.in.ua/www && node server/scripts/load-nova-poshta-data.js');
     process.exit(0);
   } catch (error) {
     console.error('❌ Критическая ошибка:', error);
