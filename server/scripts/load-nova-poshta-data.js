@@ -254,11 +254,11 @@ async function loadWarehouses() {
     let processed = 0;
     let failedCities = 0;
     let rateLimitCount = 0;
-    const MAX_RETRIES = 3;
-    const BASE_DELAY = 50; // Минимальная задержка, так как используем параллельную обработку
-    const RATE_LIMIT_DELAY = 2000; // Задержка при rate limit (2 секунды)
-    const BATCH_SIZE = 20; // Batch insert по 20 записей (15 полей * 20 = 300 placeholders, безопасно)
-    const CONCURRENT_CITIES = 20; // Обрабатываем 20 городов одновременно для ускорения в 20 раз
+    const MAX_RETRIES = 5; // Больше попыток при rate limit
+    const BASE_DELAY = 0; // Без задержек между батчами - максимальная скорость
+    const RATE_LIMIT_DELAY = 500; // Минимальная задержка при rate limit (0.5 секунды)
+    const BATCH_SIZE = 50; // Увеличиваем batch insert для большей эффективности
+    const CONCURRENT_CITIES = 100; // Обрабатываем 100 городов одновременно для максимальной скорости
     const warehouseBatch = []; // Накопление записей для batch insert
     
     // Функция для вставки батча
@@ -343,7 +343,8 @@ async function loadWarehouses() {
           if (isRateLimit && retries < MAX_RETRIES) {
             retries++;
             rateLimitCount++;
-            const delay = RATE_LIMIT_DELAY * retries; // Увеличиваем задержку с каждой попыткой
+            // Минимальная задержка с экспоненциальным backoff
+            const delay = RATE_LIMIT_DELAY * Math.pow(1.5, retries - 1);
             await new Promise(resolve => setTimeout(resolve, delay));
           } else {
             // Если не rate limit или превышены попытки - возвращаем ошибку
@@ -396,10 +397,7 @@ async function loadWarehouses() {
       showProgress(processed, cities.length, '📥 Загрузка отделений: ');
       process.stdout.write(` | ${warehousesCount} отд. | ${rate.toFixed(1)} гор/с | ~${Math.round(eta)}с осталось | ошибок: ${failedCities}\n`);
 
-      // Небольшая задержка между батчами для снижения нагрузки
-      if (i + CONCURRENT_CITIES < cities.length) {
-        await new Promise(resolve => setTimeout(resolve, BASE_DELAY));
-      }
+      // Без задержек между батчами - максимальная скорость
     }
 
     // Вставляем оставшиеся данные из batch
