@@ -150,7 +150,7 @@ const Checkout = () => {
       <div className="min-h-screen bg-muted/30">
         {/* Header */}
         <header className="bg-background border-b sticky top-0 z-50">
-          <div className="w-full max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
+          <div className="container mx-auto px-4 py-4 flex items-center gap-4">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -163,7 +163,7 @@ const Checkout = () => {
           </div>
         </header>
 
-        <div className="w-full max-w-7xl mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Form */}
             <div className="lg:col-span-2 space-y-6">
