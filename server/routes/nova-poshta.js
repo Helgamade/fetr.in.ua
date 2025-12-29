@@ -110,19 +110,21 @@ router.get('/warehouses', async (req, res, next) => {
     const params = [cityRef];
 
     // Фильтр по типу (PostOffice или Postomat)
-    // API Новой Почты возвращает UUID типов отделений:
+    // API Новой Почты возвращает UUID типов отделений (из getWarehouseTypes):
     // PostOffice (Відділення): 
-    //   - '841339c7-591a-42e2-8233-7a0a00f0ed6f' (отделения, включая пункты приема)
-    //   - '9a68df70-0267-42a8-bb5c-37f427e36ee4' (отделения)
+    //   - '6f8c7162-4b72-4b0a-88e5-906948c6a92f' - Поштове відділення з обмеження
+    //   - '841339c7-591a-42e2-8233-7a0a00f0ed6f' - Поштове(ий)
+    //   - '9a68df70-0267-42a8-bb5c-37f427e36ee4' - Вантажне(ий)
     // Postomat (Поштомат): 
-    //   - 'f9316480-5f2d-425d-bc2c-ac7cd29decf0' (почтоматы)
+    //   - '95dc212d-479c-4ffb-a8ab-8c1b9073d0bc' - Поштомат ПриватБанку
+    //   - 'f9316480-5f2d-425d-bc2c-ac7cd29decf0' - Поштомат
     if (type) {
       if (type === 'PostOffice') {
-        // Відділення: оба UUID типа отделений
-        query += ` AND type_of_warehouse IN ('841339c7-591a-42e2-8233-7a0a00f0ed6f', '9a68df70-0267-42a8-bb5c-37f427e36ee4')`;
+        // Відділення: все типы отделений
+        query += ` AND type_of_warehouse IN ('6f8c7162-4b72-4b0a-88e5-906948c6a92f', '841339c7-591a-42e2-8233-7a0a00f0ed6f', '9a68df70-0267-42a8-bb5c-37f427e36ee4')`;
       } else if (type === 'Postomat') {
-        // Поштомат: только почтоматы
-        query += ` AND type_of_warehouse = 'f9316480-5f2d-425d-bc2c-ac7cd29decf0'`;
+        // Поштомат: все типы почтоматов
+        query += ` AND type_of_warehouse IN ('95dc212d-479c-4ffb-a8ab-8c1b9073d0bc', 'f9316480-5f2d-425d-bc2c-ac7cd29decf0')`;
       }
     }
 
