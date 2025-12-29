@@ -15,6 +15,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { items, getSubtotal, getDiscount, getDeliveryCost, getTotal, clearCart } = useCart();
   const { data: products = [] } = useProducts();
+  const { data: storeSettings = {} } = usePublicSettings();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -355,8 +356,11 @@ const Checkout = () => {
                   {formData.deliveryMethod === "pickup" && (
                     <div className="p-4 bg-secondary/50 rounded-xl">
                       <div className="font-medium mb-1">Адреса самовивозу:</div>
-                      <div className="text-muted-foreground">м. Київ, вул. Урлівська 30</div>
-                      <div className="text-sm text-muted-foreground mt-2">Пн-Пт: 10:00-18:00, Сб: 10:00-15:00</div>
+                      <div className="text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
+                      <div className="text-sm text-muted-foreground mt-2">
+                        {storeSettings.store_working_hours_weekdays || 'Пн-Пт: 10:00-18:00'}
+                        {storeSettings.store_working_hours_weekend && `, ${storeSettings.store_working_hours_weekend}`}
+                      </div>
                     </div>
                   )}
                 </div>
