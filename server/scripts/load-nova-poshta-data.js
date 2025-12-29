@@ -36,29 +36,49 @@ async function novaPoshtaRequest(modelName, calledMethod, methodProperties = {},
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 секунд таймаут
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 секунд таймаут для больших ответов
+
+      const requestBody = {
+        apiKey: API_KEY,
+        modelName,
+        calledMethod,
+        methodProperties,
+      };
 
       const response = await fetch(NOVA_POSHTA_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        body: JSON.stringify({
-          apiKey: API_KEY,
-          modelName,
-          calledMethod,
-          methodProperties,
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal,
+        // Увеличиваем таймауты для больших ответов
+        keepalive: true,
       });
 
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text().catch(() => '');
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText.substring(0, 200)}`);
       }
 
-      const data = await response.json();
+      // Читаем ответ как текст сначала, чтобы проверить размер
+      const text = await response.text();
+      
+      if (!text || text.trim().length === 0) {
+        throw new Error('Empty response from API');
+      }
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.error('JSON parse error. Response length:', text.length);
+        console.error('Response start:', text.substring(0, 500));
+        throw new Error(`Failed to parse JSON response: ${parseError.message}`);
+      }
       
       if (!data.success) {
         throw new Error(`API error: ${data.errors?.join(', ') || 'Unknown error'}`);
@@ -71,11 +91,12 @@ async function novaPoshtaRequest(modelName, calledMethod, methodProperties = {},
                             error.code === 'UND_ERR_SOCKET' ||
                             error.message?.includes('terminated') ||
                             error.message?.includes('other side closed') ||
-                            error.cause?.code === 'UND_ERR_SOCKET';
+                            error.cause?.code === 'UND_ERR_SOCKET' ||
+                            error.message?.includes('fetch failed');
 
       if (isNetworkError && attempt < retries) {
-        const delay = attempt * 2000; // Увеличиваем задержку с каждой попыткой
-        console.log(`⚠️  Сетевая ошибка (попытка ${attempt}/${retries}), повтор через ${delay}ms...`);
+        const delay = attempt * 3000; // Увеличиваем задержку с каждой попыткой
+        console.log(`⚠️  Сетевая ошибка для ${calledMethod} (попытка ${attempt}/${retries}), повтор через ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
