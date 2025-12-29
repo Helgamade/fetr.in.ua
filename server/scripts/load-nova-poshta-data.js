@@ -188,8 +188,35 @@ async function loadWarehouses() {
     const MAX_RETRIES = 2; // Уменьшили до 2 попыток
     const BASE_DELAY = 200; // Уменьшили базовую задержку до 200ms
     const RATE_LIMIT_DELAY = 3000; // Уменьшили задержку при rate limit до 3 секунд
-    const BATCH_SIZE = 50; // Batch insert по 50 записей (чтобы не превысить лимит placeholders)
+    const BATCH_SIZE = 20; // Batch insert по 20 записей (15 полей * 20 = 300 placeholders, безопасно)
     const warehouseBatch = []; // Накопление записей для batch insert
+    
+    // Функция для вставки батча
+    const insertBatch = async (batch) => {
+      if (batch.length === 0) return;
+      
+      // Если батч слишком большой, разбиваем на меньшие части
+      if (batch.length > BATCH_SIZE) {
+        for (let i = 0; i < batch.length; i += BATCH_SIZE) {
+          const chunk = batch.slice(i, i + BATCH_SIZE);
+          await insertBatch(chunk);
+        }
+        return;
+      }
+      
+      const placeholders = batch.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+      const values = batch.flat();
+
+      await connection.execute(`
+        INSERT INTO nova_poshta_warehouses (
+          ref, site_key, description_ua, description_ru,
+          short_address_ua, short_address_ru,
+          city_ref, city_description_ua, city_description_ru,
+          type_of_warehouse, number, phone, max_weight_allowed,
+          longitude, latitude
+        ) VALUES ${placeholders}
+      `, values);
+    };
 
     for (const city of cities) {
       let retries = 0;
@@ -269,19 +296,7 @@ async function loadWarehouses() {
 
         // Вставляем batch когда накопилось достаточно записей
         if (warehouseBatch.length >= BATCH_SIZE) {
-          const placeholders = warehouseBatch.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
-          const values = warehouseBatch.flat();
-
-          await connection.execute(`
-            INSERT INTO nova_poshta_warehouses (
-              ref, site_key, description_ua, description_ru,
-              short_address_ua, short_address_ru,
-              city_ref, city_description_ua, city_description_ru,
-              type_of_warehouse, number, phone, max_weight_allowed,
-              longitude, latitude
-            ) VALUES ${placeholders}
-          `, values);
-
+          await insertBatch(warehouseBatch);
           warehouseBatch.length = 0; // Очищаем batch
         }
       }
@@ -305,18 +320,7 @@ async function loadWarehouses() {
 
     // Вставляем оставшиеся данные из batch
     if (warehouseBatch.length > 0) {
-      const placeholders = warehouseBatch.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
-      const values = warehouseBatch.flat();
-
-      await connection.execute(`
-        INSERT INTO nova_poshta_warehouses (
-          ref, site_key, description_ua, description_ru,
-          short_address_ua, short_address_ru,
-          city_ref, city_description_ua, city_description_ru,
-          type_of_warehouse, number, phone, max_weight_allowed,
-          longitude, latitude
-        ) VALUES ${placeholders}
-      `, values);
+      await insertBatch(warehouseBatch);
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
