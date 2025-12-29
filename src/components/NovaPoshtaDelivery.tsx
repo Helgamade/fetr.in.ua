@@ -260,9 +260,16 @@ export const NovaPoshtaDelivery = ({
                 selectedWarehouse && "border-primary"
               )}
               onClick={() => {
-                setIsWarehouseSearchOpen(!isWarehouseSearchOpen);
-                if (!isWarehouseSearchOpen) {
+                const willOpen = !isWarehouseSearchOpen;
+                setIsWarehouseSearchOpen(willOpen);
+                if (willOpen) {
+                  // При открытии списка загружаем отделения, если они еще не загружены или поиск пустой
                   setWarehouseSearchQuery("");
+                  if (selectedCity && (warehouses.length === 0 || warehouseSearchQuery)) {
+                    novaPoshtaAPI.getWarehouses(selectedCity.ref, deliveryType)
+                      .then(setWarehouses)
+                      .catch(console.error);
+                  }
                 }
               }}
             >
@@ -286,7 +293,8 @@ export const NovaPoshtaDelivery = ({
                         setWarehouseSearchQuery(e.target.value);
                         // Поиск в реальном времени
                         if (selectedCity) {
-                          novaPoshtaAPI.getWarehouses(selectedCity.ref, deliveryType, e.target.value)
+                          const searchValue = e.target.value.trim();
+                          novaPoshtaAPI.getWarehouses(selectedCity.ref, deliveryType, searchValue || undefined)
                             .then(setWarehouses)
                             .catch(console.error);
                         }
