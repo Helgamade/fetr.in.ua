@@ -92,7 +92,7 @@ export const ChatWidget: React.FC = () => {
               </div>
               <div>
                 <p className="font-medium">Зателефонувати</p>
-                <p className="text-xs text-muted-foreground">+38 (050) 123-45-67</p>
+                <p className="text-xs text-muted-foreground">{storePhone}</p>
               </div>
             </a>
           </div>
