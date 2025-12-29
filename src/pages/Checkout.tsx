@@ -125,14 +125,25 @@ const Checkout = () => {
   // Получить текущие данные для выбранного способа доставки
   const getCurrentDeliveryData = () => {
     if (formData.deliveryMethod === "nova_poshta") {
-      return {
-        city: formData.novaPoshtaCity,
-        cityRef: formData.novaPoshtaCityRef,
-        warehouse: formData.novaPoshtaWarehouse,
-        warehouseRef: formData.novaPoshtaWarehouseRef,
-        deliveryType: formData.novaPoshtaDeliveryType,
-        completed: formData.novaPoshtaCompleted,
-      };
+      if (formData.novaPoshtaDeliveryType === "PostOffice") {
+        return {
+          city: formData.novaPoshtaCity,
+          cityRef: formData.novaPoshtaCityRef,
+          warehouse: formData.novaPoshtaPostOfficeWarehouse,
+          warehouseRef: formData.novaPoshtaPostOfficeWarehouseRef,
+          deliveryType: "PostOffice" as const,
+          completed: formData.novaPoshtaPostOfficeCompleted,
+        };
+      } else {
+        return {
+          city: formData.novaPoshtaCity,
+          cityRef: formData.novaPoshtaCityRef,
+          warehouse: formData.novaPoshtaPostomatWarehouse,
+          warehouseRef: formData.novaPoshtaPostomatWarehouseRef,
+          deliveryType: "Postomat" as const,
+          completed: formData.novaPoshtaPostomatCompleted,
+        };
+      }
     } else if (formData.deliveryMethod === "ukr_poshta") {
       return {
         city: formData.ukrPoshtaCity,
@@ -147,10 +158,17 @@ const Checkout = () => {
   // Получить сохраненные данные для способа доставки (даже если он не выбран)
   const getSavedDeliveryData = (method: string) => {
     if (method === "nova_poshta") {
+      // Город общий, отделение/поштомат зависят от типа
+      const warehouse = formData.novaPoshtaDeliveryType === "PostOffice" 
+        ? formData.novaPoshtaPostOfficeWarehouse 
+        : formData.novaPoshtaPostomatWarehouse;
+      const completed = formData.novaPoshtaDeliveryType === "PostOffice"
+        ? formData.novaPoshtaPostOfficeCompleted
+        : formData.novaPoshtaPostomatCompleted;
       return {
         city: formData.novaPoshtaCity,
-        warehouse: formData.novaPoshtaWarehouse,
-        completed: formData.novaPoshtaCompleted,
+        warehouse: warehouse,
+        completed: completed,
       };
     } else if (method === "ukr_poshta") {
       return {
@@ -447,15 +465,9 @@ const Checkout = () => {
                             
                             if (showCollapsed || showSavedWhenNotSelected) {
                               return (
-                                <div className="space-y-1 text-sm text-muted-foreground mt-1">
-                                  <div>
-                                    <span className="text-muted-foreground">Населений пункт: </span>
-                                    <span className="font-medium text-foreground">{savedData.city}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-muted-foreground">Відділення: </span>
-                                    <span className="font-medium text-foreground">{savedData.warehouse}</span>
-                                  </div>
+                                <div className="space-y-1 text-sm mt-1">
+                                  <div className="text-foreground">{savedData.city}</div>
+                                  <div className="text-foreground">{savedData.warehouse}</div>
                                 </div>
                               );
                             }
