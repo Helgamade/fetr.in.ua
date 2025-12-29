@@ -384,6 +384,14 @@ async function loadWarehouses() {
 
     connection.release();
   } catch (error) {
+    // Пытаемся откатить транзакцию если была начата
+    try {
+      const connection = await pool.getConnection();
+      await connection.rollback();
+      connection.release();
+    } catch (rollbackError) {
+      // Игнорируем ошибки rollback
+    }
     console.error('❌ Ошибка при загрузке отделений:', error);
     throw error;
   }
