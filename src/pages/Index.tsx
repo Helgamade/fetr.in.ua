@@ -50,20 +50,20 @@ const Index = () => {
               <div className="container mx-auto px-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                   <div className="space-y-2">
-                    <div className="text-3xl font-bold text-primary">12+</div>
-                    <div className="text-sm text-muted-foreground">років досвіду</div>
+                    <div className="text-3xl font-bold text-primary">{t('trust.experience.value') || '12+'}</div>
+                    <div className="text-sm text-muted-foreground">{t('trust.experience.label') || 'років досвіду'}</div>
                   </div>
                   <div className="space-y-2">
-                    <div className="text-3xl font-bold text-primary">3000+</div>
-                    <div className="text-sm text-muted-foreground">щасливих клієнтів</div>
+                    <div className="text-3xl font-bold text-primary">{t('trust.clients.value') || '3000+'}</div>
+                    <div className="text-sm text-muted-foreground">{t('trust.clients.label') || 'щасливих клієнтів'}</div>
                   </div>
                   <div className="space-y-2">
-                    <div className="text-3xl font-bold text-primary">100%</div>
-                    <div className="text-sm text-muted-foreground">якісні матеріали</div>
+                    <div className="text-3xl font-bold text-primary">{t('trust.quality.value') || '100%'}</div>
+                    <div className="text-sm text-muted-foreground">{t('trust.quality.label') || 'якісні матеріали'}</div>
                   </div>
                   <div className="space-y-2">
-                    <div className="text-3xl font-bold text-primary">24/7</div>
-                    <div className="text-sm text-muted-foreground">підтримка</div>
+                    <div className="text-3xl font-bold text-primary">{t('trust.support.value') || '24/7'}</div>
+                    <div className="text-sm text-muted-foreground">{t('trust.support.label') || 'підтримка'}</div>
                   </div>
                 </div>
               </div>
