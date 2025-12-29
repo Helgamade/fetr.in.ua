@@ -140,26 +140,26 @@ export function Settings() {
                 onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, phone: e.target.value })}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="workingHoursWeekdays">Години роботи (робочі дні)</Label>
-              <Textarea
-                id="workingHoursWeekdays"
-                value={localStoreSettings.workingHoursWeekdays}
-                onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, workingHoursWeekdays: e.target.value })}
-                rows={2}
-                placeholder="Пн–Пт: 10:00 – 18:00"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="workingHoursWeekend">Години роботи (вихідні дні)</Label>
-              <Textarea
-                id="workingHoursWeekend"
-                value={localStoreSettings.workingHoursWeekend}
-                onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, workingHoursWeekend: e.target.value })}
-                rows={2}
-                placeholder="Сб: 10:00 – 14:00"
-              />
-            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="workingHoursWeekdays">Години роботи (робочі дні)</Label>
+            <Textarea
+              id="workingHoursWeekdays"
+              value={localStoreSettings.workingHoursWeekdays}
+              onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, workingHoursWeekdays: e.target.value })}
+              rows={2}
+              placeholder="Пн–Пт: 10:00 – 18:00"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="workingHoursWeekend">Години роботи (вихідні дні)</Label>
+            <Textarea
+              id="workingHoursWeekend"
+              value={localStoreSettings.workingHoursWeekend}
+              onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, workingHoursWeekend: e.target.value })}
+              rows={2}
+              placeholder="Сб: 10:00 – 14:00"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="address">Адреса</Label>
