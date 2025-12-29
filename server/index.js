@@ -15,6 +15,7 @@ import comparisonRoutes from './routes/comparison.js';
 import optionsRoutes from './routes/options.js';
 import instagramRoutes from './routes/instagram.js';
 import textsRoutes from './routes/texts.js';
+import novaPoshtaRoutes from './routes/nova-poshta.js';
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -64,6 +65,7 @@ app.use('/api/comparison', comparisonRoutes);
 app.use('/api/options', optionsRoutes);
 app.use('/api/instagram', instagramRoutes);
 app.use('/api/texts', textsRoutes);
+app.use('/api/nova-poshta', novaPoshtaRoutes);
 
 // Serve uploaded files
 const UPLOADS_DIR = join(__dirname, '..', 'uploads');

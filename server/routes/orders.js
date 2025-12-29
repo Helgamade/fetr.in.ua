@@ -192,17 +192,19 @@ router.post('/', async (req, res, next) => {
       // customer_email can be NULL, but provide empty string if needed
       const [orderResult] = await connection.execute(`
         INSERT INTO orders (order_number, customer_name, customer_phone, customer_email,
-          delivery_method, delivery_city, delivery_warehouse, delivery_post_index, delivery_address,
+          delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
           payment_method, subtotal, discount, delivery_cost, total, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'created')
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'created')
       `, [
         id, // order_number (VARCHAR)
         customer.name || null, 
         customer.phone || null, 
         toNull(customer.email),
         delivery.method || null, 
-        toNull(delivery.city), 
+        toNull(delivery.city),
+        toNull(delivery.cityRef),
         toNull(delivery.warehouse),
+        toNull(delivery.warehouseRef),
         toNull(delivery.postIndex), 
         toNull(delivery.address),
         payment.method || null, 

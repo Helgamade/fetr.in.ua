@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "start": "node server/index.js",
     "server": "node server/index.js",
-    "server:dev": "node --watch server/index.js"
+    "server:dev": "node --watch server/index.js",
+    "load-nova-poshta": "node server/scripts/load-nova-poshta-data.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

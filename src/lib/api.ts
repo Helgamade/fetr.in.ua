@@ -309,3 +309,40 @@ export const comparisonAPI = {
     fetchAPI<void>(`/comparison/feature/${key}`, { method: 'DELETE' }),
 };
 
+// Nova Poshta API
+export interface NovaPoshtaCity {
+  ref: string;
+  description_ua: string;
+  description_ru?: string;
+  area_description_ua?: string;
+  area_description_ru?: string;
+  settlement_type_description_ua?: string;
+  full_description_ua: string;
+}
+
+export interface NovaPoshtaWarehouse {
+  ref: string;
+  site_key?: number;
+  description_ua: string;
+  description_ru?: string;
+  short_address_ua?: string;
+  short_address_ru?: string;
+  type_of_warehouse: 'PostOffice' | 'Postomat';
+  number?: string;
+  phone?: string;
+  max_weight_allowed?: number;
+}
+
+export const novaPoshtaAPI = {
+  getPopularCities: () => fetchAPI<NovaPoshtaCity[]>('/nova-poshta/cities/popular'),
+  searchCities: (query: string) => fetchAPI<NovaPoshtaCity[]>(`/nova-poshta/cities/search?q=${encodeURIComponent(query)}`),
+  getCity: (ref: string) => fetchAPI<NovaPoshtaCity>(`/nova-poshta/cities/${ref}`),
+  getWarehouses: (cityRef: string, type?: 'PostOffice' | 'Postomat', search?: string) => {
+    const params = new URLSearchParams({ cityRef });
+    if (type) params.append('type', type);
+    if (search) params.append('search', search);
+    return fetchAPI<NovaPoshtaWarehouse[]>(`/nova-poshta/warehouses?${params.toString()}`);
+  },
+  getWarehouse: (ref: string) => fetchAPI<NovaPoshtaWarehouse>(`/nova-poshta/warehouses/${ref}`),
+};
+

@@ -11,6 +11,8 @@ import { ArrowLeft, Package, CreditCard, Truck, MapPin, Phone, Mail, User } from
 import { Helmet } from "react-helmet-async";
 import { toast } from "@/hooks/use-toast";
 import { usePublicSettings } from "@/hooks/usePublicSettings";
+import { NovaPoshtaDelivery } from "@/components/NovaPoshtaDelivery";
+import type { NovaPoshtaCity, NovaPoshtaWarehouse } from "@/lib/api";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -31,7 +33,10 @@ const Checkout = () => {
     paymentMethod: "card",
     deliveryMethod: "nova_poshta",
     city: "",
+    cityRef: null as string | null,
     warehouse: "",
+    warehouseRef: null as string | null,
+    novaPoshtaDeliveryType: "PostOffice" as "PostOffice" | "Postomat",
     address: "",
     postalCode: "",
     comment: ""
@@ -45,13 +50,25 @@ const Checkout = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.phone || !formData.city) {
+    // Валидация
+    if (!formData.name || !formData.phone) {
       toast({
         title: "Помилка",
-        description: "Будь ласка, заповніть всі обов'язкові поля",
+        description: "Будь ласка, заповніть контактні дані",
         variant: "destructive"
       });
       return;
+    }
+
+    if (formData.deliveryMethod !== "pickup") {
+      if (!formData.city || (formData.deliveryMethod === "nova_poshta" && !formData.warehouseRef)) {
+        toast({
+          title: "Помилка",
+          description: "Будь ласка, виберіть місто та відділення доставки",
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -81,6 +98,8 @@ const Checkout = () => {
           method: formData.deliveryMethod,
           city: formData.deliveryMethod !== "pickup" && formData.city ? formData.city.trim() : null,
           warehouse: formData.deliveryMethod === "nova_poshta" && formData.warehouse ? formData.warehouse.trim() : null,
+          warehouseRef: formData.deliveryMethod === "nova_poshta" && formData.warehouseRef ? formData.warehouseRef : null,
+          cityRef: formData.deliveryMethod === "nova_poshta" && formData.cityRef ? formData.cityRef : null,
           postIndex: formData.deliveryMethod === "ukr_poshta" && formData.postalCode ? formData.postalCode.trim() : null,
           address: formData.deliveryMethod === "ukr_poshta" && formData.address ? formData.address.trim() : null,
         },
@@ -293,7 +312,41 @@ const Checkout = () => {
                   </RadioGroup>
 
                   {/* Delivery Address */}
-                  {formData.deliveryMethod !== "pickup" && (
+                  {formData.deliveryMethod === "nova_poshta" && (
+                    <div className="space-y-4 pt-4 border-t">
+                      <NovaPoshtaDelivery
+                        cityRef={formData.cityRef}
+                        warehouseRef={formData.warehouseRef}
+                        deliveryType={formData.novaPoshtaDeliveryType}
+                        onCityChange={(city) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            city: city ? city.full_description_ua : "",
+                            cityRef: city ? city.ref : null,
+                            warehouse: "",
+                            warehouseRef: null
+                          }));
+                        }}
+                        onWarehouseChange={(warehouse) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            warehouse: warehouse ? warehouse.description_ua : "",
+                            warehouseRef: warehouse ? warehouse.ref : null
+                          }));
+                        }}
+                        onDeliveryTypeChange={(type) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            novaPoshtaDeliveryType: type,
+                            warehouse: "",
+                            warehouseRef: null
+                          }));
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {formData.deliveryMethod === "ukr_poshta" && (
                     <div className="space-y-4 pt-4 border-t">
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -311,50 +364,30 @@ const Checkout = () => {
                             />
                           </div>
                         </div>
-                        
-                        {formData.deliveryMethod === "nova_poshta" && (
-                          <div className="space-y-2">
-                            <Label htmlFor="warehouse">Відділення *</Label>
-                            <Input
-                              id="warehouse"
-                              name="warehouse"
-                              value={formData.warehouse}
-                              onChange={handleInputChange}
-                              placeholder="Номер відділення"
-                              required
-                              className="rounded-xl"
-                            />
-                          </div>
-                        )}
-                        
-                        {formData.deliveryMethod === "ukr_poshta" && (
-                          <>
-                            <div className="space-y-2">
-                              <Label htmlFor="postalCode">Індекс *</Label>
-                              <Input
-                                id="postalCode"
-                                name="postalCode"
-                                value={formData.postalCode}
-                                onChange={handleInputChange}
-                                placeholder="01001"
-                                required
-                                className="rounded-xl"
-                              />
-                            </div>
-                            <div className="space-y-2 sm:col-span-2">
-                              <Label htmlFor="address">Адреса *</Label>
-                              <Input
-                                id="address"
-                                name="address"
-                                value={formData.address}
-                                onChange={handleInputChange}
-                                placeholder="Вулиця, будинок, квартира"
-                                required
-                                className="rounded-xl"
-                              />
-                            </div>
-                          </>
-                        )}
+                        <div className="space-y-2">
+                          <Label htmlFor="postalCode">Індекс *</Label>
+                          <Input
+                            id="postalCode"
+                            name="postalCode"
+                            value={formData.postalCode}
+                            onChange={handleInputChange}
+                            placeholder="01001"
+                            required
+                            className="rounded-xl"
+                          />
+                        </div>
+                        <div className="space-y-2 sm:col-span-2">
+                          <Label htmlFor="address">Адреса *</Label>
+                          <Input
+                            id="address"
+                            name="address"
+                            value={formData.address}
+                            onChange={handleInputChange}
+                            placeholder="Вулиця, будинок, квартира"
+                            required
+                            className="rounded-xl"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
