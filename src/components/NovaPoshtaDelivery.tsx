@@ -34,9 +34,6 @@ export const NovaPoshtaDelivery = ({
   const [citySearchQuery, setCitySearchQuery] = useState("");
   const [warehouseSearchQuery, setWarehouseSearchQuery] = useState("");
 
-  const citySearchRef = useRef<HTMLDivElement>(null);
-  const warehouseSearchRef = useRef<HTMLDivElement>(null);
-
   // Загрузка популярных городов
   useEffect(() => {
     novaPoshtaAPI.getPopularCities().then(setPopularCities).catch(console.error);
@@ -83,7 +80,7 @@ export const NovaPoshtaDelivery = ({
 
   // Загрузка отделений при выборе города или изменении типа доставки
   useEffect(() => {
-    if (selectedCity) {
+    if (selectedCity && !isWarehouseSearchOpen) {
       console.log('🔄 [NovaPoshtaDelivery] Loading warehouses for city:', {
         cityRef: selectedCity.ref,
         cityName: selectedCity.description_ua,
@@ -115,20 +112,41 @@ export const NovaPoshtaDelivery = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCity, deliveryType]);
 
-  // Закрытие поиска при клике вне компонента
+  // Загрузка отделений при открытии списка отделений
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (citySearchRef.current && !citySearchRef.current.contains(event.target as Node)) {
-        setIsCitySearchOpen(false);
+    if (isWarehouseSearchOpen && selectedCity) {
+      if (warehouses.length === 0 || warehouseSearchQuery) {
+        console.log('🔄 [NovaPoshtaDelivery] Loading warehouses on dropdown open');
+        novaPoshtaAPI.getWarehouses(selectedCity.ref, deliveryType, warehouseSearchQuery || undefined)
+          .then((warehouses) => {
+            console.log(`✅ [NovaPoshtaDelivery] Loaded ${warehouses.length} warehouses on open`);
+            setWarehouses(warehouses);
+          })
+          .catch((error) => {
+            console.error('❌ [NovaPoshtaDelivery] Error loading warehouses on open:', error);
+          });
       }
-      if (warehouseSearchRef.current && !warehouseSearchRef.current.contains(event.target as Node)) {
-        setIsWarehouseSearchOpen(false);
-      }
-    };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isWarehouseSearchOpen]);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  // Поиск отделений
+  useEffect(() => {
+    if (isWarehouseSearchOpen && selectedCity && warehouseSearchQuery.length >= 2) {
+      const timeoutId = setTimeout(() => {
+        novaPoshtaAPI.getWarehouses(selectedCity.ref, deliveryType, warehouseSearchQuery)
+          .then((warehouses) => {
+            console.log(`✅ [NovaPoshtaDelivery] Search found ${warehouses.length} warehouses`);
+            setWarehouses(warehouses);
+          })
+          .catch((error) => {
+            console.error('❌ [NovaPoshtaDelivery] Search error:', error);
+          });
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [warehouseSearchQuery, isWarehouseSearchOpen]);
 
   const handleCitySelect = (city: NovaPoshtaCity) => {
     setSelectedCity(city);
@@ -152,7 +170,6 @@ export const NovaPoshtaDelivery = ({
     <div className="space-y-4">
       {/* Тип доставки */}
       <div className="space-y-3">
-        <Label>Тип доставки</Label>
         <RadioGroup
           value={deliveryType}
           onValueChange={(value) => onDeliveryTypeChange(value as 'PostOffice' | 'Postomat')}
@@ -170,14 +187,17 @@ export const NovaPoshtaDelivery = ({
       </div>
 
       {/* Выбор города */}
-      <div className="space-y-2" ref={citySearchRef}>
-        <Label htmlFor="city">Населений пункт *</Label>
-        <div className="relative">
+      <fieldset className="space-y-2">
+        <legend className="flex items-center gap-1 text-sm font-medium">
+          <span>Населений пункт</span>
+          <span className="text-red-500">*</span>
+        </legend>
+        
+        <div className="space-y-2">
           <div
             className={cn(
               "flex h-10 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm cursor-pointer",
-              "hover:border-primary transition-colors",
-              selectedCity && "border-primary"
+              "hover:border-primary transition-colors"
             )}
             onClick={() => {
               setIsCitySearchOpen(!isCitySearchOpen);
@@ -192,8 +212,9 @@ export const NovaPoshtaDelivery = ({
             <ChevronDown className={cn("h-4 w-4 transition-transform", isCitySearchOpen && "rotate-180")} />
           </div>
 
+          {/* Раскрывающийся модуль с городами */}
           {isCitySearchOpen && (
-            <div className="absolute z-50 w-full mt-1 bg-background border rounded-xl shadow-lg max-h-96 overflow-hidden">
+            <div className="border rounded-xl bg-background overflow-hidden">
               {/* Поле поиска */}
               <div className="p-3 border-b">
                 <div className="relative">
@@ -205,28 +226,54 @@ export const NovaPoshtaDelivery = ({
                     onChange={(e) => setCitySearchQuery(e.target.value)}
                     className="pl-10"
                     autoFocus
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </div>
               </div>
+
+              {/* Популярные города (когда поиск пустой) */}
+              {citySearchQuery.length < 2 && popularCities.length > 0 && (
+                <div className="p-3 border-b">
+                  <div className="flex flex-wrap gap-2">
+                    {popularCities.slice(0, 5).map((city) => (
+                      <button
+                        key={city.ref}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCitySelect(city);
+                        }}
+                        className="px-3 py-1.5 text-sm border rounded-lg hover:border-primary hover:bg-accent transition-colors"
+                      >
+                        {city.description_ua}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Список городов */}
               <div className="max-h-80 overflow-y-auto">
                 {displayedCities.length > 0 ? (
                   <div className="p-2">
                     {displayedCities.map((city) => (
-                      <div
+                      <button
                         key={city.ref}
-                        onClick={() => handleCitySelect(city)}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCitySelect(city);
+                        }}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-accent transition-colors",
+                          "w-full flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-accent transition-colors text-left",
                           selectedCity?.ref === city.ref && "bg-accent"
                         )}
                       >
                         {selectedCity?.ref === city.ref && (
-                          <Check className="h-4 w-4 text-primary" />
+                          <Check className="h-4 w-4 text-primary flex-shrink-0" />
                         )}
                         <span className="flex-1">{city.full_description_ua}</span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 ) : citySearchQuery.length >= 2 ? (
@@ -242,62 +289,26 @@ export const NovaPoshtaDelivery = ({
             </div>
           )}
         </div>
-
-        {/* Популярные города (когда поле закрыто и город не выбран) */}
-        {!isCitySearchOpen && !selectedCity && popularCities.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {popularCities.slice(0, 5).map((city) => (
-              <button
-                key={city.ref}
-                type="button"
-                onClick={() => handleCitySelect(city)}
-                className="px-3 py-1.5 text-sm border rounded-lg hover:border-primary hover:bg-accent transition-colors"
-              >
-                {city.description_ua}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      </fieldset>
 
       {/* Выбор отделения */}
       {selectedCity && (
-        <div className="space-y-2" ref={warehouseSearchRef}>
-          <Label htmlFor="warehouse">
-            {deliveryType === 'PostOffice' ? 'Відділення *' : 'Поштомат *'}
-          </Label>
-          <div className="relative">
+        <fieldset className="space-y-2">
+          <legend className="flex items-center gap-1 text-sm font-medium">
+            <span>{deliveryType === 'PostOffice' ? 'Відділення' : 'Поштомат'}</span>
+            <span className="text-red-500">*</span>
+          </legend>
+          
+          <div className="space-y-2">
             <div
               className={cn(
                 "flex h-10 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm cursor-pointer",
-                "hover:border-primary transition-colors",
-                selectedWarehouse && "border-primary"
+                "hover:border-primary transition-colors"
               )}
               onClick={() => {
-                const willOpen = !isWarehouseSearchOpen;
-                setIsWarehouseSearchOpen(willOpen);
-                if (willOpen) {
-                  // При открытии списка загружаем отделения, если они еще не загружены или поиск пустой
+                setIsWarehouseSearchOpen(!isWarehouseSearchOpen);
+                if (!isWarehouseSearchOpen) {
                   setWarehouseSearchQuery("");
-                  console.log('📂 [NovaPoshtaDelivery] Opening warehouse dropdown:', {
-                    cityRef: selectedCity?.ref,
-                    currentWarehousesCount: warehouses.length,
-                    deliveryType
-                  });
-                  
-                  if (selectedCity && (warehouses.length === 0 || warehouseSearchQuery)) {
-                    console.log('🔄 [NovaPoshtaDelivery] Loading warehouses on dropdown open');
-                    novaPoshtaAPI.getWarehouses(selectedCity.ref, deliveryType)
-                      .then((warehouses) => {
-                        console.log(`✅ [NovaPoshtaDelivery] Loaded ${warehouses.length} warehouses on open`);
-                        setWarehouses(warehouses);
-                      })
-                      .catch((error) => {
-                        console.error('❌ [NovaPoshtaDelivery] Error loading warehouses on open:', error);
-                      });
-                  } else {
-                    console.log('ℹ️  [NovaPoshtaDelivery] Warehouses already loaded, skipping');
-                  }
                 }
               }}
             >
@@ -307,39 +318,21 @@ export const NovaPoshtaDelivery = ({
               <ChevronDown className={cn("h-4 w-4 transition-transform", isWarehouseSearchOpen && "rotate-180")} />
             </div>
 
+            {/* Раскрывающийся модуль с отделениями */}
             {isWarehouseSearchOpen && (
-              <div className="absolute z-50 w-full mt-1 bg-background border rounded-xl shadow-lg max-h-96 overflow-hidden">
+              <div className="border rounded-xl bg-background overflow-hidden">
                 {/* Поле поиска */}
                 <div className="p-3 border-b">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       type="text"
-                      placeholder="Введіть номер або адресу відділення"
+                      placeholder="Виберіть відділення"
                       value={warehouseSearchQuery}
-                      onChange={(e) => {
-                        const searchValue = e.target.value.trim();
-                        setWarehouseSearchQuery(e.target.value);
-                        console.log('🔍 [NovaPoshtaDelivery] Warehouse search:', {
-                          query: searchValue,
-                          cityRef: selectedCity?.ref,
-                          deliveryType
-                        });
-                        
-                        // Поиск в реальном времени
-                        if (selectedCity) {
-                          novaPoshtaAPI.getWarehouses(selectedCity.ref, deliveryType, searchValue || undefined)
-                            .then((warehouses) => {
-                              console.log(`✅ [NovaPoshtaDelivery] Search found ${warehouses.length} warehouses`);
-                              setWarehouses(warehouses);
-                            })
-                            .catch((error) => {
-                              console.error('❌ [NovaPoshtaDelivery] Search error:', error);
-                            });
-                        }
-                      }}
+                      onChange={(e) => setWarehouseSearchQuery(e.target.value)}
                       className="pl-10"
                       autoFocus
+                      onClick={(e) => e.stopPropagation()}
                     />
                   </div>
                 </div>
@@ -347,35 +340,39 @@ export const NovaPoshtaDelivery = ({
                 {/* Список отделений */}
                 <div className="max-h-80 overflow-y-auto">
                   {warehouses.length > 0 ? (
-                    <div className="p-2">
+                    <ul className="p-2 space-y-1">
                       {warehouses.map((warehouse) => (
-                        <div
-                          key={warehouse.ref}
-                          onClick={() => handleWarehouseSelect(warehouse)}
-                          className={cn(
-                            "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-accent transition-colors",
-                            selectedWarehouse?.ref === warehouse.ref && "bg-accent"
-                          )}
-                        >
-                          {selectedWarehouse?.ref === warehouse.ref && (
-                            <Check className="h-4 w-4 text-primary" />
-                          )}
-                          <span className="flex-1 text-sm">{warehouse.description_ua}</span>
-                        </div>
+                        <li key={warehouse.ref}>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleWarehouseSelect(warehouse);
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-accent transition-colors text-left",
+                              selectedWarehouse?.ref === warehouse.ref && "bg-accent"
+                            )}
+                          >
+                            {selectedWarehouse?.ref === warehouse.ref && (
+                              <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                            )}
+                            <span className="flex-1 text-sm">{warehouse.description_ua}</span>
+                          </button>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   ) : (
                     <div className="p-4 text-center text-muted-foreground text-sm">
-                      Нічого не знайдено
+                      {warehouseSearchQuery.length >= 2 ? "Нічого не знайдено" : "Завантаження..."}
                     </div>
                   )}
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </fieldset>
       )}
     </div>
   );
 };
-

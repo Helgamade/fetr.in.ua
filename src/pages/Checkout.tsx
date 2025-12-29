@@ -284,7 +284,7 @@ const Checkout = () => {
                     className="space-y-3"
                   >
                     {/* Нова Пошта */}
-                    <div className={`border rounded-xl overflow-hidden transition-all ${formData.deliveryMethod === "nova_poshta" ? "border-primary shadow-sm" : ""}`}>
+                    <div className="border rounded-xl transition-all">
                       <label className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/50 transition-colors">
                         <RadioGroupItem value="nova_poshta" id="nova_poshta" />
                         <div className="flex-1">
@@ -296,7 +296,7 @@ const Checkout = () => {
                         </div>
                       </label>
                       {formData.deliveryMethod === "nova_poshta" && (
-                        <div className="px-4 pb-4 border-t bg-accent/30">
+                        <div className="px-4 pb-4 border-t">
                           <NovaPoshtaDelivery
                             cityRef={formData.cityRef}
                             warehouseRef={formData.warehouseRef}
@@ -331,7 +331,7 @@ const Checkout = () => {
                     </div>
 
                     {/* Укрпошта */}
-                    <div className={`border rounded-xl overflow-hidden transition-all ${formData.deliveryMethod === "ukr_poshta" ? "border-primary shadow-sm" : ""}`}>
+                    <div className="border rounded-xl transition-all">
                       <label className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/50 transition-colors">
                         <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
                         <div className="flex-1">
@@ -388,7 +388,7 @@ const Checkout = () => {
                     </div>
 
                     {/* Самовивіз */}
-                    <div className={`border rounded-xl overflow-hidden transition-all ${formData.deliveryMethod === "pickup" ? "border-primary shadow-sm" : ""}`}>
+                    <div className="border rounded-xl transition-all">
                       <label className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/50 transition-colors">
                         <RadioGroupItem value="pickup" id="pickup" />
                         <div className="flex-1">
