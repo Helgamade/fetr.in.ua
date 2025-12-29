@@ -3,6 +3,21 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
+// Функция для отображения прогресс-бара
+function showProgress(current, total, label = '', barLength = 30) {
+  const percent = Math.min(100, Math.max(0, (current / total) * 100));
+  const filled = Math.round((percent / 100) * barLength);
+  const empty = barLength - filled;
+  const bar = '█'.repeat(filled) + '░'.repeat(empty);
+  const remaining = total - current;
+  
+  process.stdout.write(`\r${label} [${bar}] ${percent.toFixed(1)}% (${current}/${total}, осталось: ${remaining})`);
+  
+  if (current >= total) {
+    process.stdout.write('\n');
+  }
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -149,8 +164,10 @@ async function loadCities() {
 
       let inserted = 0;
       let popularCount = 0;
+      const totalCities = cities.length;
 
-      for (const batch of batches) {
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
         const values = [];
         const placeholders = [];
 
@@ -188,6 +205,7 @@ async function loadCities() {
         `, values);
 
         inserted += batch.length;
+        showProgress(inserted, totalCities, '📥 Загрузка городов: ');
       }
 
       await connection.commit();
@@ -365,10 +383,13 @@ async function loadWarehouses() {
       // Адаптивная задержка: увеличиваем при частых rate limit
       const delay = rateLimitCount > 20 ? BASE_DELAY * 2 : BASE_DELAY;
       
-      if (processed % 100 === 0) {
+      // Показываем прогресс каждые 10 городов или на каждом 100-м
+      if (processed % 10 === 0 || processed % 100 === 0) {
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
-        const rate = (processed / ((Date.now() - startTime) / 1000)).toFixed(1);
-        console.log(`⏳ Обработано ${processed}/${cities.length} городов (${rate} гор/с), загружено ${totalInserted} отделений, ошибок: ${failedCities}...`);
+        const rate = processed > 0 ? (processed / ((Date.now() - startTime) / 1000)).toFixed(1) : '0';
+        const estimated = processed > 0 ? ((cities.length - processed) / (processed / ((Date.now() - startTime) / 1000))).toFixed(0) : '?';
+        showProgress(processed, cities.length, `📥 Загрузка отделений: `);
+        process.stdout.write(` | ${totalInserted} отд. | ${rate} гор/с | ~${estimated}с осталось | ошибок: ${failedCities}\n`);
       }
 
       // Задержка между запросами
@@ -382,8 +403,15 @@ async function loadWarehouses() {
       await insertBatch(warehouseBatch);
     }
 
+    // Финальный прогресс-бар
+    showProgress(processed, cities.length, '📥 Загрузка отделений: ');
+    
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(`✅ Загружено ${totalInserted} отделений для ${processed} городов за ${duration}с`);
+    const minutes = Math.floor(duration / 60);
+    const seconds = (duration % 60).toFixed(0);
+    const timeStr = minutes > 0 ? `${minutes}м ${seconds}с` : `${seconds}с`;
+    
+    console.log(`\n✅ Загружено ${totalInserted} отделений для ${processed} городов за ${timeStr}`);
     if (failedCities > 0) {
       console.log(`⚠️  Не удалось загрузить отделения для ${failedCities} городов`);
     }
