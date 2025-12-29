@@ -3,6 +3,43 @@ import pool from '../db.js';
 
 const router = express.Router();
 
+// Get public settings (for frontend, no auth required)
+router.get('/public', async (req, res, next) => {
+  try {
+    const publicKeys = [
+      'store_name',
+      'store_email',
+      'store_phone',
+      'store_address',
+      'store_working_hours_weekdays',
+      'store_working_hours_weekend'
+    ];
+    
+    const placeholders = publicKeys.map(() => '?').join(',');
+    const [settings] = await pool.execute(`
+      SELECT key_name, value, type FROM settings
+      WHERE key_name IN (${placeholders})
+    `, publicKeys);
+
+    const result = {};
+    settings.forEach(setting => {
+      let value = setting.value;
+      if (setting.type === 'number') {
+        value = parseFloat(value);
+      } else if (setting.type === 'boolean') {
+        value = value === 'true';
+      } else if (setting.type === 'json') {
+        value = JSON.parse(value);
+      }
+      result[setting.key_name] = value;
+    });
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get all settings
 router.get('/', async (req, res, next) => {
   try {
