@@ -283,120 +283,125 @@ const Checkout = () => {
                     onValueChange={(value) => setFormData(prev => ({ ...prev, deliveryMethod: value }))}
                     className="space-y-3"
                   >
-                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
-                      <RadioGroupItem value="nova_poshta" id="nova_poshta" />
-                      <div className="flex-1">
-                        <div className="font-medium">Нова Пошта</div>
-                        <div className="text-sm text-muted-foreground">1-2 дні по Україні</div>
-                      </div>
-                      <div className="text-sm font-medium">
-                        {total >= 1500 ? <span className="text-green-600">Безкоштовно</span> : "від 70 грн"}
-                      </div>
-                    </label>
-                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
-                      <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
-                      <div className="flex-1">
-                        <div className="font-medium">Укрпошта</div>
-                        <div className="text-sm text-muted-foreground">3-5 днів по Україні</div>
-                      </div>
-                      <div className="text-sm font-medium">від 45 грн</div>
-                    </label>
-                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
-                      <RadioGroupItem value="pickup" id="pickup" />
-                      <div className="flex-1">
-                        <div className="font-medium">Самовивіз</div>
-                        <div className="text-sm text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
-                      </div>
-                      <div className="text-sm font-medium text-green-600">Безкоштовно</div>
-                    </label>
-                  </RadioGroup>
-
-                  {/* Delivery Address */}
-                  {formData.deliveryMethod === "nova_poshta" && (
-                    <div className="space-y-4 pt-4 border-t">
-                      <NovaPoshtaDelivery
-                        cityRef={formData.cityRef}
-                        warehouseRef={formData.warehouseRef}
-                        deliveryType={formData.novaPoshtaDeliveryType}
-                        onCityChange={(city) => {
-                          setFormData(prev => ({
-                            ...prev,
-                            city: city ? city.full_description_ua : "",
-                            cityRef: city ? city.ref : null,
-                            warehouse: "",
-                            warehouseRef: null
-                          }));
-                        }}
-                        onWarehouseChange={(warehouse) => {
-                          setFormData(prev => ({
-                            ...prev,
-                            warehouse: warehouse ? warehouse.description_ua : "",
-                            warehouseRef: warehouse ? warehouse.ref : null
-                          }));
-                        }}
-                        onDeliveryTypeChange={(type) => {
-                          setFormData(prev => ({
-                            ...prev,
-                            novaPoshtaDeliveryType: type,
-                            warehouse: "",
-                            warehouseRef: null
-                          }));
-                        }}
-                      />
+                    {/* Нова Пошта */}
+                    <div className={`border rounded-xl overflow-hidden transition-all ${formData.deliveryMethod === "nova_poshta" ? "border-primary shadow-sm" : ""}`}>
+                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/50 transition-colors">
+                        <RadioGroupItem value="nova_poshta" id="nova_poshta" />
+                        <div className="flex-1">
+                          <div className="font-medium">Нова Пошта</div>
+                          <div className="text-sm text-muted-foreground">1-2 дні по Україні</div>
+                        </div>
+                        <div className="text-sm font-medium">
+                          {total >= 1500 ? <span className="text-green-600">Безкоштовно</span> : "від 70 грн"}
+                        </div>
+                      </label>
+                      {formData.deliveryMethod === "nova_poshta" && (
+                        <div className="px-4 pb-4 border-t bg-accent/30">
+                          <NovaPoshtaDelivery
+                            cityRef={formData.cityRef}
+                            warehouseRef={formData.warehouseRef}
+                            deliveryType={formData.novaPoshtaDeliveryType}
+                            onCityChange={(city) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                city: city ? city.full_description_ua : "",
+                                cityRef: city ? city.ref : null,
+                                warehouse: "",
+                                warehouseRef: null
+                              }));
+                            }}
+                            onWarehouseChange={(warehouse) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                warehouse: warehouse ? warehouse.description_ua : "",
+                                warehouseRef: warehouse ? warehouse.ref : null
+                              }));
+                            }}
+                            onDeliveryTypeChange={(type) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                novaPoshtaDeliveryType: type,
+                                warehouse: "",
+                                warehouseRef: null
+                              }));
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  {formData.deliveryMethod === "ukr_poshta" && (
-                    <div className="space-y-4 pt-4 border-t">
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="city">Місто *</Label>
-                          <div className="relative">
-                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input
-                              id="city"
-                              name="city"
-                              value={formData.city}
-                              onChange={handleInputChange}
-                              placeholder="Введіть місто"
-                              required
-                              className="rounded-xl pl-10"
-                            />
+                    {/* Укрпошта */}
+                    <div className={`border rounded-xl overflow-hidden transition-all ${formData.deliveryMethod === "ukr_poshta" ? "border-primary shadow-sm" : ""}`}>
+                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/50 transition-colors">
+                        <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
+                        <div className="flex-1">
+                          <div className="font-medium">Укрпошта</div>
+                          <div className="text-sm text-muted-foreground">3-5 днів по Україні</div>
+                        </div>
+                        <div className="text-sm font-medium">від 45 грн</div>
+                      </label>
+                      {formData.deliveryMethod === "ukr_poshta" && (
+                        <div className="px-4 pb-4 border-t bg-accent/30 space-y-4">
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="city">Місто *</Label>
+                              <div className="relative">
+                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                  id="city"
+                                  name="city"
+                                  value={formData.city}
+                                  onChange={handleInputChange}
+                                  placeholder="Введіть місто"
+                                  required
+                                  className="rounded-xl pl-10"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="postalCode">Індекс *</Label>
+                              <Input
+                                id="postalCode"
+                                name="postalCode"
+                                value={formData.postalCode}
+                                onChange={handleInputChange}
+                                placeholder="01001"
+                                required
+                                className="rounded-xl"
+                              />
+                            </div>
+                            <div className="space-y-2 sm:col-span-2">
+                              <Label htmlFor="address">Адреса *</Label>
+                              <Input
+                                id="address"
+                                name="address"
+                                value={formData.address}
+                                onChange={handleInputChange}
+                                placeholder="Вулиця, будинок, квартира"
+                                required
+                                className="rounded-xl"
+                              />
+                            </div>
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="postalCode">Індекс *</Label>
-                          <Input
-                            id="postalCode"
-                            name="postalCode"
-                            value={formData.postalCode}
-                            onChange={handleInputChange}
-                            placeholder="01001"
-                            required
-                            className="rounded-xl"
-                          />
-                        </div>
-                        <div className="space-y-2 sm:col-span-2">
-                          <Label htmlFor="address">Адреса *</Label>
-                          <Input
-                            id="address"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            placeholder="Вулиця, будинок, квартира"
-                            required
-                            className="rounded-xl"
-                          />
-                        </div>
-                      </div>
+                      )}
                     </div>
-                  )}
 
-                  {formData.deliveryMethod === "pickup" && (
-                    <div className="p-4 bg-secondary/50 rounded-xl">
-                      <div className="font-medium mb-1">Адреса самовивозу:</div>
-                      <div className="text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
-                      {storeSettings.store_working_hours_weekdays && (
+                    {/* Самовивіз */}
+                    <div className={`border rounded-xl overflow-hidden transition-all ${formData.deliveryMethod === "pickup" ? "border-primary shadow-sm" : ""}`}>
+                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/50 transition-colors">
+                        <RadioGroupItem value="pickup" id="pickup" />
+                        <div className="flex-1">
+                          <div className="font-medium">Самовивіз</div>
+                          <div className="text-sm text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
+                        </div>
+                        <div className="text-sm font-medium text-green-600">Безкоштовно</div>
+                      </label>
+                      {formData.deliveryMethod === "pickup" && (
+                        <div className="px-4 pb-4 border-t bg-accent/30">
+                          <div className="font-medium mb-1">Адреса самовивозу:</div>
+                          <div className="text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
+                          {storeSettings.store_working_hours_weekdays && (
                         <div className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
                           {storeSettings.store_working_hours_weekdays}
                         </div>
