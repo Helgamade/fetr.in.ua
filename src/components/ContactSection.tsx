@@ -84,8 +84,8 @@ export const ContactSection: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-heading font-bold mb-1">Графік роботи</h3>
-                  <p className="text-muted-foreground">{workingHoursWeekdays}</p>
-                  <p className="text-sm text-muted-foreground/60">{workingHoursWeekend}</p>
+                  <p className="text-muted-foreground whitespace-pre-line">{workingHoursWeekdays}</p>
+                  <p className="text-sm text-muted-foreground/60 whitespace-pre-line">{workingHoursWeekend}</p>
                 </div>
               </div>
             </div>

@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ArrowLeft, Package, CreditCard, Truck, MapPin, Phone, Mail, User } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "@/hooks/use-toast";
+import { usePublicSettings } from "@/hooks/usePublicSettings";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -357,10 +358,16 @@ const Checkout = () => {
                     <div className="p-4 bg-secondary/50 rounded-xl">
                       <div className="font-medium mb-1">Адреса самовивозу:</div>
                       <div className="text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
-                      <div className="text-sm text-muted-foreground mt-2">
-                        {storeSettings.store_working_hours_weekdays || 'Пн-Пт: 10:00-18:00'}
-                        {storeSettings.store_working_hours_weekend && `, ${storeSettings.store_working_hours_weekend}`}
-                      </div>
+                      {storeSettings.store_working_hours_weekdays && (
+                        <div className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
+                          {storeSettings.store_working_hours_weekdays}
+                        </div>
+                      )}
+                      {storeSettings.store_working_hours_weekend && (
+                        <div className="text-sm text-muted-foreground/60 mt-1 whitespace-pre-line">
+                          {storeSettings.store_working_hours_weekend}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
