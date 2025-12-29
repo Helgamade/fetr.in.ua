@@ -224,6 +224,161 @@ async function loadCities() {
   }
 }
 
+// Параллельная загрузка отделений по городам (fallback метод)
+async function loadWarehousesByCities(connection, cities, startTime) {
+  const MAX_RETRIES = 3;
+  const RATE_LIMIT_DELAY = 1000;
+  const BATCH_SIZE = 50;
+  const CONCURRENT_CITIES = 50; // Увеличиваем до 50 параллельных запросов
+  
+  let totalInserted = 0;
+  let processed = 0;
+  let failedCities = 0;
+  let rateLimitCount = 0;
+  const warehouseBatch = [];
+  
+  // Функция для вставки батча
+  const insertBatch = async (batch) => {
+    if (batch.length === 0) return;
+    if (batch.length > BATCH_SIZE) {
+      for (let i = 0; i < batch.length; i += BATCH_SIZE) {
+        const chunk = batch.slice(i, i + BATCH_SIZE);
+        await insertBatch(chunk);
+      }
+      return;
+    }
+    
+    const placeholders = batch.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+    const values = batch.flat();
+    await connection.execute(`
+      INSERT INTO nova_poshta_warehouses (
+        ref, site_key, description_ua, description_ru,
+        short_address_ua, short_address_ru,
+        city_ref, city_description_ua, city_description_ru,
+        type_of_warehouse, number, phone, max_weight_allowed,
+        longitude, latitude
+      ) VALUES ${placeholders}
+    `, values);
+  };
+
+  // Функция для обработки одного города
+  const processCity = async (city) => {
+    let retries = 0;
+    const cityWarehouses = [];
+
+    while (retries < MAX_RETRIES) {
+      try {
+        const warehouses = await novaPoshtaRequest('Address', 'getWarehouses', {
+          CityRef: city.ref
+        });
+
+        if (warehouses && warehouses.length > 0) {
+          for (const warehouse of warehouses) {
+            let number = null;
+            const numberMatch = warehouse.Description?.match(/№(\d+)/);
+            if (numberMatch) {
+              number = numberMatch[1];
+            }
+
+            cityWarehouses.push([
+              warehouse.Ref || null,
+              warehouse.SiteKey || null,
+              warehouse.Description || null,
+              warehouse.DescriptionRu || null,
+              warehouse.ShortAddress || null,
+              warehouse.ShortAddressRu || null,
+              city.ref,
+              city.description_ua,
+              null,
+              warehouse.TypeOfWarehouse || 'PostOffice',
+              number,
+              warehouse.Phone || null,
+              warehouse.TotalMaxWeightAllowed ? parseFloat(warehouse.TotalMaxWeightAllowed) : null,
+              warehouse.Longitude ? parseFloat(warehouse.Longitude) : null,
+              warehouse.Latitude ? parseFloat(warehouse.Latitude) : null
+            ]);
+          }
+        }
+
+        return { success: true, warehouses: cityWarehouses };
+      } catch (error) {
+        const errorMessage = error.message || String(error);
+        const isRateLimit = errorMessage && (
+          errorMessage.includes('To many requests') ||
+          errorMessage.includes('Too many requests') ||
+          errorMessage.includes('rate limit') ||
+          errorMessage.includes('429')
+        );
+        const isNetworkError = errorMessage && (
+          errorMessage.includes('ECONNRESET') ||
+          errorMessage.includes('ETIMEDOUT') ||
+          errorMessage.includes('ENOTFOUND') ||
+          errorMessage.includes('network') ||
+          errorMessage.includes('timeout') ||
+          errorMessage.includes('aborted') ||
+          error.name === 'AbortError'
+        );
+
+        if ((isRateLimit || isNetworkError) && retries < MAX_RETRIES) {
+          retries++;
+          if (isRateLimit) rateLimitCount++;
+          const delay = RATE_LIMIT_DELAY * Math.pow(2, retries - 1);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          return { success: false, warehouses: [], error: errorMessage };
+        }
+      }
+    }
+    return { success: false, warehouses: [] };
+  };
+
+  // Параллельная обработка городов батчами
+  for (let i = 0; i < cities.length; i += CONCURRENT_CITIES) {
+    const batch = cities.slice(i, i + CONCURRENT_CITIES);
+    const results = await Promise.all(batch.map(city => processCity(city)));
+    
+    for (const result of results) {
+      if (result.success) {
+        if (result.warehouses.length > 0) {
+          totalInserted += result.warehouses.length;
+          if (result.warehouses.length > BATCH_SIZE) {
+            await insertBatch(result.warehouses);
+          } else {
+            warehouseBatch.push(...result.warehouses);
+            if (warehouseBatch.length >= BATCH_SIZE) {
+              await insertBatch(warehouseBatch);
+              warehouseBatch.length = 0;
+            }
+          }
+        }
+      } else {
+        failedCities++;
+      }
+      processed++;
+    }
+
+    // Прогресс-бар
+    const elapsed = (Date.now() - startTime) / 1000;
+    const rate = processed / elapsed;
+    const remaining = cities.length - processed;
+    const eta = remaining / rate;
+    showProgress(processed, cities.length, '📥 Загрузка отделений: ');
+    process.stdout.write(` | ${totalInserted} отд. | ${rate.toFixed(1)} гор/с | ~${Math.round(eta)}с осталось | ошибок: ${failedCities}\n`);
+  }
+
+  // Вставляем оставшиеся данные
+  if (warehouseBatch.length > 0) {
+    await insertBatch(warehouseBatch);
+    totalInserted += warehouseBatch.length;
+  }
+
+  const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+  console.log(`\n✅ Загружено ${totalInserted} отделений для ${processed} городов за ${duration}с`);
+  if (failedCities > 0) {
+    console.log(`⚠️  Не удалось загрузить отделения для ${failedCities} городов`);
+  }
+}
+
 // Загрузка отделений для всех городов
 async function loadWarehouses() {
   const startTime = Date.now();
