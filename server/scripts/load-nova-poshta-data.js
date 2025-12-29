@@ -291,13 +291,21 @@ async function loadWarehouses() {
 
       // Добавляем отделения в batch для вставки
       if (cityWarehouses.length > 0) {
-        warehouseBatch.push(...cityWarehouses);
         totalInserted += cityWarehouses.length;
-
-        // Вставляем batch когда накопилось достаточно записей
-        if (warehouseBatch.length >= BATCH_SIZE) {
-          await insertBatch(warehouseBatch);
-          warehouseBatch.length = 0; // Очищаем batch
+        
+        // Для больших городов вставляем сразу, для маленьких - накапливаем в batch
+        if (cityWarehouses.length > BATCH_SIZE) {
+          // Большой город - вставляем сразу, разбивая на батчи
+          await insertBatch(cityWarehouses);
+        } else {
+          // Маленький город - добавляем в общий batch
+          warehouseBatch.push(...cityWarehouses);
+          
+          // Вставляем batch когда накопилось достаточно записей
+          if (warehouseBatch.length >= BATCH_SIZE) {
+            await insertBatch(warehouseBatch);
+            warehouseBatch.length = 0; // Очищаем batch
+          }
         }
       }
 
