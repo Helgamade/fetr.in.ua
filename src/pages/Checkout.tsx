@@ -279,7 +279,7 @@ const Checkout = () => {
                       <RadioGroupItem value="pickup" id="pickup" />
                       <div className="flex-1">
                         <div className="font-medium">Самовивіз</div>
-                        <div className="text-sm text-muted-foreground">м. Київ, вул. Урлівська 30</div>
+                        <div className="text-sm text-muted-foreground">{settings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
                       </div>
                       <div className="text-sm font-medium text-green-600">Безкоштовно</div>
                     </label>

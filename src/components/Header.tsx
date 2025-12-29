@@ -4,14 +4,18 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePublicSettings } from '@/hooks/usePublicSettings';
 
 export const Header: React.FC = () => {
   const { t } = useTranslation('nav');
   const { t: tCommon } = useTranslation('common');
+  const { data: settings = {} } = usePublicSettings();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { getItemCount, openCart } = useCart();
   const itemCount = getItemCount();
+  
+  const storePhone = settings.store_phone || '+380501234567';
 
   const navLinks = [
     { href: '#hero', label: t('home') },
@@ -84,7 +88,7 @@ export const Header: React.FC = () => {
           {/* Right side actions */}
           <div className="flex items-center gap-2">
             <a
-              href="tel:+380501234567"
+              href={`tel:${storePhone.replace(/\s/g, '')}`}
               className={cn(
                 'hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 'hover:bg-primary/10',
@@ -92,7 +96,7 @@ export const Header: React.FC = () => {
               )}
             >
               <Phone className="w-4 h-4" />
-              <span className="hidden md:inline">+38 (050) 123-45-67</span>
+              <span className="hidden md:inline">{storePhone}</span>
             </a>
 
             <a
@@ -171,11 +175,11 @@ export const Header: React.FC = () => {
 
         <div className="p-4 border-t border-border mt-auto">
           <a
-            href="tel:+380501234567"
+            href={`tel:${storePhone.replace(/\s/g, '')}`}
             className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors"
           >
             <Phone className="w-5 h-5 text-primary" />
-            <span className="font-medium">+38 (050) 123-45-67</span>
+            <span className="font-medium">{storePhone}</span>
           </a>
           <a
             href="https://instagram.com/helgamade_ua"

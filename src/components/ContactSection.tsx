@@ -2,9 +2,18 @@ import React from 'react';
 import { MapPin, Phone, Mail, Clock, Instagram, MessageCircle, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePublicSettings } from '@/hooks/usePublicSettings';
 
 export const ContactSection: React.FC = () => {
   const { t } = useTranslation('contact');
+  const { data: settings = {} } = usePublicSettings();
+  
+  const storeAddress = settings.store_address || 'м. Київ, вул. Урлівська 30';
+  const storePhone = settings.store_phone || '+380501234567';
+  const storeEmail = settings.store_email || 'hello@fetr.in.ua';
+  const workingHoursWeekdays = settings.store_working_hours_weekdays || 'Пн–Пт: 10:00 – 18:00';
+  const workingHoursWeekend = settings.store_working_hours_weekend || 'Сб: 10:00 – 14:00';
+  
   return (
     <section id="contact" className="py-20 bg-sage/30">
       <div className="container-tight">
@@ -32,7 +41,7 @@ export const ContactSection: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-heading font-bold mb-1">Адреса</h3>
-                  <p className="text-muted-foreground">Київ, вул. Урлівська 30</p>
+                  <p className="text-muted-foreground">{storeAddress}</p>
                   <p className="text-sm text-muted-foreground/60 mt-1">Самовивіз за попереднім записом</p>
                 </div>
               </div>
@@ -45,8 +54,8 @@ export const ContactSection: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-heading font-bold mb-1">Телефон</h3>
-                  <a href="tel:+380501234567" className="text-primary hover:underline">
-                    +38 (050) 123-45-67
+                  <a href={`tel:${storePhone.replace(/\s/g, '')}`} className="text-primary hover:underline">
+                    {storePhone}
                   </a>
                   <p className="text-sm text-muted-foreground/60 mt-1">Viber, Telegram, WhatsApp</p>
                 </div>
@@ -60,8 +69,8 @@ export const ContactSection: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-heading font-bold mb-1">Email</h3>
-                  <a href="mailto:hello@fetr.in.ua" className="text-primary hover:underline">
-                    hello@fetr.in.ua
+                  <a href={`mailto:${storeEmail}`} className="text-primary hover:underline">
+                    {storeEmail}
                   </a>
                   <p className="text-sm text-muted-foreground/60 mt-1">Відповідаємо протягом 24 годин</p>
                 </div>
@@ -75,9 +84,8 @@ export const ContactSection: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-heading font-bold mb-1">Графік роботи</h3>
-                  <p className="text-muted-foreground">Пн–Пт: 10:00 – 18:00</p>
-                  <p className="text-muted-foreground">Сб: 10:00 – 14:00</p>
-                  <p className="text-sm text-muted-foreground/60 mt-1">Нд — вихідний</p>
+                  <p className="text-muted-foreground">{workingHoursWeekdays}</p>
+                  <p className="text-sm text-muted-foreground/60">{workingHoursWeekend}</p>
                 </div>
               </div>
             </div>

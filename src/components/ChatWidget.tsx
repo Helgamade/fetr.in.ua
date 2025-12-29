@@ -81,7 +81,7 @@ export const ChatWidget: React.FC = () => {
             </a>
 
             <a
-              href="tel:+380501234567"
+              href={`tel:${storePhone.replace(/\s/g, '')}`}
               className="flex items-center gap-3 p-4 rounded-xl bg-success/10 hover:bg-success/20 transition-colors"
             >
               <div className="w-6 h-6 flex items-center justify-center">

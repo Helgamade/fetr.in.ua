@@ -64,7 +64,7 @@ export const FAQSection: React.FC = () => {
             {t('cta.title')}
           </p>
           <p className="text-muted-foreground">
-            Напишіть нам у <a href="https://instagram.com/helgamade_ua" target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">Instagram</a> або зателефонуйте за номером <a href="tel:+380501234567" className="text-primary font-medium hover:underline">+38 (050) 123-45-67</a>
+            Напишіть нам у <a href="https://instagram.com/helgamade_ua" target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">Instagram</a> або зателефонуйте за номером <a href={`tel:${storePhone.replace(/\s/g, '')}`} className="text-primary font-medium hover:underline">{storePhone}</a>
           </p>
         </div>
       </div>

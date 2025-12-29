@@ -1,11 +1,18 @@
 import React from 'react';
 import { Instagram, Send, Phone, Mail, CreditCard, Truck, Shield } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePublicSettings } from '@/hooks/usePublicSettings';
 
 export const Footer: React.FC = () => {
   const { t } = useTranslation('footer');
   const { t: tNav } = useTranslation('nav');
+  const { data: settings = {} } = usePublicSettings();
   const currentYear = new Date().getFullYear();
+  
+  const storeName = settings.store_name || 'FetrInUA';
+  const storePhone = settings.store_phone || '+380501234567';
+  const storeEmail = settings.store_email || 'hello@fetr.in.ua';
+  const storeAddress = settings.store_address || 'м. Київ, вул. Урлівська 30';
 
   return (
     <footer className="bg-foreground text-primary-foreground">
@@ -46,7 +53,7 @@ export const Footer: React.FC = () => {
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
                 <span className="text-primary-foreground font-heading font-bold text-lg">F</span>
               </div>
-              <span className="font-heading font-bold text-xl">FetrInUA</span>
+              <span className="font-heading font-bold text-xl">{storeName}</span>
             </div>
             <p className="text-primary-foreground/60 text-sm mb-4">
               {t('description')}
@@ -97,19 +104,19 @@ export const Footer: React.FC = () => {
             <h4 className="font-heading font-bold mb-4">{t('contact.title')}</h4>
             <ul className="space-y-3">
               <li>
-                <a href="tel:+380501234567" className="flex items-center gap-2 text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
+                <a href={`tel:${storePhone.replace(/\s/g, '')}`} className="flex items-center gap-2 text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
                   <Phone className="w-4 h-4" />
-                  +38 (050) 123-45-67
+                  {storePhone}
                 </a>
               </li>
               <li>
-                <a href="mailto:hello@fetr.in.ua" className="flex items-center gap-2 text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
+                <a href={`mailto:${storeEmail}`} className="flex items-center gap-2 text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
                   <Mail className="w-4 h-4" />
-                  hello@fetr.in.ua
+                  {storeEmail}
                 </a>
               </li>
               <li className="text-primary-foreground/60 text-sm">
-                м. Київ, вул. Урлівська 30
+                {storeAddress}
               </li>
             </ul>
           </div>
@@ -148,7 +155,7 @@ export const Footer: React.FC = () => {
         <div className="container-tight py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-primary-foreground/40 text-sm">
-              © {currentYear} FetrInUA. {t('copyright')}
+              © {currentYear} {storeName}. {t('copyright')}
             </p>
             <p className="text-primary-foreground/40 text-sm">
               Зроблено з ❤️ в Україні

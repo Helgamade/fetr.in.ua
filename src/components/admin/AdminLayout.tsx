@@ -30,6 +30,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
+import { usePublicSettings } from '@/hooks/usePublicSettings';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Дашборд', path: '/admin' },

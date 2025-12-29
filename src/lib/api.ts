@@ -77,6 +77,7 @@ export const ordersAPI = {
 // Settings API
 export const settingsAPI = {
   getAll: () => fetchAPI<Record<string, any>>('/settings'),
+  getPublic: () => fetchAPI<Record<string, any>>('/settings/public'),
   getByKey: (key: string) => fetchAPI<{ key: string; value: any }>(`/settings/${key}`),
   update: (key: string, value: any) => fetchAPI<any>(`/settings/${key}`, {
     method: 'PUT',

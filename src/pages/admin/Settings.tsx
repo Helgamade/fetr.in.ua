@@ -20,7 +20,8 @@ export function Settings() {
     email: settings.store_email || 'info@feltmagic.ua',
     phone: settings.store_phone || '+380501234567',
     address: settings.store_address || 'м. Київ, вул. Урлівська 30',
-    workingHours: settings.store_working_hours || 'Пн-Пт 10:00-18:00, Сб 10:00-14:00',
+    workingHoursWeekdays: settings.store_working_hours_weekdays || 'Пн–Пт: 10:00 – 18:00',
+    workingHoursWeekend: settings.store_working_hours_weekend || 'Сб: 10:00 – 14:00',
   };
 
   const deliverySettings = {
@@ -59,7 +60,8 @@ export function Settings() {
       store_email: localStoreSettings.email,
       store_phone: localStoreSettings.phone,
       store_address: localStoreSettings.address,
-      store_working_hours: localStoreSettings.workingHours,
+      store_working_hours_weekdays: localStoreSettings.workingHoursWeekdays,
+      store_working_hours_weekend: localStoreSettings.workingHoursWeekend,
       free_delivery_threshold: localDeliverySettings.freeDeliveryThreshold,
       delivery_cost: localDeliverySettings.deliveryCost,
       nova_poshta_enabled: localDeliverySettings.novaPoshtaEnabled,
@@ -139,11 +141,23 @@ export function Settings() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="workingHours">Години роботи</Label>
-              <Input
-                id="workingHours"
-                value={localStoreSettings.workingHours}
-                onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, workingHours: e.target.value })}
+              <Label htmlFor="workingHoursWeekdays">Години роботи (робочі дні)</Label>
+              <Textarea
+                id="workingHoursWeekdays"
+                value={localStoreSettings.workingHoursWeekdays}
+                onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, workingHoursWeekdays: e.target.value })}
+                rows={2}
+                placeholder="Пн–Пт: 10:00 – 18:00"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="workingHoursWeekend">Години роботи (вихідні дні)</Label>
+              <Textarea
+                id="workingHoursWeekend"
+                value={localStoreSettings.workingHoursWeekend}
+                onChange={(e) => setLocalStoreSettings({ ...localStoreSettings, workingHoursWeekend: e.target.value })}
+                rows={2}
+                placeholder="Сб: 10:00 – 14:00"
               />
             </div>
           </div>
