@@ -31,12 +31,13 @@ const Checkout = () => {
     phone: "",
     email: "",
     paymentMethod: "card",
-    deliveryMethod: "nova_poshta",
+    deliveryMethod: "",
     city: "",
     cityRef: null as string | null,
     warehouse: "",
     warehouseRef: null as string | null,
     novaPoshtaDeliveryType: "PostOffice" as "PostOffice" | "Postomat",
+    novaPoshtaExpanded: true as boolean | undefined,
     address: "",
     postalCode: "",
     comment: ""
@@ -280,12 +281,21 @@ const Checkout = () => {
                   
                   <RadioGroup
                     value={formData.deliveryMethod}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, deliveryMethod: value }))}
+                    onValueChange={(value) => {
+                      setFormData(prev => {
+                        // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
+                        if (prev.deliveryMethod === value && value === "nova_poshta" && prev.novaPoshtaExpanded === false) {
+                          return { ...prev, novaPoshtaExpanded: true };
+                        }
+                        // Иначе просто переключаем способ доставки
+                        return { ...prev, deliveryMethod: value, novaPoshtaExpanded: value === "nova_poshta" ? true : undefined };
+                      });
+                    }}
                     className="space-y-3"
                   >
                     {/* Нова Пошта */}
                     <div className="border rounded-xl transition-all">
-                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/50 transition-colors">
+                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
                         <RadioGroupItem value="nova_poshta" id="nova_poshta" />
                         <div className="flex-1">
                           <div className="font-medium">Нова Пошта</div>
@@ -296,11 +306,12 @@ const Checkout = () => {
                         </div>
                       </label>
                       {formData.deliveryMethod === "nova_poshta" && (
-                        <div className="px-4 pb-4 border-t">
+                        <div className="px-4 pb-4">
                           <NovaPoshtaDelivery
                             cityRef={formData.cityRef}
                             warehouseRef={formData.warehouseRef}
                             deliveryType={formData.novaPoshtaDeliveryType}
+                            isExpanded={formData.novaPoshtaExpanded !== false}
                             onCityChange={(city) => {
                               setFormData(prev => ({
                                 ...prev,
@@ -325,14 +336,34 @@ const Checkout = () => {
                                 warehouseRef: null
                               }));
                             }}
+                            onContinue={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                novaPoshtaExpanded: false
+                              }));
+                            }}
                           />
+                        </div>
+                      )}
+                      {formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded === false && formData.city && formData.warehouse && (
+                        <div className="px-4 pb-4">
+                          <div className="space-y-2 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Населений пункт: </span>
+                              <span className="font-medium">{formData.city}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Відділення: </span>
+                              <span className="font-medium">{formData.warehouse}</span>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
 
                     {/* Укрпошта */}
                     <div className="border rounded-xl transition-all">
-                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/50 transition-colors">
+                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
                         <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
                         <div className="flex-1">
                           <div className="font-medium">Укрпошта</div>
@@ -389,7 +420,7 @@ const Checkout = () => {
 
                     {/* Самовивіз */}
                     <div className="border rounded-xl transition-all">
-                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/50 transition-colors">
+                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
                         <RadioGroupItem value="pickup" id="pickup" />
                         <div className="flex-1">
                           <div className="font-medium">Самовивіз</div>
@@ -398,7 +429,7 @@ const Checkout = () => {
                         <div className="text-sm font-medium text-green-600">Безкоштовно</div>
                       </label>
                       {formData.deliveryMethod === "pickup" && (
-                        <div className="px-4 pb-4 border-t bg-accent/30">
+                        <div className="px-4 pb-4">
                           <div className="font-medium mb-1">Адреса самовивозу:</div>
                           <div className="text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
                               {storeSettings.store_working_hours_weekdays && (

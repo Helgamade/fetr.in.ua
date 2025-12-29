@@ -10,18 +10,22 @@ interface NovaPoshtaDeliveryProps {
   cityRef: string | null;
   warehouseRef: string | null;
   deliveryType: 'PostOffice' | 'Postomat';
+  isExpanded?: boolean;
   onCityChange: (city: NovaPoshtaCity | null) => void;
   onWarehouseChange: (warehouse: NovaPoshtaWarehouse | null) => void;
   onDeliveryTypeChange: (type: 'PostOffice' | 'Postomat') => void;
+  onContinue?: () => void;
 }
 
 export const NovaPoshtaDelivery = ({
   cityRef,
   warehouseRef,
   deliveryType,
+  isExpanded = true,
   onCityChange,
   onWarehouseChange,
   onDeliveryTypeChange,
+  onContinue,
 }: NovaPoshtaDeliveryProps) => {
   const [popularCities, setPopularCities] = useState<NovaPoshtaCity[]>([]);
   const [searchCities, setSearchCities] = useState<NovaPoshtaCity[]>([]);
@@ -372,6 +376,19 @@ export const NovaPoshtaDelivery = ({
             )}
           </div>
         </fieldset>
+      )}
+
+      {/* Кнопка Продовжити */}
+      {isExpanded && selectedCity && selectedWarehouse && onContinue && (
+        <div className="pt-4">
+          <Button
+            type="button"
+            onClick={onContinue}
+            className="w-full rounded-full"
+          >
+            Продовжити
+          </Button>
+        </div>
       )}
     </div>
   );
