@@ -34,11 +34,22 @@ const Checkout = () => {
         const parsed = JSON.parse(savedData);
         setFormData(prev => ({
           ...prev,
-          ...parsed,
-          // Восстанавливаем только строковые значения, refs оставляем null (они будут восстановлены через cityRef/warehouseRef)
-          cityRef: parsed.cityRef || null,
-          warehouseRef: parsed.warehouseRef || null,
+          name: parsed.name || prev.name,
+          phone: parsed.phone || prev.phone,
+          email: parsed.email || prev.email,
+          paymentMethod: parsed.paymentMethod || prev.paymentMethod,
+          deliveryMethod: parsed.deliveryMethod || prev.deliveryMethod,
+          novaPoshtaCity: parsed.novaPoshtaCity || prev.novaPoshtaCity,
+          novaPoshtaCityRef: parsed.novaPoshtaCityRef || prev.novaPoshtaCityRef,
+          novaPoshtaWarehouse: parsed.novaPoshtaWarehouse || prev.novaPoshtaWarehouse,
+          novaPoshtaWarehouseRef: parsed.novaPoshtaWarehouseRef || prev.novaPoshtaWarehouseRef,
+          novaPoshtaDeliveryType: parsed.novaPoshtaDeliveryType || prev.novaPoshtaDeliveryType,
           novaPoshtaExpanded: parsed.novaPoshtaExpanded !== undefined ? parsed.novaPoshtaExpanded : true,
+          novaPoshtaCompleted: parsed.novaPoshtaCompleted || false,
+          ukrPoshtaCity: parsed.ukrPoshtaCity || prev.ukrPoshtaCity,
+          ukrPoshtaPostalCode: parsed.ukrPoshtaPostalCode || prev.ukrPoshtaPostalCode,
+          ukrPoshtaAddress: parsed.ukrPoshtaAddress || prev.ukrPoshtaAddress,
+          ukrPoshtaCompleted: parsed.ukrPoshtaCompleted || false,
         }));
       } catch (error) {
         console.error('Error loading checkout form data from localStorage:', error);
@@ -52,14 +63,19 @@ const Checkout = () => {
     email: "",
     paymentMethod: "card",
     deliveryMethod: "",
-    city: "",
-    cityRef: null as string | null,
-    warehouse: "",
-    warehouseRef: null as string | null,
+    // Данные для Нова Пошта
+    novaPoshtaCity: "",
+    novaPoshtaCityRef: null as string | null,
+    novaPoshtaWarehouse: "",
+    novaPoshtaWarehouseRef: null as string | null,
     novaPoshtaDeliveryType: "PostOffice" as "PostOffice" | "Postomat",
     novaPoshtaExpanded: true as boolean | undefined,
-    address: "",
-    postalCode: "",
+    novaPoshtaCompleted: false, // Флаг, что данные заполнены и подтверждены кнопкой "Продовжити"
+    // Данные для Укрпошта
+    ukrPoshtaCity: "",
+    ukrPoshtaPostalCode: "",
+    ukrPoshtaAddress: "",
+    ukrPoshtaCompleted: false,
     comment: ""
   });
 
@@ -71,18 +87,62 @@ const Checkout = () => {
       email: formData.email,
       paymentMethod: formData.paymentMethod,
       deliveryMethod: formData.deliveryMethod,
-      city: formData.city,
-      cityRef: formData.cityRef,
-      warehouse: formData.warehouse,
-      warehouseRef: formData.warehouseRef,
+      novaPoshtaCity: formData.novaPoshtaCity,
+      novaPoshtaCityRef: formData.novaPoshtaCityRef,
+      novaPoshtaWarehouse: formData.novaPoshtaWarehouse,
+      novaPoshtaWarehouseRef: formData.novaPoshtaWarehouseRef,
       novaPoshtaDeliveryType: formData.novaPoshtaDeliveryType,
       novaPoshtaExpanded: formData.novaPoshtaExpanded,
-      address: formData.address,
-      postalCode: formData.postalCode,
+      novaPoshtaCompleted: formData.novaPoshtaCompleted,
+      ukrPoshtaCity: formData.ukrPoshtaCity,
+      ukrPoshtaPostalCode: formData.ukrPoshtaPostalCode,
+      ukrPoshtaAddress: formData.ukrPoshtaAddress,
+      ukrPoshtaCompleted: formData.ukrPoshtaCompleted,
       // Не сохраняем comment, так как он может быть специфичным для каждого заказа
     };
     localStorage.setItem('checkoutFormData', JSON.stringify(dataToSave));
   }, [formData]);
+
+  // Получить текущие данные для выбранного способа доставки
+  const getCurrentDeliveryData = () => {
+    if (formData.deliveryMethod === "nova_poshta") {
+      return {
+        city: formData.novaPoshtaCity,
+        cityRef: formData.novaPoshtaCityRef,
+        warehouse: formData.novaPoshtaWarehouse,
+        warehouseRef: formData.novaPoshtaWarehouseRef,
+        deliveryType: formData.novaPoshtaDeliveryType,
+        completed: formData.novaPoshtaCompleted,
+      };
+    } else if (formData.deliveryMethod === "ukr_poshta") {
+      return {
+        city: formData.ukrPoshtaCity,
+        postalCode: formData.ukrPoshtaPostalCode,
+        address: formData.ukrPoshtaAddress,
+        completed: formData.ukrPoshtaCompleted,
+      };
+    }
+    return null;
+  };
+
+  // Получить сохраненные данные для способа доставки (даже если он не выбран)
+  const getSavedDeliveryData = (method: string) => {
+    if (method === "nova_poshta") {
+      return {
+        city: formData.novaPoshtaCity,
+        warehouse: formData.novaPoshtaWarehouse,
+        completed: formData.novaPoshtaCompleted,
+      };
+    } else if (method === "ukr_poshta") {
+      return {
+        city: formData.ukrPoshtaCity,
+        postalCode: formData.ukrPoshtaPostalCode,
+        address: formData.ukrPoshtaAddress,
+        completed: formData.ukrPoshtaCompleted,
+      };
+    }
+    return null;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -103,13 +163,25 @@ const Checkout = () => {
     }
 
     if (formData.deliveryMethod !== "pickup") {
-      if (!formData.city || (formData.deliveryMethod === "nova_poshta" && !formData.warehouseRef)) {
-        toast({
-          title: "Помилка",
-          description: "Будь ласка, виберіть місто та відділення доставки",
-          variant: "destructive"
-        });
-        return;
+      const deliveryData = getCurrentDeliveryData();
+      if (formData.deliveryMethod === "nova_poshta") {
+        if (!deliveryData?.city || !deliveryData?.warehouseRef) {
+          toast({
+            title: "Помилка",
+            description: "Будь ласка, виберіть місто та відділення доставки",
+            variant: "destructive"
+          });
+          return;
+        }
+      } else if (formData.deliveryMethod === "ukr_poshta") {
+        if (!deliveryData?.city || !deliveryData?.postalCode || !deliveryData?.address) {
+          toast({
+            title: "Помилка",
+            description: "Будь ласка, заповніть адресу доставки",
+            variant: "destructive"
+          });
+          return;
+        }
       }
     }
 
@@ -136,15 +208,40 @@ const Checkout = () => {
           phone: formData.phone,
           email: formData.email && formData.email.trim() ? formData.email.trim() : null,
         },
-        delivery: {
-          method: formData.deliveryMethod,
-          city: formData.deliveryMethod !== "pickup" && formData.city ? formData.city.trim() : null,
-          warehouse: formData.deliveryMethod === "nova_poshta" && formData.warehouse ? formData.warehouse.trim() : null,
-          warehouseRef: formData.deliveryMethod === "nova_poshta" && formData.warehouseRef ? formData.warehouseRef : null,
-          cityRef: formData.deliveryMethod === "nova_poshta" && formData.cityRef ? formData.cityRef : null,
-          postIndex: formData.deliveryMethod === "ukr_poshta" && formData.postalCode ? formData.postalCode.trim() : null,
-          address: formData.deliveryMethod === "ukr_poshta" && formData.address ? formData.address.trim() : null,
-        },
+        delivery: (() => {
+          const deliveryData = getCurrentDeliveryData();
+          if (formData.deliveryMethod === "nova_poshta" && deliveryData) {
+            return {
+              method: formData.deliveryMethod,
+              city: deliveryData.city || null,
+              warehouse: deliveryData.warehouse || null,
+              warehouseRef: deliveryData.warehouseRef || null,
+              cityRef: deliveryData.cityRef || null,
+              postIndex: null,
+              address: null,
+            };
+          } else if (formData.deliveryMethod === "ukr_poshta" && deliveryData) {
+            return {
+              method: formData.deliveryMethod,
+              city: deliveryData.city || null,
+              warehouse: null,
+              warehouseRef: null,
+              cityRef: null,
+              postIndex: deliveryData.postalCode || null,
+              address: deliveryData.address || null,
+            };
+          } else {
+            return {
+              method: formData.deliveryMethod,
+              city: null,
+              warehouse: null,
+              warehouseRef: null,
+              cityRef: null,
+              postIndex: null,
+              address: null,
+            };
+          }
+        })(),
         payment: {
           method: formData.paymentMethod,
         },
@@ -323,60 +420,72 @@ const Checkout = () => {
                         <RadioGroupItem value="nova_poshta" id="nova_poshta" />
                         <div className="flex-1">
                           <div className="font-medium">Нова Пошта</div>
-                          {formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded === false && formData.city && formData.warehouse ? (
-                            <div className="space-y-1 text-sm text-muted-foreground mt-1">
-                              <div>
-                                <span className="text-muted-foreground">Населений пункт: </span>
-                                <span className="font-medium text-foreground">{formData.city}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Відділення: </span>
-                                <span className="font-medium text-foreground">{formData.warehouse}</span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-sm text-muted-foreground">1-2 дні по Україні</div>
-                          )}
+                          {(() => {
+                            const savedData = getSavedDeliveryData("nova_poshta");
+                            const isCollapsed = formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded === false;
+                            const showCollapsed = isCollapsed && savedData?.completed && savedData.city && savedData.warehouse;
+                            const showSavedWhenNotSelected = formData.deliveryMethod !== "nova_poshta" && savedData?.completed && savedData.city && savedData.warehouse;
+                            
+                            if (showCollapsed || showSavedWhenNotSelected) {
+                              return (
+                                <div className="space-y-1 text-sm text-muted-foreground mt-1">
+                                  <div>
+                                    <span className="text-muted-foreground">Населений пункт: </span>
+                                    <span className="font-medium text-foreground">{savedData.city}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-muted-foreground">Відділення: </span>
+                                    <span className="font-medium text-foreground">{savedData.warehouse}</span>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return <div className="text-sm text-muted-foreground">1-2 дні по Україні</div>;
+                          })()}
                         </div>
                         <div className="text-sm font-medium">
                           {total >= 1500 ? <span className="text-green-600">Безкоштовно</span> : "від 70 грн"}
                         </div>
                       </label>
                       {formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded !== false && (
-                        <div className="px-4 pb-4">
+                        <div className="pl-4 pr-4 pb-4">
                           <NovaPoshtaDelivery
-                            cityRef={formData.cityRef}
-                            warehouseRef={formData.warehouseRef}
+                            cityRef={formData.novaPoshtaCityRef}
+                            warehouseRef={formData.novaPoshtaWarehouseRef}
                             deliveryType={formData.novaPoshtaDeliveryType}
                             isExpanded={true}
                             onCityChange={(city) => {
                               setFormData(prev => ({
                                 ...prev,
-                                city: city ? city.full_description_ua : "",
-                                cityRef: city ? city.ref : null,
-                                warehouse: "",
-                                warehouseRef: null
+                                novaPoshtaCity: city ? city.full_description_ua : "",
+                                novaPoshtaCityRef: city ? city.ref : null,
+                                novaPoshtaWarehouse: "",
+                                novaPoshtaWarehouseRef: null,
+                                novaPoshtaCompleted: false
                               }));
                             }}
                             onWarehouseChange={(warehouse) => {
                               setFormData(prev => ({
                                 ...prev,
-                                warehouse: warehouse ? warehouse.description_ua : "",
-                                warehouseRef: warehouse ? warehouse.ref : null
+                                novaPoshtaWarehouse: warehouse ? warehouse.description_ua : "",
+                                novaPoshtaWarehouseRef: warehouse ? warehouse.ref : null,
+                                novaPoshtaCompleted: false
                               }));
                             }}
                             onDeliveryTypeChange={(type) => {
                               setFormData(prev => ({
                                 ...prev,
                                 novaPoshtaDeliveryType: type,
-                                warehouse: "",
-                                warehouseRef: null
+                                novaPoshtaWarehouse: "",
+                                novaPoshtaWarehouseRef: null,
+                                novaPoshtaCompleted: false
                               }));
                             }}
                             onContinue={() => {
                               setFormData(prev => ({
                                 ...prev,
-                                novaPoshtaExpanded: false
+                                novaPoshtaExpanded: false,
+                                novaPoshtaCompleted: true
                               }));
                             }}
                           />
