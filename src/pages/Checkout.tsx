@@ -54,6 +54,7 @@ const Checkout = () => {
           ukrPoshtaCity: parsed.ukrPoshtaCity || prev.ukrPoshtaCity,
           ukrPoshtaPostalCode: parsed.ukrPoshtaPostalCode || prev.ukrPoshtaPostalCode,
           ukrPoshtaAddress: parsed.ukrPoshtaAddress || prev.ukrPoshtaAddress,
+          ukrPoshtaExpanded: parsed.ukrPoshtaExpanded !== undefined ? parsed.ukrPoshtaExpanded : false,
           ukrPoshtaCompleted: parsed.ukrPoshtaCompleted || false,
         }));
       } catch (error) {
@@ -85,6 +86,7 @@ const Checkout = () => {
     ukrPoshtaCity: "",
     ukrPoshtaPostalCode: "",
     ukrPoshtaAddress: "",
+    ukrPoshtaExpanded: false,
     ukrPoshtaCompleted: false,
     comment: ""
   });
@@ -112,6 +114,7 @@ const Checkout = () => {
       ukrPoshtaCity: formData.ukrPoshtaCity,
       ukrPoshtaPostalCode: formData.ukrPoshtaPostalCode,
       ukrPoshtaAddress: formData.ukrPoshtaAddress,
+      ukrPoshtaExpanded: formData.ukrPoshtaExpanded,
       ukrPoshtaCompleted: formData.ukrPoshtaCompleted,
       // Не сохраняем comment, так как он может быть специфичным для каждого заказа
     };
@@ -537,16 +540,27 @@ const Checkout = () => {
                     </div>
 
                     {/* Укрпошта */}
-                    <div className="border rounded-xl transition-all">
+                    <div 
+                      className="border rounded-xl transition-all"
+                      onClick={(e) => {
+                        // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
+                        if (formData.deliveryMethod === "ukr_poshta" && formData.ukrPoshtaExpanded === false) {
+                          e.stopPropagation();
+                          setFormData(prev => ({ ...prev, ukrPoshtaExpanded: true }));
+                        }
+                      }}
+                    >
                       <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
                         <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
                         <div className="flex-1">
                           <div className="font-medium">Укрпошта</div>
                           {(() => {
                             const savedData = getSavedDeliveryData("ukr_poshta");
+                            const isCollapsed = formData.deliveryMethod === "ukr_poshta" && formData.ukrPoshtaExpanded === false;
+                            const showCollapsed = isCollapsed && savedData?.completed && savedData.city;
                             const showSavedWhenNotSelected = formData.deliveryMethod !== "ukr_poshta" && savedData?.completed && savedData.city;
                             
-                            if (showSavedWhenNotSelected) {
+                            if (showCollapsed || showSavedWhenNotSelected) {
                               return (
                                 <div className="space-y-1 text-sm text-muted-foreground mt-1">
                                   <div>
@@ -567,7 +581,7 @@ const Checkout = () => {
                         </div>
                         <div className="text-sm font-medium">від 45 грн</div>
                       </label>
-                      {formData.deliveryMethod === "ukr_poshta" && (
+                      {formData.deliveryMethod === "ukr_poshta" && formData.ukrPoshtaExpanded !== false && (
                         <div className="pl-4 pr-4 pb-4 space-y-4">
                           <div className="grid sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -579,7 +593,7 @@ const Checkout = () => {
                                   name="ukrPoshtaCity"
                                   value={formData.ukrPoshtaCity}
                                   onChange={(e) => {
-                                    setFormData(prev => ({ ...prev, ukrPoshtaCity: e.target.value, ukrPoshtaCompleted: false }));
+                                    setFormData(prev => ({ ...prev, ukrPoshtaCity: e.target.value, ukrPoshtaCompleted: false, ukrPoshtaExpanded: true }));
                                   }}
                                   placeholder="Введіть місто"
                                   required
@@ -594,7 +608,7 @@ const Checkout = () => {
                                 name="ukrPoshtaPostalCode"
                                 value={formData.ukrPoshtaPostalCode}
                                 onChange={(e) => {
-                                  setFormData(prev => ({ ...prev, ukrPoshtaPostalCode: e.target.value, ukrPoshtaCompleted: false }));
+                                  setFormData(prev => ({ ...prev, ukrPoshtaPostalCode: e.target.value, ukrPoshtaCompleted: false, ukrPoshtaExpanded: true }));
                                 }}
                                 placeholder="01001"
                                 required
@@ -608,7 +622,7 @@ const Checkout = () => {
                                 name="ukrPoshtaAddress"
                                 value={formData.ukrPoshtaAddress}
                                 onChange={(e) => {
-                                  setFormData(prev => ({ ...prev, ukrPoshtaAddress: e.target.value, ukrPoshtaCompleted: false }));
+                                  setFormData(prev => ({ ...prev, ukrPoshtaAddress: e.target.value, ukrPoshtaCompleted: false, ukrPoshtaExpanded: true }));
                                 }}
                                 placeholder="Вулиця, будинок, квартира"
                                 required
@@ -621,6 +635,7 @@ const Checkout = () => {
                             onClick={() => {
                               setFormData(prev => ({
                                 ...prev,
+                                ukrPoshtaExpanded: false,
                                 ukrPoshtaCompleted: true
                               }));
                             }}
