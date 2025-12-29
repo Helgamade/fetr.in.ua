@@ -110,15 +110,18 @@ router.get('/warehouses', async (req, res, next) => {
     const params = [cityRef];
 
     // Фильтр по типу (PostOffice или Postomat)
-    // API Новой Почты возвращает UUID типов:
-    // PostOffice (отделение): '841339c7-591a-42e2-8233-7a0a00f0ed6f' или '9a68df70-0267-42a8-bb5c-37f427e36ee4'
-    // Postomat (почтомат): 'f9316480-5f2d-425d-bc2c-ac7cd29decf0'
+    // API Новой Почты возвращает UUID типов отделений:
+    // PostOffice (Відділення): 
+    //   - '841339c7-591a-42e2-8233-7a0a00f0ed6f' (отделения, включая пункты приема)
+    //   - '9a68df70-0267-42a8-bb5c-37f427e36ee4' (отделения)
+    // Postomat (Поштомат): 
+    //   - 'f9316480-5f2d-425d-bc2c-ac7cd29decf0' (почтоматы)
     if (type) {
       if (type === 'PostOffice') {
-        // Отделения: оба UUID типа отделений
+        // Відділення: оба UUID типа отделений
         query += ` AND type_of_warehouse IN ('841339c7-591a-42e2-8233-7a0a00f0ed6f', '9a68df70-0267-42a8-bb5c-37f427e36ee4')`;
       } else if (type === 'Postomat') {
-        // Почтоматы
+        // Поштомат: только почтоматы
         query += ` AND type_of_warehouse = 'f9316480-5f2d-425d-bc2c-ac7cd29decf0'`;
       }
     }
