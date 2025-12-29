@@ -39,23 +39,23 @@ const Checkout = () => {
           email: parsed.email || prev.email,
           paymentMethod: parsed.paymentMethod || prev.paymentMethod,
           deliveryMethod: parsed.deliveryMethod || prev.deliveryMethod,
-          novaPoshtaPostOfficeCity: parsed.novaPoshtaPostOfficeCity || prev.novaPoshtaPostOfficeCity,
-          novaPoshtaPostOfficeCityRef: parsed.novaPoshtaPostOfficeCityRef || prev.novaPoshtaPostOfficeCityRef,
+          novaPoshtaCity: parsed.novaPoshtaCity || prev.novaPoshtaCity,
+          novaPoshtaCityRef: parsed.novaPoshtaCityRef || prev.novaPoshtaCityRef,
           novaPoshtaPostOfficeWarehouse: parsed.novaPoshtaPostOfficeWarehouse || prev.novaPoshtaPostOfficeWarehouse,
           novaPoshtaPostOfficeWarehouseRef: parsed.novaPoshtaPostOfficeWarehouseRef || prev.novaPoshtaPostOfficeWarehouseRef,
           novaPoshtaPostOfficeCompleted: parsed.novaPoshtaPostOfficeCompleted || false,
-          novaPoshtaPostomatCity: parsed.novaPoshtaPostomatCity || prev.novaPoshtaPostomatCity,
-          novaPoshtaPostomatCityRef: parsed.novaPoshtaPostomatCityRef || prev.novaPoshtaPostomatCityRef,
           novaPoshtaPostomatWarehouse: parsed.novaPoshtaPostomatWarehouse || prev.novaPoshtaPostomatWarehouse,
           novaPoshtaPostomatWarehouseRef: parsed.novaPoshtaPostomatWarehouseRef || prev.novaPoshtaPostomatWarehouseRef,
           novaPoshtaPostomatCompleted: parsed.novaPoshtaPostomatCompleted || false,
           novaPoshtaDeliveryType: parsed.novaPoshtaDeliveryType || prev.novaPoshtaDeliveryType,
-          novaPoshtaExpanded: parsed.novaPoshtaExpanded !== undefined ? parsed.novaPoshtaExpanded : false,
+          novaPoshtaExpanded: false, // Всегда свернуто при загрузке
           ukrPoshtaCity: parsed.ukrPoshtaCity || prev.ukrPoshtaCity,
           ukrPoshtaPostalCode: parsed.ukrPoshtaPostalCode || prev.ukrPoshtaPostalCode,
           ukrPoshtaAddress: parsed.ukrPoshtaAddress || prev.ukrPoshtaAddress,
-          ukrPoshtaExpanded: parsed.ukrPoshtaExpanded !== undefined ? parsed.ukrPoshtaExpanded : false,
+          ukrPoshtaExpanded: false, // Всегда свернуто при загрузке
           ukrPoshtaCompleted: parsed.ukrPoshtaCompleted || false,
+          pickupExpanded: false, // Всегда свернуто при загрузке
+          pickupCompleted: parsed.pickupCompleted || false,
         }));
       } catch (error) {
         console.error('Error loading checkout form data from localStorage:', error);
@@ -69,14 +69,12 @@ const Checkout = () => {
     email: "",
     paymentMethod: "card",
     deliveryMethod: "",
-    // Данные для Нова Пошта - отдельно для каждого типа доставки
-    novaPoshtaPostOfficeCity: "",
-    novaPoshtaPostOfficeCityRef: null as string | null,
+    // Данные для Нова Пошта - город общий, отделения/поштоматы отдельно
+    novaPoshtaCity: "",
+    novaPoshtaCityRef: null as string | null,
     novaPoshtaPostOfficeWarehouse: "",
     novaPoshtaPostOfficeWarehouseRef: null as string | null,
     novaPoshtaPostOfficeCompleted: false,
-    novaPoshtaPostomatCity: "",
-    novaPoshtaPostomatCityRef: null as string | null,
     novaPoshtaPostomatWarehouse: "",
     novaPoshtaPostomatWarehouseRef: null as string | null,
     novaPoshtaPostomatCompleted: false,
@@ -88,6 +86,9 @@ const Checkout = () => {
     ukrPoshtaAddress: "",
     ukrPoshtaExpanded: false,
     ukrPoshtaCompleted: false,
+    // Данные для Самовывоза
+    pickupExpanded: false,
+    pickupCompleted: false,
     comment: ""
   });
 
@@ -99,13 +100,11 @@ const Checkout = () => {
       email: formData.email,
       paymentMethod: formData.paymentMethod,
       deliveryMethod: formData.deliveryMethod,
-      novaPoshtaPostOfficeCity: formData.novaPoshtaPostOfficeCity,
-      novaPoshtaPostOfficeCityRef: formData.novaPoshtaPostOfficeCityRef,
+      novaPoshtaCity: formData.novaPoshtaCity,
+      novaPoshtaCityRef: formData.novaPoshtaCityRef,
       novaPoshtaPostOfficeWarehouse: formData.novaPoshtaPostOfficeWarehouse,
       novaPoshtaPostOfficeWarehouseRef: formData.novaPoshtaPostOfficeWarehouseRef,
       novaPoshtaPostOfficeCompleted: formData.novaPoshtaPostOfficeCompleted,
-      novaPoshtaPostomatCity: formData.novaPoshtaPostomatCity,
-      novaPoshtaPostomatCityRef: formData.novaPoshtaPostomatCityRef,
       novaPoshtaPostomatWarehouse: formData.novaPoshtaPostomatWarehouse,
       novaPoshtaPostomatWarehouseRef: formData.novaPoshtaPostomatWarehouseRef,
       novaPoshtaPostomatCompleted: formData.novaPoshtaPostomatCompleted,
@@ -116,6 +115,8 @@ const Checkout = () => {
       ukrPoshtaAddress: formData.ukrPoshtaAddress,
       ukrPoshtaExpanded: formData.ukrPoshtaExpanded,
       ukrPoshtaCompleted: formData.ukrPoshtaCompleted,
+      pickupExpanded: formData.pickupExpanded,
+      pickupCompleted: formData.pickupCompleted,
       // Не сохраняем comment, так как он может быть специфичным для каждого заказа
     };
     localStorage.setItem('checkoutFormData', JSON.stringify(dataToSave));
@@ -468,36 +469,25 @@ const Checkout = () => {
                       {formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded !== false && (
                         <div className="pl-4 pr-4 pb-4">
                           <NovaPoshtaDelivery
-                            cityRef={formData.novaPoshtaDeliveryType === "PostOffice" 
-                              ? formData.novaPoshtaPostOfficeCityRef 
-                              : formData.novaPoshtaPostomatCityRef}
+                            cityRef={formData.novaPoshtaCityRef}
                             warehouseRef={formData.novaPoshtaDeliveryType === "PostOffice" 
                               ? formData.novaPoshtaPostOfficeWarehouseRef 
                               : formData.novaPoshtaPostomatWarehouseRef}
                             deliveryType={formData.novaPoshtaDeliveryType}
                             isExpanded={true}
                             onCityChange={(city) => {
-                              setFormData(prev => {
-                                if (prev.novaPoshtaDeliveryType === "PostOffice") {
-                                  return {
-                                    ...prev,
-                                    novaPoshtaPostOfficeCity: city ? city.full_description_ua : "",
-                                    novaPoshtaPostOfficeCityRef: city ? city.ref : null,
-                                    novaPoshtaPostOfficeWarehouse: "",
-                                    novaPoshtaPostOfficeWarehouseRef: null,
-                                    novaPoshtaPostOfficeCompleted: false
-                                  };
-                                } else {
-                                  return {
-                                    ...prev,
-                                    novaPoshtaPostomatCity: city ? city.full_description_ua : "",
-                                    novaPoshtaPostomatCityRef: city ? city.ref : null,
-                                    novaPoshtaPostomatWarehouse: "",
-                                    novaPoshtaPostomatWarehouseRef: null,
-                                    novaPoshtaPostomatCompleted: false
-                                  };
-                                }
-                              });
+                              setFormData(prev => ({
+                                ...prev,
+                                novaPoshtaCity: city ? city.full_description_ua : "",
+                                novaPoshtaCityRef: city ? city.ref : null,
+                                // Сбрасываем оба типа при смене города
+                                novaPoshtaPostOfficeWarehouse: "",
+                                novaPoshtaPostOfficeWarehouseRef: null,
+                                novaPoshtaPostOfficeCompleted: false,
+                                novaPoshtaPostomatWarehouse: "",
+                                novaPoshtaPostomatWarehouseRef: null,
+                                novaPoshtaPostomatCompleted: false
+                              }));
                             }}
                             onWarehouseChange={(warehouse) => {
                               setFormData(prev => {
@@ -522,7 +512,7 @@ const Checkout = () => {
                               setFormData(prev => ({
                                 ...prev,
                                 novaPoshtaDeliveryType: type,
-                                // Не сбрасываем данные при переключении типа
+                                // Не сбрасываем данные при переключении типа, город остается общим
                               }));
                             }}
                             onContinue={() => {
@@ -562,16 +552,10 @@ const Checkout = () => {
                             
                             if (showCollapsed || showSavedWhenNotSelected) {
                               return (
-                                <div className="space-y-1 text-sm text-muted-foreground mt-1">
-                                  <div>
-                                    <span className="text-muted-foreground">Місто: </span>
-                                    <span className="font-medium text-foreground">{savedData.city}</span>
-                                  </div>
+                                <div className="space-y-1 text-sm mt-1">
+                                  <div className="text-foreground">{savedData.city}</div>
                                   {savedData.address && (
-                                    <div>
-                                      <span className="text-muted-foreground">Адреса: </span>
-                                      <span className="font-medium text-foreground">{savedData.address}</span>
-                                    </div>
+                                    <div className="text-foreground">{savedData.address}</div>
                                   )}
                                 </div>
                               );
