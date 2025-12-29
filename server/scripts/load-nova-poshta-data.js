@@ -207,7 +207,7 @@ async function loadCities() {
 }
 
 // Загрузка отделений для всех городов
-async function loadWarehouses(skipExisting = false) {
+async function loadWarehouses() {
   const startTime = Date.now();
   console.log('📥 Загрузка отделений...');
   
@@ -215,21 +215,7 @@ async function loadWarehouses(skipExisting = false) {
     const connection = await pool.getConnection();
     
     // Получаем все города
-    let citiesQuery = 'SELECT ref, description_ua FROM nova_poshta_cities ORDER BY is_popular DESC, description_ua ASC';
-    
-    // Если skipExisting = true, загружаем только для городов, у которых еще нет отделений
-    if (skipExisting) {
-      citiesQuery = `
-        SELECT c.ref, c.description_ua 
-        FROM nova_poshta_cities c
-        LEFT JOIN nova_poshta_warehouses w ON c.ref = w.city_ref
-        WHERE w.city_ref IS NULL
-        ORDER BY c.is_popular DESC, c.description_ua ASC
-      `;
-      console.log('📋 Режим догрузки: загружаем только города без отделений');
-    }
-    
-    const [cities] = await connection.execute(citiesQuery);
+    const [cities] = await connection.execute('SELECT ref, description_ua FROM nova_poshta_cities ORDER BY is_popular DESC, description_ua ASC');
     
     if (cities.length === 0) {
       console.log('⚠️  Нет городов в базе. Сначала загрузите города.');
@@ -241,14 +227,10 @@ async function loadWarehouses(skipExisting = false) {
 
     // КРИТИЧНО: Полная очистка таблицы перед загрузкой новых данных
     // Отключаем проверку внешних ключей для TRUNCATE
-    if (!skipExisting) {
-      await connection.execute('SET FOREIGN_KEY_CHECKS = 0');
-      await connection.execute('TRUNCATE TABLE nova_poshta_warehouses');
-      await connection.execute('SET FOREIGN_KEY_CHECKS = 1');
-      console.log('🗑️  Старые данные отделений полностью удалены (TRUNCATE)');
-    } else {
-      console.log('📝 Режим догрузки: существующие данные сохраняются');
-    }
+    await connection.execute('SET FOREIGN_KEY_CHECKS = 0');
+    await connection.execute('TRUNCATE TABLE nova_poshta_warehouses');
+    await connection.execute('SET FOREIGN_KEY_CHECKS = 1');
+    console.log('🗑️  Старые данные отделений полностью удалены (TRUNCATE)');
 
     let totalInserted = 0;
     let processed = 0;
@@ -416,38 +398,18 @@ async function loadWarehouses(skipExisting = false) {
 // Главная функция
 async function main() {
   const totalStartTime = Date.now();
-  const args = process.argv.slice(2);
-  const skipExisting = args.includes('--skip-existing') || args.includes('--continue');
-  
   console.log('🚀 Начало загрузки справочников Новой Почты');
   console.log('📅 Рекомендуется запускать ежедневно (ночью) для актуальности данных');
-  if (skipExisting) {
-    console.log('📝 Режим: догрузка (пропуск городов с уже загруженными отделениями)\n');
-  } else {
-    console.log('📝 Режим: полная загрузка (очистка всех данных)\n');
-  }
+  console.log('📝 Режим: полная загрузка (очистка всех данных перед загрузкой)\n');
 
   try {
-    // Сначала загружаем города (если не в режиме догрузки)
-    let citiesLoaded = true;
-    if (!skipExisting) {
-      citiesLoaded = await loadCities();
-      console.log('');
-    } else {
-      // В режиме догрузки проверяем, что города есть
-      const connection = await pool.getConnection();
-      const [result] = await connection.execute('SELECT COUNT(*) as count FROM nova_poshta_cities');
-      connection.release();
-      if (result[0].count === 0) {
-        console.log('⚠️  Города не загружены. Сначала выполните полную загрузку.');
-        process.exit(1);
-      }
-      console.log(`✅ Города уже загружены (${result[0].count} шт.), пропускаем загрузку городов\n`);
-    }
+    // Сначала загружаем города
+    const citiesLoaded = await loadCities();
+    console.log('');
 
     if (citiesLoaded) {
       // Затем загружаем отделения
-      await loadWarehouses(skipExisting);
+      await loadWarehouses();
       console.log('');
     }
 
