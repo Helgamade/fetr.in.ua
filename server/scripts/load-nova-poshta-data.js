@@ -79,7 +79,10 @@ async function loadCities() {
 
     try {
       // КРИТИЧНО: Полная очистка таблицы перед загрузкой новых данных
+      // Сначала отключаем проверку внешних ключей, чтобы можно было использовать TRUNCATE
+      await connection.execute('SET FOREIGN_KEY_CHECKS = 0');
       await connection.execute('TRUNCATE TABLE nova_poshta_cities');
+      await connection.execute('SET FOREIGN_KEY_CHECKS = 1');
       console.log('🗑️  Старые данные полностью удалены (TRUNCATE)');
 
       // Определение популярных городов
@@ -172,7 +175,10 @@ async function loadWarehouses() {
     console.log(`📋 Найдено ${cities.length} городов для загрузки отделений`);
 
     // КРИТИЧНО: Полная очистка таблицы перед загрузкой новых данных
+    // Отключаем проверку внешних ключей для TRUNCATE
+    await connection.execute('SET FOREIGN_KEY_CHECKS = 0');
     await connection.execute('TRUNCATE TABLE nova_poshta_warehouses');
+    await connection.execute('SET FOREIGN_KEY_CHECKS = 1');
     console.log('🗑️  Старые данные отделений полностью удалены (TRUNCATE)');
 
     // Используем временную таблицу для batch insert
