@@ -134,8 +134,14 @@ router.get('/warehouses', async (req, res, next) => {
       params.push(`%${search}%`, `%${search}%`);
     }
 
-    // Сортировка: сначала по номеру (если есть), затем по описанию
+    // Сортировка: сначала по типу (Відділення -> Склад -> Пункт), затем по номеру, затем по описанию
     query += ` ORDER BY 
+      CASE 
+        WHEN description_ua LIKE 'Відділення%' THEN 1
+        WHEN description_ua LIKE 'Склад%' THEN 2
+        WHEN description_ua LIKE 'Пункт%' THEN 3
+        ELSE 4
+      END ASC,
       CASE 
         WHEN number IS NOT NULL AND number REGEXP '^[0-9]+$' THEN CAST(number AS UNSIGNED)
         ELSE 999999
