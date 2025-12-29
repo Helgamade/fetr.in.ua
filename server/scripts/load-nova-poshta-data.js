@@ -417,9 +417,9 @@ async function loadWarehouses() {
     
     let warehouses = [];
     try {
-      // Загружаем ВСЕ отделения одним запросом (без CityRef)
-      console.log('📡 Запрос к API: getWarehouses (без параметров)...');
-      warehouses = await novaPoshtaRequest('Address', 'getWarehouses', {});
+      // Загружаем ВСЕ отделения одним запросом через AddressGeneral (без CityRef)
+      console.log('📡 Запрос к API: AddressGeneral.getWarehouses (без параметров)...');
+      warehouses = await novaPoshtaRequest('AddressGeneral', 'getWarehouses', {});
       
       if (!warehouses || warehouses.length === 0) {
         console.log('⚠️  Отделения не получены. API может требовать CityRef. Пробуем альтернативный метод...');
