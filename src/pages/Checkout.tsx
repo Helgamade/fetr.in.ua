@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useProducts } from "@/hooks/useProducts";
@@ -18,6 +18,11 @@ const Checkout = () => {
   const { data: products = [] } = useProducts();
   const { data: storeSettings = {} } = usePublicSettings();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -145,7 +150,7 @@ const Checkout = () => {
       <div className="min-h-screen bg-muted/30">
         {/* Header */}
         <header className="bg-background border-b sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+          <div className="w-full max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -158,7 +163,7 @@ const Checkout = () => {
           </div>
         </header>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="w-full max-w-7xl mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Form */}
             <div className="lg:col-span-2 space-y-6">
