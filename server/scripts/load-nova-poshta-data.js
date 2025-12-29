@@ -254,12 +254,12 @@ async function loadWarehouses() {
     let processed = 0;
     let failedCities = 0;
     let rateLimitCount = 0;
-    const MAX_RETRIES = 2;
-    const BASE_DELAY = 500; // Увеличиваем базовую задержку до 500ms для избежания rate limit
-    const RATE_LIMIT_DELAY = 10000; // Увеличиваем задержку при rate limit до 10 секунд
+    const MAX_RETRIES = 3;
+    const BASE_DELAY = 50; // Минимальная задержка, так как используем параллельную обработку
+    const RATE_LIMIT_DELAY = 2000; // Задержка при rate limit (2 секунды)
     const BATCH_SIZE = 20; // Batch insert по 20 записей (15 полей * 20 = 300 placeholders, безопасно)
+    const CONCURRENT_CITIES = 20; // Обрабатываем 20 городов одновременно для ускорения в 20 раз
     const warehouseBatch = []; // Накопление записей для batch insert
-    let consecutiveRateLimits = 0; // Счетчик последовательных rate limit
     
     // Функция для вставки батча
     const insertBatch = async (batch) => {
@@ -288,12 +288,12 @@ async function loadWarehouses() {
       `, values);
     };
 
-    for (const city of cities) {
+    // Функция для обработки одного города
+    const processCity = async (city) => {
       let retries = 0;
-      let success = false;
       const cityWarehouses = [];
 
-      while (retries < MAX_RETRIES && !success) {
+      while (retries < MAX_RETRIES) {
         try {
           // Загружаем отделения для города
           const warehouses = await novaPoshtaRequest('Address', 'getWarehouses', {
@@ -329,8 +329,7 @@ async function loadWarehouses() {
             }
           }
 
-            success = true;
-            consecutiveRateLimits = 0; // Сбрасываем счетчик при успехе
+          return { success: true, warehouses: cityWarehouses };
 
         } catch (error) {
           // Проверяем, является ли ошибка rate limit
@@ -344,68 +343,62 @@ async function loadWarehouses() {
           if (isRateLimit && retries < MAX_RETRIES) {
             retries++;
             rateLimitCount++;
-            consecutiveRateLimits++;
-            
-            // Адаптивная задержка: чем больше последовательных rate limit, тем дольше ждем
-            const delay = RATE_LIMIT_DELAY + (consecutiveRateLimits * 2000);
-            if (retries === 1) {
-              console.log(`\n⏸️  Rate limit для города ${city.description_ua}. Ожидание ${(delay/1000).toFixed(1)}с...`);
-            }
+            const delay = RATE_LIMIT_DELAY * retries; // Увеличиваем задержку с каждой попыткой
             await new Promise(resolve => setTimeout(resolve, delay));
           } else {
-            // Если не rate limit или превышены попытки - пропускаем город
-            if (retries === 0) {
-              console.error(`⚠️  Ошибка для города ${city.description_ua}:`, error.message);
+            // Если не rate limit или превышены попытки - возвращаем ошибку
+            return { success: false, warehouses: [], error: error.message };
+          }
+        }
+      }
+
+      return { success: false, warehouses: [] };
+    };
+
+    // Параллельная обработка городов батчами по CONCURRENT_CITIES
+    for (let i = 0; i < cities.length; i += CONCURRENT_CITIES) {
+      const batch = cities.slice(i, i + CONCURRENT_CITIES);
+      
+      // Обрабатываем батч параллельно
+      const results = await Promise.all(batch.map(city => processCity(city)));
+      
+      // Обрабатываем результаты
+      for (const result of results) {
+        if (result.success) {
+          if (result.warehouses.length > 0) {
+            totalInserted += result.warehouses.length;
+            
+            // Для больших городов вставляем сразу, для маленьких - накапливаем в batch
+            if (result.warehouses.length > BATCH_SIZE) {
+              await insertBatch(result.warehouses);
+            } else {
+              warehouseBatch.push(...result.warehouses);
+              
+              // Вставляем batch когда накопилось достаточно записей
+              if (warehouseBatch.length >= BATCH_SIZE) {
+                await insertBatch(warehouseBatch);
+                warehouseBatch.length = 0;
+              }
             }
-            failedCities++;
-            success = true; // Пропускаем город и продолжаем
           }
-        }
-      }
-
-      // Добавляем отделения в batch для вставки
-      if (cityWarehouses.length > 0) {
-        totalInserted += cityWarehouses.length;
-        
-        // Для больших городов вставляем сразу, для маленьких - накапливаем в batch
-        if (cityWarehouses.length > BATCH_SIZE) {
-          // Большой город - вставляем сразу, разбивая на батчи
-          await insertBatch(cityWarehouses);
         } else {
-          // Маленький город - добавляем в общий batch
-          warehouseBatch.push(...cityWarehouses);
-          
-          // Вставляем batch когда накопилось достаточно записей
-          if (warehouseBatch.length >= BATCH_SIZE) {
-            await insertBatch(warehouseBatch);
-            warehouseBatch.length = 0; // Очищаем batch
-          }
+          failedCities++;
         }
+        processed++;
       }
 
-      processed++;
-      
-      // Адаптивная задержка: увеличиваем при частых rate limit
-      // Если было много rate limit, увеличиваем задержку между запросами
-      let delay = BASE_DELAY;
-      if (consecutiveRateLimits > 5) {
-        delay = BASE_DELAY * 3; // Увеличиваем в 3 раза при частых rate limit
-      } else if (rateLimitCount > 10) {
-        delay = BASE_DELAY * 2; // Увеличиваем в 2 раза при общем количестве rate limit
-      }
-      
-      // Показываем прогресс каждые 10 городов или на каждом 100-м
-      if (processed % 10 === 0 || processed % 100 === 0) {
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
-        const rate = processed > 0 ? (processed / ((Date.now() - startTime) / 1000)).toFixed(1) : '0';
-        const estimated = processed > 0 ? ((cities.length - processed) / (processed / ((Date.now() - startTime) / 1000))).toFixed(0) : '?';
-        showProgress(processed, cities.length, `📥 Загрузка отделений: `);
-        process.stdout.write(` | ${totalInserted} отд. | ${rate} гор/с | ~${estimated}с осталось | ошибок: ${failedCities}\n`);
-      }
+      // Прогресс-бар
+      const warehousesCount = totalInserted;
+      const elapsed = (Date.now() - startTime) / 1000;
+      const rate = processed / elapsed;
+      const remaining = cities.length - processed;
+      const eta = remaining / rate;
+      showProgress(processed, cities.length, '📥 Загрузка отделений: ');
+      process.stdout.write(` | ${warehousesCount} отд. | ${rate.toFixed(1)} гор/с | ~${Math.round(eta)}с осталось | ошибок: ${failedCities}\n`);
 
-      // Задержка между запросами
-      if (processed < cities.length) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+      // Небольшая задержка между батчами для снижения нагрузки
+      if (i + CONCURRENT_CITIES < cities.length) {
+        await new Promise(resolve => setTimeout(resolve, BASE_DELAY));
       }
     }
 
