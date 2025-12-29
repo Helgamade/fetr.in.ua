@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { MessageCircle, X, Send, Instagram } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { usePublicSettings } from '@/hooks/usePublicSettings';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { data: settings = {} } = usePublicSettings();
+  const storePhone = settings.store_phone || '+380501234567';
 
   return (
     <>

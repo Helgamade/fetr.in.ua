@@ -49,6 +49,7 @@ const menuItems = [
 
 export function AdminLayout() {
   const location = useLocation();
+  const { data: storeSettings = {} } = usePublicSettings();
 
   return (
     <SidebarProvider>
@@ -59,7 +60,7 @@ export function AdminLayout() {
               <Package className="h-4 w-4" />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">FeltMagic</span>
+              <span className="truncate font-semibold">{storeSettings.store_name || 'FeltMagic'}</span>
               <span className="truncate text-xs text-muted-foreground">Admin Panel</span>
             </div>
           </div>
