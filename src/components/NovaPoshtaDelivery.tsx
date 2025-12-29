@@ -84,6 +84,12 @@ export const NovaPoshtaDelivery = ({
   // Загрузка отделений при выборе города или изменении типа доставки
   useEffect(() => {
     if (selectedCity) {
+      console.log('🔄 [NovaPoshtaDelivery] Loading warehouses for city:', {
+        cityRef: selectedCity.ref,
+        cityName: selectedCity.description_ua,
+        deliveryType
+      });
+      
       setIsCitySearchOpen(false);
       setCitySearchQuery("");
       setSearchCities([]);
@@ -95,8 +101,16 @@ export const NovaPoshtaDelivery = ({
       }
       
       novaPoshtaAPI.getWarehouses(selectedCity.ref, deliveryType)
-        .then(setWarehouses)
-        .catch(console.error);
+        .then((warehouses) => {
+          console.log(`✅ [NovaPoshtaDelivery] Loaded ${warehouses.length} warehouses for city ${selectedCity.ref}`);
+          if (warehouses.length > 0) {
+            console.log('📦 [NovaPoshtaDelivery] Sample warehouse:', warehouses[0]);
+          }
+          setWarehouses(warehouses);
+        })
+        .catch((error) => {
+          console.error('❌ [NovaPoshtaDelivery] Error loading warehouses:', error);
+        });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCity, deliveryType]);
@@ -265,10 +279,24 @@ export const NovaPoshtaDelivery = ({
                 if (willOpen) {
                   // При открытии списка загружаем отделения, если они еще не загружены или поиск пустой
                   setWarehouseSearchQuery("");
+                  console.log('📂 [NovaPoshtaDelivery] Opening warehouse dropdown:', {
+                    cityRef: selectedCity?.ref,
+                    currentWarehousesCount: warehouses.length,
+                    deliveryType
+                  });
+                  
                   if (selectedCity && (warehouses.length === 0 || warehouseSearchQuery)) {
+                    console.log('🔄 [NovaPoshtaDelivery] Loading warehouses on dropdown open');
                     novaPoshtaAPI.getWarehouses(selectedCity.ref, deliveryType)
-                      .then(setWarehouses)
-                      .catch(console.error);
+                      .then((warehouses) => {
+                        console.log(`✅ [NovaPoshtaDelivery] Loaded ${warehouses.length} warehouses on open`);
+                        setWarehouses(warehouses);
+                      })
+                      .catch((error) => {
+                        console.error('❌ [NovaPoshtaDelivery] Error loading warehouses on open:', error);
+                      });
+                  } else {
+                    console.log('ℹ️  [NovaPoshtaDelivery] Warehouses already loaded, skipping');
                   }
                 }
               }}
@@ -290,13 +318,24 @@ export const NovaPoshtaDelivery = ({
                       placeholder="Введіть номер або адресу відділення"
                       value={warehouseSearchQuery}
                       onChange={(e) => {
+                        const searchValue = e.target.value.trim();
                         setWarehouseSearchQuery(e.target.value);
+                        console.log('🔍 [NovaPoshtaDelivery] Warehouse search:', {
+                          query: searchValue,
+                          cityRef: selectedCity?.ref,
+                          deliveryType
+                        });
+                        
                         // Поиск в реальном времени
                         if (selectedCity) {
-                          const searchValue = e.target.value.trim();
                           novaPoshtaAPI.getWarehouses(selectedCity.ref, deliveryType, searchValue || undefined)
-                            .then(setWarehouses)
-                            .catch(console.error);
+                            .then((warehouses) => {
+                              console.log(`✅ [NovaPoshtaDelivery] Search found ${warehouses.length} warehouses`);
+                              setWarehouses(warehouses);
+                            })
+                            .catch((error) => {
+                              console.error('❌ [NovaPoshtaDelivery] Search error:', error);
+                            });
                         }
                       }}
                       className="pl-10"

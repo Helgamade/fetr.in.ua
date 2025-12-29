@@ -70,9 +70,25 @@ router.get('/warehouses', async (req, res, next) => {
   try {
     const { cityRef, type, search } = req.query;
 
+    console.log('🔍 [GET /warehouses] Request:', { cityRef, type, search });
+
     if (!cityRef) {
+      console.log('❌ [GET /warehouses] Missing cityRef');
       return res.status(400).json({ error: 'cityRef is required' });
     }
+
+    // Проверяем, существует ли город
+    const [cityCheck] = await pool.execute(
+      'SELECT ref, description_ua FROM nova_poshta_cities WHERE ref = ?',
+      [cityRef]
+    );
+
+    if (cityCheck.length === 0) {
+      console.log(`❌ [GET /warehouses] City not found: ${cityRef}`);
+      return res.status(404).json({ error: 'City not found' });
+    }
+
+    console.log(`✅ [GET /warehouses] City found: ${cityCheck[0].description_ua} (${cityRef})`);
 
     let query = `
       SELECT 
@@ -85,7 +101,8 @@ router.get('/warehouses', async (req, res, next) => {
         type_of_warehouse,
         number,
         phone,
-        max_weight_allowed
+        max_weight_allowed,
+        city_ref
       FROM nova_poshta_warehouses
       WHERE city_ref = ?
     `;
@@ -114,10 +131,39 @@ router.get('/warehouses', async (req, res, next) => {
       LIMIT 100
     `;
 
+    console.log(`📊 [GET /warehouses] Query: ${query}`);
+    console.log(`📊 [GET /warehouses] Params:`, params);
+
     const [warehouses] = await pool.execute(query, params);
+
+    console.log(`✅ [GET /warehouses] Found ${warehouses.length} warehouses for city ${cityRef}`);
+
+    // Проверяем первые несколько отделений для отладки
+    if (warehouses.length > 0) {
+      console.log(`📦 [GET /warehouses] Sample warehouse:`, {
+        ref: warehouses[0].ref,
+        description: warehouses[0].description_ua,
+        city_ref: warehouses[0].city_ref,
+        type: warehouses[0].type_of_warehouse
+      });
+    } else {
+      // Проверяем, есть ли вообще отделения в базе для этого города
+      const [totalCheck] = await pool.execute(
+        'SELECT COUNT(*) as total FROM nova_poshta_warehouses WHERE city_ref = ?',
+        [cityRef]
+      );
+      console.log(`⚠️  [GET /warehouses] No warehouses found, but total in DB for this city: ${totalCheck[0].total}`);
+      
+      // Проверяем, есть ли вообще отделения в базе
+      const [globalCheck] = await pool.execute(
+        'SELECT COUNT(*) as total FROM nova_poshta_warehouses'
+      );
+      console.log(`📊 [GET /warehouses] Total warehouses in DB: ${globalCheck[0].total}`);
+    }
 
     res.json(warehouses);
   } catch (error) {
+    console.error('❌ [GET /warehouses] Error:', error);
     next(error);
   }
 });
