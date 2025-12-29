@@ -267,22 +267,35 @@ const Checkout = () => {
                     {/* Нова Пошта */}
                     <div className="border rounded-xl transition-all">
                       <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
-                      <RadioGroupItem value="nova_poshta" id="nova_poshta" />
-                      <div className="flex-1">
-                        <div className="font-medium">Нова Пошта</div>
-                        <div className="text-sm text-muted-foreground">1-2 дні по Україні</div>
-                      </div>
-                      <div className="text-sm font-medium">
-                        {total >= 1500 ? <span className="text-green-600">Безкоштовно</span> : "від 70 грн"}
-                      </div>
-                    </label>
-                      {formData.deliveryMethod === "nova_poshta" && (
+                        <RadioGroupItem value="nova_poshta" id="nova_poshta" />
+                        <div className="flex-1">
+                          <div className="font-medium">Нова Пошта</div>
+                          {formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded === false && formData.city && formData.warehouse ? (
+                            <div className="space-y-1 text-sm text-muted-foreground mt-1">
+                              <div>
+                                <span className="text-muted-foreground">Населений пункт: </span>
+                                <span className="font-medium text-foreground">{formData.city}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Відділення: </span>
+                                <span className="font-medium text-foreground">{formData.warehouse}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">1-2 дні по Україні</div>
+                          )}
+                        </div>
+                        <div className="text-sm font-medium">
+                          {total >= 1500 ? <span className="text-green-600">Безкоштовно</span> : "від 70 грн"}
+                        </div>
+                      </label>
+                      {formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded !== false && (
                         <div className="px-4 pb-4">
                           <NovaPoshtaDelivery
                             cityRef={formData.cityRef}
                             warehouseRef={formData.warehouseRef}
                             deliveryType={formData.novaPoshtaDeliveryType}
-                            isExpanded={formData.novaPoshtaExpanded !== false}
+                            isExpanded={true}
                             onCityChange={(city) => {
                               setFormData(prev => ({
                                 ...prev,
@@ -314,20 +327,6 @@ const Checkout = () => {
                               }));
                             }}
                           />
-                        </div>
-                      )}
-                      {formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded === false && formData.city && formData.warehouse && (
-                        <div className="px-4 pb-4">
-                          <div className="space-y-2 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">Населений пункт: </span>
-                              <span className="font-medium">{formData.city}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Відділення: </span>
-                              <span className="font-medium">{formData.warehouse}</span>
-                            </div>
-                          </div>
                         </div>
                       )}
                     </div>
