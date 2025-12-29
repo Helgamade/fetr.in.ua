@@ -228,15 +228,15 @@ export const NovaPoshtaDelivery = ({
               <div className="p-3 border-b">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Почніть вводити назву населеного пункту від 3-х букв"
-                    value={citySearchQuery}
-                    onChange={(e) => setCitySearchQuery(e.target.value)}
-                    className="pl-10"
-                    autoFocus
-                    onClick={(e) => e.stopPropagation()}
-                  />
+                      <Input
+                        type="text"
+                        placeholder="Почніть вводити назву населеного пункту від 3-х букв"
+                        value={citySearchQuery}
+                        onChange={(e) => setCitySearchQuery(e.target.value)}
+                        className="pl-10 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
                 </div>
               </div>
 
@@ -274,14 +274,14 @@ export const NovaPoshtaDelivery = ({
                           handleCitySelect(city);
                         }}
                         className={cn(
-                          "w-full flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-accent transition-colors text-left",
-                          selectedCity?.ref === city.ref && "bg-accent"
+                          "w-full flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-left",
+                          selectedCity?.ref === city.ref && "text-primary font-medium"
                         )}
                       >
                         {selectedCity?.ref === city.ref && (
                           <Check className="h-4 w-4 text-primary flex-shrink-0" />
                         )}
-                        <span className="flex-1">{city.full_description_ua}</span>
+                        <span className={cn("flex-1", selectedCity?.ref === city.ref && "text-primary")}>{city.full_description_ua}</span>
                       </button>
                     ))}
                   </div>
@@ -339,7 +339,7 @@ export const NovaPoshtaDelivery = ({
                       placeholder="Виберіть відділення"
                       value={warehouseSearchQuery}
                       onChange={(e) => setWarehouseSearchQuery(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
                       autoFocus
                       onClick={(e) => e.stopPropagation()}
                     />
@@ -359,14 +359,14 @@ export const NovaPoshtaDelivery = ({
                               handleWarehouseSelect(warehouse);
                             }}
                             className={cn(
-                              "w-full flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-accent transition-colors text-left",
-                              selectedWarehouse?.ref === warehouse.ref && "bg-accent"
+                              "w-full flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-left",
+                              selectedWarehouse?.ref === warehouse.ref && "text-primary font-medium"
                             )}
                           >
                             {selectedWarehouse?.ref === warehouse.ref && (
                               <Check className="h-4 w-4 text-primary flex-shrink-0" />
                             )}
-                            <span className="flex-1 text-sm">{warehouse.description_ua}</span>
+                            <span className={cn("flex-1 text-sm", selectedWarehouse?.ref === warehouse.ref && "text-primary")}>{warehouse.description_ua}</span>
                           </button>
                         </li>
                       ))}
@@ -390,7 +390,8 @@ export const NovaPoshtaDelivery = ({
             type="button"
             onClick={onContinue}
             disabled={!selectedCity || !selectedWarehouse}
-            className="w-full rounded-full"
+            variant="outline"
+            className="w-full rounded-full border-2"
           >
             Продовжити
           </Button>

@@ -39,13 +39,18 @@ const Checkout = () => {
           email: parsed.email || prev.email,
           paymentMethod: parsed.paymentMethod || prev.paymentMethod,
           deliveryMethod: parsed.deliveryMethod || prev.deliveryMethod,
-          novaPoshtaCity: parsed.novaPoshtaCity || prev.novaPoshtaCity,
-          novaPoshtaCityRef: parsed.novaPoshtaCityRef || prev.novaPoshtaCityRef,
-          novaPoshtaWarehouse: parsed.novaPoshtaWarehouse || prev.novaPoshtaWarehouse,
-          novaPoshtaWarehouseRef: parsed.novaPoshtaWarehouseRef || prev.novaPoshtaWarehouseRef,
+          novaPoshtaPostOfficeCity: parsed.novaPoshtaPostOfficeCity || prev.novaPoshtaPostOfficeCity,
+          novaPoshtaPostOfficeCityRef: parsed.novaPoshtaPostOfficeCityRef || prev.novaPoshtaPostOfficeCityRef,
+          novaPoshtaPostOfficeWarehouse: parsed.novaPoshtaPostOfficeWarehouse || prev.novaPoshtaPostOfficeWarehouse,
+          novaPoshtaPostOfficeWarehouseRef: parsed.novaPoshtaPostOfficeWarehouseRef || prev.novaPoshtaPostOfficeWarehouseRef,
+          novaPoshtaPostOfficeCompleted: parsed.novaPoshtaPostOfficeCompleted || false,
+          novaPoshtaPostomatCity: parsed.novaPoshtaPostomatCity || prev.novaPoshtaPostomatCity,
+          novaPoshtaPostomatCityRef: parsed.novaPoshtaPostomatCityRef || prev.novaPoshtaPostomatCityRef,
+          novaPoshtaPostomatWarehouse: parsed.novaPoshtaPostomatWarehouse || prev.novaPoshtaPostomatWarehouse,
+          novaPoshtaPostomatWarehouseRef: parsed.novaPoshtaPostomatWarehouseRef || prev.novaPoshtaPostomatWarehouseRef,
+          novaPoshtaPostomatCompleted: parsed.novaPoshtaPostomatCompleted || false,
           novaPoshtaDeliveryType: parsed.novaPoshtaDeliveryType || prev.novaPoshtaDeliveryType,
-          novaPoshtaExpanded: parsed.novaPoshtaExpanded !== undefined ? parsed.novaPoshtaExpanded : true,
-          novaPoshtaCompleted: parsed.novaPoshtaCompleted || false,
+          novaPoshtaExpanded: parsed.novaPoshtaExpanded !== undefined ? parsed.novaPoshtaExpanded : false,
           ukrPoshtaCity: parsed.ukrPoshtaCity || prev.ukrPoshtaCity,
           ukrPoshtaPostalCode: parsed.ukrPoshtaPostalCode || prev.ukrPoshtaPostalCode,
           ukrPoshtaAddress: parsed.ukrPoshtaAddress || prev.ukrPoshtaAddress,
@@ -63,14 +68,19 @@ const Checkout = () => {
     email: "",
     paymentMethod: "card",
     deliveryMethod: "",
-    // Данные для Нова Пошта
-    novaPoshtaCity: "",
-    novaPoshtaCityRef: null as string | null,
-    novaPoshtaWarehouse: "",
-    novaPoshtaWarehouseRef: null as string | null,
+    // Данные для Нова Пошта - отдельно для каждого типа доставки
+    novaPoshtaPostOfficeCity: "",
+    novaPoshtaPostOfficeCityRef: null as string | null,
+    novaPoshtaPostOfficeWarehouse: "",
+    novaPoshtaPostOfficeWarehouseRef: null as string | null,
+    novaPoshtaPostOfficeCompleted: false,
+    novaPoshtaPostomatCity: "",
+    novaPoshtaPostomatCityRef: null as string | null,
+    novaPoshtaPostomatWarehouse: "",
+    novaPoshtaPostomatWarehouseRef: null as string | null,
+    novaPoshtaPostomatCompleted: false,
     novaPoshtaDeliveryType: "PostOffice" as "PostOffice" | "Postomat",
-    novaPoshtaExpanded: true as boolean | undefined,
-    novaPoshtaCompleted: false, // Флаг, что данные заполнены и подтверждены кнопкой "Продовжити"
+    novaPoshtaExpanded: false as boolean | undefined, // По умолчанию свернуто
     // Данные для Укрпошта
     ukrPoshtaCity: "",
     ukrPoshtaPostalCode: "",
@@ -87,13 +97,18 @@ const Checkout = () => {
       email: formData.email,
       paymentMethod: formData.paymentMethod,
       deliveryMethod: formData.deliveryMethod,
-      novaPoshtaCity: formData.novaPoshtaCity,
-      novaPoshtaCityRef: formData.novaPoshtaCityRef,
-      novaPoshtaWarehouse: formData.novaPoshtaWarehouse,
-      novaPoshtaWarehouseRef: formData.novaPoshtaWarehouseRef,
+      novaPoshtaPostOfficeCity: formData.novaPoshtaPostOfficeCity,
+      novaPoshtaPostOfficeCityRef: formData.novaPoshtaPostOfficeCityRef,
+      novaPoshtaPostOfficeWarehouse: formData.novaPoshtaPostOfficeWarehouse,
+      novaPoshtaPostOfficeWarehouseRef: formData.novaPoshtaPostOfficeWarehouseRef,
+      novaPoshtaPostOfficeCompleted: formData.novaPoshtaPostOfficeCompleted,
+      novaPoshtaPostomatCity: formData.novaPoshtaPostomatCity,
+      novaPoshtaPostomatCityRef: formData.novaPoshtaPostomatCityRef,
+      novaPoshtaPostomatWarehouse: formData.novaPoshtaPostomatWarehouse,
+      novaPoshtaPostomatWarehouseRef: formData.novaPoshtaPostomatWarehouseRef,
+      novaPoshtaPostomatCompleted: formData.novaPoshtaPostomatCompleted,
       novaPoshtaDeliveryType: formData.novaPoshtaDeliveryType,
       novaPoshtaExpanded: formData.novaPoshtaExpanded,
-      novaPoshtaCompleted: formData.novaPoshtaCompleted,
       ukrPoshtaCity: formData.ukrPoshtaCity,
       ukrPoshtaPostalCode: formData.ukrPoshtaPostalCode,
       ukrPoshtaAddress: formData.ukrPoshtaAddress,
@@ -450,42 +465,70 @@ const Checkout = () => {
                       {formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded !== false && (
                         <div className="pl-4 pr-4 pb-4">
                           <NovaPoshtaDelivery
-                            cityRef={formData.novaPoshtaCityRef}
-                            warehouseRef={formData.novaPoshtaWarehouseRef}
+                            cityRef={formData.novaPoshtaDeliveryType === "PostOffice" 
+                              ? formData.novaPoshtaPostOfficeCityRef 
+                              : formData.novaPoshtaPostomatCityRef}
+                            warehouseRef={formData.novaPoshtaDeliveryType === "PostOffice" 
+                              ? formData.novaPoshtaPostOfficeWarehouseRef 
+                              : formData.novaPoshtaPostomatWarehouseRef}
                             deliveryType={formData.novaPoshtaDeliveryType}
                             isExpanded={true}
                             onCityChange={(city) => {
-                              setFormData(prev => ({
-                                ...prev,
-                                novaPoshtaCity: city ? city.full_description_ua : "",
-                                novaPoshtaCityRef: city ? city.ref : null,
-                                novaPoshtaWarehouse: "",
-                                novaPoshtaWarehouseRef: null,
-                                novaPoshtaCompleted: false
-                              }));
+                              setFormData(prev => {
+                                if (prev.novaPoshtaDeliveryType === "PostOffice") {
+                                  return {
+                                    ...prev,
+                                    novaPoshtaPostOfficeCity: city ? city.full_description_ua : "",
+                                    novaPoshtaPostOfficeCityRef: city ? city.ref : null,
+                                    novaPoshtaPostOfficeWarehouse: "",
+                                    novaPoshtaPostOfficeWarehouseRef: null,
+                                    novaPoshtaPostOfficeCompleted: false
+                                  };
+                                } else {
+                                  return {
+                                    ...prev,
+                                    novaPoshtaPostomatCity: city ? city.full_description_ua : "",
+                                    novaPoshtaPostomatCityRef: city ? city.ref : null,
+                                    novaPoshtaPostomatWarehouse: "",
+                                    novaPoshtaPostomatWarehouseRef: null,
+                                    novaPoshtaPostomatCompleted: false
+                                  };
+                                }
+                              });
                             }}
                             onWarehouseChange={(warehouse) => {
-                              setFormData(prev => ({
-                                ...prev,
-                                novaPoshtaWarehouse: warehouse ? warehouse.description_ua : "",
-                                novaPoshtaWarehouseRef: warehouse ? warehouse.ref : null,
-                                novaPoshtaCompleted: false
-                              }));
+                              setFormData(prev => {
+                                if (prev.novaPoshtaDeliveryType === "PostOffice") {
+                                  return {
+                                    ...prev,
+                                    novaPoshtaPostOfficeWarehouse: warehouse ? warehouse.description_ua : "",
+                                    novaPoshtaPostOfficeWarehouseRef: warehouse ? warehouse.ref : null,
+                                    novaPoshtaPostOfficeCompleted: false
+                                  };
+                                } else {
+                                  return {
+                                    ...prev,
+                                    novaPoshtaPostomatWarehouse: warehouse ? warehouse.description_ua : "",
+                                    novaPoshtaPostomatWarehouseRef: warehouse ? warehouse.ref : null,
+                                    novaPoshtaPostomatCompleted: false
+                                  };
+                                }
+                              });
                             }}
                             onDeliveryTypeChange={(type) => {
                               setFormData(prev => ({
                                 ...prev,
                                 novaPoshtaDeliveryType: type,
-                                novaPoshtaWarehouse: "",
-                                novaPoshtaWarehouseRef: null,
-                                novaPoshtaCompleted: false
+                                // Не сбрасываем данные при переключении типа
                               }));
                             }}
                             onContinue={() => {
                               setFormData(prev => ({
                                 ...prev,
                                 novaPoshtaExpanded: false,
-                                novaPoshtaCompleted: true
+                                ...(prev.novaPoshtaDeliveryType === "PostOffice" 
+                                  ? { novaPoshtaPostOfficeCompleted: true }
+                                  : { novaPoshtaPostomatCompleted: true })
                               }));
                             }}
                           />
@@ -496,58 +539,99 @@ const Checkout = () => {
                     {/* Укрпошта */}
                     <div className="border rounded-xl transition-all">
                       <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
-                      <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
-                      <div className="flex-1">
-                        <div className="font-medium">Укрпошта</div>
-                        <div className="text-sm text-muted-foreground">3-5 днів по Україні</div>
-                      </div>
-                      <div className="text-sm font-medium">від 45 грн</div>
-                    </label>
-                      {formData.deliveryMethod === "ukr_poshta" && (
-                        <div className="px-4 pb-4 space-y-4">
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="city">Місто *</Label>
-                          <div className="relative">
-                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input
-                              id="city"
-                              name="city"
-                              value={formData.city}
-                              onChange={handleInputChange}
-                              placeholder="Введіть місто"
-                              required
-                              className="rounded-xl pl-10"
-                            />
-                          </div>
+                        <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
+                        <div className="flex-1">
+                          <div className="font-medium">Укрпошта</div>
+                          {(() => {
+                            const savedData = getSavedDeliveryData("ukr_poshta");
+                            const showSavedWhenNotSelected = formData.deliveryMethod !== "ukr_poshta" && savedData?.completed && savedData.city;
+                            
+                            if (showSavedWhenNotSelected) {
+                              return (
+                                <div className="space-y-1 text-sm text-muted-foreground mt-1">
+                                  <div>
+                                    <span className="text-muted-foreground">Місто: </span>
+                                    <span className="font-medium text-foreground">{savedData.city}</span>
+                                  </div>
+                                  {savedData.address && (
+                                    <div>
+                                      <span className="text-muted-foreground">Адреса: </span>
+                                      <span className="font-medium text-foreground">{savedData.address}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+                            return <div className="text-sm text-muted-foreground">3-5 днів по Україні</div>;
+                          })()}
                         </div>
+                        <div className="text-sm font-medium">від 45 грн</div>
+                      </label>
+                      {formData.deliveryMethod === "ukr_poshta" && (
+                        <div className="pl-4 pr-4 pb-4 space-y-4">
+                          <div className="grid sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label htmlFor="postalCode">Індекс *</Label>
+                              <Label htmlFor="ukrPoshtaCity">Місто *</Label>
+                              <div className="relative">
+                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                  id="ukrPoshtaCity"
+                                  name="ukrPoshtaCity"
+                                  value={formData.ukrPoshtaCity}
+                                  onChange={(e) => {
+                                    setFormData(prev => ({ ...prev, ukrPoshtaCity: e.target.value, ukrPoshtaCompleted: false }));
+                                  }}
+                                  placeholder="Введіть місто"
+                                  required
+                                  className="rounded-xl pl-10"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="ukrPoshtaPostalCode">Індекс *</Label>
                               <Input
-                                id="postalCode"
-                                name="postalCode"
-                                value={formData.postalCode}
-                                onChange={handleInputChange}
+                                id="ukrPoshtaPostalCode"
+                                name="ukrPoshtaPostalCode"
+                                value={formData.ukrPoshtaPostalCode}
+                                onChange={(e) => {
+                                  setFormData(prev => ({ ...prev, ukrPoshtaPostalCode: e.target.value, ukrPoshtaCompleted: false }));
+                                }}
                                 placeholder="01001"
                                 required
                                 className="rounded-xl"
                               />
                             </div>
                             <div className="space-y-2 sm:col-span-2">
-                              <Label htmlFor="address">Адреса *</Label>
+                              <Label htmlFor="ukrPoshtaAddress">Адреса *</Label>
                               <Input
-                                id="address"
-                                name="address"
-                                value={formData.address}
-                                onChange={handleInputChange}
+                                id="ukrPoshtaAddress"
+                                name="ukrPoshtaAddress"
+                                value={formData.ukrPoshtaAddress}
+                                onChange={(e) => {
+                                  setFormData(prev => ({ ...prev, ukrPoshtaAddress: e.target.value, ukrPoshtaCompleted: false }));
+                                }}
                                 placeholder="Вулиця, будинок, квартира"
                                 required
                                 className="rounded-xl"
                               />
                             </div>
-                      </div>
-                    </div>
-                  )}
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                ukrPoshtaCompleted: true
+                              }));
+                            }}
+                            disabled={!formData.ukrPoshtaCity || !formData.ukrPoshtaPostalCode || !formData.ukrPoshtaAddress}
+                            variant="outline"
+                            className="w-full rounded-full border-2"
+                          >
+                            Продовжити
+                          </Button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Самовивіз */}
@@ -560,22 +644,33 @@ const Checkout = () => {
                         </div>
                         <div className="text-sm font-medium text-green-600">Безкоштовно</div>
                       </label>
-                  {formData.deliveryMethod === "pickup" && (
-                        <div className="px-4 pb-4">
-                      <div className="font-medium mb-1">Адреса самовивозу:</div>
-                      <div className="text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
-                      {storeSettings.store_working_hours_weekdays && (
-                        <div className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
-                          {storeSettings.store_working_hours_weekdays}
+                      {formData.deliveryMethod === "pickup" && (
+                        <div className="pl-4 pr-4 pb-4">
+                          <div className="font-medium mb-1">Адреса самовивозу:</div>
+                          <div className="text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
+                          {storeSettings.store_working_hours_weekdays && (
+                            <div className="text-sm text-muted-foreground mt-2 whitespace-pre-line">
+                              {storeSettings.store_working_hours_weekdays}
+                            </div>
+                          )}
+                          {storeSettings.store_working_hours_weekend && (
+                            <div className="text-sm text-muted-foreground/60 mt-1 whitespace-pre-line">
+                              {storeSettings.store_working_hours_weekend}
+                            </div>
+                          )}
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              // Для самовывоза ничего не сохраняем, просто свертываем
+                              // Можно добавить флаг, если понадобится
+                            }}
+                            variant="outline"
+                            className="w-full rounded-full border-2 mt-4"
+                          >
+                            Продовжити
+                          </Button>
                         </div>
                       )}
-                      {storeSettings.store_working_hours_weekend && (
-                        <div className="text-sm text-muted-foreground/60 mt-1 whitespace-pre-line">
-                          {storeSettings.store_working_hours_weekend}
-                        </div>
-                      )}
-                    </div>
-                  )}
                     </div>
                   </RadioGroup>
                 </div>
