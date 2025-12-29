@@ -45,6 +45,12 @@ if [ -f "dist/robots.txt" ]; then
   cp -f dist/robots.txt robots.txt 2>/dev/null || true
 fi
 
+# КРИТИЧНО: Копируем .htaccess для правильных MIME типов
+if [ -f "public/.htaccess" ]; then
+  cp -f public/.htaccess .htaccess 2>/dev/null || true
+  echo "Copied .htaccess for MIME types"
+fi
+
 # 3. Установка прав доступа
 echo "Setting permissions..."
 chmod 755 assets

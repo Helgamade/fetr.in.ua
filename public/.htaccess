@@ -25,6 +25,13 @@
   AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
 </IfModule>
 
+# MIME types for JavaScript modules (КРИТИЧНО для module scripts!)
+<IfModule mod_mime.c>
+  AddType application/javascript .js
+  AddType application/javascript .mjs
+  AddType text/javascript .js
+</IfModule>
+
 # Cache static assets
 <IfModule mod_expires.c>
   ExpiresActive On
@@ -35,6 +42,7 @@
   ExpiresByType image/svg+xml "access plus 1 year"
   ExpiresByType text/css "access plus 1 month"
   ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType text/javascript "access plus 1 month"
   ExpiresByType application/pdf "access plus 1 month"
 </IfModule>
 
