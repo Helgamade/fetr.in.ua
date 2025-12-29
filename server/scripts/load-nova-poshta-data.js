@@ -42,8 +42,13 @@ async function novaPoshtaRequest(modelName, calledMethod, methodProperties = {},
         apiKey: API_KEY,
         modelName,
         calledMethod,
-        methodProperties,
+        methodProperties: methodProperties || {},
       };
+
+      // Для отладки - логируем только для getCities (большой запрос)
+      if (calledMethod === 'getCities') {
+        console.log(`📡 Запрос к API: ${calledMethod}, размер body: ${JSON.stringify(requestBody).length} байт`);
+      }
 
       const response = await fetch(NOVA_POSHTA_API_URL, {
         method: 'POST',
@@ -53,8 +58,6 @@ async function novaPoshtaRequest(modelName, calledMethod, methodProperties = {},
         },
         body: JSON.stringify(requestBody),
         signal: controller.signal,
-        // Увеличиваем таймауты для больших ответов
-        keepalive: true,
       });
 
       clearTimeout(timeoutId);
