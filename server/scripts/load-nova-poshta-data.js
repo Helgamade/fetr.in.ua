@@ -254,11 +254,12 @@ async function loadWarehouses() {
     let processed = 0;
     let failedCities = 0;
     let rateLimitCount = 0;
-    const MAX_RETRIES = 2; // Уменьшили до 2 попыток
-    const BASE_DELAY = 200; // Уменьшили базовую задержку до 200ms
-    const RATE_LIMIT_DELAY = 3000; // Уменьшили задержку при rate limit до 3 секунд
+    const MAX_RETRIES = 2;
+    const BASE_DELAY = 500; // Увеличиваем базовую задержку до 500ms для избежания rate limit
+    const RATE_LIMIT_DELAY = 10000; // Увеличиваем задержку при rate limit до 10 секунд
     const BATCH_SIZE = 20; // Batch insert по 20 записей (15 полей * 20 = 300 placeholders, безопасно)
     const warehouseBatch = []; // Накопление записей для batch insert
+    let consecutiveRateLimits = 0; // Счетчик последовательных rate limit
     
     // Функция для вставки батча
     const insertBatch = async (batch) => {
@@ -328,7 +329,8 @@ async function loadWarehouses() {
             }
           }
 
-          success = true;
+            success = true;
+            consecutiveRateLimits = 0; // Сбрасываем счетчик при успехе
 
         } catch (error) {
           // Проверяем, является ли ошибка rate limit
@@ -342,9 +344,12 @@ async function loadWarehouses() {
           if (isRateLimit && retries < MAX_RETRIES) {
             retries++;
             rateLimitCount++;
-            const delay = RATE_LIMIT_DELAY + (rateLimitCount * 1000); // Увеличиваем задержку при частых rate limit
+            consecutiveRateLimits++;
+            
+            // Адаптивная задержка: чем больше последовательных rate limit, тем дольше ждем
+            const delay = RATE_LIMIT_DELAY + (consecutiveRateLimits * 2000);
             if (retries === 1) {
-              console.log(`⏸️  Rate limit для города ${city.description_ua}. Ожидание ${delay}ms...`);
+              console.log(`\n⏸️  Rate limit для города ${city.description_ua}. Ожидание ${(delay/1000).toFixed(1)}с...`);
             }
             await new Promise(resolve => setTimeout(resolve, delay));
           } else {
@@ -381,7 +386,13 @@ async function loadWarehouses() {
       processed++;
       
       // Адаптивная задержка: увеличиваем при частых rate limit
-      const delay = rateLimitCount > 20 ? BASE_DELAY * 2 : BASE_DELAY;
+      // Если было много rate limit, увеличиваем задержку между запросами
+      let delay = BASE_DELAY;
+      if (consecutiveRateLimits > 5) {
+        delay = BASE_DELAY * 3; // Увеличиваем в 3 раза при частых rate limit
+      } else if (rateLimitCount > 10) {
+        delay = BASE_DELAY * 2; // Увеличиваем в 2 раза при общем количестве rate limit
+      }
       
       // Показываем прогресс каждые 10 городов или на каждом 100-м
       if (processed % 10 === 0 || processed % 100 === 0) {
