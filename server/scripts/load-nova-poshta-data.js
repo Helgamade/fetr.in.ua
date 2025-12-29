@@ -254,11 +254,11 @@ async function loadWarehouses() {
     let processed = 0;
     let failedCities = 0;
     let rateLimitCount = 0;
-    const MAX_RETRIES = 5; // Больше попыток при rate limit
-    const BASE_DELAY = 0; // Без задержек между батчами - максимальная скорость
-    const RATE_LIMIT_DELAY = 500; // Минимальная задержка при rate limit (0.5 секунды)
-    const BATCH_SIZE = 50; // Увеличиваем batch insert для большей эффективности
-    const CONCURRENT_CITIES = 100; // Обрабатываем 100 городов одновременно для максимальной скорости
+    const MAX_RETRIES = 3; // Оптимальное количество попыток
+    const BASE_DELAY = 100; // Небольшая задержка между батчами для стабильности
+    const RATE_LIMIT_DELAY = 1000; // Задержка при rate limit (1 секунда)
+    const BATCH_SIZE = 50; // Batch insert для эффективности
+    const CONCURRENT_CITIES = 20; // Уменьшаем до 20 параллельных запросов для стабильности
     const warehouseBatch = []; // Накопление записей для batch insert
     
     // Функция для вставки батча
@@ -332,23 +332,38 @@ async function loadWarehouses() {
           return { success: true, warehouses: cityWarehouses };
 
         } catch (error) {
+          const errorMessage = error.message || String(error);
+          
           // Проверяем, является ли ошибка rate limit
-          const isRateLimit = error.message && (
-            error.message.includes('To many requests') ||
-            error.message.includes('Too many requests') ||
-            error.message.includes('rate limit') ||
-            error.message.includes('429')
+          const isRateLimit = errorMessage && (
+            errorMessage.includes('To many requests') ||
+            errorMessage.includes('Too many requests') ||
+            errorMessage.includes('rate limit') ||
+            errorMessage.includes('429')
+          );
+          
+          // Проверяем сетевые ошибки
+          const isNetworkError = errorMessage && (
+            errorMessage.includes('ECONNRESET') ||
+            errorMessage.includes('ETIMEDOUT') ||
+            errorMessage.includes('ENOTFOUND') ||
+            errorMessage.includes('network') ||
+            errorMessage.includes('timeout') ||
+            errorMessage.includes('aborted') ||
+            error.name === 'AbortError'
           );
 
-          if (isRateLimit && retries < MAX_RETRIES) {
+          if ((isRateLimit || isNetworkError) && retries < MAX_RETRIES) {
             retries++;
-            rateLimitCount++;
-            // Минимальная задержка с экспоненциальным backoff
-            const delay = RATE_LIMIT_DELAY * Math.pow(1.5, retries - 1);
+            if (isRateLimit) {
+              rateLimitCount++;
+            }
+            // Экспоненциальный backoff: 1s, 2s, 4s
+            const delay = RATE_LIMIT_DELAY * Math.pow(2, retries - 1);
             await new Promise(resolve => setTimeout(resolve, delay));
           } else {
-            // Если не rate limit или превышены попытки - возвращаем ошибку
-            return { success: false, warehouses: [], error: error.message };
+            // Если не rate limit/network error или превышены попытки - возвращаем ошибку
+            return { success: false, warehouses: [], error: errorMessage };
           }
         }
       }
@@ -397,7 +412,10 @@ async function loadWarehouses() {
       showProgress(processed, cities.length, '📥 Загрузка отделений: ');
       process.stdout.write(` | ${warehousesCount} отд. | ${rate.toFixed(1)} гор/с | ~${Math.round(eta)}с осталось | ошибок: ${failedCities}\n`);
 
-      // Без задержек между батчами - максимальная скорость
+      // Задержка между батчами для стабильности и избежания rate limit
+      if (i + CONCURRENT_CITIES < cities.length) {
+        await new Promise(resolve => setTimeout(resolve, BASE_DELAY));
+      }
     }
 
     // Вставляем оставшиеся данные из batch
