@@ -25,6 +25,26 @@ const Checkout = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
+
+  // Load data from localStorage on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('checkoutFormData');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        setFormData(prev => ({
+          ...prev,
+          ...parsed,
+          // Восстанавливаем только строковые значения, refs оставляем null (они будут восстановлены через cityRef/warehouseRef)
+          cityRef: parsed.cityRef || null,
+          warehouseRef: parsed.warehouseRef || null,
+          novaPoshtaExpanded: parsed.novaPoshtaExpanded !== undefined ? parsed.novaPoshtaExpanded : true,
+        }));
+      } catch (error) {
+        console.error('Error loading checkout form data from localStorage:', error);
+      }
+    }
+  }, []);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -42,6 +62,27 @@ const Checkout = () => {
     postalCode: "",
     comment: ""
   });
+
+  // Save to localStorage whenever formData changes
+  useEffect(() => {
+    const dataToSave = {
+      name: formData.name,
+      phone: formData.phone,
+      email: formData.email,
+      paymentMethod: formData.paymentMethod,
+      deliveryMethod: formData.deliveryMethod,
+      city: formData.city,
+      cityRef: formData.cityRef,
+      warehouse: formData.warehouse,
+      warehouseRef: formData.warehouseRef,
+      novaPoshtaDeliveryType: formData.novaPoshtaDeliveryType,
+      novaPoshtaExpanded: formData.novaPoshtaExpanded,
+      address: formData.address,
+      postalCode: formData.postalCode,
+      // Не сохраняем comment, так как он может быть специфичным для каждого заказа
+    };
+    localStorage.setItem('checkoutFormData', JSON.stringify(dataToSave));
+  }, [formData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -120,6 +161,9 @@ const Checkout = () => {
 
       // Submit order to API
       const order = await ordersAPI.create(orderData);
+      
+      // Clear localStorage after successful order
+      localStorage.removeItem('checkoutFormData');
       
       clearCart();
       navigate(`/thank-you?order=${order.id}`);
@@ -265,7 +309,16 @@ const Checkout = () => {
                     className="space-y-3"
                   >
                     {/* Нова Пошта */}
-                    <div className="border rounded-xl transition-all">
+                    <div 
+                      className="border rounded-xl transition-all"
+                      onClick={(e) => {
+                        // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
+                        if (formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded === false) {
+                          e.stopPropagation();
+                          setFormData(prev => ({ ...prev, novaPoshtaExpanded: true }));
+                        }
+                      }}
+                    >
                       <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
                         <RadioGroupItem value="nova_poshta" id="nova_poshta" />
                         <div className="flex-1">

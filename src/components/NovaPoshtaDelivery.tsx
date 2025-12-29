@@ -44,27 +44,31 @@ export const NovaPoshtaDelivery = ({
     novaPoshtaAPI.getPopularCities().then(setPopularCities).catch(console.error);
   }, []);
 
-  // Загрузка выбранного города при монтировании
+  // Загрузка выбранного города при монтировании или изменении cityRef
   useEffect(() => {
     if (cityRef) {
       novaPoshtaAPI.getCity(cityRef)
         .then(city => {
           setSelectedCity(city);
-          onCityChange(city);
+          // Не вызываем onCityChange здесь, чтобы не перезаписывать данные из props
         })
         .catch(console.error);
+    } else {
+      setSelectedCity(null);
     }
-  }, []);
+  }, [cityRef]);
 
-  // Загрузка выбранного отделения при монтировании
+  // Загрузка выбранного отделения при монтировании или изменении warehouseRef
   useEffect(() => {
     if (warehouseRef && selectedCity) {
       novaPoshtaAPI.getWarehouse(warehouseRef)
         .then(warehouse => {
           setSelectedWarehouse(warehouse);
-          onWarehouseChange(warehouse);
+          // Не вызываем onWarehouseChange здесь, чтобы не перезаписывать данные из props
         })
         .catch(console.error);
+    } else {
+      setSelectedWarehouse(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [warehouseRef, selectedCity]);
