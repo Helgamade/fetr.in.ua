@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, Package, CreditCard, Truck, MapPin, Phone, Mail, User } from "lucide-react";
+import { ArrowLeft, Package, CreditCard, Truck, MapPin, Phone, Mail, User, CheckCircle } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "@/hooks/use-toast";
 import { usePublicSettings } from "@/hooks/usePublicSettings";
@@ -35,6 +35,8 @@ const Checkout = () => {
         setFormData(prev => ({
           ...prev,
           name: parsed.name || prev.name,
+          firstName: parsed.firstName || prev.firstName,
+          lastName: parsed.lastName || prev.lastName,
           phone: parsed.phone || prev.phone,
           email: parsed.email || prev.email,
           paymentMethod: parsed.paymentMethod || prev.paymentMethod,
@@ -64,7 +66,9 @@ const Checkout = () => {
   }, []);
   
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
+    name: "", // Объединенное имя для отправки на сервер
     phone: "",
     email: "",
     paymentMethod: "online",
@@ -92,10 +96,46 @@ const Checkout = () => {
     comment: ""
   });
 
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
+
+  const validatePhone = (phone: string): boolean => {
+    // Убираем все символы кроме цифр
+    const digitsOnly = phone.replace(/\D/g, '');
+    // Проверяем что номер начинается с 380 и имеет правильную длину (12 цифр для +380XXXXXXXXX)
+    if (digitsOnly.length === 0) {
+      setPhoneError("Це обов'язкове поле");
+      return false;
+    }
+    if (digitsOnly.length < 12 || !digitsOnly.startsWith('380')) {
+      setPhoneError("Це обов'язкове поле");
+      return false;
+    }
+    setPhoneError("");
+    return true;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, phone: value }));
+    if (phoneTouched) {
+      validatePhone(value);
+    }
+  };
+
+  const handlePhoneBlur = () => {
+    setPhoneTouched(true);
+    validatePhone(formData.phone);
+  };
+
+  const isPhoneValid = formData.phone.replace(/\D/g, '').length === 12 && formData.phone.replace(/\D/g, '').startsWith('380');
+
   // Save to localStorage whenever formData changes
   useEffect(() => {
     const dataToSave = {
       name: formData.name,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
       phone: formData.phone,
       email: formData.email,
       paymentMethod: formData.paymentMethod,
@@ -190,7 +230,7 @@ const Checkout = () => {
     e.preventDefault();
     
     // Валидация
-    if (!formData.name || !formData.phone) {
+    if (!formData.firstName || !formData.lastName || !formData.phone) {
       toast({
         title: "Помилка",
         description: "Будь ласка, заповніть контактні дані",
@@ -198,6 +238,9 @@ const Checkout = () => {
       });
       return;
     }
+    
+    // Объединяем имя и фамилию для отправки
+    const fullName = `${formData.firstName} ${formData.lastName}`.trim();
 
     if (formData.deliveryMethod !== "pickup") {
       const deliveryData = getCurrentDeliveryData();
@@ -228,8 +271,9 @@ const Checkout = () => {
       // Calculate order totals
       const subtotal = getSubtotal();
       const discount = getDiscount();
-      const deliveryCost = getDeliveryCost();
-      const orderTotal = getTotal();
+      // Доставка не включается в стоимость заказа, отправляем 0
+      const deliveryCost = 0;
+      const orderTotal = subtotal - discount; // Стоимость заказа БЕЗ доставки
       
       // Add COD commission if needed
       const finalTotal = orderTotal + (formData.paymentMethod === "cod" ? 20 : 0);
@@ -241,7 +285,7 @@ const Checkout = () => {
       const orderData = {
         id: orderId,
         customer: {
-          name: formData.name,
+          name: fullName,
           phone: formData.phone,
           email: formData.email && formData.email.trim() ? formData.email.trim() : null,
         },
@@ -368,9 +412,34 @@ const Checkout = () => {
     }
   };
 
-  const total = getTotal();
-  const deliveryPrice = total >= 1500 ? 0 : 70;
-  const finalTotal = total + deliveryPrice;
+  // Стоимость заказа БЕЗ доставки
+  const orderTotal = getSubtotal() - getDiscount();
+  const FREE_DELIVERY_THRESHOLD = 1500;
+  
+  // Цены доставки для справки (не включаются в стоимость заказа)
+  const getDeliveryPriceInfo = () => {
+    if (formData.deliveryMethod === "nova_poshta") {
+      return orderTotal >= FREE_DELIVERY_THRESHOLD 
+        ? { price: 0, text: "Безкоштовно", showFree: false }
+        : { price: 60, text: "від 60 ₴", showFree: true };
+    } else if (formData.deliveryMethod === "ukr_poshta") {
+      return orderTotal >= FREE_DELIVERY_THRESHOLD
+        ? { price: 0, text: "Безкоштовно", showFree: false }
+        : { price: 45, text: "від 45 ₴", showFree: true };
+    } else if (formData.deliveryMethod === "pickup") {
+      return { price: 0, text: "Безкоштовно", showFree: false };
+    }
+    return null;
+  };
+
+  const deliveryInfo = getDeliveryPriceInfo();
+  const deliveryLabel = formData.deliveryMethod === "nova_poshta" 
+    ? "Доставка Нова Пошта:" 
+    : formData.deliveryMethod === "ukr_poshta"
+    ? "Доставка Укрпошта:"
+    : formData.deliveryMethod === "pickup"
+    ? "Самовивіз:"
+    : "Доставка:";
 
   // Get full product data for cart items
   const cartItemsWithProducts = items.map(item => {
@@ -422,55 +491,59 @@ const Checkout = () => {
             <div className="lg:col-span-2 space-y-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Contact Info */}
-                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
+                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4 border-2 border-primary/20">
                   <h2 className="text-lg font-bold flex items-center gap-2">
-                    <User className="w-5 h-5 text-primary" />
-                    Контактні дані
+                    <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">1</span>
+                    Контактні дані *
                   </h2>
                   
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Ім'я та прізвище *</Label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        placeholder="Олена Петренко"
-                        required
-                        className="rounded-xl"
-                      />
-                    </div>
+                  <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="phone">Телефон *</Label>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
                           id="phone"
                           name="phone"
                           type="tel"
                           value={formData.phone}
-                          onChange={handleInputChange}
-                          placeholder="+380 XX XXX XX XX"
+                          onChange={handlePhoneChange}
+                          onBlur={handlePhoneBlur}
+                          placeholder="+380 () _ _ _ _ _ _ _"
                           required
-                          className="rounded-xl pl-10"
+                          className={`rounded-xl pr-10 ${phoneTouched && phoneError ? 'border-red-500' : ''} ${isPhoneValid ? 'border-green-500' : ''}`}
                         />
+                        {isPhoneValid && (
+                          <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                        )}
                       </div>
+                      {phoneTouched && phoneError && (
+                        <p className="text-sm text-red-500">{phoneError}</p>
+                      )}
                     </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Прізвище *</Label>
                       <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
+                        id="lastName"
+                        name="lastName"
+                        value={formData.lastName}
                         onChange={handleInputChange}
-                        placeholder="email@example.com"
-                        className="rounded-xl pl-10"
+                        placeholder="Введіть прізвище кирилицею"
+                        required
+                        className="rounded-xl"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">Ім'я *</Label>
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        placeholder="Введіть Ім'я кирилицею"
+                        required
+                        className="rounded-xl"
                       />
                     </div>
                   </div>
@@ -530,7 +603,7 @@ const Checkout = () => {
                           })()}
                         </div>
                         <div className="text-sm font-medium">
-                          {total >= 1500 ? <span className="text-green-600">Безкоштовно</span> : "від 70 грн"}
+                          {orderTotal >= FREE_DELIVERY_THRESHOLD ? <span className="text-green-600">Безкоштовно</span> : "від 60 ₴"}
                         </div>
                       </label>
                       {formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded !== false && (
@@ -791,7 +864,7 @@ const Checkout = () => {
                     className="w-full rounded-full text-lg"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Обробка..." : `Підтвердити замовлення • ${finalTotal} грн`}
+                    {isSubmitting ? "Обробка..." : `Підтвердити замовлення • ${orderTotal} ₴`}
                   </Button>
                 </div>
               </form>
@@ -836,25 +909,28 @@ const Checkout = () => {
 
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Товари:</span>
-                    <span>{total} грн</span>
+                    <span className="text-muted-foreground">Вартість замовлення:</span>
+                    <span>{orderTotal} ₴</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Доставка:</span>
-                    <span className={deliveryPrice === 0 ? "text-green-600" : ""}>
-                      {deliveryPrice === 0 ? "Безкоштовно" : `${deliveryPrice} грн`}
-                    </span>
-                  </div>
-                  {formData.paymentMethod === "cod" && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Комісія НП:</span>
-                      <span>+20 грн</span>
-                    </div>
+                  {formData.deliveryMethod && deliveryInfo && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{deliveryLabel}</span>
+                        <span className={deliveryInfo.price === 0 ? "text-green-600" : ""}>
+                          {deliveryInfo.text}
+                        </span>
+                      </div>
+                      {deliveryInfo.showFree && (
+                        <div className="text-sm text-green-600">
+                          Безкоштовна доставка від 1500 ₴
+                        </div>
+                      )}
+                    </>
                   )}
                   <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                    <span>Разом:</span>
+                    <span>До оплати без доставки:</span>
                     <span className="text-primary">
-                      {finalTotal + (formData.paymentMethod === "cod" ? 20 : 0)} грн
+                      {orderTotal} ₴
                     </span>
                   </div>
                 </div>
