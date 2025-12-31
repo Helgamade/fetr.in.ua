@@ -18,8 +18,17 @@ router.post('/create-payment', async (req, res, next) => {
   try {
     const { orderId } = req.body;
 
+    console.log('[WayForPay] Creating payment for order:', orderId);
+
     if (!orderId) {
+      console.error('[WayForPay] Order ID is required');
       return res.status(400).json({ error: 'Order ID is required' });
+    }
+
+    // Проверяем конфигурацию
+    if (!WFP_CONFIG.merchantAccount || !WFP_CONFIG.merchantSecretKey) {
+      console.error('[WayForPay] Missing merchant credentials');
+      return res.status(500).json({ error: 'WayForPay configuration is missing' });
     }
 
     // Получаем заказ из БД
@@ -29,6 +38,7 @@ router.post('/create-payment', async (req, res, next) => {
     );
 
     if (orders.length === 0) {
+      console.error('[WayForPay] Order not found:', orderId);
       return res.status(404).json({ error: 'Order not found' });
     }
 
@@ -48,6 +58,11 @@ router.post('/create-payment', async (req, res, next) => {
       WHERE oi.order_id = ?
     `, [orderIdInt]);
 
+    if (items.length === 0) {
+      console.error('[WayForPay] No items found for order:', orderId);
+      return res.status(400).json({ error: 'Order has no items' });
+    }
+
     // Формируем данные для WayForPay
     const orderData = {
       id: order.order_number,
@@ -60,13 +75,21 @@ router.post('/create-payment', async (req, res, next) => {
       })),
     };
 
+    console.log('[WayForPay] Order data:', JSON.stringify(orderData, null, 2));
+
     const paymentData = buildWayForPayData(orderData, WFP_CONFIG);
+
+    console.log('[WayForPay] Payment data created (without signature):', JSON.stringify({
+      ...paymentData,
+      merchantSignature: '***HIDDEN***'
+    }, null, 2));
 
     res.json({
       paymentUrl: 'https://secure.wayforpay.com/pay',
       paymentData,
     });
   } catch (error) {
+    console.error('[WayForPay] Error creating payment:', error);
     next(error);
   }
 });
@@ -75,6 +98,11 @@ router.post('/create-payment', async (req, res, next) => {
 router.post('/callback', async (req, res, next) => {
   try {
     const callbackData = req.body;
+    
+    console.log('[WayForPay] Callback received:', JSON.stringify({
+      ...callbackData,
+      merchantSignature: callbackData.merchantSignature ? '***PRESENT***' : '***MISSING***'
+    }, null, 2));
 
     // Валидируем подпись
     const isValid = validateWayForPaySignature(
@@ -84,7 +112,7 @@ router.post('/callback', async (req, res, next) => {
     );
 
     if (!isValid) {
-      console.error('Invalid WayForPay signature:', callbackData);
+      console.error('[WayForPay] Invalid signature for callback:', callbackData.orderReference);
       return res.status(400).json({ error: 'Invalid signature' });
     }
 
@@ -93,30 +121,41 @@ router.post('/callback', async (req, res, next) => {
     const reasonCode = callbackData.reasonCode;
     const reason = callbackData.reason || '';
 
+    console.log('[WayForPay] Processing callback for order:', orderReference, 'Status:', transactionStatus);
+
     // Обновляем статус заказа
     let orderStatus = 'created';
     if (transactionStatus === 'Approved') {
       orderStatus = 'paid';
+      console.log('[WayForPay] Order approved:', orderReference);
     } else if (transactionStatus === 'Declined' || transactionStatus === 'Expired') {
       orderStatus = 'awaiting_payment';
+      console.log('[WayForPay] Order declined/expired:', orderReference, 'Reason:', reason);
+    } else {
+      console.log('[WayForPay] Unknown transaction status:', transactionStatus, 'for order:', orderReference);
     }
 
     // Обновляем заказ в БД
-    await pool.execute(
+    const [updateResult] = await pool.execute(
       `UPDATE orders 
        SET status = ?, updated_at = CURRENT_TIMESTAMP 
        WHERE order_number = ?`,
       [orderStatus, orderReference]
     );
 
+    console.log('[WayForPay] Order status updated:', orderReference, 'to', orderStatus, 'Rows affected:', updateResult.affectedRows);
+
     // WayForPay ожидает ответ в формате JSON
-    res.json({
+    const response = {
       orderReference,
       status: 'accept',
       time: Math.floor(Date.now() / 1000),
-    });
+    };
+    
+    console.log('[WayForPay] Sending callback response:', response);
+    res.json(response);
   } catch (error) {
-    console.error('WayForPay callback error:', error);
+    console.error('[WayForPay] Callback error:', error);
     next(error);
   }
 });

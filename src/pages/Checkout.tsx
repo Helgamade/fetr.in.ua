@@ -301,25 +301,45 @@ const Checkout = () => {
       
       // Если онлайн оплата - редиректим на WayForPay
       if (formData.paymentMethod === "online") {
-        const { wayforpayAPI } = await import("@/lib/api");
-        const paymentResponse = await wayforpayAPI.createPayment(order.id);
-        
-        // Создаем форму и отправляем на WayForPay
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = paymentResponse.paymentUrl;
-        
-        Object.entries(paymentResponse.paymentData).forEach(([key, value]) => {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = key;
-          input.value = String(value);
-          form.appendChild(input);
-        });
-        
-        document.body.appendChild(form);
-        form.submit();
-        return; // Не очищаем корзину и не редиректим, так как уходим на WayForPay
+        try {
+          const { wayforpayAPI } = await import("@/lib/api");
+          console.log('[Checkout] Creating WayForPay payment for order:', order.id);
+          
+          const paymentResponse = await wayforpayAPI.createPayment(order.id);
+          
+          console.log('[Checkout] Payment response received:', paymentResponse);
+          
+          if (!paymentResponse.paymentUrl || !paymentResponse.paymentData) {
+            throw new Error('Invalid payment response from server');
+          }
+          
+          // Создаем форму и отправляем на WayForPay
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = paymentResponse.paymentUrl;
+          
+          Object.entries(paymentResponse.paymentData).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = String(value);
+            form.appendChild(input);
+          });
+          
+          console.log('[Checkout] Submitting form to WayForPay');
+          document.body.appendChild(form);
+          form.submit();
+          return; // Не очищаем корзину и не редиректим, так как уходим на WayForPay
+        } catch (paymentError) {
+          console.error('[Checkout] Error creating payment:', paymentError);
+          toast({
+            title: "Помилка оплати",
+            description: paymentError instanceof Error ? paymentError.message : "Не вдалося створити платіж. Спробуйте пізніше.",
+            variant: "destructive"
+          });
+          // Не очищаем корзину при ошибке оплаты
+          return;
+        }
       }
       
       // Для наложенного платежа - обычный флоу

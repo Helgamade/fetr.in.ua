@@ -60,16 +60,19 @@ export function buildWayForPayData(order, config) {
   // Базовая структура данных
   const orderDate = Math.floor(Date.now() / 1000);
   
+  // WayForPay ожидает сумму в копейках (умноженную на 100)
+  const amountInKopecks = Math.round(order.total * 100);
+  
   const params = {
     merchantAccount,
     merchantDomainName,
     orderReference: order.id,
     orderDate,
-    amount: order.total,
+    amount: amountInKopecks,
     currency: 'UAH',
     productName: products.map(p => p.name).join('; '),
     productCount: products.length,
-    productPrice: order.total,
+    productPrice: amountInKopecks,
     serviceUrl, // URL для callback от WayForPay
     returnUrl, // URL для возврата пользователя после оплаты
     language: 'UA',
