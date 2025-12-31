@@ -8,15 +8,27 @@ import crypto from 'crypto';
  */
 export function generateWayForPaySignature(params, secretKey) {
   // Сортируем ключи по алфавиту и формируем строку для подписи
+  // Все значения должны быть строками
   const keys = Object.keys(params).sort();
   const signatureString = keys
-    .map(key => `${key}=${params[key]}`)
+    .map(key => {
+      const value = params[key];
+      // Преобразуем все значения в строки
+      return `${key}=${String(value)}`;
+    })
     .join(';');
   
-  return crypto
+  console.log('[WayForPay] Signature string:', signatureString);
+  
+  // Важно: используем строку, а не Buffer для secretKey
+  const signature = crypto
     .createHmac('md5', secretKey)
-    .update(signatureString)
+    .update(signatureString, 'utf8')
     .digest('hex');
+  
+  console.log('[WayForPay] Generated signature:', signature);
+  
+  return signature;
 }
 
 /**
@@ -60,25 +72,26 @@ export function buildWayForPayData(order, config) {
   // Базовая структура данных
   const orderDate = Math.floor(Date.now() / 1000);
   
-  // WayForPay для UAH ожидает сумму в гривнах (не в копейках!)
-  const amount = parseFloat(order.total.toFixed(2));
+  // WayForPay для UAH ожидает сумму в гривнах с двумя знаками после запятой (например, "915.00")
+  // Важно: используем строку для корректного форматирования
+  const amount = order.total.toFixed(2);
   
   const params = {
     merchantAccount,
     merchantDomainName,
     orderReference: order.id,
-    orderDate,
+    orderDate: orderDate.toString(),
     amount: amount,
     currency: 'UAH',
     productName: products.map(p => p.name).join('; '),
-    productCount: products.length,
+    productCount: products.length.toString(),
     productPrice: amount,
     serviceUrl, // URL для callback от WayForPay
     returnUrl, // URL для возврата пользователя после оплаты
     language: 'UA',
   };
 
-  // Генерируем подпись
+  // Генерируем подпись (все значения должны быть строками!)
   const merchantSignature = generateWayForPaySignature(params, merchantSecretKey);
 
   return {
