@@ -108,7 +108,7 @@ const Checkout = () => {
       return false;
     }
     if (digitsOnly.length < 12 || !digitsOnly.startsWith('380')) {
-      setPhoneError("Це обов'язкове поле");
+      setPhoneError("Некоректний номер");
       return false;
     }
     setPhoneError("");
@@ -491,7 +491,7 @@ const Checkout = () => {
             <div className="lg:col-span-2 space-y-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Contact Info */}
-                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4 border-2 border-primary/20">
+                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4 border">
                   <h2 className="text-lg font-bold flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">1</span>
                     Контактні дані *
@@ -508,7 +508,7 @@ const Checkout = () => {
                           value={formData.phone}
                           onChange={handlePhoneChange}
                           onBlur={handlePhoneBlur}
-                          placeholder="+380 () _ _ _ _ _ _ _"
+                          placeholder="+380 (__) ___-__-__"
                           required
                           className={`rounded-xl pr-10 ${phoneTouched && phoneError ? 'border-red-500' : ''} ${isPhoneValid ? 'border-green-500' : ''}`}
                         />
@@ -547,6 +547,15 @@ const Checkout = () => {
                       />
                     </div>
                   </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!isPhoneValid || !formData.firstName.trim() || !formData.lastName.trim()}
+                    className="w-full rounded-full border-2"
+                  >
+                    Продовжити
+                  </Button>
                 </div>
 
                 {/* Delivery */}
