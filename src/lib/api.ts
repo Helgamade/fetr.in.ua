@@ -346,3 +346,11 @@ export const novaPoshtaAPI = {
   getWarehouse: (ref: string) => fetchAPI<NovaPoshtaWarehouse>(`/nova-poshta/warehouses/${ref}`),
 };
 
+// WayForPay API
+export const wayforpayAPI = {
+  createPayment: (orderId: string) => fetchAPI<{ paymentUrl: string; paymentData: Record<string, string | number> }>('/wayforpay/create-payment', {
+    method: 'POST',
+    body: JSON.stringify({ orderId }),
+  }),
+};
+

@@ -88,3 +88,5 @@ INSERT INTO site_texts (`key`, value, namespace, description) VALUES
 ('common.menu', 'Меню', 'common', 'Меню')
 ON DUPLICATE KEY UPDATE value = VALUES(value), description = VALUES(description);
 
+
+

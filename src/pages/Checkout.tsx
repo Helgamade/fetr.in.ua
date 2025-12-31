@@ -67,7 +67,7 @@ const Checkout = () => {
     name: "",
     phone: "",
     email: "",
-    paymentMethod: "card",
+    paymentMethod: "online",
     deliveryMethod: "",
     // Данные для Нова Пошта - город общий, отделения/поштоматы отдельно
     novaPoshtaCity: "",
@@ -299,6 +299,30 @@ const Checkout = () => {
       // Clear localStorage after successful order
       localStorage.removeItem('checkoutFormData');
       
+      // Если онлайн оплата - редиректим на WayForPay
+      if (formData.paymentMethod === "online") {
+        const { wayforpayAPI } = await import("@/lib/api");
+        const paymentResponse = await wayforpayAPI.createPayment(order.id);
+        
+        // Создаем форму и отправляем на WayForPay
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = paymentResponse.paymentUrl;
+        
+        Object.entries(paymentResponse.paymentData).forEach(([key, value]) => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = String(value);
+          form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+        return; // Не очищаем корзину и не редиректим, так как уходим на WayForPay
+      }
+      
+      // Для наложенного платежа - обычный флоу
       clearCart();
       navigate(`/thank-you?order=${order.id}`);
     } catch (error) {
@@ -699,10 +723,10 @@ const Checkout = () => {
                     className="space-y-3"
                   >
                     <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
-                      <RadioGroupItem value="card" id="card" />
+                      <RadioGroupItem value="online" id="online" />
                       <div>
-                        <div className="font-medium">Оплата на карту</div>
-                        <div className="text-sm text-muted-foreground">Переказ на картку ПриватБанку</div>
+                        <div className="font-medium">Онлайн оплата</div>
+                        <div className="text-sm text-muted-foreground">Безпечна оплата карткою через WayForPay</div>
                       </div>
                     </label>
                     <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
