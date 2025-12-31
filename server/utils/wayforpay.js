@@ -1,15 +1,25 @@
 import crypto from 'crypto';
 
 /**
- * Генерирует подпись для WayForPay
- * @param {Object} params - Параметры платежа
+ * Генерирует подпись для WayForPay Purchase API
+ * 
+ * Документация: https://wiki.wayforpay.com/uk/view/852102
+ * 
+ * Алгоритм генерации подписи согласно документации:
+ * 1. Строка формируется объединением параметров через точку с запятой (;)
+ * 2. Порядок параметров (строгий, НЕ по алфавиту):
+ *    merchantAccount;merchantDomainName;orderReference;orderDate;amount;currency;
+ *    productName[0];productName[1];...;productName[n];
+ *    productCount[0];productCount[1];...;productCount[n];
+ *    productPrice[0];productPrice[1];...;productPrice[n]
+ * 3. serviceUrl и returnUrl НЕ входят в подпись!
+ * 4. Применяется HMAC-MD5 с использованием SecretKey
+ * 
+ * @param {Object} params - Параметры платежа (с массивами productName, productCount, productPrice)
  * @param {string} secretKey - Секретный ключ мерчанта
- * @returns {string} - Подпись
+ * @returns {string} - Подпись в формате hex
  */
 export function generateWayForPaySignature(params, secretKey) {
-  // WayForPay требует строгий порядок полей для подписи (НЕ по алфавиту!)
-  // Порядок: merchantAccount;merchantDomainName;orderReference;orderDate;amount;currency;productName...;productCount...;productPrice...
-  // serviceUrl и returnUrl НЕ входят в подпись!
   
   const parts = [];
   
