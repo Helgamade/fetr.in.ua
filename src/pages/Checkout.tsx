@@ -319,11 +319,22 @@ const Checkout = () => {
           form.action = paymentResponse.paymentUrl;
           
           Object.entries(paymentResponse.paymentData).forEach(([key, value]) => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = String(value);
-            form.appendChild(input);
+            // Обрабатываем массивы для productName[], productPrice[], productCount[]
+            if (Array.isArray(value)) {
+              value.forEach((item, index) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `${key}[]`;
+                input.value = String(item);
+                form.appendChild(input);
+              });
+            } else {
+              const input = document.createElement('input');
+              input.type = 'hidden';
+              input.name = key;
+              input.value = String(value);
+              form.appendChild(input);
+            }
           });
           
           console.log('[Checkout] Submitting form to WayForPay');

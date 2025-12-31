@@ -348,7 +348,7 @@ export const novaPoshtaAPI = {
 
 // WayForPay API
 export const wayforpayAPI = {
-  createPayment: (orderId: string) => fetchAPI<{ paymentUrl: string; paymentData: Record<string, string | number> }>('/wayforpay/create-payment', {
+  createPayment: (orderId: string) => fetchAPI<{ paymentUrl: string; paymentData: Record<string, string | number | string[]> }>('/wayforpay/create-payment', {
     method: 'POST',
     body: JSON.stringify({ orderId }),
   }),

@@ -7,16 +7,43 @@ import crypto from 'crypto';
  * @returns {string} - Подпись
  */
 export function generateWayForPaySignature(params, secretKey) {
-  // Сортируем ключи по алфавиту и формируем строку для подписи
-  // Все значения должны быть строками
-  const keys = Object.keys(params).sort();
-  const signatureString = keys
-    .map(key => {
-      const value = params[key];
-      // Преобразуем все значения в строки
-      return `${key}=${String(value)}`;
-    })
-    .join(';');
+  // WayForPay требует строгий порядок полей для подписи (НЕ по алфавиту!)
+  // Порядок: merchantAccount;merchantDomainName;orderReference;orderDate;amount;currency;productName...;productCount...;productPrice...
+  // serviceUrl и returnUrl НЕ входят в подпись!
+  
+  const parts = [];
+  
+  // Базовые поля в строгом порядке
+  parts.push(String(params.merchantAccount));
+  parts.push(String(params.merchantDomainName));
+  parts.push(String(params.orderReference));
+  parts.push(String(params.orderDate));
+  parts.push(String(params.amount));
+  parts.push(String(params.currency));
+  
+  // productName - массив (каждый элемент отдельно)
+  if (Array.isArray(params.productName)) {
+    params.productName.forEach(name => parts.push(String(name)));
+  } else {
+    // Если передан как массив продуктов
+    parts.push(String(params.productName));
+  }
+  
+  // productCount - массив (каждый элемент отдельно)
+  if (Array.isArray(params.productCount)) {
+    params.productCount.forEach(count => parts.push(String(count)));
+  } else {
+    parts.push(String(params.productCount));
+  }
+  
+  // productPrice - массив (каждый элемент отдельно)
+  if (Array.isArray(params.productPrice)) {
+    params.productPrice.forEach(price => parts.push(String(price)));
+  } else {
+    parts.push(String(params.productPrice));
+  }
+  
+  const signatureString = parts.join(';');
   
   console.log('[WayForPay] Signature string:', signatureString);
   
@@ -63,39 +90,54 @@ export function buildWayForPayData(order, config) {
   } = config;
 
   // Формируем список товаров для WayForPay
-  const products = order.items.map((item) => ({
-    name: item.productName || 'Товар',
-    count: item.quantity,
-    price: item.price,
-  }));
+  const products = order.items.map((item) => {
+    const price = parseFloat(item.price);
+    return {
+      name: item.productName || 'Товар',
+      count: item.quantity,
+      // Форматируем цену: если целое число - без .00, иначе с двумя знаками
+      price: price % 1 === 0 ? price.toString() : price.toFixed(2),
+    };
+  });
 
   // Базовая структура данных
   const orderDate = Math.floor(Date.now() / 1000);
   
   // WayForPay для UAH ожидает сумму в гривнах с двумя знаками после запятой (например, "915.00")
-  // Важно: используем строку для корректного форматирования
   const amount = order.total.toFixed(2);
   
-  const params = {
+  // Параметры для подписи (в строгом порядке, без serviceUrl и returnUrl!)
+  const paramsForSignature = {
     merchantAccount,
     merchantDomainName,
     orderReference: order.id,
     orderDate: orderDate.toString(),
     amount: amount,
     currency: 'UAH',
-    productName: products.map(p => p.name).join('; '),
-    productCount: products.length.toString(),
-    productPrice: amount,
-    serviceUrl, // URL для callback от WayForPay
-    returnUrl, // URL для возврата пользователя после оплаты
-    language: 'UA',
+    // Массивы для товаров - каждый элемент отдельно!
+    productName: products.map(p => p.name),
+    productCount: products.map(p => p.count.toString()),
+    productPrice: products.map(p => p.price),
   };
+  
+  // Генерируем подпись ТОЛЬКО из paramsForSignature (без serviceUrl и returnUrl!)
+  const merchantSignature = generateWayForPaySignature(paramsForSignature, merchantSecretKey);
 
-  // Генерируем подпись (все значения должны быть строками!)
-  const merchantSignature = generateWayForPaySignature(params, merchantSecretKey);
-
+  // Возвращаем полные данные для формы (включая serviceUrl и returnUrl, но они НЕ в подписи)
   return {
-    ...params,
+    merchantAccount,
+    merchantDomainName,
+    orderReference: order.id,
+    orderDate: orderDate.toString(),
+    amount: amount,
+    currency: 'UAH',
+    // Для формы используем массивы productName[], productPrice[], productCount[]
+    productName: products.map(p => p.name),
+    productPrice: products.map(p => p.price),
+    productCount: products.map(p => p.count.toString()),
+    serviceUrl, // URL для callback от WayForPay (НЕ в подписи!)
+    returnUrl, // URL для возврата пользователя после оплаты (НЕ в подписи!)
+    language: 'UA',
     merchantSignature,
   };
 }
