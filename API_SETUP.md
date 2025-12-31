@@ -16,6 +16,7 @@ CORS_ORIGIN=https://fetr.in.ua
 # WayForPay настройки
 WAYFORPAY_MERCHANT_ACCOUNT=www_fetr_in_ua
 WAYFORPAY_SECRET_KEY=77cbf18313c8c17e70ffe4bfad6b50fa37bb8ef5
+WAYFORPAY_PASSWORD=893f8e94f5c617f16e973b898ae7335c
 WAYFORPAY_DOMAIN=fetr.in.ua
 WAYFORPAY_RETURN_URL=https://fetr.in.ua/thank-you
 WAYFORPAY_SERVICE_URL=https://fetr.in.ua/api/wayforpay/callback

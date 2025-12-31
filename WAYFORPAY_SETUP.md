@@ -13,6 +13,7 @@
 ```env
 WAYFORPAY_MERCHANT_ACCOUNT=www_fetr_in_ua
 WAYFORPAY_SECRET_KEY=77cbf18313c8c17e70ffe4bfad6b50fa37bb8ef5
+WAYFORPAY_PASSWORD=893f8e94f5c617f16e973b898ae7335c
 WAYFORPAY_DOMAIN=fetr.in.ua
 WAYFORPAY_RETURN_URL=https://fetr.in.ua/thank-you
 WAYFORPAY_SERVICE_URL=https://fetr.in.ua/api/wayforpay/callback
@@ -21,7 +22,8 @@ WAYFORPAY_SERVICE_URL=https://fetr.in.ua/api/wayforpay/callback
 ## Описание переменных
 
 - `WAYFORPAY_MERCHANT_ACCOUNT` - Логин мерчанта (Merchant login)
-- `WAYFORPAY_SECRET_KEY` - Секретный ключ для подписи запросов (Merchant secret key)
+- `WAYFORPAY_SECRET_KEY` - Секретный ключ для подписи запросов (Merchant secret key) - **используется для Purchase API**
+- `WAYFORPAY_PASSWORD` - Пароль мерчанта (Merchant password) - используется для других операций API (Check Status и т.д.)
 - `WAYFORPAY_DOMAIN` - Домен магазина (должен соответствовать домену в настройках WayForPay)
 - `WAYFORPAY_RETURN_URL` - URL для возврата пользователя после оплаты
 - `WAYFORPAY_SERVICE_URL` - URL для callback от WayForPay (обработка результата платежа)
