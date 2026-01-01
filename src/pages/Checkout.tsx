@@ -37,7 +37,8 @@ const Checkout = () => {
           name: parsed.name || prev.name,
           firstName: parsed.firstName || prev.firstName,
           lastName: parsed.lastName || prev.lastName,
-          phone: parsed.phone || prev.phone || "+380",
+          phone: parsed.phone || prev.phone || "",
+          deliveryExpanded: parsed.deliveryExpanded !== undefined ? parsed.deliveryExpanded : true,
           contactInfoCompleted: parsed.contactInfoCompleted || false,
           contactInfoExpanded: parsed.contactInfoExpanded !== undefined ? parsed.contactInfoExpanded : true,
           email: parsed.email || prev.email,
@@ -71,7 +72,7 @@ const Checkout = () => {
     firstName: "",
     lastName: "",
     name: "", // Объединенное имя для отправки на сервер
-    phone: "+380",
+    phone: "",
     email: "",
     paymentMethod: "online",
     deliveryMethod: "",
@@ -97,7 +98,8 @@ const Checkout = () => {
     pickupCompleted: false,
     comment: "",
     contactInfoCompleted: false,
-    contactInfoExpanded: true
+    contactInfoExpanded: true,
+    deliveryExpanded: true
   });
 
   const [phoneTouched, setPhoneTouched] = useState(false);
@@ -125,9 +127,9 @@ const Checkout = () => {
     // Убираем все символы кроме цифр
     const digitsOnly = value.replace(/\D/g, '');
     
-    // Если начинается не с 380, добавляем 380
+    // Всегда начинаем с 380
     let phoneDigits = digitsOnly;
-    if (phoneDigits.length > 0 && !phoneDigits.startsWith('380')) {
+    if (!phoneDigits.startsWith('380')) {
       phoneDigits = '380' + phoneDigits;
     }
     
@@ -151,27 +153,45 @@ const Checkout = () => {
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
     const cursorPosition = input.selectionStart || 0;
-    const oldValue = formData.phone;
+    const oldValue = formData.phone === "" || formData.phone === "+380 (" ? "" : formData.phone;
     let newValue = input.value;
     
-    // Если пользователь пытается удалить +380, предотвращаем это
-    if (newValue.length < 4 || !newValue.startsWith('+380')) {
-      newValue = '+380';
+    // Если поле было пустым (показывался плейсхолдер) и начался ввод
+    if ((oldValue === "" || oldValue === "+380 (") && newValue.length > 6) {
+      // Извлекаем введенные символы после "+380 ("
+      const afterPrefix = newValue.slice(6);
+      const digitsOnly = afterPrefix.replace(/\D/g, '');
+      if (digitsOnly.length > 0) {
+        newValue = '+380' + digitsOnly;
+      } else {
+        setFormData(prev => ({ ...prev, phone: "" }));
+        return;
+      }
+    } else if (newValue === "+380 (" || newValue === "" || newValue.length <= 6) {
+      // Если пользователь удалил все до "+380 (", возвращаем к пустому состоянию
+      setFormData(prev => ({ ...prev, phone: "" }));
+      return;
+    }
+    
+    // Убеждаемся что начинается с +380
+    if (!newValue.startsWith('+380')) {
+      const digitsOnly = newValue.replace(/\D/g, '');
+      if (digitsOnly.length > 0) {
+        newValue = '+380' + digitsOnly;
+      } else {
+        setFormData(prev => ({ ...prev, phone: "" }));
+        return;
+      }
     }
     
     // Форматируем
     const formatted = formatPhone(newValue);
     
     // Вычисляем новую позицию курсора
-    const oldLength = oldValue.length;
+    const oldLength = oldValue.length || 6; // "+380 (" имеет длину 6
     const newLength = formatted.length;
     const lengthDiff = newLength - oldLength;
-    let newCursorPosition = cursorPosition + lengthDiff;
-    
-    // Если курсор был в начале +380, оставляем его после +380 (
-    if (cursorPosition <= 4) {
-      newCursorPosition = Math.min(7, formatted.length); // После "+380 ("
-    }
+    let newCursorPosition = Math.max(7, cursorPosition + lengthDiff);
     
     setFormData(prev => ({ ...prev, phone: formatted }));
     
@@ -182,28 +202,30 @@ const Checkout = () => {
       }
     }, 0);
     
-    if (phoneTouched) {
+    if (phoneTouched || formatted.length > 6) {
       validatePhone(formatted);
     }
   };
 
   const handlePhoneFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    // При фокусе перемещаем курсор после +380 (
+    // При фокусе всегда ставим курсор после "+380 ("
     setTimeout(() => {
       if (phoneInputRef.current) {
-        const value = phoneInputRef.current.value;
-        const cursorPos = value.length >= 7 ? 7 : value.length; // После "+380 ("
-        phoneInputRef.current.setSelectionRange(cursorPos, cursorPos);
+        phoneInputRef.current.setSelectionRange(7, 7);
       }
     }, 0);
   };
-
-  const handlePhoneBlur = () => {
+  
+  const handlePhoneBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // При потере фокуса, если поле пустое, очищаем значение для плейсхолдера
+    if (formData.phone === "" || formData.phone === "+380 (") {
+      setFormData(prev => ({ ...prev, phone: "" }));
+    }
     setPhoneTouched(true);
-    validatePhone(formData.phone);
+    validatePhone(formData.phone === "" || formData.phone === "+380 (" ? "" : formData.phone);
   };
 
-  const isPhoneValid = formData.phone.replace(/\D/g, '').length === 12 && formData.phone.replace(/\D/g, '').startsWith('380');
+  const isPhoneValid = (formData.phone === "" || formData.phone === "+380 (" ? "" : formData.phone).replace(/\D/g, '').length === 12 && (formData.phone === "" || formData.phone === "+380 (" ? "" : formData.phone).replace(/\D/g, '').startsWith('380');
 
   // Save to localStorage whenever formData changes
   useEffect(() => {
@@ -214,6 +236,7 @@ const Checkout = () => {
       phone: formData.phone,
       contactInfoCompleted: formData.contactInfoCompleted,
       contactInfoExpanded: formData.contactInfoExpanded,
+      deliveryExpanded: formData.deliveryExpanded,
       email: formData.email,
       paymentMethod: formData.paymentMethod,
       deliveryMethod: formData.deliveryMethod,
@@ -610,13 +633,13 @@ const Checkout = () => {
                               id="phone"
                               name="phone"
                               type="tel"
-                              value={formData.phone}
+                              value={formData.phone === "" ? "+380 (" : formData.phone}
                               onChange={handlePhoneChange}
                               onFocus={handlePhoneFocus}
                               onBlur={handlePhoneBlur}
                               placeholder="+380 (__) ___-__-__"
                               required
-                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${phoneTouched && phoneError ? 'border-red-500' : ''} ${isPhoneValid ? 'border-green-500' : ''}`}
+                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${formData.phone === "" || formData.phone === "+380 (" ? 'text-muted-foreground' : ''} ${phoneTouched && phoneError ? 'border-red-500' : ''} ${isPhoneValid ? 'border-green-500' : ''}`}
                             />
                             {isPhoneValid && (
                               <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
@@ -671,11 +694,23 @@ const Checkout = () => {
 
                 {/* Delivery */}
                 <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
-                  <h2 className="text-lg font-bold flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">2</span>
+                  <h2 
+                    className="text-lg font-bold flex items-center gap-2 cursor-pointer"
+                    onClick={() => {
+                      if (!formData.deliveryExpanded && formData.deliveryMethod) {
+                        setFormData(prev => ({ ...prev, deliveryExpanded: true }));
+                      }
+                    }}
+                  >
+                    {formData.deliveryMethod && getCurrentDeliveryData()?.completed ? (
+                      <CheckCircle className="w-6 h-6 text-green-500" />
+                    ) : (
+                      <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">2</span>
+                    )}
                     Доставка
                   </h2>
                   
+                  {formData.deliveryExpanded ? (
                   <RadioGroup
                     value={formData.deliveryMethod}
                     onValueChange={(value) => {
@@ -779,6 +814,7 @@ const Checkout = () => {
                               setFormData(prev => ({
                                 ...prev,
                                 novaPoshtaExpanded: false,
+                                deliveryExpanded: false,
                                 ...(prev.novaPoshtaDeliveryType === "PostOffice" 
                                   ? { novaPoshtaPostOfficeCompleted: true }
                                   : { novaPoshtaPostomatCompleted: true })
@@ -880,7 +916,8 @@ const Checkout = () => {
                               setFormData(prev => ({
                                 ...prev,
                                 ukrPoshtaExpanded: false,
-                                ukrPoshtaCompleted: true
+                                ukrPoshtaCompleted: true,
+                                deliveryExpanded: false
                               }));
                             }}
                             disabled={!formData.ukrPoshtaCity || !formData.ukrPoshtaPostalCode || !formData.ukrPoshtaAddress}
@@ -920,8 +957,11 @@ const Checkout = () => {
                           <Button
                             type="button"
                             onClick={() => {
-                              // Для самовывоза ничего не сохраняем, просто свертываем
-                              // Можно добавить флаг, если понадобится
+                              setFormData(prev => ({
+                                ...prev,
+                                deliveryExpanded: false,
+                                pickupCompleted: true
+                              }));
                             }}
                             variant="outline"
                             className="w-full rounded-full border-2 mt-4"
@@ -932,6 +972,41 @@ const Checkout = () => {
                       )}
                     </div>
                   </RadioGroup>
+                  ) : (
+                    // Свернутый вид блока доставки
+                    <div className="space-y-2">
+                      {(() => {
+                        const deliveryData = getCurrentDeliveryData();
+                        if (formData.deliveryMethod === "nova_poshta" && deliveryData) {
+                          return (
+                            <>
+                              <div className="text-sm font-medium">Нова Пошта</div>
+                              <div className="text-sm">{deliveryData.city}</div>
+                              <div className="text-sm">{deliveryData.warehouse}</div>
+                            </>
+                          );
+                        } else if (formData.deliveryMethod === "ukr_poshta" && deliveryData) {
+                          return (
+                            <>
+                              <div className="text-sm font-medium">Укрпошта</div>
+                              <div className="text-sm">{deliveryData.city}</div>
+                              {deliveryData.address && (
+                                <div className="text-sm">{deliveryData.address}</div>
+                              )}
+                            </>
+                          );
+                        } else if (formData.deliveryMethod === "pickup") {
+                          return (
+                            <>
+                              <div className="text-sm font-medium">Самовивіз</div>
+                              <div className="text-sm">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
+                            </>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                  )}
                 </div>
 
                 {/* Payment */}
