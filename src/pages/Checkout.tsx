@@ -405,6 +405,7 @@ const Checkout = () => {
       return {
         city: formData.ukrPoshtaCity,
         cityId: formData.ukrPoshtaCityId,
+        cityRegion: formData.ukrPoshtaCityRegion,
         branch: formData.ukrPoshtaBranch,
         branchId: formData.ukrPoshtaBranchId,
         postalCode: formData.ukrPoshtaPostalCode,
