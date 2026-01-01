@@ -1266,7 +1266,10 @@ const Checkout = () => {
                           return (
                             <>
                               <div className="flex items-center justify-between">
-                                <div className="text-sm font-medium">Нова Пошта</div>
+                                <div className="text-sm font-medium flex items-center gap-2">
+                                  <NovaPoshtaLogo className="w-5 h-5" />
+                                  Нова Пошта
+                                </div>
                                 <button
                                   type="button"
                                   onClick={(e) => {
@@ -1304,7 +1307,7 @@ const Checkout = () => {
                             <>
                               <div className="flex items-center justify-between">
                                 <div className="text-sm font-medium flex items-center gap-2">
-                                  <UkrposhtaLogo className="w-4 h-4" />
+                                  <UkrposhtaLogo className="w-5 h-5" />
                                   Укрпошта
                                 </div>
                                 <button
@@ -1332,7 +1335,7 @@ const Checkout = () => {
                             <>
                               <div className="flex items-center justify-between">
                                 <div className="text-sm font-medium flex items-center gap-2">
-                                  <PickupLogo className="w-4 h-4" />
+                                  <PickupLogo className="w-5 h-5" />
                                   Самовивіз
                                 </div>
                                 <button
