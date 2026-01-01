@@ -43,12 +43,18 @@ export const UkrPoshtaDelivery = ({
   // По аналогии с NovaPoshtaDelivery - загружаем по ID через API
   useEffect(() => {
     if (cityId) {
+      console.log(`🔍 [UkrPoshtaDelivery] Loading city by ID: ${cityId}`);
       ukrposhtaAPI.getCity(cityId)
         .then(city => {
+          console.log(`✅ [UkrPoshtaDelivery] Loaded city:`, city);
           setSelectedCity(city);
           // Не вызываем onCityChange здесь, чтобы не перезаписывать данные из props
         })
-        .catch(console.error);
+        .catch((error) => {
+          console.error(`❌ [UkrPoshtaDelivery] Error loading city ${cityId}:`, error);
+          // Если не удалось загрузить город по ID, сбрасываем выбранный город
+          setSelectedCity(null);
+        });
     } else {
       setSelectedCity(null);
     }
