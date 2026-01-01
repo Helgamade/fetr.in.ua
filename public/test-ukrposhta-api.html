@@ -197,11 +197,15 @@
             resultDiv.innerHTML = '<p>⏳ Загрузка...</p>';
             
             try {
-                // Попробуем несколько вариантов поиска
+                // Используем правильный endpoint из официальной документации
+                // Согласно разделу 3.2: /get_city_by_name?region_id={region_id}&district_id={district_id}&city_name={city_name}&lang={language}&fuzzy={fuzzy}
                 const endpoints = [
-                    `/get_city_by_region_id_and_district_id_and_city_ua?region_id=270&city_ua=${encodeURIComponent(cityName)}`,
-                    `/get_city_by_city_ua?city_ua=${encodeURIComponent(cityName)}`,
-                    `/get_city_by_region_id_and_city_ua?region_id=270&city_ua=${encodeURIComponent(cityName)}`,
+                    // Поиск с нечётким поиском (fuzzy=1) в Киевской области
+                    `/get_city_by_name?region_id=270&district_id=&city_name=${encodeURIComponent(cityName)}&lang=UA&fuzzy=1`,
+                    // Поиск с точным совпадением (fuzzy=0) в Киевской области
+                    `/get_city_by_name?region_id=270&district_id=&city_name=${encodeURIComponent(cityName)}&lang=UA&fuzzy=0`,
+                    // Поиск в области Тернопільська (из примера документации)
+                    `/get_city_by_name?region_id=279&district_id=&city_name=${encodeURIComponent(cityName)}&lang=UA&fuzzy=1`,
                 ];
                 
                 let html = '<h3>Результаты поиска:</h3>';

@@ -413,44 +413,72 @@ export const ukrposhtaAPI = {
   },
   searchCities: async (query: string): Promise<UkrposhtaCity[]> => {
     // Делаем запрос НАПРЯМУЮ с фронтенда (Cloudflare блокирует серверные запросы)
+    // Используем правильный endpoint согласно официальной документации:
+    // /get_city_by_name?region_id={region_id}&district_id={district_id}&city_name={city_name}&lang={language}&fuzzy={fuzzy}
     console.log('🔍 [Ukrposhta API] Searching cities from frontend:', query);
       
-      // Популярные области для поиска
+      // Популярные области для поиска (с пустым district_id для поиска по всем районам)
       const popularRegions = [
         { id: '270', name: 'Київська' },
-        { id: '14', name: 'Львівська' },
-        { id: '63', name: 'Харківська' },
-        { id: '51', name: 'Одеська' },
-        { id: '12', name: 'Дніпропетровська' },
-        { id: '23', name: 'Запорізька' },
+        { id: '279', name: 'Тернопільська' },
+        { id: '262', name: 'Вінницька' },
+        { id: '263', name: 'Волинська' },
+        { id: '264', name: 'Дніпропетровська' },
+        { id: '265', name: 'Донецька' },
+        { id: '266', name: 'Житомирська' },
+        { id: '267', name: 'Закарпатська' },
+        { id: '268', name: 'Запорізька' },
+        { id: '269', name: 'Івано-Франківська' },
+        { id: '271', name: 'Кіровоградська' },
+        { id: '272', name: 'Луганська' },
+        { id: '273', name: 'Львівська' },
+        { id: '274', name: 'Миколаївська' },
+        { id: '275', name: 'Одеська' },
+        { id: '276', name: 'Полтавська' },
+        { id: '277', name: 'Рівненська' },
+        { id: '278', name: 'Сумська' },
+        { id: '280', name: 'Харківська' },
+        { id: '281', name: 'Херсонська' },
+        { id: '282', name: 'Хмельницька' },
+        { id: '283', name: 'Черкаська' },
+        { id: '284', name: 'Чернівецька' },
+        { id: '285', name: 'Чернігівська' },
         { id: '32', name: 'Київ' },
       ];
       
       // Ищем в популярных областях параллельно
+      // Используем fuzzy=1 для нечёткого поиска
       const searchPromises = popularRegions.map(async (region) => {
         try {
+          // Согласно документации, все параметры обязательны:
+          // region_id, district_id (пустой для поиска по всем районам), city_name, lang, fuzzy
           const data = await callUkrposhtaAPIDirect(
-            `/get_city_by_region_id_and_district_id_and_city_ua?region_id=${region.id}&city_ua=${encodeURIComponent(query)}`
+            `/get_city_by_name?region_id=${region.id}&district_id=&city_name=${encodeURIComponent(query)}&lang=UA&fuzzy=1`
           );
           const entries = data?.Entries?.Entry || [];
           return Array.isArray(entries) ? entries : [entries];
         } catch (err) {
+          console.log(`⚠️ Error searching in region ${region.name}:`, err);
           return [];
         }
       });
       
       const results = await Promise.all(searchPromises);
-      const apiCities = results.flat();
+      const apiCities = results.flat().filter((item: any) => item && Object.keys(item).length > 0);
       
-      // Преобразуем данные API в наш формат
+      console.log(`📦 Found ${apiCities.length} cities from API`);
+      
+      // Преобразуем данные API в наш формат (согласно структуре из документации)
       const formattedCities = apiCities.map((item: any) => ({
-        id: item.CITY_ID?.toString() || item.CITY_KOATUU || item.CITY_KATOTTG || '',
-        name: item.CITY_UA || item.CITY_EN || '',
-        postalCode: item.POSTCODE || '',
-        region: item.REGION_UA || '',
-        district: item.DISTRICT_UA || '',
+        id: item.CITY_ID?.toString() || '',
+        name: item.CITY_NAME || '',
+        postalCode: '', // В этом endpoint нет почтового индекса
+        region: item.REGION_NAME || '',
+        district: item.DISTRICT_NAME || '',
         cityId: item.CITY_ID?.toString() || '',
       })).filter((city: any) => city.name && city.id);
+      
+      console.log(`✨ Formatted ${formattedCities.length} cities`);
       
       return formattedCities;
   },
