@@ -148,11 +148,14 @@ router.get('/cities/search', async (req, res, next) => {
       console.log(`🌍 [Ukrposhta API] Searching in ${popularRegions.length} popular regions`);
       
       // Ищем в популярных областях параллельно
-      // Endpoint: GET /get_city_by_region_id_and_city_ua?region_id={region_id}&city_ua={название}
+      // Согласно документации, правильный endpoint: 
+      // GET /get_city_by_region_id_and_district_id_and_city_ua?region_id={regionId}&city_ua={cityUa}
+      // Можно использовать без district_id, только с region_id и city_ua
+      // Согласно "Address-classifier-v3.20-09122024.xml" раздел 1.3
       const searchPromises = popularRegions.map(async (region) => {
         try {
           const data = await callAddressClassifierAPI(
-            `/get_city_by_region_id_and_city_ua?region_id=${region.id}&city_ua=${encodeURIComponent(q)}`
+            `/get_city_by_region_id_and_district_id_and_city_ua?region_id=${region.id}&city_ua=${encodeURIComponent(q)}`
           );
           const entries = data?.Entries?.Entry || [];
           const result = Array.isArray(entries) ? entries : [entries];
@@ -288,17 +291,20 @@ router.get('/branches', async (req, res, next) => {
 
     try {
       // Получаем отделения по CITY_ID согласно документации
-      const data = await callAddressClassifierAPI(`/get_postoffices_by_city_id?city_id=${cityIdNum}`);
+      // Правильный endpoint: /get_postoffices_by_postcode_cityid_cityvpzid?city_id={city_id}
+      // Согласно "Search-offices-and-indexes-v3.pdf" и "Address-classifier-v3.20-09122024.xml"
+      const data = await callAddressClassifierAPI(`/get_postoffices_by_postcode_cityid_cityvpzid?city_id=${cityIdNum}`);
       
       // Формат ответа: {Entries: {Entry: [...]}}
       const entries = data?.Entries?.Entry || [];
       const branchesList = Array.isArray(entries) ? entries : [entries];
       
       // Преобразуем данные API в наш формат
+      // Согласно документации, формат ответа: {POSTOFFICE_ID, POSTOFFICE_UA, POSTCODE, STREET_UA_VPZ, ...}
       const formattedBranches = branchesList.map((item, index) => ({
         id: item.POSTOFFICE_ID?.toString() || item.POSTCODE || `branch_${index}`,
         name: item.POSTOFFICE_UA || item.POSTOFFICE_EN || item.POSTOFFICE_NAME || `Відділення ${index + 1}`,
-        address: item.ADDRESS_UA || item.ADDRESS_EN || item.ADDRESS || '',
+        address: item.STREET_UA_VPZ || item.ADDRESS_UA || item.ADDRESS_EN || item.ADDRESS || '',
         postalCode: item.POSTCODE || postalCode || '',
         cityId: cityId,
       })).filter(branch => branch.name);
@@ -358,7 +364,7 @@ router.get('/branches/:id', async (req, res, next) => {
       const branch = {
         id: branchData.POSTOFFICE_ID?.toString() || id,
         name: branchData.POSTOFFICE_UA || branchData.POSTOFFICE_EN || branchData.POSTOFFICE_NAME || '',
-        address: branchData.ADDRESS_UA || branchData.ADDRESS_EN || branchData.ADDRESS || '',
+        address: branchData.STREET_UA_VPZ || branchData.ADDRESS_UA || branchData.ADDRESS_EN || branchData.ADDRESS || '',
         postalCode: branchData.POSTCODE || '',
         cityId: branchData.CITY_ID?.toString() || null,
       };
