@@ -1,6 +1,6 @@
 import express from 'express';
 import pool from '../db.js';
-import { buildWayForPayData, validateWayForPaySignature } from '../utils/wayforpay.js';
+import { buildWayForPayData, validateWayForPayCallbackSignature, generateWayForPayResponseSignature } from '../utils/wayforpay.js';
 
 const router = express.Router();
 
@@ -113,16 +113,28 @@ router.post('/create-payment', async (req, res, next) => {
 });
 
 // Callback от WayForPay (обработка результата платежа)
+// Согласно документации: https://wiki.wayforpay.com/view/852102
+// Callback приходит как JSON в теле POST запроса
 router.post('/callback', async (req, res, next) => {
   try {
     let callbackData = req.body;
     
     console.log('[WayForPay] Raw callback body:', JSON.stringify(req.body, null, 2));
-    console.log('[WayForPay] Body type:', typeof req.body);
-    console.log('[WayForPay] Body keys:', Object.keys(req.body || {}));
+    console.log('[WayForPay] Content-Type:', req.get('Content-Type'));
     
-    // WayForPay иногда отправляет данные как JSON строку в ключе объекта
-    // Проверяем все ключи и парсим, если нужно
+    // WayForPay отправляет данные как JSON в теле запроса
+    // Но иногда может прийти как строка или в другом формате
+    if (typeof callbackData === 'string') {
+      try {
+        callbackData = JSON.parse(callbackData);
+        console.log('[WayForPay] Parsed JSON string from body');
+      } catch (parseError) {
+        console.error('[WayForPay] Failed to parse JSON string:', parseError);
+        return res.status(400).json({ error: 'Invalid JSON format' });
+      }
+    }
+    
+    // Если данные пришли в нестандартном формате (JSON строка в ключе объекта)
     if (typeof callbackData === 'object' && callbackData !== null) {
       const keys = Object.keys(callbackData);
       
@@ -158,8 +170,8 @@ router.post('/callback', async (req, res, next) => {
       return res.status(400).json({ error: 'Missing orderReference' });
     }
 
-    // Валидируем подпись
-    const isValid = validateWayForPaySignature(
+    // Валидируем подпись согласно документации WayForPay
+    const isValid = validateWayForPayCallbackSignature(
       callbackData,
       WFP_CONFIG.merchantSecretKey,
       callbackData.merchantSignature
@@ -202,13 +214,19 @@ router.post('/callback', async (req, res, next) => {
     console.log('[WayForPay] Order status updated:', orderReference, 'to', orderStatus, 'Rows affected:', updateResult.affectedRows);
 
     // WayForPay ожидает ответ в формате JSON
+    // Согласно документации: orderReference;status;time
+    const responseTime = Math.floor(Date.now() / 1000);
     const response = {
       orderReference,
       status: 'accept',
-      time: Math.floor(Date.now() / 1000),
+      time: responseTime,
+      signature: generateWayForPayResponseSignature(orderReference, 'accept', responseTime, WFP_CONFIG.merchantSecretKey),
     };
     
-    console.log('[WayForPay] Sending callback response:', response);
+    console.log('[WayForPay] Sending callback response:', JSON.stringify({
+      ...response,
+      signature: '***HIDDEN***'
+    }));
     res.json(response);
   } catch (error) {
     console.error('[WayForPay] Callback error:', error);

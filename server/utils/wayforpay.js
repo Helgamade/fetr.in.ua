@@ -69,19 +69,60 @@ export function generateWayForPaySignature(params, secretKey) {
 }
 
 /**
- * Валидирует подпись от WayForPay
+ * Валидирует подпись от WayForPay для callback
+ * Согласно документации: merchantAccount;orderReference;amount;currency;authCode;cardPan;transactionStatus;reasonCode
  * @param {Object} params - Параметры из callback
  * @param {string} secretKey - Секретный ключ мерчанта
  * @param {string} receivedSignature - Полученная подпись
  * @returns {boolean} - true если подпись валидна
  */
-export function validateWayForPaySignature(params, secretKey, receivedSignature) {
-  // Удаляем merchantSignature из параметров для проверки
-  const paramsForSign = { ...params };
-  delete paramsForSign.merchantSignature;
+export function validateWayForPayCallbackSignature(params, secretKey, receivedSignature) {
+  // Формируем строку для подписи согласно документации WayForPay
+  // merchantAccount;orderReference;amount;currency;authCode;cardPan;transactionStatus;reasonCode
+  const parts = [
+    String(params.merchantAccount || ''),
+    String(params.orderReference || ''),
+    String(params.amount || ''),
+    String(params.currency || ''),
+    String(params.authCode || ''),
+    String(params.cardPan || ''),
+    String(params.transactionStatus || ''),
+    String(params.reasonCode || ''),
+  ];
   
-  const calculatedSignature = generateWayForPaySignature(paramsForSign, secretKey);
+  const signatureString = parts.join(';');
+  
+  console.log('[WayForPay] Callback signature string:', signatureString);
+  
+  const calculatedSignature = crypto
+    .createHmac('md5', secretKey)
+    .update(signatureString, 'utf8')
+    .digest('hex');
+  
+  console.log('[WayForPay] Calculated callback signature:', calculatedSignature);
+  console.log('[WayForPay] Received callback signature:', receivedSignature);
+  
   return calculatedSignature === receivedSignature;
+}
+
+/**
+ * Генерирует подпись для ответа на callback
+ * Согласно документации: orderReference;status;time
+ * @param {string} orderReference - Номер заказа
+ * @param {string} status - Статус ответа (обычно "accept")
+ * @param {number} time - Время в секундах (Unix timestamp)
+ * @param {string} secretKey - Секретный ключ мерчанта
+ * @returns {string} - Подпись в формате hex
+ */
+export function generateWayForPayResponseSignature(orderReference, status, time, secretKey) {
+  const signatureString = `${orderReference};${status};${time}`;
+  
+  const signature = crypto
+    .createHmac('md5', secretKey)
+    .update(signatureString, 'utf8')
+    .digest('hex');
+  
+  return signature;
 }
 
 /**
