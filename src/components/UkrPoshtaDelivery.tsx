@@ -56,9 +56,18 @@ export const UkrPoshtaDelivery = ({
 
   // Загрузка выбранного отделения при монтировании или изменении branchId
   // По аналогии с NovaPoshtaDelivery - загружаем по ID через API
+  // ВАЖНО: для получения отделения нужен cityId (CITY_ID)
   useEffect(() => {
     if (branchId && selectedCity) {
-      ukrposhtaAPI.getBranch(branchId)
+      const cityIdForBranch = selectedCity.cityId || selectedCity.id;
+      // Endpoint требует cityId как query параметр
+      fetch(`/api/ukrposhta/branches/${branchId}?cityId=${cityIdForBranch}`)
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
         .then(branch => {
           setSelectedBranch(branch);
           // Не вызываем onBranchChange здесь, чтобы не перезаписывать данные из props
