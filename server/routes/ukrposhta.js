@@ -18,18 +18,26 @@ const ADDRESS_CLASSIFIER_BASE = 'https://www.ukrposhta.ua/address-classifier-ws'
 const UKRPOSHTA_BEARER_TOKEN = process.env.UKRPOSHTA_BEARER_TOKEN || '67f02a7c-3af7-34d1-aa18-7eb4d96f3be4';
 
 // Функция для вызова адресного классификатора API
+// Согласно документации раздел 3.2: /get_city_by_name
 async function callAddressClassifierAPI(endpoint) {
   const url = `${ADDRESS_CLASSIFIER_BASE}${endpoint}`;
   
   try {
     console.log(`📡 [Address Classifier API] GET ${url}`);
     
+    // Полный набор заголовков для имитации браузера и обхода Cloudflare
+    const headers = {
+      'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN}`,
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Language': 'uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Referer': 'https://www.ukrposhta.ua/',
+      'Origin': 'https://www.ukrposhta.ua',
+    };
+    
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN}`,
-        'Accept': 'application/json',
-      },
+      headers: headers,
     });
     
     const responseText = await response.text();
@@ -165,16 +173,16 @@ router.get('/cities/search', async (req, res, next) => {
       
       console.log(`📦 [Ukrposhta API] Total API cities found: ${apiCities.length}`);
       
-      // Преобразуем данные API в наш формат
-      // Формат ответа: {REGION_ID, DISTRICT_ID, CITY_ID, REGION_UA, DISTRICT_UA, CITY_UA, POSTCODE, ...}
-      const formattedCities = apiCities.map((item) => ({
-        id: item.CITY_ID?.toString() || item.CITY_KOATUU || item.CITY_KATOTTG || '',
-        name: item.CITY_UA || item.CITY_EN || '',
-        postalCode: item.POSTCODE || '',
-        region: item.REGION_UA || '',
-        district: item.DISTRICT_UA || '',
-        cityId: item.CITY_ID?.toString() || '', // Сохраняем CITY_ID для получения отделений
-      })).filter(city => city.name && city.id);
+    // Преобразуем данные API в наш формат (структура из документации раздел 3.2)
+    // Формат ответа: {REGION_ID, DISTRICT_ID, CITY_ID, REGION_NAME, DISTRICT_NAME, CITY_NAME, ...}
+    const formattedCities = apiCities.map((item) => ({
+      id: item.CITY_ID?.toString() || '',
+      name: item.CITY_NAME || '',  // CITY_NAME согласно документации (не CITY_UA)
+      postalCode: '', // В этом endpoint нет почтового индекса
+      region: item.REGION_NAME || '',  // REGION_NAME согласно документации
+      district: item.DISTRICT_NAME || '',  // DISTRICT_NAME согласно документации
+      cityId: item.CITY_ID?.toString() || '', // Сохраняем CITY_ID для получения отделений
+    })).filter(city => city.name && city.id);
 
       console.log(`✨ [Ukrposhta API] Formatted cities: ${formattedCities.length}`);
 
