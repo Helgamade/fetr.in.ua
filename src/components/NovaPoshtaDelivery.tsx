@@ -325,7 +325,7 @@ export const NovaPoshtaDelivery = ({
               }}
             >
               <span className={selectedWarehouse ? "text-foreground" : "text-muted-foreground"}>
-                {selectedWarehouse ? selectedWarehouse.description_ua : "Виберіть відділення"}
+                {selectedWarehouse ? selectedWarehouse.description_ua : (deliveryType === 'PostOffice' ? "Виберіть відділення" : "Виберіть поштомат")}
               </span>
               <ChevronDown className={cn("h-4 w-4 transition-transform text-muted-foreground", isWarehouseSearchOpen && "rotate-180")} />
             </div>
@@ -339,7 +339,7 @@ export const NovaPoshtaDelivery = ({
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       type="text"
-                      placeholder="Виберіть відділення"
+                      placeholder={deliveryType === 'PostOffice' ? "Виберіть відділення" : "Виберіть поштомат"}
                       value={warehouseSearchQuery}
                       onChange={(e) => setWarehouseSearchQuery(e.target.value)}
                       className="pl-10 rounded-xl"
