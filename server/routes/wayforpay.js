@@ -45,6 +45,13 @@ router.post('/create-payment', async (req, res, next) => {
     const order = orders[0];
     const orderIdInt = order.id;
 
+    // Получаем tracking_token для returnUrl
+    const trackingToken = order.tracking_token;
+    if (!trackingToken) {
+      console.error('[WayForPay] Tracking token not found for order:', orderId);
+      return res.status(500).json({ error: 'Tracking token not found' });
+    }
+
     // Получаем товары заказа
     const [items] = await pool.execute(`
       SELECT 
@@ -77,7 +84,13 @@ router.post('/create-payment', async (req, res, next) => {
 
     console.log('[WayForPay] Order data:', JSON.stringify(orderData, null, 2));
 
-    const paymentData = buildWayForPayData(orderData, WFP_CONFIG);
+    // Создаем конфиг с returnUrl, включающим trackingToken
+    const configWithReturnUrl = {
+      ...WFP_CONFIG,
+      returnUrl: `${WFP_CONFIG.returnUrl}?track=${trackingToken}`,
+    };
+
+    const paymentData = buildWayForPayData(orderData, configWithReturnUrl);
 
     console.log('[WayForPay] Payment data created (without signature):', JSON.stringify({
       ...paymentData,

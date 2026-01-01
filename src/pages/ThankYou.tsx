@@ -39,13 +39,19 @@ const ThankYou = () => {
     enabled: !!identifier,
   });
 
+  // Определяем статус оплаты
+  const isPaymentPending = order?.status === 'awaiting_payment' && order?.payment?.method === 'wayforpay';
+  const isPaymentPaid = order?.status === 'paid' || (order?.status !== 'awaiting_payment' && order?.payment?.method !== 'wayforpay');
+
   // Debug: log order data
   useEffect(() => {
     if (order) {
       console.log('[ThankYou] Order data:', order);
       console.log('[ThankYou] Payment method:', order.payment?.method);
+      console.log('[ThankYou] Order status:', order.status);
+      console.log('[ThankYou] Is payment pending:', isPaymentPending);
     }
-  }, [order]);
+  }, [order, isPaymentPending]);
 
   const timelineSteps: TimelineStep[] = [
     {
@@ -142,15 +148,28 @@ const ThankYou = () => {
         <meta name="robots" content="noindex" />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-b from-green-50 to-background">
-        {/* Success Header */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 text-white py-12">
+      <div className={`min-h-screen bg-gradient-to-b ${isPaymentPending ? 'from-yellow-50' : 'from-green-50'} to-background`}>
+        {/* Header - зеленый для успешной оплаты, желтый для ожидающей */}
+        <div className={`bg-gradient-to-r ${isPaymentPending ? 'from-yellow-500 to-yellow-600' : 'from-green-500 to-green-600'} text-white py-12`}>
           <div className="container mx-auto px-4 text-center">
-            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-scale-in">
-              <CheckCircle className="w-10 h-10" />
+            <div className={`w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-scale-in`}>
+              {isPaymentPending ? (
+                <CreditCard className="w-10 h-10" />
+              ) : (
+                <CheckCircle className="w-10 h-10" />
+              )}
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">Дякуємо за замовлення!</h1>
-            <p className="text-green-100">Ваше замовлення успішно оформлено</p>
+            {isPaymentPending ? (
+              <>
+                <h1 className="text-2xl md:text-3xl font-bold mb-2">Очікуємо на оплату</h1>
+                <p className="text-yellow-100">Ваше замовлення оформлено, але оплата ще не підтверджена</p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-2xl md:text-3xl font-bold mb-2">Дякуємо за замовлення!</h1>
+                <p className="text-green-100">Ваше замовлення успішно оформлено</p>
+              </>
+            )}
           </div>
         </div>
 
@@ -164,10 +183,17 @@ const ThankYou = () => {
               </div>
               <div className="text-right">
                 <div className="text-sm text-muted-foreground">Статус</div>
-                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-                  <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                  Обробляється
-                </div>
+                {isPaymentPending ? (
+                  <div className="inline-flex items-center gap-2 bg-yellow-500/10 text-yellow-600 px-3 py-1 rounded-full text-sm font-medium">
+                    <span className="w-2 h-2 bg-yellow-600 rounded-full animate-pulse" />
+                    Очікує оплату
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                    <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                    Обробляється
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -273,6 +299,58 @@ const ThankYou = () => {
                       {order.payment.method === 'fopiban' && (
                         <div className="mt-3 pt-3 border-t text-sm text-muted-foreground">
                           Реквізити для оплати будуть надіслані вам на email або SMS
+                        </div>
+                      )}
+                      {isPaymentPending && order.payment.method === 'wayforpay' && (
+                        <div className="mt-4 pt-4 border-t">
+                          <p className="text-sm text-muted-foreground mb-3">
+                            Оплата не була завершена. Будь ласка, спробуйте оплатити замовлення ще раз.
+                          </p>
+                          <Button
+                            onClick={async () => {
+                              try {
+                                const { wayforpayAPI } = await import("@/lib/api");
+                                const paymentResponse = await wayforpayAPI.createPayment(order.id);
+                                
+                                if (!paymentResponse.paymentUrl || !paymentResponse.paymentData) {
+                                  throw new Error('Invalid payment response from server');
+                                }
+                                
+                                const form = document.createElement('form');
+                                form.method = 'POST';
+                                form.action = paymentResponse.paymentUrl;
+                                
+                                Object.entries(paymentResponse.paymentData).forEach(([key, value]) => {
+                                  if (Array.isArray(value)) {
+                                    value.forEach((item, index) => {
+                                      const input = document.createElement('input');
+                                      input.type = 'hidden';
+                                      input.name = `${key}[]`;
+                                      input.value = String(item);
+                                      form.appendChild(input);
+                                    });
+                                  } else {
+                                    const input = document.createElement('input');
+                                    input.type = 'hidden';
+                                    input.name = key;
+                                    input.value = String(value);
+                                    form.appendChild(input);
+                                  }
+                                });
+                                
+                                document.body.appendChild(form);
+                                form.submit();
+                              } catch (error) {
+                                console.error('[ThankYou] Error creating payment:', error);
+                                alert('Не вдалося створити платіж. Спробуйте пізніше.');
+                              }
+                            }}
+                            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+                            size="lg"
+                          >
+                            <CreditCard className="w-4 h-4 mr-2" />
+                            Спробувати оплатити ще раз
+                          </Button>
                         </div>
                       )}
                     </>
