@@ -997,7 +997,7 @@ const Checkout = () => {
                             {orderTotal >= FREE_DELIVERY_THRESHOLD ? <span className="text-green-600">Безкоштовно</span> : "від 60 ₴"}
                           </div>
                         </div>
-                        <div className="pl-8">
+                        <div className="ml-[28px]">
                           {(() => {
                             const savedData = getSavedDeliveryData("nova_poshta");
                             const isCollapsed = formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded === false;
@@ -1017,7 +1017,7 @@ const Checkout = () => {
                         </div>
                       </label>
                       {formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded !== false && (
-                        <div className="pl-4 pr-4 pb-4">
+                        <div className="pl-4 pr-4 pb-4 ml-[28px]">
                           <NovaPoshtaDelivery
                             cityRef={formData.novaPoshtaCityRef}
                             warehouseRef={formData.novaPoshtaDeliveryType === "PostOffice" 
@@ -1113,7 +1113,7 @@ const Checkout = () => {
                             {orderTotal >= FREE_DELIVERY_THRESHOLD ? <span className="text-green-600">Безкоштовно</span> : "від 45 грн"}
                           </div>
                         </div>
-                        <div className="pl-8">
+                        <div className="ml-[28px]">
                           {(() => {
                             const savedData = getSavedDeliveryData("ukr_poshta");
                             const isCollapsed = formData.deliveryMethod === "ukr_poshta" && formData.ukrPoshtaExpanded === false;
@@ -1149,7 +1149,7 @@ const Checkout = () => {
                         </div>
                       </label>
                       {formData.deliveryMethod === "ukr_poshta" && formData.ukrPoshtaExpanded !== false && (
-                        <div className="pl-4 pr-4 pb-4">
+                        <div className="pl-4 pr-4 pb-4 ml-[28px]">
                           <UkrPoshtaDelivery
                             cityId={formData.ukrPoshtaCityId}
                             branchId={formData.ukrPoshtaBranchId}
@@ -1221,7 +1221,7 @@ const Checkout = () => {
                             })()}
                           </div>
                         </div>
-                        <div className="pl-8">
+                        <div className="ml-[28px]">
                           <div className="text-sm text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
                         </div>
                       </label>

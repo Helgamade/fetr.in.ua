@@ -177,7 +177,7 @@ export const NovaPoshtaDelivery = ({
   const displayedCities = citySearchQuery.length >= 2 ? searchCities : popularCities;
 
   return (
-    <div className="space-y-4 pl-2">
+    <div className="space-y-4">
       {/* Тип доставки */}
       <div className="space-y-3">
         <RadioGroup

@@ -445,7 +445,7 @@ export const UkrPoshtaDelivery = ({
   };
 
   return (
-    <div className="space-y-4 pl-2">
+    <div className="space-y-4">
       {/* Выбор города */}
       <fieldset className="space-y-2">
         <legend className="flex items-center gap-1 text-sm font-medium">
