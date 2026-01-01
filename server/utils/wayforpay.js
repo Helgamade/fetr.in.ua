@@ -175,7 +175,7 @@ export function buildWayForPayData(order, config) {
   const merchantSignature = generateWayForPaySignature(paramsForSignature, merchantSecretKey);
 
   // Возвращаем полные данные для формы (включая serviceUrl и returnUrl, но они НЕ в подписи)
-  return {
+  const result = {
     merchantAccount,
     merchantDomainName,
     orderReference: order.id,
@@ -191,5 +191,10 @@ export function buildWayForPayData(order, config) {
     language: 'UA',
     merchantSignature,
   };
+  
+  console.log('[buildWayForPayData] returnUrl from config:', returnUrl);
+  console.log('[buildWayForPayData] returnUrl in result:', result.returnUrl);
+  
+  return result;
 }
 

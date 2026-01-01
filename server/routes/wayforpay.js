@@ -136,21 +136,36 @@ router.post('/callback', async (req, res, next) => {
     }
     
     // Если данные пришли в нестандартном формате (JSON строка в ключе объекта)
+    // WayForPay иногда отправляет данные как: { "{\"orderReference\":\"...\"}": "", "merchantSignature": "..." }
     if (typeof callbackData === 'object' && callbackData !== null) {
       const keys = Object.keys(callbackData);
       
-      // Ищем ключ, который содержит JSON строку
+      // Ищем ключ, который содержит JSON строку (обычно это первый ключ, который выглядит как JSON)
       for (const key of keys) {
-        const value = callbackData[key];
+        // Если сам ключ - это JSON строка
+        if (key.startsWith('{') && key.endsWith('}')) {
+          try {
+            const parsed = JSON.parse(key);
+            // Если распарсилось успешно и содержит нужные поля - используем это
+            if (parsed.orderReference || parsed.transactionStatus) {
+              callbackData = parsed;
+              console.log('[WayForPay] Parsed JSON string from callback key (key is JSON)');
+              break;
+            }
+          } catch (parseError) {
+            // Игнорируем ошибки парсинга
+          }
+        }
         
         // Если значение - строка, которая выглядит как JSON
-        if (typeof value === 'string' && (value.startsWith('{') || value.startsWith('['))) {
+        const value = callbackData[key];
+        if (typeof value === 'string' && value.startsWith('{') && value.endsWith('}')) {
           try {
             const parsed = JSON.parse(value);
             // Если распарсилось успешно и содержит нужные поля - используем это
             if (parsed.orderReference || parsed.transactionStatus) {
               callbackData = parsed;
-              console.log('[WayForPay] Parsed JSON string from callback key:', key);
+              console.log('[WayForPay] Parsed JSON string from callback value');
               break;
             }
           } catch (parseError) {
