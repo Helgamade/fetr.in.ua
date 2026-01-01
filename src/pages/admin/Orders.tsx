@@ -270,6 +270,16 @@ export function Orders() {
                 </div>
               </div>
 
+              {/* Comment */}
+              {selectedOrder.comment && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Коментар</h4>
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <div className="text-sm whitespace-pre-wrap">{selectedOrder.comment}</div>
+                  </div>
+                </div>
+              )}
+
               {/* Items */}
               <div className="space-y-2">
                 <h4 className="font-semibold">Товари</h4>

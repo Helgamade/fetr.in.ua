@@ -104,11 +104,8 @@ export const NovaPoshtaDelivery = ({
       setIsWarehouseSearchOpen(false);
       setWarehouseSearchQuery("");
       
-      // Сбрасываем выбранное отделение при изменении типа доставки
-      if (selectedWarehouse) {
-        setSelectedWarehouse(null);
-        onWarehouseChange(null);
-      }
+      // НЕ сбрасываем выбранное отделение при изменении типа доставки
+      // warehouseRef из props уже будет правильным для текущего типа
       
       novaPoshtaAPI.getWarehouses(selectedCity.ref, deliveryType)
         .then((warehouses) => {

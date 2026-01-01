@@ -58,6 +58,11 @@ router.get('/', async (req, res, next) => {
         method: order.payment_method
       };
 
+      // Include comment if it exists
+      if (order.comment) {
+        order.comment = order.comment;
+      }
+
       // Remove old fields
       delete order.customer_name;
       delete order.customer_phone;
@@ -193,8 +198,8 @@ router.post('/', async (req, res, next) => {
       const [orderResult] = await connection.execute(`
         INSERT INTO orders (order_number, customer_name, customer_phone, customer_email,
           delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
-          payment_method, subtotal, discount, delivery_cost, total, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'created')
+          payment_method, subtotal, discount, delivery_cost, total, status, comment)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'created', ?)
       `, [
         id, // order_number (VARCHAR)
         customer.name || null, 
@@ -211,7 +216,8 @@ router.post('/', async (req, res, next) => {
         Number(subtotal) || 0, 
         Number(discount) || 0, 
         Number(deliveryCost) || 0, 
-        Number(total) || 0
+        Number(total) || 0,
+        toNull(req.body.comment)
       ]);
 
       const orderId = orderResult.insertId; // Get the AUTO_INCREMENT id (INT)

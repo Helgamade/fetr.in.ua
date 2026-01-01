@@ -63,6 +63,7 @@ const Checkout = () => {
           ukrPoshtaCompleted: parsed.ukrPoshtaCompleted || false,
           pickupExpanded: false, // Всегда свернуто при загрузке
           pickupCompleted: parsed.pickupCompleted || false,
+          comment: parsed.comment || prev.comment || "",
           commentExpanded: parsed.commentExpanded !== undefined ? parsed.commentExpanded : false,
         }));
       } catch (error) {
@@ -294,10 +295,17 @@ const Checkout = () => {
   };
 
   const handlePhoneFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    // При фокусе всегда ставим курсор после "+380"
+    // Если телефон уже введен, ставим курсор в конец, иначе после "+380"
     setTimeout(() => {
       if (phoneInputRef.current) {
-        phoneInputRef.current.setSelectionRange(4, 4);
+        const phone = formData.phone === "" ? "+380" : formData.phone;
+        if (phone.length > 4) {
+          // Если номер уже введен, ставим курсор в конец
+          phoneInputRef.current.setSelectionRange(phone.length, phone.length);
+        } else {
+          // Иначе ставим после "+380"
+          phoneInputRef.current.setSelectionRange(4, 4);
+        }
       }
     }, 0);
   };
@@ -549,6 +557,7 @@ const Checkout = () => {
         discount: discount || 0,
         deliveryCost: deliveryCost || 0,
         total: finalTotal || 0,
+        comment: formData.comment && formData.comment.trim() ? formData.comment.trim() : null,
       };
 
       // Submit order to API
