@@ -867,7 +867,9 @@ const Checkout = () => {
   // Стоимость заказа БЕЗ доставки (после всех скидок)
   const orderTotal = getSubtotal() - getTotalDiscount();
   // Порог бесплатной доставки из настроек админ-панели
-  const FREE_DELIVERY_THRESHOLD = parseInt(storeSettings.free_delivery_threshold) || 1500;
+  const FREE_DELIVERY_THRESHOLD = typeof storeSettings.free_delivery_threshold === 'number' 
+    ? storeSettings.free_delivery_threshold 
+    : parseInt(String(storeSettings.free_delivery_threshold || '1500')) || 1500;
   
   // Цены доставки для справки (не включаются в стоимость заказа)
   const getDeliveryPriceInfo = () => {
