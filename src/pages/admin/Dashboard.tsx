@@ -43,7 +43,7 @@ export function Dashboard() {
   const statsCards = [
     {
       title: 'Загальний дохід',
-      value: `₴${totalRevenue.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: `₴${totalRevenue.toFixed(2)}`,
       change: '+0%',
       trend: 'up' as const,
       icon: DollarSign,
