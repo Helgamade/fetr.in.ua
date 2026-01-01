@@ -184,9 +184,9 @@ export function Orders() {
                       <td className="py-4 px-4">
                         <div className="flex items-start gap-3">
                           <div className="flex-shrink-0">
-                            {product?.image ? (
+                            {product?.images && product.images.length > 0 ? (
                               <img
-                                src={product.image}
+                                src={product.images[0]}
                                 alt={product.name}
                                 className="w-12 h-12 object-cover rounded"
                               />
