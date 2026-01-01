@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, Package, CreditCard, Truck, MapPin, Phone, Mail, User, CheckCircle, Pencil } from "lucide-react";
+import { ArrowLeft, Package, CreditCard, Truck, MapPin, Phone, Mail, User, CheckCircle, Pencil, ChevronDown, ChevronUp } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "@/hooks/use-toast";
 import { usePublicSettings } from "@/hooks/usePublicSettings";
@@ -63,6 +63,7 @@ const Checkout = () => {
           ukrPoshtaCompleted: parsed.ukrPoshtaCompleted || false,
           pickupExpanded: false, // Всегда свернуто при загрузке
           pickupCompleted: parsed.pickupCompleted || false,
+          commentExpanded: parsed.commentExpanded !== undefined ? parsed.commentExpanded : false,
         }));
       } catch (error) {
         console.error('Error loading checkout form data from localStorage:', error);
@@ -101,6 +102,7 @@ const Checkout = () => {
     pickupExpanded: false,
     pickupCompleted: false,
     comment: "",
+    commentExpanded: false,
     contactInfoCompleted: false,
     contactInfoExpanded: true,
     deliveryExpanded: true
@@ -839,7 +841,7 @@ const Checkout = () => {
                         type="button"
                         variant="outline"
                         disabled={!isPhoneValid || !isFirstNameValid || !isLastNameValid}
-                        className="w-full rounded-xl border h-10"
+                        className="w-full rounded-xl border h-10 hover:border hover:bg-transparent"
                         onClick={() => {
                           if (isContactInfoValid) {
                             setFormData(prev => ({ ...prev, contactInfoCompleted: true, contactInfoExpanded: false }));
@@ -878,6 +880,16 @@ const Checkout = () => {
                         // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
                         if (prev.deliveryMethod === value && value === "nova_poshta" && prev.novaPoshtaExpanded === false) {
                           return { ...prev, novaPoshtaExpanded: true };
+                        }
+                        // Если выбираем самовывоз, сразу помечаем как завершенный и сворачиваем
+                        if (value === "pickup") {
+                          return { 
+                            ...prev, 
+                            deliveryMethod: value, 
+                            pickupCompleted: true,
+                            deliveryExpanded: false,
+                            novaPoshtaExpanded: undefined 
+                          };
                         }
                         // Иначе просто переключаем способ доставки
                         return { ...prev, deliveryMethod: value, novaPoshtaExpanded: value === "nova_poshta" ? true : undefined };
@@ -1084,7 +1096,7 @@ const Checkout = () => {
                             }}
                             disabled={!formData.ukrPoshtaCity || !formData.ukrPoshtaPostalCode || !formData.ukrPoshtaAddress}
                             variant="outline"
-                            className="w-full rounded-xl border h-10"
+                            className="w-full rounded-xl border h-10 hover:border hover:bg-transparent"
                           >
                             Продовжити
                           </Button>
@@ -1133,7 +1145,7 @@ const Checkout = () => {
                               }));
                             }}
                             variant="outline"
-                            className="w-full rounded-xl border h-10 mt-4"
+                            className="w-full rounded-xl border h-10 mt-4 hover:border hover:bg-transparent"
                           >
                             Продовжити
                           </Button>
@@ -1351,15 +1363,35 @@ const Checkout = () => {
 
                 {/* Comment */}
                 <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
-                  <Label htmlFor="comment">Коментар до замовлення</Label>
-                  <textarea
-                    id="comment"
-                    name="comment"
-                    value={formData.comment}
-                    onChange={handleInputChange}
-                    placeholder="Додаткові побажання..."
-                    className="w-full min-h-[100px] p-3 border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                  />
+                  <div 
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, commentExpanded: !prev.commentExpanded }));
+                    }}
+                  >
+                    <Label htmlFor="comment" className="cursor-pointer">Коментар до замовлення</Label>
+                    {formData.commentExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  {formData.commentExpanded && (
+                    <div className="space-y-2">
+                      <textarea
+                        id="comment"
+                        name="comment"
+                        value={formData.comment}
+                        onChange={handleInputChange}
+                        placeholder="Введіть коментар"
+                        maxLength={254}
+                        className="w-full min-h-[100px] p-3 border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                      />
+                      <div className="text-sm text-muted-foreground text-right">
+                        Залишилось символів: {254 - formData.comment.length}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Submit Button (Mobile) */}

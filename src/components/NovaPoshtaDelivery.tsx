@@ -252,7 +252,7 @@ export const NovaPoshtaDelivery = ({
                           e.stopPropagation();
                           handleCitySelect(city);
                         }}
-                        className="px-3 py-1.5 text-sm border rounded-lg hover:border-primary hover:bg-accent transition-colors"
+                        className="px-3 py-1.5 text-sm border rounded-lg"
                       >
                         {city.description_ua}
                       </button>
@@ -391,7 +391,7 @@ export const NovaPoshtaDelivery = ({
             onClick={onContinue}
             disabled={!selectedCity || !selectedWarehouse}
             variant="outline"
-            className="w-full rounded-xl border h-10"
+            className="w-full rounded-xl border h-10 hover:border hover:bg-transparent"
           >
             Продовжити
           </Button>
