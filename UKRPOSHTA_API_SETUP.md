@@ -5,17 +5,17 @@
 API Укрпошты состоит из двух частей:
 
 1. **Адресный классификатор** (`https://www.ukrposhta.ua/address-classifier-ws/`)
-   - **Требует Authorization Bearer токен** (такой же, как для оформления отправлений)
+   - **Требует PROD_COUNTERPARTY TOKEN** для Address Classifier API
    - URL должен быть с www: `https://www.ukrposhta.ua/address-classifier-ws/`
    - Используется для поиска городов и отделений
    - См. документацию: `Search-offices-and-indexes-v3.pdf` и `Address-classifier-v3.20-09122024.xml`
 
 2. **ecom API** (`https://www.ukrposhta.ua/ecom/0.0.1`)
-   - Требует Bearer токен
+   - Требует PRODUCTION BEARER eCom токен
    - Используется для создания адресы, клиентов, отправлений
    - См. документацию: `API-інструкція.pdf`
 
-**Для текущей реализации (выбор города и отделения) используется адресный классификатор, требуется Bearer токен.**
+**Для текущей реализации (выбор города и отделения) используется адресный классификатор с PROD_COUNTERPARTY TOKEN.**
 
 ## Добавление ключей в server/.env
 
@@ -23,8 +23,8 @@ API Укрпошты состоит из двух частей:
 
 ```env
 # Укрпошта API настройки (PRODUCTION)
-# Bearer токен для адресного классификатора и ecom API
-UKRPOSHTA_BEARER_TOKEN=68cff37f-1e85-4fa9-b0a8-36c0f1ba5d40
+# PROD_COUNTERPARTY TOKEN для Address Classifier API (поиск городов и отделений)
+UKRPOSHTA_BEARER_TOKEN=ab714b81-60a5-4dc5-a106-1a382f8d84bf
 ```
 
 ### Для тестирования (Sandbox):
@@ -58,33 +58,45 @@ WAYFORPAY_RETURN_URL=https://fetr.in.ua/thank-you
 WAYFORPAY_SERVICE_URL=https://fetr.in.ua/api/wayforpay/callback
 
 # Укрпошта API настройки (PRODUCTION)
-UKRPOSHTA_API_BASE=https://www.ukrposhta.ua/ecom/0.0.1
-UKRPOSHTA_BEARER_TOKEN=67f02a7c-3af7-34d1-aa18-7eb4d96f3be4
+# PROD_COUNTERPARTY TOKEN для Address Classifier API
+UKRPOSHTA_BEARER_TOKEN=ab714b81-60a5-4dc5-a106-1a382f8d84bf
+# PRODUCTION BEARER eCom для создания отправлений (если понадобится)
+# UKRPOSHTA_ECOM_TOKEN=67f02a7c-3af7-34d1-aa18-7eb4d96f3be4
 ```
 
 ## Значения из файла АРІ_ключі.pdf:
 
 ### PRODUCTION (продакшн):
-- **PRODUCTION BEARER eCom**: `67f02a7c-3af7-34d1-aa18-7eb4d96f3be4`
-- **PRODUCTION BEARER StatusTracking**: `7f37c2c3-780b-3602-8e18-b7e50b901cd5`
+- **PROD_COUNTERPARTY TOKEN**: `ab714b81-60a5-4dc5-a106-1a382f8d84bf` ⭐ **Для Address Classifier API**
+- **PRODUCTION BEARER eCom**: `67f02a7c-3af7-34d1-aa18-7eb4d96f3be4` - для создания отправлений
+- **PRODUCTION BEARER StatusTracking**: `7f37c2c3-780b-3602-8e18-b7e50b901cd5` - для отслеживания посылок
 
 ### SANDBOX (тестовое окружение):
-- **SANDBOX BEARER eCom**: `4bfd1c4e-ff8f-3952-bb30-8fc17c5975db`
-- **SANDBOX BEARER StatusTracking**: `d4ff701b-795e-3951-a7dc-1202d6fa388a`
+- **SANDBOX_COUNTERPARTY_TOKEN**: `2fbee77e-2f39-3f34-823f-52d4b3e0bae2` - для Address Classifier API
+- **SANDBOX BEARER eCom**: `4bfd1c4e-ff8f-3952-bb30-8fc17c5975db` - для создания отправлений
+- **SANDBOX BEARER StatusTracking**: `d4ff701b-795e-3951-a7dc-1202d6fa388a` - для отслеживания посылок
 
-**Важно:** Для работы с городами и отделениями через адресный классификатор токен НЕ требуется. Токен нужен только для ecom API (создание отправлений).
+**Важно:** 
+- Для Address Classifier API (поиск городов и отделений) используется **PROD_COUNTERPARTY TOKEN**
+- Для создания отправлений используется **PRODUCTION BEARER eCom**
 
 ## Текущая реализация
 
 Текущая реализация использует **адресный классификатор API** для поиска городов и отделений:
 
-- **Базовый URL:** `https://ukrposhta.ua/address-classifier-ws/`
-- **Токен:** Не требуется (публичный API)
+- **Базовый URL:** `https://www.ukrposhta.ua/address-classifier-ws/` (с www)
+- **Токен:** `PROD_COUNTERPARTY TOKEN` (`ab714b81-60a5-4dc5-a106-1a382f8d84bf`)
 - **Endpoints:**
-  - Поиск городов: `/get_city_by_region_id_and_city_ua?region_id=...&city_ua=...`
-  - Получение отделений: `/get_postoffices_by_city_id?city_id={CITY_ID}`
+  - Поиск городов: `/get_city_by_region_id_and_district_id_and_city_ua?city_ua={назва_міста}`
+  - Получение отделений: `/get_postoffices_by_postcode_cityid_cityvpzid?city_id={CITY_ID}`
 
-Подробнее см. `UKRPOSHTA_ADDRESS_CLASSIFIER.md`
+**Пример запроса:**
+```bash
+curl -X GET \
+  --header 'Authorization: Bearer ab714b81-60a5-4dc5-a106-1a382f8d84bf' \
+  --header 'Accept: application/json' \
+  'https://www.ukrposhta.ua/address-classifier-ws/get_city_by_region_id_and_district_id_and_city_ua?city_ua=ворон'
+```
 
 ## Примечания:
 

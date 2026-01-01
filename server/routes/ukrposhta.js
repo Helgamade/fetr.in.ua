@@ -11,11 +11,12 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 const router = express.Router();
 
 // Адресный классификатор API Укрпошты
-// ✅ ПРОТЕСТИРОВАНО автоматическим тестом - эта конфигурация работает!
+// ✅ Согласно официальной информации от Укрпошты:
+// Для Address Classifier API нужно использовать PROD_COUNTERPARTY TOKEN
 // URL: https://www.ukrposhta.ua/address-classifier-ws (с www)
-// PROD_BEARER_ECOM (из АРІ_ключі.pdf): 67f02a7c-3af7-34d1-aa18-7eb4d96f3be4
+// PROD_COUNTERPARTY TOKEN (из АРІ_ключі.pdf): ab714b81-60a5-4dc5-a106-1a382f8d84bf
 const ADDRESS_CLASSIFIER_BASE = 'https://www.ukrposhta.ua/address-classifier-ws';
-const UKRPOSHTA_BEARER_TOKEN = process.env.UKRPOSHTA_BEARER_TOKEN || '67f02a7c-3af7-34d1-aa18-7eb4d96f3be4';
+const UKRPOSHTA_BEARER_TOKEN = process.env.UKRPOSHTA_BEARER_TOKEN || 'ab714b81-60a5-4dc5-a106-1a382f8d84bf';
 
 // Функция для вызова адресного классификатора API
 // Согласно документации раздел 3.2: /get_city_by_name
