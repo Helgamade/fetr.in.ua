@@ -48,6 +48,15 @@ export interface CartState {
 export interface CustomerInfo {
   name: string;
   phone: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+export interface RecipientInfo {
+  name: string;
+  phone: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface DeliveryInfo {
@@ -59,12 +68,13 @@ export interface DeliveryInfo {
 }
 
 export interface PaymentInfo {
-  method: 'card' | 'cod'; // card = на карту, cod = післяплата
+  method: 'card' | 'cod' | 'fop'; // card = на карту, cod = післяплата, fop = на рахунок ФОП
 }
 
 export interface Order {
   id: string;
   customer: CustomerInfo;
+  recipient?: RecipientInfo; // Данные получателя, если отличается от заказчика
   delivery: DeliveryInfo;
   payment: PaymentInfo;
   items: CartItem[];
