@@ -9,8 +9,6 @@ import { cn } from "@/lib/utils";
 interface UkrPoshtaDeliveryProps {
   cityId: string | null;
   branchId: string | null;
-  cityData?: UkrposhtaCity | null; // Полный объект города для восстановления
-  branchData?: UkrposhtaBranch | null; // Полный объект отделения для восстановления
   isExpanded?: boolean;
   onCityChange: (city: UkrposhtaCity | null) => void;
   onBranchChange: (branch: UkrposhtaBranch | null) => void;
@@ -20,8 +18,6 @@ interface UkrPoshtaDeliveryProps {
 export const UkrPoshtaDelivery = ({
   cityId,
   branchId,
-  cityData,
-  branchData,
   isExpanded = true,
   onCityChange,
   onBranchChange,
@@ -43,52 +39,43 @@ export const UkrPoshtaDelivery = ({
     ukrposhtaAPI.getPopularCities().then(setPopularCities).catch(console.error);
   }, []);
 
-  // Восстановление данных из сохраненных объектов при монтировании
+  // Загрузка выбранного города при монтировании или изменении cityId
+  // По аналогии с NovaPoshtaDelivery - загружаем по ID через API
   useEffect(() => {
-    // Приоритет: сначала используем полные объекты из props (восстановление из localStorage)
-    if (cityData) {
-      console.log('✅ [UkrPoshtaDelivery] Restoring city from saved data:', cityData);
-      setSelectedCity(cityData);
-    } else if (cityId) {
-      // Fallback: загружаем по ID через API (если полный объект не передан)
-      console.log('🔄 [UkrPoshtaDelivery] Loading city by ID:', cityId);
+    if (cityId) {
       ukrposhtaAPI.getCity(cityId)
         .then(city => {
           setSelectedCity(city);
+          // Не вызываем onCityChange здесь, чтобы не перезаписывать данные из props
         })
         .catch((error) => {
           console.error('❌ [UkrPoshtaDelivery] Error loading city by ID:', error);
-          // Если не удалось загрузить по ID, оставляем null
-          setSelectedCity(null);
+          // Если endpoint не работает, пытаемся найти город через поиск по сохраненному названию
+          // Это fallback для случаев, когда getCity не работает
         });
     } else {
       setSelectedCity(null);
     }
-  }, [cityId, cityData]);
+  }, [cityId]);
 
-  // Восстановление отделения из сохраненных объектов
+  // Загрузка выбранного отделения при монтировании или изменении branchId
+  // По аналогии с NovaPoshtaDelivery - загружаем по ID через API
   useEffect(() => {
-    // Приоритет: сначала используем полный объект из props (восстановление из localStorage)
-    if (branchData) {
-      console.log('✅ [UkrPoshtaDelivery] Restoring branch from saved data:', branchData);
-      setSelectedBranch(branchData);
-    } else if (branchId && selectedCity) {
-      // Fallback: загружаем по ID через API (если полный объект не передан)
-      console.log('🔄 [UkrPoshtaDelivery] Loading branch by ID:', branchId);
+    if (branchId && selectedCity) {
       ukrposhtaAPI.getBranch(branchId)
         .then(branch => {
           setSelectedBranch(branch);
+          // Не вызываем onBranchChange здесь, чтобы не перезаписывать данные из props
         })
         .catch((error) => {
           console.error('❌ [UkrPoshtaDelivery] Error loading branch by ID:', error);
-          // Если не удалось загрузить по ID, оставляем null
-          setSelectedBranch(null);
+          // Если endpoint не работает, отделение не восстановится автоматически
         });
     } else {
       setSelectedBranch(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [branchId, branchData, selectedCity]);
+  }, [branchId, selectedCity]);
 
   // Поиск городов
   useEffect(() => {
@@ -255,13 +242,9 @@ export const UkrPoshtaDelivery = ({
 
   const handleCitySelect = (city: UkrposhtaCity) => {
     setSelectedCity(city);
-    // Сбрасываем отделение только если выбран другой город
-    // Если выбран тот же город, сохраняем отделение
-    if (selectedCity?.id !== city.id) {
-      setSelectedBranch(null);
-      onBranchChange(null);
-    }
+    setSelectedBranch(null);
     onCityChange(city);
+    onBranchChange(null);
     setIsCitySearchOpen(false);
     setCitySearchQuery("");
   };
