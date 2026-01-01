@@ -89,7 +89,7 @@ export const NovaPoshtaDelivery = ({
 
   // Загрузка отделений при выборе города или изменении типа доставки
   useEffect(() => {
-    if (selectedCity && !isWarehouseSearchOpen) {
+    if (selectedCity) {
       console.log('🔄 [NovaPoshtaDelivery] Loading warehouses for city:', {
         cityRef: selectedCity.ref,
         cityName: selectedCity.description_ua,
@@ -99,6 +99,10 @@ export const NovaPoshtaDelivery = ({
       setIsCitySearchOpen(false);
       setCitySearchQuery("");
       setSearchCities([]);
+      
+      // Закрываем список отделений при изменении типа доставки
+      setIsWarehouseSearchOpen(false);
+      setWarehouseSearchQuery("");
       
       // Сбрасываем выбранное отделение при изменении типа доставки
       if (selectedWarehouse) {

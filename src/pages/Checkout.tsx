@@ -767,7 +767,7 @@ const Checkout = () => {
                               onBlur={handlePhoneBlur}
                               placeholder="+380"
                               required
-                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${formData.phone === "" || formData.phone === "+380" ? 'text-muted-foreground' : ''} ${phoneTouched && phoneError ? 'border-red-500' : ''} ${isPhoneValid ? 'border-green-500' : ''}`}
+                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${formData.phone === "" || formData.phone === "+380" ? 'text-muted-foreground' : ''} ${phoneTouched && phoneError ? 'border-red-500' : ''}`}
                             />
                             {isPhoneValid && (
                               <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
@@ -798,7 +798,7 @@ const Checkout = () => {
                               }}
                               placeholder="Введіть прізвище кирилицею"
                               required
-                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${lastNameTouched && lastNameError ? 'border-red-500' : ''} ${isLastNameValid ? 'border-green-500' : ''}`}
+                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${lastNameTouched && lastNameError ? 'border-red-500' : ''}`}
                             />
                             {isLastNameValid && (
                               <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
@@ -829,7 +829,7 @@ const Checkout = () => {
                               }}
                               placeholder="Введіть Ім'я кирилицею"
                               required
-                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${firstNameTouched && firstNameError ? 'border-red-500' : ''} ${isFirstNameValid ? 'border-green-500' : ''}`}
+                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${firstNameTouched && firstNameError ? 'border-red-500' : ''}`}
                             />
                             {isFirstNameValid && (
                               <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
