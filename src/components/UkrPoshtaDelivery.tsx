@@ -467,10 +467,13 @@ export const UkrPoshtaDelivery = ({
               }
             }}
           >
-            <span className={selectedCity ? "text-foreground" : "text-muted-foreground"}>
+            <span className={cn(
+              "flex-1 break-words pr-2",
+              selectedCity ? "text-foreground" : "text-muted-foreground"
+            )}>
               {selectedCity ? getCityDisplayName(selectedCity) : "Виберіть населений пункт"}
             </span>
-            <ChevronDown className={cn("h-4 w-4 transition-transform text-muted-foreground", isCitySearchOpen && "rotate-180")} />
+            <ChevronDown className={cn("h-4 w-4 transition-transform text-muted-foreground flex-shrink-0", isCitySearchOpen && "rotate-180")} />
           </div>
 
           {/* Раскрывающийся модуль с городами */}
