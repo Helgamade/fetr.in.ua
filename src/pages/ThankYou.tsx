@@ -237,20 +237,27 @@ const ThankYou = () => {
                   Оплата
                 </h2>
                 <div className="bg-muted/30 rounded-xl p-4">
-                  <div className="flex items-center gap-2">
-                    {order.payment.method === 'card' && <WayForPayLogo className="w-5 h-5" />}
-                    {order.payment.method === 'cod' && <CODPaymentLogo className="w-5 h-5" />}
-                    {order.payment.method === 'fop' && <FOPPaymentLogo className="w-5 h-5" />}
-                    <span className="font-medium">
-                      {order.payment.method === 'card' && 'Онлайн оплата (WayForPay)'}
-                      {order.payment.method === 'cod' && 'Накладений платіж'}
-                      {order.payment.method === 'fop' && 'Оплата на рахунок ФОП'}
-                    </span>
-                  </div>
-                  {order.payment.method === 'fop' && (
-                    <div className="mt-3 pt-3 border-t text-sm text-muted-foreground">
-                      Реквізити для оплати будуть надіслані вам на email або SMS
-                    </div>
+                  {order.payment && order.payment.method ? (
+                    <>
+                      <div className="flex items-center gap-2">
+                        {order.payment.method === 'card' && <WayForPayLogo className="w-5 h-5" />}
+                        {order.payment.method === 'cod' && <CODPaymentLogo className="w-5 h-5" />}
+                        {order.payment.method === 'fop' && <FOPPaymentLogo className="w-5 h-5" />}
+                        <span className="font-medium">
+                          {order.payment.method === 'card' && 'Онлайн оплата (WayForPay)'}
+                          {order.payment.method === 'cod' && 'Накладений платіж'}
+                          {order.payment.method === 'fop' && 'Оплата на рахунок ФОП'}
+                          {!['card', 'cod', 'fop'].includes(order.payment.method) && `Спосіб оплати: ${order.payment.method}`}
+                        </span>
+                      </div>
+                      {order.payment.method === 'fop' && (
+                        <div className="mt-3 pt-3 border-t text-sm text-muted-foreground">
+                          Реквізити для оплати будуть надіслані вам на email або SMS
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">Спосіб оплати не вказано</div>
                   )}
                 </div>
               </div>
