@@ -21,7 +21,10 @@ const UKRPOSHTA_BEARER_TOKEN = process.env.UKRPOSHTA_BEARER_TOKEN || '67f02a7c-3
 
 // Функция для вызова адресного классификатора API
 async function callAddressClassifierAPI(endpoint) {
-  const url = `${ADDRESS_CLASSIFIER_BASE}${endpoint}`;
+  // ВАЖНО: endpoint может уже содержать query параметры, поэтому формируем URL правильно
+  const url = endpoint.startsWith('http') 
+    ? endpoint 
+    : `${ADDRESS_CLASSIFIER_BASE}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
   
   try {
     // Проверяем, что токен определён
@@ -32,8 +35,8 @@ async function callAddressClassifierAPI(endpoint) {
     console.log(`📡 [Address Classifier API] GET ${url}`);
     console.log(`🔑 [Address Classifier API] Using token: ${UKRPOSHTA_BEARER_TOKEN.substring(0, 20)}...`);
     
-    // Полный набор заголовков для имитации браузера и обхода Cloudflare
-    // ВАЖНО: Authorization должен быть первым заголовком
+    // ВАЖНО: Используем простой объект для заголовков (Node.js fetch поддерживает это)
+    // Authorization должен быть передан правильно
     const headers = {
       'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN}`,
       'Accept': 'application/json',
@@ -43,35 +46,18 @@ async function callAddressClassifierAPI(endpoint) {
       'Origin': 'https://www.ukrposhta.ua',
     };
     
-    // Логируем заголовки для отладки (без полного токена)
+    // Логируем заголовки для отладки
     console.log(`📋 [Address Classifier API] Headers:`, {
       'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN.substring(0, 20)}...`,
       'Accept': headers.Accept,
-      'User-Agent': headers['User-Agent'].substring(0, 50) + '...',
+      'hasAuth': !!headers.Authorization,
+      'authLength': headers.Authorization.length,
     });
     
-    // ВАЖНО: Убеждаемся, что заголовки передаются правильно
-    // Node.js fetch может требовать явного указания всех заголовков
-    const fetchOptions = {
+    const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN}`,
-        'Accept': 'application/json',
-        'Accept-Language': 'uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://www.ukrposhta.ua/',
-        'Origin': 'https://www.ukrposhta.ua',
-      },
-    };
-    
-    console.log(`🔍 [Address Classifier API] Fetch options:`, {
-      method: fetchOptions.method,
-      url: url,
-      hasAuth: !!fetchOptions.headers.Authorization,
-      authPrefix: fetchOptions.headers.Authorization?.substring(0, 20),
+      headers: headers,
     });
-    
-    const response = await fetch(url, fetchOptions);
     
     const responseText = await response.text();
     
@@ -270,35 +256,12 @@ router.get('/cities/:id', async (req, res, next) => {
       return res.json(popularCity);
     }
 
-    // Пробуем получить информацию о городе через адресный классификатор
-    // ПРИМЕЧАНИЕ: Для получения города по ID нужен endpoint типа /get_city_by_city_id?city_id=...
-    // Если такого endpoint нет, возвращаем 404
-    try {
-      // Пробуем получить город по CITY_ID
-      const data = await callAddressClassifierAPI(`/get_city_by_city_id?city_id=${encodeURIComponent(id)}`);
-      
-      const entries = data?.Entries?.Entry || [];
-      const cityData = Array.isArray(entries) ? entries[0] : entries;
-      
-      if (!cityData) {
-        throw new Error('City not found');
-      }
-
-      // Преобразуем данные в наш формат
-      const city = {
-        id: cityData.CITY_ID?.toString() || id,
-        name: cityData.CITY_UA || cityData.CITY_EN || '',
-        postalCode: cityData.POSTCODE || '',
-        region: cityData.REGION_UA || '',
-        district: cityData.DISTRICT_UA || '',
-        cityId: cityData.CITY_ID?.toString() || id, // Сохраняем CITY_ID для получения отделений
-      };
-      
-      res.json(city);
-    } catch (apiError) {
-      console.error('❌ [Address Classifier API] Get city error:', apiError.message);
-      res.status(404).json({ error: 'City not found' });
-    }
+    // ПРИМЕЧАНИЕ: Endpoint /get_city_by_city_id не существует в API
+    // Для получения города по ID нужно использовать поиск или вернуть 404
+    // Если id - это CITY_ID (число), можно попробовать поиск по всем городам
+    // Но это неэффективно, поэтому просто возвращаем 404
+    console.log(`⚠️ [GET /cities/:id] Endpoint /get_city_by_city_id does not exist. City ID: ${id}`);
+    res.status(404).json({ error: 'City not found. Use /cities/search to find cities.' });
   } catch (error) {
     next(error);
   }
