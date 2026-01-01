@@ -397,14 +397,23 @@ async function callUkrposhtaAPIDirect(endpoint: string): Promise<any> {
 }
 
 export const ukrposhtaAPI = {
-  getPopularCities: () => fetchAPI<UkrposhtaCity[]>('/ukrposhta/cities/popular'),
+  // ⚠️ ВАЖНО: API Укрпошты защищено Cloudflare и блокирует все серверные запросы
+  // Поэтому все запросы делаются НАПРЯМУЮ с фронтенда (из браузера пользователя)
+  getPopularCities: async (): Promise<UkrposhtaCity[]> => {
+    // Возвращаем заранее определённые популярные города (с их реальными CITY_ID)
+    const popularCitiesWithIds = [
+      { id: '4926', name: 'Київ', postalCode: '01001', region: 'Київ', cityId: '4926' },
+      { id: '4827', name: 'Одеса', postalCode: '65001', region: 'Одеська обл.', cityId: '4827' },
+      { id: '4820', name: 'Дніпро', postalCode: '49001', region: 'Дніпропетровська обл.', cityId: '4820' },
+      { id: '4898', name: 'Харків', postalCode: '61001', region: 'Харківська обл.', cityId: '4898' },
+      { id: '4808', name: 'Львів', postalCode: '79001', region: 'Львівська обл.', cityId: '4808' },
+      { id: '4908', name: 'Запоріжжя', postalCode: '69001', region: 'Запорізька обл.', cityId: '4908' },
+    ];
+    return popularCitiesWithIds;
+  },
   searchCities: async (query: string): Promise<UkrposhtaCity[]> => {
-    // Пробуем сначала через наш сервер (может не работать из-за 403)
-    try {
-      return await fetchAPI<UkrposhtaCity[]>(`/ukrposhta/cities/search?q=${encodeURIComponent(query)}`);
-    } catch (error) {
-      // Если серверный запрос не работает, пробуем напрямую с фронтенда
-      console.log('⚠️ [Ukrposhta API] Server request failed, trying direct API call');
+    // Делаем запрос НАПРЯМУЮ с фронтенда (Cloudflare блокирует серверные запросы)
+    console.log('🔍 [Ukrposhta API] Searching cities from frontend:', query);
       
       // Популярные области для поиска
       const popularRegions = [
@@ -444,58 +453,105 @@ export const ukrposhtaAPI = {
       })).filter((city: any) => city.name && city.id);
       
       return formattedCities;
-    }
   },
-  getCity: (id: string) => fetchAPI<UkrposhtaCity>(`/ukrposhta/cities/${id}`),
-  getBranches: async (cityId: string, search?: string): Promise<UkrposhtaBranch[]> => {
-    // Пробуем сначала через наш сервер
+  getCity: async (id: string): Promise<UkrposhtaCity> => {
+    // Делаем запрос НАПРЯМУЮ с фронтенда (Cloudflare блокирует серверные запросы)
+    console.log('🔍 [Ukrposhta API] Getting city from frontend:', id);
+    
     try {
-      const params = new URLSearchParams({ cityId });
-      if (search) params.append('search', search);
-      return await fetchAPI<UkrposhtaBranch[]>(`/ukrposhta/branches?${params.toString()}`);
+      const data = await callUkrposhtaAPIDirect(`/get_city_by_city_id?city_id=${encodeURIComponent(id)}`);
+      const entries = data?.Entries?.Entry || [];
+      const cityData = Array.isArray(entries) ? entries[0] : entries;
+      
+      if (!cityData) {
+        throw new Error(`City not found: ${id}`);
+      }
+      
+      return {
+        id: cityData.CITY_ID?.toString() || id,
+        name: cityData.CITY_UA || cityData.CITY_EN || '',
+        postalCode: cityData.POSTCODE || '',
+        region: cityData.REGION_UA || '',
+        district: cityData.DISTRICT_UA || '',
+        cityId: cityData.CITY_ID?.toString() || id,
+      };
     } catch (error) {
-      // Если серверный запрос не работает, пробуем напрямую с фронтенда
-      console.log('⚠️ [Ukrposhta API] Server request failed, trying direct API call');
-      
-      const cityIdNum = parseInt(cityId, 10);
-      if (isNaN(cityIdNum) || cityIdNum <= 0) {
-        throw new Error(`Invalid cityId: "${cityId}". CITY_ID must be a number.`);
-      }
-      
-      try {
-        const data = await callUkrposhtaAPIDirect(
-          `/get_postoffices_by_postcode_cityid_cityvpzid?city_id=${cityIdNum}`
-        );
-        
-        const entries = data?.Entries?.Entry || [];
-        const branchesList = Array.isArray(entries) ? entries : [entries];
-        
-        const formattedBranches = branchesList.map((item: any, index: number) => ({
-          id: item.POSTOFFICE_ID?.toString() || item.POSTCODE || `branch_${index}`,
-          name: item.POSTOFFICE_UA || item.POSTOFFICE_EN || item.POSTOFFICE_NAME || `Відділення ${index + 1}`,
-          address: item.STREET_UA_VPZ || item.ADDRESS_UA || item.ADDRESS_EN || item.ADDRESS || '',
-          postalCode: item.POSTCODE || '',
-          cityId: cityId,
-        })).filter((branch: any) => branch.name);
-        
-        // Если есть поисковый запрос, дополнительно фильтруем результаты
-        if (search && search.length >= 2) {
-          const searchLower = search.toLowerCase();
-          return formattedBranches.filter((branch: any) => 
-            branch.name.toLowerCase().includes(searchLower) ||
-            branch.address.toLowerCase().includes(searchLower) ||
-            branch.id.toString().toLowerCase().includes(searchLower)
-          );
-        }
-        
-        return formattedBranches;
-      } catch (apiError) {
-        console.error('❌ [Ukrposhta Direct API] Get branches error:', apiError);
-        throw apiError;
-      }
+      console.error('❌ [Ukrposhta Direct API] Get city error:', error);
+      throw error;
     }
   },
-  getBranch: (id: string) => fetchAPI<UkrposhtaBranch>(`/ukrposhta/branches/${id}`),
+  getBranches: async (cityId: string, search?: string): Promise<UkrposhtaBranch[]> => {
+    // Делаем запрос НАПРЯМУЮ с фронтенда (Cloudflare блокирует серверные запросы)
+    console.log('🔍 [Ukrposhta API] Getting branches from frontend for cityId:', cityId);
+    
+    const cityIdNum = parseInt(cityId, 10);
+    if (isNaN(cityIdNum) || cityIdNum <= 0) {
+      throw new Error(`Invalid cityId: "${cityId}". CITY_ID must be a number.`);
+    }
+    
+    try {
+      const data = await callUkrposhtaAPIDirect(
+        `/get_postoffices_by_postcode_cityid_cityvpzid?city_id=${cityIdNum}`
+      );
+      
+      const entries = data?.Entries?.Entry || [];
+      const branchesList = Array.isArray(entries) ? entries : [entries];
+      
+      const formattedBranches = branchesList.map((item: any, index: number) => ({
+        id: item.POSTOFFICE_ID?.toString() || item.POSTCODE || `branch_${index}`,
+        name: item.POSTOFFICE_UA || item.POSTOFFICE_EN || item.POSTOFFICE_NAME || `Відділення ${index + 1}`,
+        address: item.STREET_UA_VPZ || item.ADDRESS_UA || item.ADDRESS_EN || item.ADDRESS || '',
+        postalCode: item.POSTCODE || '',
+        cityId: cityId,
+      })).filter((branch: any) => branch.name);
+      
+      // Если есть поисковый запрос, дополнительно фильтруем результаты
+      if (search && search.length >= 2) {
+        const searchLower = search.toLowerCase();
+        return formattedBranches.filter((branch: any) => 
+          branch.name.toLowerCase().includes(searchLower) ||
+          branch.address.toLowerCase().includes(searchLower) ||
+          branch.id.toString().toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return formattedBranches;
+    } catch (apiError) {
+      console.error('❌ [Ukrposhta Direct API] Get branches error:', apiError);
+      throw apiError;
+    }
+  },
+  getBranch: async (id: string): Promise<UkrposhtaBranch> => {
+    // Делаем запрос НАПРЯМУЮ с фронтенда (Cloudflare блокирует серверные запросы)
+    console.log('🔍 [Ukrposhta API] Getting branch from frontend:', id);
+    
+    try {
+      let data;
+      try {
+        data = await callUkrposhtaAPIDirect(`/get_postoffice_by_id?postoffice_id=${encodeURIComponent(id)}`);
+      } catch (error1) {
+        data = await callUkrposhtaAPIDirect(`/get_postoffice_by_postoffice_id?postoffice_id=${encodeURIComponent(id)}`);
+      }
+      
+      const entries = data?.Entries?.Entry || [];
+      const branchData = Array.isArray(entries) ? entries[0] : entries;
+      
+      if (!branchData) {
+        throw new Error(`Branch not found: ${id}`);
+      }
+      
+      return {
+        id: branchData.POSTOFFICE_ID?.toString() || id,
+        name: branchData.POSTOFFICE_UA || branchData.POSTOFFICE_EN || branchData.POSTOFFICE_NAME || '',
+        address: branchData.STREET_UA_VPZ || branchData.ADDRESS_UA || branchData.ADDRESS_EN || branchData.ADDRESS || '',
+        postalCode: branchData.POSTCODE || '',
+        cityId: branchData.CITY_ID?.toString() || null,
+      };
+    } catch (error) {
+      console.error('❌ [Ukrposhta Direct API] Get branch error:', error);
+      throw error;
+    }
+  },
 };
 
 // WayForPay API
