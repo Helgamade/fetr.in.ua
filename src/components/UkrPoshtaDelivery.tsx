@@ -91,13 +91,64 @@ export const UkrPoshtaDelivery = ({
   // Согласно документации адресного классификатора, для получения отделений нужен CITY_ID
   useEffect(() => {
     if (selectedCity) {
-      // Используем cityId (CITY_ID) если есть, иначе используем id
-      const cityIdForBranches = selectedCity.cityId || selectedCity.id;
+      // КРИТИЧНО: Для получения отделений нужен числовой CITY_ID
+      // Если cityId отсутствует или не является числом, нужно сначала получить CITY_ID через API
+      const cityIdForBranches = selectedCity.cityId;
+      
+      // Проверяем, что cityId является числом
+      const cityIdNum = cityIdForBranches ? parseInt(cityIdForBranches.toString(), 10) : null;
+      
+      if (!cityIdNum || isNaN(cityIdNum)) {
+        console.warn('⚠️ [UkrPoshtaDelivery] City does not have valid CITY_ID, trying to get it from API:', {
+          cityName: selectedCity.name,
+          cityId: cityIdForBranches,
+          id: selectedCity.id,
+        });
+        
+        // Если это популярный город без CITY_ID, пытаемся найти его через API
+        if (selectedCity.name) {
+          ukrposhtaAPI.searchCities(selectedCity.name)
+            .then((cities) => {
+              const foundCity = cities.find(c => 
+                c.name.toLowerCase() === selectedCity.name.toLowerCase() && 
+                c.cityId && 
+                !isNaN(parseInt(c.cityId.toString(), 10))
+              );
+              
+              if (foundCity && foundCity.cityId) {
+                console.log('✅ [UkrPoshtaDelivery] Found CITY_ID for city:', foundCity);
+                // Обновляем выбранный город с правильным cityId
+                const updatedCity = { ...selectedCity, cityId: foundCity.cityId };
+                setSelectedCity(updatedCity);
+                onCityChange(updatedCity);
+                // Загружаем отделения с правильным CITY_ID
+                ukrposhtaAPI.getBranches(foundCity.cityId)
+                  .then((branches) => {
+                    console.log(`✅ [UkrPoshtaDelivery] Loaded ${branches.length} branches for city ${foundCity.cityId}`);
+                    setBranches(branches);
+                  })
+                  .catch((error) => {
+                    console.error('❌ [UkrPoshtaDelivery] Error loading branches:', error);
+                    setBranches([]);
+                  });
+              } else {
+                console.error('❌ [UkrPoshtaDelivery] Could not find CITY_ID for city:', selectedCity.name);
+                setBranches([]);
+              }
+            })
+            .catch((error) => {
+              console.error('❌ [UkrPoshtaDelivery] Error searching for city:', error);
+              setBranches([]);
+            });
+        } else {
+          setBranches([]);
+        }
+        return;
+      }
       
       console.log('🔄 [UkrPoshtaDelivery] Loading branches for city:', {
-        cityId: cityIdForBranches,
+        cityId: cityIdNum,
         cityName: selectedCity.name,
-        hasCityId: !!selectedCity.cityId,
       });
       
       setIsCitySearchOpen(false);
@@ -107,9 +158,9 @@ export const UkrPoshtaDelivery = ({
       setIsBranchSearchOpen(false);
       setBranchSearchQuery("");
       
-      ukrposhtaAPI.getBranches(cityIdForBranches)
+      ukrposhtaAPI.getBranches(cityIdNum.toString())
         .then((branches) => {
-          console.log(`✅ [UkrPoshtaDelivery] Loaded ${branches.length} branches for city ${cityIdForBranches}`);
+          console.log(`✅ [UkrPoshtaDelivery] Loaded ${branches.length} branches for city ${cityIdNum}`);
           if (branches.length > 0) {
             console.log('📦 [UkrPoshtaDelivery] Sample branch:', branches[0]);
           }
@@ -117,6 +168,7 @@ export const UkrPoshtaDelivery = ({
         })
         .catch((error) => {
           console.error('❌ [UkrPoshtaDelivery] Error loading branches:', error);
+          setBranches([]);
         });
     }
   }, [selectedCity]);
@@ -125,15 +177,24 @@ export const UkrPoshtaDelivery = ({
   useEffect(() => {
     if (isBranchSearchOpen && selectedCity) {
       if (branches.length === 0 || branchSearchQuery) {
-        const cityIdForBranches = selectedCity.cityId || selectedCity.id;
+        const cityIdForBranches = selectedCity.cityId;
+        const cityIdNum = cityIdForBranches ? parseInt(cityIdForBranches.toString(), 10) : null;
+        
+        if (!cityIdNum || isNaN(cityIdNum)) {
+          console.warn('⚠️ [UkrPoshtaDelivery] Cannot load branches: invalid CITY_ID');
+          setBranches([]);
+          return;
+        }
+        
         console.log('🔄 [UkrPoshtaDelivery] Loading branches on dropdown open');
-        ukrposhtaAPI.getBranches(cityIdForBranches, branchSearchQuery || undefined)
+        ukrposhtaAPI.getBranches(cityIdNum.toString(), branchSearchQuery || undefined)
           .then((branches) => {
             console.log(`✅ [UkrPoshtaDelivery] Loaded ${branches.length} branches on open`);
             setBranches(branches);
           })
           .catch((error) => {
             console.error('❌ [UkrPoshtaDelivery] Error loading branches on open:', error);
+            setBranches([]);
           });
       }
     }
@@ -143,15 +204,24 @@ export const UkrPoshtaDelivery = ({
   // Поиск отделений
   useEffect(() => {
     if (isBranchSearchOpen && selectedCity && branchSearchQuery.length >= 2) {
-      const cityIdForBranches = selectedCity.cityId || selectedCity.id;
+      const cityIdForBranches = selectedCity.cityId;
+      const cityIdNum = cityIdForBranches ? parseInt(cityIdForBranches.toString(), 10) : null;
+      
+      if (!cityIdNum || isNaN(cityIdNum)) {
+        console.warn('⚠️ [UkrPoshtaDelivery] Cannot search branches: invalid CITY_ID');
+        setBranches([]);
+        return;
+      }
+      
       const timeoutId = setTimeout(() => {
-        ukrposhtaAPI.getBranches(cityIdForBranches, branchSearchQuery)
+        ukrposhtaAPI.getBranches(cityIdNum.toString(), branchSearchQuery)
           .then((branches) => {
             console.log(`✅ [UkrPoshtaDelivery] Search found ${branches.length} branches`);
             setBranches(branches);
           })
           .catch((error) => {
             console.error('❌ [UkrPoshtaDelivery] Search error:', error);
+            setBranches([]);
           });
       }, 300);
       return () => clearTimeout(timeoutId);

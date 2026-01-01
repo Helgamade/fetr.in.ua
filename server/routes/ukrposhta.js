@@ -25,6 +25,8 @@ async function callAddressClassifierAPI(endpoint) {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Referer': 'https://www.ukrposhta.ua/',
+        'Origin': 'https://www.ukrposhta.ua',
       },
     });
     
@@ -53,16 +55,16 @@ async function callAddressClassifierAPI(endpoint) {
 }
 
 // Популярные города Украины (хардкод для быстрого доступа)
-// ПРИМЕЧАНИЕ: Для работы с адресным классификатором нужны CITY_ID из API
-// Эти значения являются временными и должны быть получены через API
-// или обновлены после получения реальных CITY_ID из адресного классификатора
+// ВАЖНО: Эти города используются только для отображения в UI
+// Для получения отделений нужно использовать CITY_ID из API через cities/search
+// Популярные города НЕ должны использоваться для получения отделений напрямую
 const POPULAR_CITIES = [
-  { id: 'kyiv', name: 'Київ', postalCode: '01001', region: 'Київська обл.', cityId: '' }, // TODO: получить CITY_ID через API
-  { id: 'odesa', name: 'Одеса', postalCode: '65001', region: 'Одеська обл.', cityId: '' },
-  { id: 'dnipro', name: 'Дніпро', postalCode: '49001', region: 'Дніпропетровська обл.', cityId: '' },
-  { id: 'kharkiv', name: 'Харків', postalCode: '61001', region: 'Харківська обл.', cityId: '' },
-  { id: 'lviv', name: 'Львів', postalCode: '79001', region: 'Львівська обл.', cityId: '' },
-  { id: 'zaporizhzhia', name: 'Запоріжжя', postalCode: '69001', region: 'Запорізька обл.', cityId: '' },
+  { id: 'kyiv', name: 'Київ', postalCode: '01001', region: 'Київська обл.', cityId: null }, // cityId должен быть получен через API
+  { id: 'odesa', name: 'Одеса', postalCode: '65001', region: 'Одеська обл.', cityId: null },
+  { id: 'dnipro', name: 'Дніпро', postalCode: '49001', region: 'Дніпропетровська обл.', cityId: null },
+  { id: 'kharkiv', name: 'Харків', postalCode: '61001', region: 'Харківська обл.', cityId: null },
+  { id: 'lviv', name: 'Львів', postalCode: '79001', region: 'Львівська обл.', cityId: null },
+  { id: 'zaporizhzhia', name: 'Запоріжжя', postalCode: '69001', region: 'Запорізька обл.', cityId: null },
 ];
 
 // Получить популярные города
@@ -264,9 +266,17 @@ router.get('/branches', async (req, res, next) => {
       return res.status(400).json({ error: 'cityId (CITY_ID) is required. Use cities/search to find city and get CITY_ID' });
     }
 
+    // Проверяем, что cityId является числом (CITY_ID должен быть числовым)
+    // Если это строка (например, 'kyiv', 'odesa'), значит это популярный город без CITY_ID
+    const cityIdNum = parseInt(cityId, 10);
+    if (isNaN(cityIdNum) || cityIdNum <= 0) {
+      console.log(`❌ [GET /branches] Invalid cityId: "${cityId}" - must be a numeric CITY_ID. Use cities/search to find city and get CITY_ID`);
+      return res.status(400).json({ error: `Invalid cityId: "${cityId}". CITY_ID must be a number. Use cities/search to find city and get CITY_ID` });
+    }
+
     try {
       // Получаем отделения по CITY_ID согласно документации
-      const data = await callAddressClassifierAPI(`/get_postoffices_by_city_id?city_id=${encodeURIComponent(cityId)}`);
+      const data = await callAddressClassifierAPI(`/get_postoffices_by_city_id?city_id=${cityIdNum}`);
       
       // Формат ответа: {Entries: {Entry: [...]}}
       const entries = data?.Entries?.Entry || [];
