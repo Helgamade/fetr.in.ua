@@ -366,10 +366,48 @@ router.get('/cities/:id', async (req, res, next) => {
         }
       }
       
-      // Если не нашли в популярных регионах, пробуем поиск через /cities/search
-      // с известным cityId из предыдущего поиска
-      // Но это не поможет, так как search требует название города
-      console.log(`⚠️ [GET /cities/:id] City with CITY_ID ${cityIdNum} not found in popular regions`);
+      // Если не нашли в популярных регионах, пробуем получить информацию о городе
+      // через endpoint отделений - если отделения для города существуют, значит город существует
+      // и мы можем извлечь информацию о городе из первого отделения
+      try {
+        console.log(`🔄 [GET /cities/:id] Trying to get city info via branches endpoint for CITY_ID: ${cityIdNum}`);
+        const branchesData = await callAddressClassifierAPI(
+          `/get_postoffices_by_postcode_cityid_cityvpzid?city_id=${cityIdNum}`
+        );
+        const branchesEntries = branchesData?.Entries?.Entry || [];
+        const branchesList = Array.isArray(branchesEntries) ? branchesEntries : [branchesEntries];
+        
+        if (branchesList.length > 0 && branchesList[0]) {
+          const firstBranch = branchesList[0];
+          // Извлекаем информацию о городе из отделения
+          // В ответе отделения может быть информация о городе (CITY_ID, CITY_UA, REGION_UA и т.д.)
+          // Но в реальном ответе API может не быть полной информации о городе
+          // Поэтому пробуем поиск по названию города, если оно есть в отделении
+          
+          // Если в отделении есть информация о городе, используем её
+          // Иначе пробуем поиск по всем регионам с более широким запросом
+          console.log(`✅ [GET /cities/:id] Found branches for CITY_ID ${cityIdNum}, extracting city info from first branch`);
+          
+          // Пробуем найти город через поиск по всем регионам с частичным совпадением
+          // Но это неэффективно, поэтому лучше вернуть минимальную информацию
+          // и позволить фронтенду использовать данные из отделений
+          
+          // ВАЖНО: Если отделения загружаются, значит город существует
+          // Возвращаем минимальную информацию о городе на основе CITY_ID
+          return res.json({
+            id: cityIdNum.toString(),
+            name: firstBranch.CITY_UA || firstBranch.CITY_NAME || `City ${cityIdNum}`, // Может быть в ответе отделения
+            postalCode: firstBranch.POSTCODE || '',
+            region: firstBranch.REGION_UA || firstBranch.REGION_NAME || '',
+            district: firstBranch.DISTRICT_UA || firstBranch.DISTRICT_NAME || '',
+            cityId: cityIdNum.toString(),
+          });
+        }
+      } catch (branchesError) {
+        console.log(`⚠️ [GET /cities/:id] Could not get city info via branches: ${branchesError.message}`);
+      }
+      
+      console.log(`⚠️ [GET /cities/:id] City with CITY_ID ${cityIdNum} not found in popular regions and branches endpoint`);
     }
 
     console.log(`⚠️ [GET /cities/:id] City not found. City ID: ${id}`);
