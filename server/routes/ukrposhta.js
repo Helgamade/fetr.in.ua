@@ -11,34 +11,24 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 const router = express.Router();
 
 // Адресный классификатор API Укрпошты
-// Согласно документации:
-// - Search-offices-and-indexes-v3.xml: URL без www: https://ukrposhta.ua/address-classifier-ws/
-// - Address-classifier-v3.20-09122024.xml (версия 2.0): "Для сервісу надано доступ без необхідності авторизації"
-// Пробуем без токена и с URL без www
-const ADDRESS_CLASSIFIER_BASE = 'https://ukrposhta.ua/address-classifier-ws';
-const UKRPOSHTA_BEARER_TOKEN = process.env.UKRPOSHTA_BEARER_TOKEN; // Опционально, если нужен
+// Согласно документации для клиентов с договором:
+// PROD_COUNTERPARTY TOKEN (из АРІ_ключі.pdf): ab714b81-60a5-4dc5-a106-1a382f8d84bf
+const ADDRESS_CLASSIFIER_BASE = 'https://www.ukrposhta.ua/address-classifier-ws';
+const UKRPOSHTA_BEARER_TOKEN = process.env.UKRPOSHTA_BEARER_TOKEN || 'ab714b81-60a5-4dc5-a106-1a382f8d84bf';
 
 // Функция для вызова адресного классификатора API
-// Согласно версии 2.0 документации, доступ предоставлен без авторизации
 async function callAddressClassifierAPI(endpoint) {
   const url = `${ADDRESS_CLASSIFIER_BASE}${endpoint}`;
   
   try {
     console.log(`📡 [Address Classifier API] GET ${url}`);
     
-    // Пробуем сначала без токена (согласно версии 2.0 документации)
-    const headers = {
-      'Accept': 'application/json',
-    };
-    
-    // Если токен указан, добавляем его (на случай если нужен)
-    if (UKRPOSHTA_BEARER_TOKEN) {
-      headers['Authorization'] = `Bearer ${UKRPOSHTA_BEARER_TOKEN}`;
-    }
-    
     const response = await fetch(url, {
       method: 'GET',
-      headers: headers,
+      headers: {
+        'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN}`,
+        'Accept': 'application/json',
+      },
     });
     
     const responseText = await response.text();
