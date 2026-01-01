@@ -394,6 +394,7 @@ export const UkrPoshtaDelivery = ({
         const foundCities = await ukrposhtaAPI.searchCities(city.name);
         
         // Нормализуем область для сравнения (убираем "обл." и лишние пробелы)
+        // ВАЖНО: Популярные города теперь уже без "обл.", но на всякий случай нормализуем
         const normalizeRegion = (region: string) => {
           if (!region) return '';
           return region.replace(/\s*обл\.?\s*$/i, '').trim();
@@ -402,7 +403,9 @@ export const UkrPoshtaDelivery = ({
         const cityRegionNormalized = normalizeRegion(city.region || '');
         
         // Ищем город по названию и области (с нормализацией)
-        const foundCity = foundCities.find(c => {
+        // ВАЖНО: Сначала ищем точное совпадение по названию и области
+        // Если не находим, пробуем только по названию (на случай, если область отличается)
+        let foundCity = foundCities.find(c => {
           const nameMatch = c.name.toLowerCase() === city.name.toLowerCase();
           const regionMatch = cityRegionNormalized 
             ? normalizeRegion(c.region || '') === cityRegionNormalized
@@ -412,10 +415,22 @@ export const UkrPoshtaDelivery = ({
           return nameMatch && regionMatch && hasNumericCityId;
         });
         
+        // Если не нашли с учетом области, пробуем только по названию (берем первый с числовым CITY_ID)
+        if (!foundCity && cityRegionNormalized) {
+          foundCity = foundCities.find(c => {
+            const nameMatch = c.name.toLowerCase() === city.name.toLowerCase();
+            const hasNumericCityId = c.cityId && !isNaN(parseInt(c.cityId.toString(), 10));
+            return nameMatch && hasNumericCityId;
+          });
+        }
+        
         if (foundCity && foundCity.cityId) {
           console.log(`✅ [UkrPoshtaDelivery] Found CITY_ID ${foundCity.cityId} for popular city "${city.name}"`);
+          // ВАЖНО: Сохраняем город с числовым CITY_ID для надежного сохранения
           cityToSave = {
             ...foundCity,
+            id: foundCity.cityId.toString(), // Используем числовой CITY_ID как id
+            cityId: foundCity.cityId.toString(), // Сохраняем числовой CITY_ID
             // Сохраняем полное название для отображения везде одинаково
             displayName: getCityFullName(foundCity),
           };

@@ -79,13 +79,14 @@ async function callAddressClassifierAPI(endpoint) {
 // ВАЖНО: Эти города используются только для отображения в UI
 // Для получения отделений нужно использовать CITY_ID из API через cities/search
 // Популярные города НЕ должны использоваться для получения отделений напрямую
+// ВАЖНО: Область указывается БЕЗ "обл." для единообразия с API
 const POPULAR_CITIES = [
-  { id: 'kyiv', name: 'Київ', postalCode: '01001', region: 'Київська обл.', cityId: null }, // cityId должен быть получен через API
-  { id: 'odesa', name: 'Одеса', postalCode: '65001', region: 'Одеська обл.', cityId: null },
-  { id: 'dnipro', name: 'Дніпро', postalCode: '49001', region: 'Дніпропетровська обл.', cityId: null },
-  { id: 'kharkiv', name: 'Харків', postalCode: '61001', region: 'Харківська обл.', cityId: null },
-  { id: 'lviv', name: 'Львів', postalCode: '79001', region: 'Львівська обл.', cityId: null },
-  { id: 'zaporizhzhia', name: 'Запоріжжя', postalCode: '69001', region: 'Запорізька обл.', cityId: null },
+  { id: 'kyiv', name: 'Київ', postalCode: '01001', region: 'Київська', cityId: null }, // cityId должен быть получен через API
+  { id: 'odesa', name: 'Одеса', postalCode: '65001', region: 'Одеська', cityId: null },
+  { id: 'dnipro', name: 'Дніпро', postalCode: '49001', region: 'Дніпропетровська', cityId: null },
+  { id: 'kharkiv', name: 'Харків', postalCode: '61001', region: 'Харківська', cityId: null },
+  { id: 'lviv', name: 'Львів', postalCode: '79001', region: 'Львівська', cityId: null },
+  { id: 'zaporizhzhia', name: 'Запоріжжя', postalCode: '69001', region: 'Запорізька', cityId: null },
 ];
 
 // Получить популярные города
