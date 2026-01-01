@@ -201,7 +201,10 @@ router.get('/track/:token', async (req, res, next) => {
 
     // Сохраняем tracking_token для админки (для создания ссылки отслеживания)
     if (order.tracking_token) {
-      order.trackingToken = order.tracking_token;
+      order.trackingToken = String(order.tracking_token);
+      console.log('[Get Order] tracking_token found:', order.tracking_token, '-> trackingToken:', order.trackingToken);
+    } else {
+      console.log('[Get Order] WARNING: tracking_token is NULL or empty for order id:', order.id);
     }
     delete order.tracking_token;
 

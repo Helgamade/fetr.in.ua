@@ -79,7 +79,11 @@ export function OrderDetail() {
   useEffect(() => {
     if (id) {
       ordersAPI.getOrder(id)
-        .then(setOrder)
+        .then((orderData) => {
+          console.log('[OrderDetail] Order data received:', orderData);
+          console.log('[OrderDetail] trackingToken:', orderData.trackingToken);
+          setOrder(orderData);
+        })
         .catch(console.error)
         .finally(() => setIsLoading(false));
     }
@@ -131,9 +135,9 @@ export function OrderDetail() {
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold">Замовлення {order.id}</h1>
-            {order.trackingToken && (
+            {(order.trackingToken || (order as any).tracking_token) && (
               <a
-                href={`/thank-you?track=${order.trackingToken}`}
+                href={`/thank-you?track=${order.trackingToken || (order as any).tracking_token}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:text-primary/80 transition-colors"
