@@ -1138,6 +1138,11 @@ const Checkout = () => {
                           <UkrPoshtaDelivery
                             cityId={formData.ukrPoshtaCityId}
                             branchId={formData.ukrPoshtaBranchId}
+                            savedCityName={formData.ukrPoshtaCity}
+                            savedCityRegion={formData.ukrPoshtaCityRegion}
+                            savedBranchName={formData.ukrPoshtaBranch}
+                            savedBranchAddress={formData.ukrPoshtaAddress}
+                            savedBranchPostalCode={formData.ukrPoshtaPostalCode}
                             isExpanded={true}
                             onCityChange={(city) => {
                               setFormData(prev => ({

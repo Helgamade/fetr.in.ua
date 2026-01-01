@@ -9,6 +9,12 @@ import { cn } from "@/lib/utils";
 interface UkrPoshtaDeliveryProps {
   cityId: string | null;
   branchId: string | null;
+  // Сохраненные данные для мгновенного отображения (из localStorage)
+  savedCityName?: string | null;
+  savedCityRegion?: string | null;
+  savedBranchName?: string | null;
+  savedBranchAddress?: string | null;
+  savedBranchPostalCode?: string | null;
   isExpanded?: boolean;
   onCityChange: (city: UkrposhtaCity | null) => void;
   onBranchChange: (branch: UkrposhtaBranch | null) => void;
@@ -18,6 +24,11 @@ interface UkrPoshtaDeliveryProps {
 export const UkrPoshtaDelivery = ({
   cityId,
   branchId,
+  savedCityName,
+  savedCityRegion,
+  savedBranchName,
+  savedBranchAddress,
+  savedBranchPostalCode,
   isExpanded = true,
   onCityChange,
   onBranchChange,
@@ -28,6 +39,37 @@ export const UkrPoshtaDelivery = ({
   const [branches, setBranches] = useState<UkrposhtaBranch[]>([]);
   const [selectedCity, setSelectedCity] = useState<UkrposhtaCity | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<UkrposhtaBranch | null>(null);
+  
+  // Инициализация из сохраненных данных для мгновенного отображения
+  useEffect(() => {
+    if (cityId && savedCityName && !selectedCity) {
+      // Создаем объект города из сохраненных данных для мгновенного отображения
+      const cityFromSaved: UkrposhtaCity = {
+        id: cityId,
+        name: savedCityName,
+        postalCode: '',
+        region: savedCityRegion || '',
+        cityId: cityId,
+      };
+      setSelectedCity(cityFromSaved);
+      console.log(`⚡ [UkrPoshtaDelivery] Instant city display from saved data:`, cityFromSaved);
+    }
+  }, [cityId, savedCityName, savedCityRegion, selectedCity]);
+  
+  useEffect(() => {
+    if (branchId && savedBranchName && !selectedBranch && selectedCity) {
+      // Создаем объект отделения из сохраненных данных для мгновенного отображения
+      const branchFromSaved: UkrposhtaBranch = {
+        id: branchId,
+        name: savedBranchName,
+        address: savedBranchAddress || '',
+        postalCode: savedBranchPostalCode || '',
+        cityId: selectedCity.id,
+      };
+      setSelectedBranch(branchFromSaved);
+      console.log(`⚡ [UkrPoshtaDelivery] Instant branch display from saved data:`, branchFromSaved);
+    }
+  }, [branchId, savedBranchName, savedBranchAddress, savedBranchPostalCode, selectedBranch, selectedCity]);
   
   const [isCitySearchOpen, setIsCitySearchOpen] = useState(false);
   const [isBranchSearchOpen, setIsBranchSearchOpen] = useState(false);
