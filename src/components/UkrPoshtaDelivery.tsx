@@ -61,7 +61,61 @@ export const UkrPoshtaDelivery = ({
         }
       }
       
-      // Создаем объект города из сохраненных данных для мгновенного отображения
+      // ВАЛИДАЦИЯ: Проверяем, что cityId является числовым CITY_ID
+      const cityIdNum = parseInt(cityId.toString(), 10);
+      if (isNaN(cityIdNum) || cityIdNum <= 0) {
+        // Если cityId строковый (популярный город), пытаемся найти числовой CITY_ID через API
+        console.log(`🔍 [UkrPoshtaDelivery] Saved cityId "${cityId}" is not numeric, searching via API for "${cityName}"...`);
+        ukrposhtaAPI.searchCities(cityName)
+          .then((cities) => {
+            const foundCity = cities.find(c => 
+              c.name.toLowerCase() === cityName.toLowerCase() && 
+              (region ? c.region === region : true) &&
+              c.cityId && 
+              !isNaN(parseInt(c.cityId.toString(), 10))
+            );
+            
+            if (foundCity && foundCity.cityId) {
+              console.log(`✅ [UkrPoshtaDelivery] Found numeric CITY_ID ${foundCity.cityId} for saved city "${cityName}"`);
+              const cityFromSaved: UkrposhtaCity = {
+                id: foundCity.cityId.toString(),
+                name: foundCity.name,
+                postalCode: '',
+                region: foundCity.region || region,
+                cityId: foundCity.cityId.toString(),
+              };
+              setSelectedCity(cityFromSaved);
+              // Обновляем cityId в родительском компоненте через onCityChange
+              onCityChange(cityFromSaved);
+            } else {
+              console.warn(`⚠️ [UkrPoshtaDelivery] Could not find numeric CITY_ID for saved city "${cityName}"`);
+              // Используем сохраненные данные как есть
+              const cityFromSaved: UkrposhtaCity = {
+                id: cityId,
+                name: cityName,
+                postalCode: '',
+                region: region,
+                cityId: cityId, // Оставляем строковый ID
+              };
+              setSelectedCity(cityFromSaved);
+            }
+          })
+          .catch((error) => {
+            console.error(`❌ [UkrPoshtaDelivery] Error searching for saved city "${cityName}":`, error);
+            // При ошибке используем сохраненные данные как есть
+            const cityFromSaved: UkrposhtaCity = {
+              id: cityId,
+              name: cityName,
+              postalCode: '',
+              region: region,
+              cityId: cityId,
+            };
+            setSelectedCity(cityFromSaved);
+          });
+        return;
+      }
+      
+      // Если cityId числовой, создаем объект города из сохраненных данных
       const cityFromSaved: UkrposhtaCity = {
         id: cityId,
         name: cityName,
@@ -72,7 +126,7 @@ export const UkrPoshtaDelivery = ({
       setSelectedCity(cityFromSaved);
       console.log(`⚡ [UkrPoshtaDelivery] Instant city display from saved data:`, cityFromSaved);
     }
-  }, [cityId, savedCityName, savedCityRegion, selectedCity]);
+  }, [cityId, savedCityName, savedCityRegion, selectedCity, onCityChange]);
   
   useEffect(() => {
     if (branchId && savedBranchName && !selectedBranch && selectedCity) {
