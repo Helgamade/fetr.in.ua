@@ -77,6 +77,11 @@ export function generateWayForPaySignature(params, secretKey) {
  * @returns {boolean} - true если подпись валидна
  */
 export function validateWayForPayCallbackSignature(params, secretKey, receivedSignature) {
+  console.log('[validateWayForPayCallbackSignature] ===== VALIDATION START =====');
+  console.log('[validateWayForPayCallbackSignature] Input params:', JSON.stringify(params, null, 2));
+  console.log('[validateWayForPayCallbackSignature] secretKey present?', secretKey ? 'YES' : 'NO');
+  console.log('[validateWayForPayCallbackSignature] receivedSignature:', receivedSignature);
+  
   // Формируем строку для подписи согласно документации WayForPay
   // merchantAccount;orderReference;amount;currency;authCode;cardPan;transactionStatus;reasonCode
   const parts = [
@@ -90,17 +95,22 @@ export function validateWayForPayCallbackSignature(params, secretKey, receivedSi
     String(params.reasonCode || ''),
   ];
   
+  console.log('[validateWayForPayCallbackSignature] Parts for signature:', parts);
+  
   const signatureString = parts.join(';');
   
-  console.log('[WayForPay] Callback signature string:', signatureString);
+  console.log('[validateWayForPayCallbackSignature] Signature string:', signatureString);
+  console.log('[validateWayForPayCallbackSignature] Signature string length:', signatureString.length);
   
   const calculatedSignature = crypto
     .createHmac('md5', secretKey)
     .update(signatureString, 'utf8')
     .digest('hex');
   
-  console.log('[WayForPay] Calculated callback signature:', calculatedSignature);
-  console.log('[WayForPay] Received callback signature:', receivedSignature);
+  console.log('[validateWayForPayCallbackSignature] Calculated signature:', calculatedSignature);
+  console.log('[validateWayForPayCallbackSignature] Received signature:', receivedSignature);
+  console.log('[validateWayForPayCallbackSignature] Signatures match?', calculatedSignature === receivedSignature);
+  console.log('[validateWayForPayCallbackSignature] ===== VALIDATION END =====');
   
   return calculatedSignature === receivedSignature;
 }

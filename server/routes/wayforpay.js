@@ -229,15 +229,18 @@ router.post('/callback', async (req, res, next) => {
             // Если распарсилось успешно и содержит нужные поля - используем это
             if (parsed.orderReference || parsed.transactionStatus) {
               console.log(`[WayForPay] Step 3.${i + 1}: Parsed data contains orderReference or transactionStatus`);
-              // Сохраняем merchantSignature из исходного объекта, если он есть
-              if (callbackData.merchantSignature) {
-                console.log(`[WayForPay] Step 3.${i + 1}: Preserving merchantSignature from original:`, callbackData.merchantSignature);
+              // merchantSignature должен быть ВНУТРИ распарсенного JSON, а не в исходном объекте
+              console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature in parsed data:`, parsed.merchantSignature);
+              console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature in original object:`, callbackData.merchantSignature);
+              // Используем merchantSignature из распарсенного JSON (он там должен быть)
+              // Если его нет в распарсенном, пробуем из исходного объекта
+              if (!parsed.merchantSignature && callbackData.merchantSignature) {
+                console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature not in parsed, using from original:`, callbackData.merchantSignature);
                 parsed.merchantSignature = callbackData.merchantSignature;
-              } else {
-                console.log(`[WayForPay] Step 3.${i + 1}: No merchantSignature in original object`);
               }
               callbackData = parsed;
               console.log(`[WayForPay] Step 3.${i + 1}: Using parsed data from key`);
+              console.log(`[WayForPay] Step 3.${i + 1}: Final callbackData.merchantSignature:`, callbackData.merchantSignature);
               break;
             } else {
               console.log(`[WayForPay] Step 3.${i + 1}: Parsed data does NOT contain orderReference or transactionStatus`);
@@ -266,15 +269,18 @@ router.post('/callback', async (req, res, next) => {
             // Если распарсилось успешно и содержит нужные поля - используем это
             if (parsed.orderReference || parsed.transactionStatus) {
               console.log(`[WayForPay] Step 3.${i + 1}: Parsed data contains orderReference or transactionStatus`);
-              // Сохраняем merchantSignature из исходного объекта, если он есть
-              if (callbackData.merchantSignature) {
-                console.log(`[WayForPay] Step 3.${i + 1}: Preserving merchantSignature from original:`, callbackData.merchantSignature);
+              // merchantSignature должен быть ВНУТРИ распарсенного JSON, а не в исходном объекте
+              console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature in parsed data:`, parsed.merchantSignature);
+              console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature in original object:`, callbackData.merchantSignature);
+              // Используем merchantSignature из распарсенного JSON (он там должен быть)
+              // Если его нет в распарсенном, пробуем из исходного объекта
+              if (!parsed.merchantSignature && callbackData.merchantSignature) {
+                console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature not in parsed, using from original:`, callbackData.merchantSignature);
                 parsed.merchantSignature = callbackData.merchantSignature;
-              } else {
-                console.log(`[WayForPay] Step 3.${i + 1}: No merchantSignature in original object`);
               }
               callbackData = parsed;
               console.log(`[WayForPay] Step 3.${i + 1}: Using parsed data from value`);
+              console.log(`[WayForPay] Step 3.${i + 1}: Final callbackData.merchantSignature:`, callbackData.merchantSignature);
               break;
             } else {
               console.log(`[WayForPay] Step 3.${i + 1}: Parsed data does NOT contain orderReference or transactionStatus`);
