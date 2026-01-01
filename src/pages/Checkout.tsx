@@ -1498,7 +1498,7 @@ const Checkout = () => {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-card rounded-2xl p-6 shadow-soft sticky top-24 space-y-4">
+              <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
                 <h2 className="text-lg font-bold">Ваше замовлення</h2>
                 
                 <div className="space-y-3 max-h-[300px] overflow-auto">
@@ -1591,12 +1591,12 @@ const Checkout = () => {
               </div>
 
               {/* Promo Code Section - отдельный блок */}
-              <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4 border mt-6">
+              <div className="bg-card/50 rounded-2xl p-4 shadow-soft space-y-3 mt-4">
                 <div 
                   className="flex items-center justify-between cursor-pointer"
                   onClick={() => setPromoCodeExpanded(!promoCodeExpanded)}
                 >
-                  <h3 className="font-medium">Ввести промокод</h3>
+                  <h3 className="font-medium text-muted-foreground text-sm">Ввести промокод</h3>
                   {promoCodeExpanded ? (
                     <ChevronUp className="w-4 h-4 text-muted-foreground" />
                   ) : (
