@@ -68,7 +68,7 @@ export interface DeliveryInfo {
 }
 
 export interface PaymentInfo {
-  method: 'card' | 'cod' | 'fop'; // card = на карту, cod = післяплата, fop = на рахунок ФОП
+  method: 'wayforpay' | 'nalojka' | 'fopiban'; // wayforpay = WayForPay, nalojka = наложенный платеж, fopiban = Оплата на рахунок ФОП
 }
 
 export interface Order {

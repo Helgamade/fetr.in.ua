@@ -23,7 +23,7 @@ async function applyFOPMigration() {
 
     // Apply migration
     const migrationSQL = `
-      ALTER TABLE orders MODIFY COLUMN payment_method ENUM('card', 'cod', 'fop') NOT NULL;
+      ALTER TABLE orders MODIFY COLUMN payment_method ENUM('wayforpay', 'nalojka', 'fopiban') NOT NULL;
     `;
     
     await connection.execute(migrationSQL);

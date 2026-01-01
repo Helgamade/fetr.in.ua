@@ -252,9 +252,9 @@ export function Orders() {
                           <div className="flex items-start gap-2">
                             <CreditCard className="h-4 w-4 mt-0.5 flex-shrink-0" />
                             <div>
-                              {order.payment.method === 'card' && 'Онлайн оплата (WayForPay)'}
-                              {order.payment.method === 'cod' && 'Накладений платіж'}
-                              {order.payment.method === 'fop' && 'Оплата на рахунок ФОП'}
+                              {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
+                              {order.payment.method === 'nalojka' && 'Накладений платіж'}
+                              {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
                             </div>
                           </div>
                         </div>

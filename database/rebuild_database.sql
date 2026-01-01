@@ -104,7 +104,7 @@ CREATE TABLE orders (
   delivery_warehouse VARCHAR(255) NULL,
   delivery_post_index VARCHAR(20) NULL,
   delivery_address TEXT NULL,
-  payment_method ENUM('card', 'cod') NOT NULL,
+  payment_method ENUM('wayforpay', 'nalojka', 'fopiban') NOT NULL,
   subtotal DECIMAL(10, 2) NOT NULL,
   discount DECIMAL(10, 2) NOT NULL DEFAULT 0,
   delivery_cost DECIMAL(10, 2) NOT NULL DEFAULT 0,

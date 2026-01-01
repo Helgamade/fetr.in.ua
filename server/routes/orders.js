@@ -237,13 +237,13 @@ router.post('/', async (req, res, next) => {
       const toNull = (val) => (val === undefined || val === null || val === '') ? null : val;
       
       // Determine initial order status based on payment method
-      // For online payment, status is 'awaiting_payment' until WayForPay confirms payment
-      // For COD, status is 'created'
-      const initialStatus = payment.method === 'online' ? 'awaiting_payment' : 'created';
+      // For wayforpay payment, status is 'awaiting_payment' until WayForPay confirms payment
+      // For nalojka, status is 'created'
+      const initialStatus = payment.method === 'wayforpay' ? 'awaiting_payment' : 'created';
       
-      // Convert payment method: 'online' -> 'card' for database compatibility
-      // Маппинг способов оплаты: 'online' -> 'card' для обратной совместимости, 'fop' -> 'fop'
-      const dbPaymentMethod = payment.method === 'online' ? 'card' : payment.method;
+      // Convert payment method: 'wayforpay' -> 'wayforpay' for database
+      // Маппинг способов оплаты: 'wayforpay' -> 'wayforpay', 'nalojka' -> 'nalojka', 'fopiban' -> 'fopiban'
+      const dbPaymentMethod = payment.method;
       console.log('[Create Order] Payment method:', payment.method, '-> DB:', dbPaymentMethod);
       
       // Insert order - id is AUTO_INCREMENT, use order_number for string identifier

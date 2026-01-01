@@ -678,7 +678,7 @@ const Checkout = () => {
       const orderTotal = subtotal - discount; // Стоимость заказа БЕЗ доставки (после всех скидок)
       
       // Add COD commission if needed
-      const finalTotal = orderTotal + (formData.paymentMethod === "cod" ? 20 : 0);
+      const finalTotal = orderTotal + (formData.paymentMethod === "nalojka" ? 20 : 0);
       
       // Generate order ID
       const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
@@ -755,7 +755,7 @@ const Checkout = () => {
       localStorage.removeItem('checkoutFormData');
       
       // Если онлайн оплата - редиректим на WayForPay
-      if (formData.paymentMethod === "online") {
+      if (formData.paymentMethod === "wayforpay") {
         try {
           const { wayforpayAPI } = await import("@/lib/api");
           console.log('[Checkout] Creating WayForPay payment for order:', order.id);
@@ -1691,7 +1691,7 @@ const Checkout = () => {
                   {formData.paymentCompleted && !formData.paymentExpanded ? (
                     // Свернутый вид блока оплаты
                     <div className="space-y-2">
-                      {formData.paymentMethod === "online" && (
+                      {formData.paymentMethod === "wayforpay" && (
                         <>
                           <div className="flex items-center justify-between">
                             <div className="text-sm font-medium flex items-center gap-2">
@@ -1714,7 +1714,7 @@ const Checkout = () => {
                           <div className="text-sm text-muted-foreground">Безпечна оплата карткою через WayForPay</div>
                         </>
                       )}
-                      {formData.paymentMethod === "cod" && (
+                      {formData.paymentMethod === "nalojka" && (
                         <>
                           <div className="flex items-center justify-between">
                             <div className="text-sm font-medium flex items-center gap-2">
@@ -1737,7 +1737,7 @@ const Checkout = () => {
                           <div className="text-sm text-muted-foreground">Оплата при отриманні (+20 грн комісія)</div>
                         </>
                       )}
-                      {formData.paymentMethod === "fop" && (
+                      {formData.paymentMethod === "fopiban" && (
                         <>
                           <div className="flex items-center justify-between">
                             <div className="text-sm font-medium flex items-center gap-2">
@@ -1776,7 +1776,7 @@ const Checkout = () => {
                       className="space-y-3"
                     >
                       <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
-                        <RadioGroupItem value="online" id="online" />
+                        <RadioGroupItem value="wayforpay" id="wayforpay" />
                         <div>
                           <div className="font-medium flex items-center gap-2">
                             <WayForPayLogo className="w-5 h-5" />
@@ -1786,7 +1786,7 @@ const Checkout = () => {
                         </div>
                       </label>
                       <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
-                        <RadioGroupItem value="cod" id="cod" />
+                        <RadioGroupItem value="nalojka" id="nalojka" />
                         <div>
                           <div className="font-medium flex items-center gap-2">
                             <CODPaymentLogo className="w-5 h-5" />
@@ -1796,7 +1796,7 @@ const Checkout = () => {
                         </div>
                       </label>
                       <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
-                        <RadioGroupItem value="fop" id="fop" />
+                        <RadioGroupItem value="fopiban" id="fopiban" />
                         <div>
                           <div className="font-medium flex items-center gap-2">
                             <FOPPaymentLogo className="w-5 h-5" />

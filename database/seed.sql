@@ -120,8 +120,8 @@ ON DUPLICATE KEY UPDATE value=VALUES(value), description=VALUES(description), so
 
 -- Заказы
 INSERT INTO orders (id, customer_name, customer_phone, customer_email, delivery_method, delivery_city, delivery_warehouse, delivery_post_index, delivery_address, payment_method, subtotal, discount, delivery_cost, total, status, created_at, updated_at) VALUES
-('ORD-001', 'Олена Мельник', '+380501234567', 'olena.melnyk@gmail.com', 'nova_poshta', 'Київ', 'Відділення №15', NULL, NULL, 'card', 1190.00, 0.00, 0.00, 1265.00, 'created', '2024-12-24 10:30:00', '2024-12-24 10:30:00'),
-('ORD-002', 'Ірина Ковальчук', '+380679876543', 'iryna.kovalchuk@ukr.net', 'nova_poshta', 'Львів', 'Відділення №7', NULL, NULL, 'cod', 1990.00, 0.00, 0.00, 1990.00, 'processing', '2024-12-23 15:45:00', '2024-12-24 09:00:00'),
+('ORD-001', 'Олена Мельник', '+380501234567', 'olena.melnyk@gmail.com', 'nova_poshta', 'Київ', 'Відділення №15', NULL, NULL, 'wayforpay', 1190.00, 0.00, 0.00, 1265.00, 'created', '2024-12-24 10:30:00', '2024-12-24 10:30:00'),
+('ORD-002', 'Ірина Ковальчук', '+380679876543', 'iryna.kovalchuk@ukr.net', 'nova_poshta', 'Львів', 'Відділення №7', NULL, NULL, 'nalojka', 1990.00, 0.00, 0.00, 1990.00, 'processing', '2024-12-23 15:45:00', '2024-12-24 09:00:00'),
 ('ORD-003', 'Наталія Шевченко', '+380631112233', 'natalia.shevchenko@gmail.com', 'ukrposhta', 'Одеса', NULL, '65000', 'вул. Дерибасівська, 10', 'card', 1614.00, 0.00, 70.00, 1684.00, 'shipped', '2024-12-22 12:00:00', '2024-12-23 14:30:00'),
 ('ORD-004', 'Марія Бондаренко', '+380997778899', 'maria.bondarenko@gmail.com', 'pickup', NULL, NULL, NULL, NULL, 'card', 2075.00, 200.00, 0.00, 1875.00, 'completed', '2024-12-20 09:15:00', '2024-12-21 16:00:00'),
 ('ORD-005', 'Вікторія Литвин', '+380661234567', 'viktoria.lytvyn@gmail.com', 'nova_poshta', 'Харків', 'Відділення №23', NULL, NULL, 'card', 2140.00, 0.00, 0.00, 2140.00, 'paid', '2024-12-23 18:20:00', '2024-12-24 08:00:00'),

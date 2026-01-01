@@ -248,17 +248,17 @@ const ThankYou = () => {
                   {order.payment && order.payment.method ? (
                     <>
                       <div className="flex items-center gap-2">
-                        {order.payment.method === 'card' && <WayForPayLogo className="w-5 h-5" />}
-                        {order.payment.method === 'cod' && <CODPaymentLogo className="w-5 h-5" />}
-                        {order.payment.method === 'fop' && <FOPPaymentLogo className="w-5 h-5" />}
+                        {order.payment.method === 'wayforpay' && <WayForPayLogo className="w-5 h-5" />}
+                        {order.payment.method === 'nalojka' && <CODPaymentLogo className="w-5 h-5" />}
+                        {order.payment.method === 'fopiban' && <FOPPaymentLogo className="w-5 h-5" />}
                         <span className="font-medium">
-                          {order.payment.method === 'card' && 'Онлайн оплата (WayForPay)'}
-                          {order.payment.method === 'cod' && 'Накладений платіж'}
-                          {order.payment.method === 'fop' && 'Оплата на рахунок ФОП'}
-                          {!['card', 'cod', 'fop'].includes(order.payment.method) && `Спосіб оплати: ${order.payment.method}`}
+                          {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
+                          {order.payment.method === 'nalojka' && 'Накладений платіж'}
+                          {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
+                          {!['wayforpay', 'nalojka', 'fopiban'].includes(order.payment.method) && `Спосіб оплати: ${order.payment.method}`}
                         </span>
                       </div>
-                      {order.payment.method === 'fop' && (
+                      {order.payment.method === 'fopiban' && (
                         <div className="mt-3 pt-3 border-t text-sm text-muted-foreground">
                           Реквізити для оплати будуть надіслані вам на email або SMS
                         </div>
@@ -273,7 +273,7 @@ const ThankYou = () => {
           )}
 
           {/* Payment Info for FOP */}
-          {order && order.payment && order.payment.method === 'fop' && (
+          {order && order.payment && order.payment.method === 'fopiban' && (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8">
               <h2 className="font-bold text-amber-800 mb-2 flex items-center gap-2">
                 <CreditCard className="w-5 h-5" />

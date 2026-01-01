@@ -85,9 +85,9 @@ export function Dashboard() {
   }, {} as Record<string, number>);
   
   const paymentLabels: Record<string, string> = {
-    card: 'Онлайн оплата (WayForPay)',
-    cod: 'Накладений платіж',
-    fop: 'Оплата на рахунок ФОП',
+    wayforpay: 'Онлайн оплата (WayForPay)',
+    nalojka: 'Накладений платіж',
+    fopiban: 'Оплата на рахунок ФОП',
     unknown: 'Невідомо',
   };
   
