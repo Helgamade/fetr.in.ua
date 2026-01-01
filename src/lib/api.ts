@@ -366,14 +366,131 @@ export interface UkrposhtaBranch {
   cityId?: string; // CITY_ID
 }
 
+// Прямой вызов API Укрпошты с фронтенда (через браузер)
+// API Укрпошты блокирует серверные запросы (403), поэтому делаем запросы напрямую с фронтенда
+const UKRPOSHTA_API_BASE = 'https://ukrposhta.ua/address-classifier-ws';
+
+async function callUkrposhtaAPIDirect(endpoint: string): Promise<any> {
+  const url = `${UKRPOSHTA_API_BASE}${endpoint}`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status} - ${await response.text()}`);
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error(`❌ [Ukrposhta Direct API] Request failed:`, error);
+    throw error;
+  }
+}
+
 export const ukrposhtaAPI = {
   getPopularCities: () => fetchAPI<UkrposhtaCity[]>('/ukrposhta/cities/popular'),
-  searchCities: (query: string) => fetchAPI<UkrposhtaCity[]>(`/ukrposhta/cities/search?q=${encodeURIComponent(query)}`),
+  searchCities: async (query: string): Promise<UkrposhtaCity[]> => {
+    // Пробуем сначала через наш сервер (может не работать из-за 403)
+    try {
+      return await fetchAPI<UkrposhtaCity[]>(`/ukrposhta/cities/search?q=${encodeURIComponent(query)}`);
+    } catch (error) {
+      // Если серверный запрос не работает, пробуем напрямую с фронтенда
+      console.log('⚠️ [Ukrposhta API] Server request failed, trying direct API call');
+      
+      // Популярные области для поиска
+      const popularRegions = [
+        { id: '270', name: 'Київська' },
+        { id: '14', name: 'Львівська' },
+        { id: '63', name: 'Харківська' },
+        { id: '51', name: 'Одеська' },
+        { id: '12', name: 'Дніпропетровська' },
+        { id: '23', name: 'Запорізька' },
+        { id: '32', name: 'Київ' },
+      ];
+      
+      // Ищем в популярных областях параллельно
+      const searchPromises = popularRegions.map(async (region) => {
+        try {
+          const data = await callUkrposhtaAPIDirect(
+            `/get_city_by_region_id_and_district_id_and_city_ua?region_id=${region.id}&city_ua=${encodeURIComponent(query)}`
+          );
+          const entries = data?.Entries?.Entry || [];
+          return Array.isArray(entries) ? entries : [entries];
+        } catch (err) {
+          return [];
+        }
+      });
+      
+      const results = await Promise.all(searchPromises);
+      const apiCities = results.flat();
+      
+      // Преобразуем данные API в наш формат
+      const formattedCities = apiCities.map((item: any) => ({
+        id: item.CITY_ID?.toString() || item.CITY_KOATUU || item.CITY_KATOTTG || '',
+        name: item.CITY_UA || item.CITY_EN || '',
+        postalCode: item.POSTCODE || '',
+        region: item.REGION_UA || '',
+        district: item.DISTRICT_UA || '',
+        cityId: item.CITY_ID?.toString() || '',
+      })).filter((city: any) => city.name && city.id);
+      
+      return formattedCities;
+    }
+  },
   getCity: (id: string) => fetchAPI<UkrposhtaCity>(`/ukrposhta/cities/${id}`),
-  getBranches: (cityId: string, search?: string) => {
-    const params = new URLSearchParams({ cityId });
-    if (search) params.append('search', search);
-    return fetchAPI<UkrposhtaBranch[]>(`/ukrposhta/branches?${params.toString()}`);
+  getBranches: async (cityId: string, search?: string): Promise<UkrposhtaBranch[]> => {
+    // Пробуем сначала через наш сервер
+    try {
+      const params = new URLSearchParams({ cityId });
+      if (search) params.append('search', search);
+      return await fetchAPI<UkrposhtaBranch[]>(`/ukrposhta/branches?${params.toString()}`);
+    } catch (error) {
+      // Если серверный запрос не работает, пробуем напрямую с фронтенда
+      console.log('⚠️ [Ukrposhta API] Server request failed, trying direct API call');
+      
+      const cityIdNum = parseInt(cityId, 10);
+      if (isNaN(cityIdNum) || cityIdNum <= 0) {
+        throw new Error(`Invalid cityId: "${cityId}". CITY_ID must be a number.`);
+      }
+      
+      try {
+        const data = await callUkrposhtaAPIDirect(
+          `/get_postoffices_by_postcode_cityid_cityvpzid?city_id=${cityIdNum}`
+        );
+        
+        const entries = data?.Entries?.Entry || [];
+        const branchesList = Array.isArray(entries) ? entries : [entries];
+        
+        const formattedBranches = branchesList.map((item: any, index: number) => ({
+          id: item.POSTOFFICE_ID?.toString() || item.POSTCODE || `branch_${index}`,
+          name: item.POSTOFFICE_UA || item.POSTOFFICE_EN || item.POSTOFFICE_NAME || `Відділення ${index + 1}`,
+          address: item.STREET_UA_VPZ || item.ADDRESS_UA || item.ADDRESS_EN || item.ADDRESS || '',
+          postalCode: item.POSTCODE || '',
+          cityId: cityId,
+        })).filter((branch: any) => branch.name);
+        
+        // Если есть поисковый запрос, дополнительно фильтруем результаты
+        if (search && search.length >= 2) {
+          const searchLower = search.toLowerCase();
+          return formattedBranches.filter((branch: any) => 
+            branch.name.toLowerCase().includes(searchLower) ||
+            branch.address.toLowerCase().includes(searchLower) ||
+            branch.id.toString().toLowerCase().includes(searchLower)
+          );
+        }
+        
+        return formattedBranches;
+      } catch (apiError) {
+        console.error('❌ [Ukrposhta Direct API] Get branches error:', apiError);
+        throw apiError;
+      }
+    }
   },
   getBranch: (id: string) => fetchAPI<UkrposhtaBranch>(`/ukrposhta/branches/${id}`),
 };
