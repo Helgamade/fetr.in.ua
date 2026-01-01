@@ -43,6 +43,15 @@ export const UkrPoshtaDelivery = ({
   // По аналогии с NovaPoshtaDelivery - загружаем по ID через API
   useEffect(() => {
     if (cityId) {
+      // ВАЛИДАЦИЯ: Проверяем, что cityId является валидным числовым CITY_ID
+      // Если это строка (например, "kyiv" из старых данных), не пытаемся загрузить
+      const cityIdNum = parseInt(cityId.toString(), 10);
+      if (isNaN(cityIdNum) || cityIdNum <= 0) {
+        console.warn(`⚠️ [UkrPoshtaDelivery] Invalid cityId (not a numeric CITY_ID): ${cityId}. Skipping API call.`);
+        setSelectedCity(null);
+        return;
+      }
+      
       console.log(`🔍 [UkrPoshtaDelivery] Loading city by ID: ${cityId}`);
       ukrposhtaAPI.getCity(cityId)
         .then(city => {
@@ -51,7 +60,13 @@ export const UkrPoshtaDelivery = ({
           // Не вызываем onCityChange здесь, чтобы не перезаписывать данные из props
         })
         .catch((error) => {
-          console.error(`❌ [UkrPoshtaDelivery] Error loading city ${cityId}:`, error);
+          // Не показываем ошибку как критическую, если это просто "City not found"
+          // Это нормально, если город был удален из API или ID изменился
+          if (error.message && error.message.includes('City not found')) {
+            console.warn(`⚠️ [UkrPoshtaDelivery] City with ID ${cityId} not found in API. This may be normal if the city was removed or ID changed.`);
+          } else {
+            console.error(`❌ [UkrPoshtaDelivery] Error loading city ${cityId}:`, error);
+          }
           // Если не удалось загрузить город по ID, сбрасываем выбранный город
           setSelectedCity(null);
         });
