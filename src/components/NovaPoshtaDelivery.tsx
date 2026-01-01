@@ -234,7 +234,7 @@ export const NovaPoshtaDelivery = ({
                         placeholder="Почніть вводити назву населеного пункту від 3-х букв"
                         value={citySearchQuery}
                         onChange={(e) => setCitySearchQuery(e.target.value)}
-                        className="pl-10 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
+                        className="pl-10 border border-input focus-visible:ring-1 focus-visible:ring-primary/50"
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
                       />
@@ -341,7 +341,7 @@ export const NovaPoshtaDelivery = ({
                       placeholder="Виберіть відділення"
                       value={warehouseSearchQuery}
                       onChange={(e) => setWarehouseSearchQuery(e.target.value)}
-                      className="pl-10 rounded-xl border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
+                      className="pl-10 rounded-xl border border-input focus-visible:ring-1 focus-visible:ring-primary/50"
                       autoFocus
                       onClick={(e) => e.stopPropagation()}
                     />
