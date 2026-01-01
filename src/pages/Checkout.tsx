@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, Package, CreditCard, Truck, MapPin, Phone, Mail, User, CheckCircle } from "lucide-react";
+import { ArrowLeft, Package, CreditCard, Truck, MapPin, Phone, Mail, User, CheckCircle, Pencil } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "@/hooks/use-toast";
 import { usePublicSettings } from "@/hooks/usePublicSettings";
@@ -42,7 +42,9 @@ const Checkout = () => {
           contactInfoCompleted: parsed.contactInfoCompleted || false,
           contactInfoExpanded: parsed.contactInfoExpanded !== undefined ? parsed.contactInfoExpanded : true,
           email: parsed.email || prev.email,
-          paymentMethod: parsed.paymentMethod || prev.paymentMethod,
+          paymentMethod: parsed.paymentMethod || prev.paymentMethod || "",
+          paymentCompleted: parsed.paymentCompleted || false,
+          paymentExpanded: parsed.paymentExpanded !== undefined ? parsed.paymentExpanded : true,
           deliveryMethod: parsed.deliveryMethod || prev.deliveryMethod,
           novaPoshtaCity: parsed.novaPoshtaCity || prev.novaPoshtaCity,
           novaPoshtaCityRef: parsed.novaPoshtaCityRef || prev.novaPoshtaCityRef,
@@ -74,7 +76,9 @@ const Checkout = () => {
     name: "", // Объединенное имя для отправки на сервер
     phone: "",
     email: "",
-    paymentMethod: "online",
+    paymentMethod: "",
+    paymentCompleted: false,
+    paymentExpanded: true,
     deliveryMethod: "",
     // Данные для Нова Пошта - город общий, отделения/поштоматы отдельно
     novaPoshtaCity: "",
@@ -105,6 +109,10 @@ const Checkout = () => {
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const phoneInputRef = useRef<HTMLInputElement>(null);
+  const [lastNameTouched, setLastNameTouched] = useState(false);
+  const [lastNameError, setLastNameError] = useState("");
+  const [firstNameTouched, setFirstNameTouched] = useState(false);
+  const [firstNameError, setFirstNameError] = useState("");
 
   const validatePhone = (phone: string): boolean => {
     // Убираем все символы кроме цифр
@@ -122,7 +130,7 @@ const Checkout = () => {
     return true;
   };
 
-  // Форматирование телефона в формат +380 (XX) XXX-XX-XX
+  // Форматирование телефона в формат +380 (XX) XXX-XX-XX (в скобках только 2 цифры)
   const formatPhone = (value: string): string => {
     // Убираем все символы кроме цифр
     const digitsOnly = value.replace(/\D/g, '');
@@ -136,19 +144,67 @@ const Checkout = () => {
     // Ограничиваем длину до 12 цифр (380XXXXXXXXX)
     phoneDigits = phoneDigits.slice(0, 12);
     
-    // Форматируем
+    // Форматируем: +380 (XX) XXX-XX-XX
     if (phoneDigits.length <= 3) {
       return '+' + phoneDigits;
-    } else if (phoneDigits.length <= 6) {
+    } else if (phoneDigits.length <= 5) {
+      // После +380 идут 2 цифры в скобках
       return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3)}`;
+    } else if (phoneDigits.length === 6) {
+      // После ввода второй цифры закрываем скобку
+      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 5)}) ${phoneDigits.slice(5)}`;
     } else if (phoneDigits.length <= 9) {
-      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 6)}) ${phoneDigits.slice(6)}`;
+      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 5)}) ${phoneDigits.slice(5)}`;
     } else if (phoneDigits.length <= 11) {
-      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 6)}) ${phoneDigits.slice(6, 9)}-${phoneDigits.slice(9)}`;
+      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 5)}) ${phoneDigits.slice(5, 8)}-${phoneDigits.slice(8)}`;
     } else {
-      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 6)}) ${phoneDigits.slice(6, 9)}-${phoneDigits.slice(9, 11)}-${phoneDigits.slice(11)}`;
+      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 5)}) ${phoneDigits.slice(5, 8)}-${phoneDigits.slice(8, 10)}-${phoneDigits.slice(10)}`;
     }
   };
+
+  // Валидация кириллицы и тире
+  const validateCyrillic = (value: string): boolean => {
+    // Разрешаем только кириллицу, пробелы и тире
+    const cyrillicRegex = /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/;
+    return cyrillicRegex.test(value);
+  };
+
+  const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Разрешаем только кириллицу, пробелы и тире
+    if (value === "" || validateCyrillic(value)) {
+      setFormData(prev => ({ ...prev, lastName: value }));
+      if (lastNameTouched) {
+        if (value.trim() === "") {
+          setLastNameError("Це обов'язкове поле");
+        } else if (!validateCyrillic(value)) {
+          setLastNameError("Використовуйте тільки кириличні символи");
+        } else {
+          setLastNameError("");
+        }
+      }
+    }
+  };
+
+  const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Разрешаем только кириллицу, пробелы и тире
+    if (value === "" || validateCyrillic(value)) {
+      setFormData(prev => ({ ...prev, firstName: value }));
+      if (firstNameTouched) {
+        if (value.trim() === "") {
+          setFirstNameError("Це обов'язкове поле");
+        } else if (!validateCyrillic(value)) {
+          setFirstNameError("Використовуйте тільки кириличні символи");
+        } else {
+          setFirstNameError("");
+        }
+      }
+    }
+  };
+
+  const isLastNameValid = formData.lastName.trim() !== "" && validateCyrillic(formData.lastName);
+  const isFirstNameValid = formData.firstName.trim() !== "" && validateCyrillic(formData.firstName);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
@@ -191,7 +247,20 @@ const Checkout = () => {
     const oldLength = oldValue.length || 6; // "+380 (" имеет длину 6
     const newLength = formatted.length;
     const lengthDiff = newLength - oldLength;
-    let newCursorPosition = Math.max(7, cursorPosition + lengthDiff);
+    
+    // Определяем позицию курсора в зависимости от длины
+    let newCursorPosition = cursorPosition + lengthDiff;
+    // После "+380 (" идет 2 цифры, затем закрывается скобка
+    if (formatted.includes(')')) {
+      // Если скобка закрыта, курсор должен быть после скобки
+      const bracketPos = formatted.indexOf(')');
+      if (cursorPosition <= bracketPos + 1) {
+        newCursorPosition = bracketPos + 2; // После ") "
+      }
+    } else {
+      // Если скобка еще не закрыта, курсор после "+380 ("
+      newCursorPosition = Math.max(7, cursorPosition + lengthDiff);
+    }
     
     setFormData(prev => ({ ...prev, phone: formatted }));
     
@@ -239,6 +308,8 @@ const Checkout = () => {
       deliveryExpanded: formData.deliveryExpanded,
       email: formData.email,
       paymentMethod: formData.paymentMethod,
+      paymentCompleted: formData.paymentCompleted,
+      paymentExpanded: formData.paymentExpanded,
       deliveryMethod: formData.deliveryMethod,
       novaPoshtaCity: formData.novaPoshtaCity,
       novaPoshtaCityRef: formData.novaPoshtaCityRef,
@@ -342,6 +413,15 @@ const Checkout = () => {
     // Объединяем имя и фамилию для отправки
     const fullName = `${formData.firstName} ${formData.lastName}`.trim();
 
+    if (!formData.deliveryMethod) {
+      toast({
+        title: "Помилка",
+        description: "Будь ласка, виберіть спосіб доставки",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (formData.deliveryMethod !== "pickup") {
       const deliveryData = getCurrentDeliveryData();
       if (formData.deliveryMethod === "nova_poshta") {
@@ -363,6 +443,15 @@ const Checkout = () => {
           return;
         }
       }
+    }
+
+    if (!formData.paymentMethod) {
+      toast({
+        title: "Помилка",
+        description: "Будь ласка, виберіть спосіб оплати",
+        variant: "destructive"
+      });
+      return;
     }
 
     setIsSubmitting(true);
@@ -680,7 +769,7 @@ const Checkout = () => {
                       <Button
                         type="button"
                         variant="outline"
-                        disabled={!isPhoneValid || !formData.firstName.trim() || !formData.lastName.trim()}
+                        disabled={!isPhoneValid || !isFirstNameValid || !isLastNameValid}
                         className="w-full rounded-full border-2"
                         onClick={() => {
                           setFormData(prev => ({ ...prev, contactInfoCompleted: true, contactInfoExpanded: false }));
@@ -974,7 +1063,14 @@ const Checkout = () => {
                   </RadioGroup>
                   ) : (
                     // Свернутый вид блока доставки
-                    <div className="space-y-2">
+                    <div className="space-y-2 relative">
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, deliveryExpanded: true }))}
+                        className="absolute top-0 right-0 text-muted-foreground hover:text-primary"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
                       {(() => {
                         const deliveryData = getCurrentDeliveryData();
                         if (formData.deliveryMethod === "nova_poshta" && deliveryData) {
@@ -1011,31 +1107,109 @@ const Checkout = () => {
 
                 {/* Payment */}
                 <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
-                  <h2 className="text-lg font-bold flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">3</span>
-                    Спосіб оплати
+                  <h2 
+                    className="text-lg font-bold flex items-center gap-2 cursor-pointer"
+                    onClick={() => {
+                      if (formData.paymentCompleted) {
+                        setFormData(prev => ({ ...prev, paymentExpanded: !prev.paymentExpanded }));
+                      }
+                    }}
+                  >
+                    {formData.paymentCompleted ? (
+                      <CheckCircle className="w-6 h-6 text-green-500" />
+                    ) : (
+                      <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">3</span>
+                    )}
+                    Спосіб оплати *
                   </h2>
                   
-                  <RadioGroup
-                    value={formData.paymentMethod}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}
-                    className="space-y-3"
+                  {formData.paymentCompleted && !formData.paymentExpanded ? (
+                    // Свернутый вид блока оплаты
+                    <div className="space-y-2 relative">
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, paymentExpanded: true }))}
+                        className="absolute top-0 right-0 text-muted-foreground hover:text-primary"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      {formData.paymentMethod === "online" && (
+                        <>
+                          <div className="text-sm font-medium">Онлайн оплата</div>
+                          <div className="text-sm text-muted-foreground">Безпечна оплата карткою через WayForPay</div>
+                        </>
+                      )}
+                      {formData.paymentMethod === "cod" && (
+                        <>
+                          <div className="text-sm font-medium">Накладений платіж</div>
+                          <div className="text-sm text-muted-foreground">Оплата при отриманні (+20 грн комісія)</div>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    // Развернутый вид блока оплаты
+                    <RadioGroup
+                      value={formData.paymentMethod}
+                      onValueChange={(value) => {
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          paymentMethod: value,
+                          paymentCompleted: true,
+                          paymentExpanded: false
+                        }));
+                      }}
+                      className="space-y-3"
+                    >
+                      <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
+                        <RadioGroupItem value="online" id="online" />
+                        <div>
+                          <div className="font-medium">Онлайн оплата</div>
+                          <div className="text-sm text-muted-foreground">Безпечна оплата карткою через WayForPay</div>
+                        </div>
+                      </label>
+                      <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
+                        <RadioGroupItem value="cod" id="cod" />
+                        <div>
+                          <div className="font-medium">Накладений платіж</div>
+                          <div className="text-sm text-muted-foreground">Оплата при отриманні (+20 грн комісія)</div>
+                        </div>
+                      </label>
+                    </RadioGroup>
+                  )}
+                </div>
+
+                {/* Reset Button */}
+                <div className="bg-card rounded-2xl p-6 shadow-soft">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        deliveryMethod: "",
+                        deliveryExpanded: true,
+                        paymentMethod: "",
+                        paymentCompleted: false,
+                        paymentExpanded: true,
+                        novaPoshtaCity: "",
+                        novaPoshtaCityRef: null,
+                        novaPoshtaPostOfficeWarehouse: "",
+                        novaPoshtaPostOfficeWarehouseRef: null,
+                        novaPoshtaPostOfficeCompleted: false,
+                        novaPoshtaPostomatWarehouse: "",
+                        novaPoshtaPostomatWarehouseRef: null,
+                        novaPoshtaPostomatCompleted: false,
+                        ukrPoshtaCity: "",
+                        ukrPoshtaPostalCode: "",
+                        ukrPoshtaAddress: "",
+                        ukrPoshtaCompleted: false,
+                        pickupCompleted: false
+                      }));
+                    }}
+                    className="w-full text-muted-foreground hover:text-foreground"
                   >
-                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
-                      <RadioGroupItem value="online" id="online" />
-                      <div>
-                        <div className="font-medium">Онлайн оплата</div>
-                        <div className="text-sm text-muted-foreground">Безпечна оплата карткою через WayForPay</div>
-                      </div>
-                    </label>
-                    <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
-                      <RadioGroupItem value="cod" id="cod" />
-                      <div>
-                        <div className="font-medium">Накладений платіж</div>
-                        <div className="text-sm text-muted-foreground">Оплата при отриманні (+20 грн комісія)</div>
-                      </div>
-                    </label>
-                  </RadioGroup>
+                    Скинути вибрані способи
+                  </Button>
                 </div>
 
                 {/* Comment */}
