@@ -145,42 +145,51 @@ router.get('/cities/search', async (req, res, next) => {
       
       console.log(`🌍 [Ukrposhta API] Searching in ${popularRegions.length} popular regions`);
       
-      // Ищем в популярных областях параллельно
-      // Согласно документации, правильный endpoint: 
-      // GET /get_city_by_region_id_and_district_id_and_city_ua?region_id={regionId}&city_ua={cityUa}
-      // Можно использовать без district_id, только с region_id и city_ua
-      // Согласно "Address-classifier-v3.20-09122024.xml" раздел 1.3
-      const searchPromises = popularRegions.map(async (region) => {
-        try {
-          const data = await callAddressClassifierAPI(
-            `/get_city_by_region_id_and_district_id_and_city_ua?region_id=${region.id}&city_ua=${encodeURIComponent(q)}`
-          );
-          const entries = data?.Entries?.Entry || [];
-          const result = Array.isArray(entries) ? entries : [entries];
-          if (result.length > 0) {
-            console.log(`✅ [Ukrposhta API] Found ${result.length} cities in ${region.name}`);
+      // Согласно тестированию, endpoint работает БЕЗ region_id (поиск по всей Украине)
+      // GET /get_city_by_region_id_and_district_id_and_city_ua?city_ua={cityUa}
+      try {
+        console.log(`🔍 [Ukrposhta API] Searching without region_id (all Ukraine)`);
+        const data = await callAddressClassifierAPI(
+          `/get_city_by_region_id_and_district_id_and_city_ua?city_ua=${encodeURIComponent(q)}`
+        );
+        const entries = data?.Entries?.Entry || [];
+        apiCities = Array.isArray(entries) ? entries : [entries];
+        console.log(`✅ [Ukrposhta API] Found ${apiCities.length} cities (all Ukraine)`);
+      } catch (err) {
+        console.log(`⚠️ [Ukrposhta API] Error searching without region_id:`, err.message);
+        // Fallback: ищем в популярных областях
+        console.log(`🔄 [Ukrposhta API] Fallback: searching in popular regions`);
+        const searchPromises = popularRegions.map(async (region) => {
+          try {
+            const data = await callAddressClassifierAPI(
+              `/get_city_by_region_id_and_district_id_and_city_ua?region_id=${region.id}&city_ua=${encodeURIComponent(q)}`
+            );
+            const entries = data?.Entries?.Entry || [];
+            const result = Array.isArray(entries) ? entries : [entries];
+            if (result.length > 0) {
+              console.log(`✅ [Ukrposhta API] Found ${result.length} cities in ${region.name}`);
+            }
+            return result;
+          } catch (err) {
+            console.log(`⚠️ [Ukrposhta API] Error searching in ${region.name}:`, err.message);
+            return [];
           }
-          return result;
-        } catch (err) {
-          // Игнорируем ошибки для отдельных областей
-          console.log(`⚠️ [Ukrposhta API] Error searching in ${region.name}:`, err.message);
-          return [];
-        }
-      });
-      
-      const results = await Promise.all(searchPromises);
-      apiCities = results.flat();
+        });
+        
+        const results = await Promise.all(searchPromises);
+        apiCities = results.flat();
+      }
       
       console.log(`📦 [Ukrposhta API] Total API cities found: ${apiCities.length}`);
       
-    // Преобразуем данные API в наш формат (структура из документации раздел 3.2)
-    // Формат ответа: {REGION_ID, DISTRICT_ID, CITY_ID, REGION_NAME, DISTRICT_NAME, CITY_NAME, ...}
+    // Преобразуем данные API в наш формат
+    // Формат ответа: {REGION_ID, DISTRICT_ID, CITY_ID, REGION_UA, DISTRICT_UA, CITY_UA, ...}
     const formattedCities = apiCities.map((item) => ({
       id: item.CITY_ID?.toString() || '',
-      name: item.CITY_NAME || '',  // CITY_NAME согласно документации (не CITY_UA)
+      name: item.CITY_UA || '',  // CITY_UA согласно реальному ответу API
       postalCode: '', // В этом endpoint нет почтового индекса
-      region: item.REGION_NAME || '',  // REGION_NAME согласно документации
-      district: item.DISTRICT_NAME || '',  // DISTRICT_NAME согласно документации
+      region: item.REGION_UA || '',  // REGION_UA согласно реальному ответу API
+      district: item.DISTRICT_UA || '',  // DISTRICT_UA согласно реальному ответу API
       cityId: item.CITY_ID?.toString() || '', // Сохраняем CITY_ID для получения отделений
     })).filter(city => city.name && city.id);
 
