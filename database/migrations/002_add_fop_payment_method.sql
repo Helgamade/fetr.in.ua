@@ -1,4 +1,4 @@
 -- Добавление нового способа оплаты 'fop' (Оплата на рахунок ФОП)
--- Также обновляем 'card' на 'online' для соответствия фронтенду
-ALTER TABLE orders MODIFY COLUMN payment_method ENUM('online', 'cod', 'fop') NOT NULL;
+-- Оставляем 'card' для обратной совместимости (маппится с 'online' на фронтенде)
+ALTER TABLE orders MODIFY COLUMN payment_method ENUM('card', 'cod', 'fop') NOT NULL;
 
