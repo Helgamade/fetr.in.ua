@@ -43,12 +43,24 @@ export const UkrPoshtaDelivery = ({
   // Инициализация из сохраненных данных для мгновенного отображения
   useEffect(() => {
     if (cityId && savedCityName && !selectedCity) {
+      // ВАЖНО: savedCityName может содержать полное название "Город (Область)"
+      // Извлекаем название города и область
+      let cityName = savedCityName;
+      let region = savedCityRegion || '';
+      
+      // Если savedCityName уже содержит область в скобках, извлекаем их
+      const match = savedCityName.match(/^(.+?)\s*\((.+?)\)$/);
+      if (match) {
+        cityName = match[1].trim();
+        region = match[2].trim();
+      }
+      
       // Создаем объект города из сохраненных данных для мгновенного отображения
       const cityFromSaved: UkrposhtaCity = {
         id: cityId,
-        name: savedCityName,
+        name: cityName,
         postalCode: '',
-        region: savedCityRegion || '',
+        region: region,
         cityId: cityId,
       };
       setSelectedCity(cityFromSaved);
