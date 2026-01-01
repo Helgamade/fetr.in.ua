@@ -58,8 +58,10 @@ const Checkout = () => {
           novaPoshtaExpanded: false, // Всегда свернуто при загрузке
           ukrPoshtaCity: parsed.ukrPoshtaCity || prev.ukrPoshtaCity,
           ukrPoshtaCityId: parsed.ukrPoshtaCityId || prev.ukrPoshtaCityId,
+          ukrPoshtaCityData: parsed.ukrPoshtaCityData ? JSON.parse(parsed.ukrPoshtaCityData) : prev.ukrPoshtaCityData,
           ukrPoshtaBranch: parsed.ukrPoshtaBranch || prev.ukrPoshtaBranch,
           ukrPoshtaBranchId: parsed.ukrPoshtaBranchId || prev.ukrPoshtaBranchId,
+          ukrPoshtaBranchData: parsed.ukrPoshtaBranchData ? (typeof parsed.ukrPoshtaBranchData === 'string' ? JSON.parse(parsed.ukrPoshtaBranchData) : parsed.ukrPoshtaBranchData) : prev.ukrPoshtaBranchData,
           ukrPoshtaPostalCode: parsed.ukrPoshtaPostalCode || prev.ukrPoshtaPostalCode,
           ukrPoshtaAddress: parsed.ukrPoshtaAddress || prev.ukrPoshtaAddress,
           ukrPoshtaExpanded: false, // Всегда свернуто при загрузке
@@ -95,11 +97,13 @@ const Checkout = () => {
     novaPoshtaPostomatCompleted: false,
     novaPoshtaDeliveryType: "PostOffice" as "PostOffice" | "Postomat",
     novaPoshtaExpanded: false as boolean | undefined, // По умолчанию свернуто
-    // Данные для Укрпошта
+    // Данные для Укрпошта - сохраняем полные объекты для восстановления
     ukrPoshtaCity: "",
     ukrPoshtaCityId: null as string | null,
+    ukrPoshtaCityData: null as UkrposhtaCity | null, // Полный объект города для восстановления
     ukrPoshtaBranch: "",
     ukrPoshtaBranchId: null as string | null,
+    ukrPoshtaBranchData: null as UkrposhtaBranch | null, // Полный объект отделения для восстановления
     ukrPoshtaPostalCode: "",
     ukrPoshtaAddress: "",
     ukrPoshtaExpanded: false,
@@ -363,8 +367,10 @@ const Checkout = () => {
       novaPoshtaExpanded: formData.novaPoshtaExpanded,
       ukrPoshtaCity: formData.ukrPoshtaCity,
       ukrPoshtaCityId: formData.ukrPoshtaCityId,
+      ukrPoshtaCityData: formData.ukrPoshtaCityData ? JSON.stringify(formData.ukrPoshtaCityData) : null,
       ukrPoshtaBranch: formData.ukrPoshtaBranch,
       ukrPoshtaBranchId: formData.ukrPoshtaBranchId,
+      ukrPoshtaBranchData: formData.ukrPoshtaBranchData ? JSON.stringify(formData.ukrPoshtaBranchData) : null,
       ukrPoshtaPostalCode: formData.ukrPoshtaPostalCode,
       ukrPoshtaAddress: formData.ukrPoshtaAddress,
       ukrPoshtaExpanded: formData.ukrPoshtaExpanded,
@@ -1123,17 +1129,21 @@ const Checkout = () => {
                           <UkrPoshtaDelivery
                             cityId={formData.ukrPoshtaCityId}
                             branchId={formData.ukrPoshtaBranchId}
+                            cityData={formData.ukrPoshtaCityData}
+                            branchData={formData.ukrPoshtaBranchData}
                             isExpanded={true}
                             onCityChange={(city) => {
                               setFormData(prev => ({
                                 ...prev,
                                 ukrPoshtaCity: city ? city.name : "",
                                 ukrPoshtaCityId: city ? city.id : null,
-                                ukrPoshtaBranch: "",
-                                ukrPoshtaBranchId: null,
-                                ukrPoshtaPostalCode: "",
-                                ukrPoshtaAddress: "",
-                                ukrPoshtaCompleted: false
+                                ukrPoshtaCityData: city, // Сохраняем полный объект для восстановления
+                                // НЕ сбрасываем отделение при смене города - пользователь может вернуться к тому же городу
+                                // ukrPoshtaBranch: "",
+                                // ukrPoshtaBranchId: null,
+                                // ukrPoshtaPostalCode: "",
+                                // ukrPoshtaAddress: "",
+                                // ukrPoshtaCompleted: false
                               }));
                             }}
                             onBranchChange={(branch) => {
@@ -1141,6 +1151,7 @@ const Checkout = () => {
                                 ...prev,
                                 ukrPoshtaBranch: branch ? branch.name : "",
                                 ukrPoshtaBranchId: branch ? branch.id : null,
+                                ukrPoshtaBranchData: branch, // Сохраняем полный объект для восстановления
                                 ukrPoshtaPostalCode: branch ? branch.postalCode : "",
                                 ukrPoshtaAddress: branch ? branch.address : "",
                                 ukrPoshtaCompleted: !!branch
@@ -1405,6 +1416,11 @@ const Checkout = () => {
                       novaPoshtaPostomatWarehouseRef: null,
                       novaPoshtaPostomatCompleted: false,
                       ukrPoshtaCity: "",
+                      ukrPoshtaCityId: null,
+                      ukrPoshtaCityData: null,
+                      ukrPoshtaBranch: "",
+                      ukrPoshtaBranchId: null,
+                      ukrPoshtaBranchData: null,
                       ukrPoshtaPostalCode: "",
                       ukrPoshtaAddress: "",
                       ukrPoshtaCompleted: false,

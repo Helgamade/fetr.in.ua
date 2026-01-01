@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 interface UkrPoshtaDeliveryProps {
   cityId: string | null;
   branchId: string | null;
+  cityData?: UkrposhtaCity | null; // Полный объект города для восстановления
+  branchData?: UkrposhtaBranch | null; // Полный объект отделения для восстановления
   isExpanded?: boolean;
   onCityChange: (city: UkrposhtaCity | null) => void;
   onBranchChange: (branch: UkrposhtaBranch | null) => void;
@@ -18,6 +20,8 @@ interface UkrPoshtaDeliveryProps {
 export const UkrPoshtaDelivery = ({
   cityId,
   branchId,
+  cityData,
+  branchData,
   isExpanded = true,
   onCityChange,
   onBranchChange,
@@ -39,32 +43,52 @@ export const UkrPoshtaDelivery = ({
     ukrposhtaAPI.getPopularCities().then(setPopularCities).catch(console.error);
   }, []);
 
-  // Загрузка выбранного города при монтировании или изменении cityId
+  // Восстановление данных из сохраненных объектов при монтировании
   useEffect(() => {
-    if (cityId) {
+    // Приоритет: сначала используем полные объекты из props (восстановление из localStorage)
+    if (cityData) {
+      console.log('✅ [UkrPoshtaDelivery] Restoring city from saved data:', cityData);
+      setSelectedCity(cityData);
+    } else if (cityId) {
+      // Fallback: загружаем по ID через API (если полный объект не передан)
+      console.log('🔄 [UkrPoshtaDelivery] Loading city by ID:', cityId);
       ukrposhtaAPI.getCity(cityId)
         .then(city => {
           setSelectedCity(city);
         })
-        .catch(console.error);
+        .catch((error) => {
+          console.error('❌ [UkrPoshtaDelivery] Error loading city by ID:', error);
+          // Если не удалось загрузить по ID, оставляем null
+          setSelectedCity(null);
+        });
     } else {
       setSelectedCity(null);
     }
-  }, [cityId]);
+  }, [cityId, cityData]);
 
-  // Загрузка выбранного отделения при монтировании или изменении branchId
+  // Восстановление отделения из сохраненных объектов
   useEffect(() => {
-    if (branchId && selectedCity) {
+    // Приоритет: сначала используем полный объект из props (восстановление из localStorage)
+    if (branchData) {
+      console.log('✅ [UkrPoshtaDelivery] Restoring branch from saved data:', branchData);
+      setSelectedBranch(branchData);
+    } else if (branchId && selectedCity) {
+      // Fallback: загружаем по ID через API (если полный объект не передан)
+      console.log('🔄 [UkrPoshtaDelivery] Loading branch by ID:', branchId);
       ukrposhtaAPI.getBranch(branchId)
         .then(branch => {
           setSelectedBranch(branch);
         })
-        .catch(console.error);
+        .catch((error) => {
+          console.error('❌ [UkrPoshtaDelivery] Error loading branch by ID:', error);
+          // Если не удалось загрузить по ID, оставляем null
+          setSelectedBranch(null);
+        });
     } else {
       setSelectedBranch(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [branchId, selectedCity]);
+  }, [branchId, branchData, selectedCity]);
 
   // Поиск городов
   useEffect(() => {
@@ -231,9 +255,13 @@ export const UkrPoshtaDelivery = ({
 
   const handleCitySelect = (city: UkrposhtaCity) => {
     setSelectedCity(city);
-    setSelectedBranch(null);
+    // Сбрасываем отделение только если выбран другой город
+    // Если выбран тот же город, сохраняем отделение
+    if (selectedCity?.id !== city.id) {
+      setSelectedBranch(null);
+      onBranchChange(null);
+    }
     onCityChange(city);
-    onBranchChange(null);
     setIsCitySearchOpen(false);
     setCitySearchQuery("");
   };
