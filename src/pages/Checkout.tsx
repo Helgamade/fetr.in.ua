@@ -699,16 +699,16 @@ const Checkout = () => {
                   
                   {formData.contactInfoCompleted && !formData.contactInfoExpanded ? (
                     // Свернутый вид с информацией
-                    <div className="space-y-2">
-                      <div className="text-sm">{formData.lastName} {formData.firstName}</div>
-                      <div className="text-sm">{formData.phone}</div>
+                    <div className="space-y-2 relative">
                       <button
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, contactInfoExpanded: true }))}
-                        className="text-sm text-primary hover:underline"
+                        className="absolute top-0 right-0 text-muted-foreground hover:text-primary"
                       >
-                        Редагувати
+                        <Pencil className="w-4 h-4" />
                       </button>
+                      <div className="text-sm">{formData.lastName} {formData.firstName}</div>
+                      <div className="text-sm">{formData.phone}</div>
                     </div>
                   ) : (
                     // Развернутый вид с формой
@@ -741,28 +741,64 @@ const Checkout = () => {
 
                         <div className="space-y-2">
                           <Label htmlFor="lastName">Прізвище *</Label>
-                          <Input
-                            id="lastName"
-                            name="lastName"
-                            value={formData.lastName}
-                            onChange={handleInputChange}
-                            placeholder="Введіть прізвище кирилицею"
-                            required
-                            className="rounded-xl focus-visible:ring-0 focus-visible:ring-offset-0"
-                          />
+                          <div className="relative">
+                            <Input
+                              id="lastName"
+                              name="lastName"
+                              value={formData.lastName}
+                              onChange={handleLastNameChange}
+                              onBlur={() => {
+                                setLastNameTouched(true);
+                                if (formData.lastName.trim() === "") {
+                                  setLastNameError("Це обов'язкове поле");
+                                } else if (!validateCyrillic(formData.lastName)) {
+                                  setLastNameError("Використовуйте тільки кириличні символи");
+                                } else {
+                                  setLastNameError("");
+                                }
+                              }}
+                              placeholder="Введіть прізвище кирилицею"
+                              required
+                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${lastNameTouched && lastNameError ? 'border-red-500' : ''} ${isLastNameValid ? 'border-green-500' : ''}`}
+                            />
+                            {isLastNameValid && (
+                              <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                            )}
+                          </div>
+                          {lastNameTouched && lastNameError && (
+                            <p className="text-sm text-red-500">{lastNameError}</p>
+                          )}
                         </div>
 
                         <div className="space-y-2">
                           <Label htmlFor="firstName">Ім'я *</Label>
-                          <Input
-                            id="firstName"
-                            name="firstName"
-                            value={formData.firstName}
-                            onChange={handleInputChange}
-                            placeholder="Введіть Ім'я кирилицею"
-                            required
-                            className="rounded-xl focus-visible:ring-0 focus-visible:ring-offset-0"
-                          />
+                          <div className="relative">
+                            <Input
+                              id="firstName"
+                              name="firstName"
+                              value={formData.firstName}
+                              onChange={handleFirstNameChange}
+                              onBlur={() => {
+                                setFirstNameTouched(true);
+                                if (formData.firstName.trim() === "") {
+                                  setFirstNameError("Це обов'язкове поле");
+                                } else if (!validateCyrillic(formData.firstName)) {
+                                  setFirstNameError("Використовуйте тільки кириличні символи");
+                                } else {
+                                  setFirstNameError("");
+                                }
+                              }}
+                              placeholder="Введіть Ім'я кирилицею"
+                              required
+                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${firstNameTouched && firstNameError ? 'border-red-500' : ''} ${isFirstNameValid ? 'border-green-500' : ''}`}
+                            />
+                            {isFirstNameValid && (
+                              <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                            )}
+                          </div>
+                          {firstNameTouched && firstNameError && (
+                            <p className="text-sm text-red-500">{firstNameError}</p>
+                          )}
                         </div>
                       </div>
 
@@ -796,7 +832,7 @@ const Checkout = () => {
                     ) : (
                       <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">2</span>
                     )}
-                    Доставка
+                    Доставка *
                   </h2>
                   
                   {formData.deliveryExpanded ? (
