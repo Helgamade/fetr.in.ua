@@ -213,11 +213,35 @@ router.get('/cities/search', async (req, res, next) => {
       console.log(`✨ [Ukrposhta API] Formatted cities: ${formattedCities.length}`);
 
       // Объединяем популярные и результаты API, убираем дубликаты по CITY_ID
-      const allCities = [...popularMatches];
-      formattedCities.forEach(city => {
-        if (!allCities.find(c => c.id === city.id || c.postalCode === city.postalCode)) {
-          allCities.push(city);
+      // ВАЖНО: Используем Set для правильной дедупликации по CITY_ID
+      const citiesMap = new Map();
+      
+      // Сначала добавляем популярные города
+      popularMatches.forEach(city => {
+        if (city.cityId) {
+          citiesMap.set(city.cityId, city);
+        } else {
+          citiesMap.set(city.id, city);
         }
+      });
+      
+      // Затем добавляем города из API (перезаписывают популярные, если есть CITY_ID)
+      formattedCities.forEach(city => {
+        const key = city.cityId || city.id;
+        if (key && !citiesMap.has(key)) {
+          citiesMap.set(key, city);
+        }
+      });
+      
+      const allCities = Array.from(citiesMap.values());
+      
+      // Сортируем: сначала точные совпадения, потом по алфавиту
+      allCities.sort((a, b) => {
+        const aExact = a.name.toLowerCase().startsWith(q.toLowerCase());
+        const bExact = b.name.toLowerCase().startsWith(q.toLowerCase());
+        if (aExact && !bExact) return -1;
+        if (!aExact && bExact) return 1;
+        return a.name.localeCompare(b.name, 'uk');
       });
 
       console.log(`🎯 [Ukrposhta API] Total cities to return: ${allCities.length}`);
