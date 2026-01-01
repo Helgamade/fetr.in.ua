@@ -367,9 +367,11 @@ export interface UkrposhtaBranch {
 }
 
 // Прямой вызов API Укрпошты с фронтенда (через браузер)
-// PROD_COUNTERPARTY TOKEN (из АРІ_ключі.pdf): ab714b81-60a5-4dc5-a106-1a382f8d84bf
+// ✅ ПРОТЕСТИРОВАНО автоматическим тестом - эта конфигурация работает!
+// URL: https://www.ukrposhta.ua/address-classifier-ws (с www)
+// PROD_BEARER_ECOM (из АРІ_ключі.pdf): 67f02a7c-3af7-34d1-aa18-7eb4d96f3be4
 const UKRPOSHTA_API_BASE = 'https://www.ukrposhta.ua/address-classifier-ws';
-const UKRPOSHTA_BEARER_TOKEN = 'ab714b81-60a5-4dc5-a106-1a382f8d84bf';
+const UKRPOSHTA_BEARER_TOKEN = '67f02a7c-3af7-34d1-aa18-7eb4d96f3be4';
 
 async function callUkrposhtaAPIDirect(endpoint: string): Promise<any> {
   const url = `${UKRPOSHTA_API_BASE}${endpoint}`;
