@@ -129,7 +129,37 @@ export function OrderDetail() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">Замовлення {order.id}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">Замовлення {order.id}</h1>
+            {order.trackingToken && (
+              <a
+                href={`/thank-you?track=${order.trackingToken}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary/80 transition-colors"
+                title="Відкрити сторінку відстеження замовлення"
+              >
+                <svg 
+                  width="24" 
+                  height="24" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  data-testid="SvgLink" 
+                  data-qaid="SvgLink" 
+                  focusable="false" 
+                  aria-hidden="true" 
+                  tabIndex={-1}
+                  className="inline-block"
+                  style={{ width: '24px', height: '24px' }}
+                >
+                  <path 
+                    fill="currentColor" 
+                    d="M12 4.929 9.879 7.05a1.003 1.003 0 0 0 0 1.415 1.003 1.003 0 0 0 1.414 0l2.121-2.122a3.009 3.009 0 0 1 4.243 0 3.009 3.009 0 0 1 0 4.243l-2.121 2.121a1.003 1.003 0 0 0 0 1.414 1.003 1.003 0 0 0 1.414 0l2.121-2.12a5.002 5.002 0 0 0 0-7.072 5.002 5.002 0 0 0-7.071 0Zm-2.828 9.9a1.003 1.003 0 0 0 1.414 0l4.242-4.243a1.003 1.003 0 0 0 0-1.414 1.003 1.003 0 0 0-1.414 0l-4.242 4.242a1.003 1.003 0 0 0 0 1.415Zm3.535.707-2.121 2.121a3.009 3.009 0 0 1-4.243 0 3.009 3.009 0 0 1 0-4.243l2.121-2.121a1.003 1.003 0 0 0 0-1.414 1.003 1.003 0 0 0-1.414 0L4.93 12a5.002 5.002 0 0 0 0 7.071 5.002 5.002 0 0 0 7.071 0l2.121-2.121a1.003 1.003 0 0 0 0-1.414 1.003 1.003 0 0 0-1.414 0Z"
+                  />
+                </svg>
+              </a>
+            )}
+          </div>
           <div className="flex items-center gap-4 mt-2">
             <Badge className={statusColors[order.status]}>
               {statusLabels[order.status]}

@@ -84,6 +84,7 @@ export interface Order {
   total: number;
   status: OrderStatus;
   promoCode?: string;
+  trackingToken?: string; // Токен для отслеживания заказа (для админки)
   createdAt: Date;
   updatedAt: Date;
 }

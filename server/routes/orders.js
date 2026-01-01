@@ -198,7 +198,12 @@ router.get('/track/:token', async (req, res, next) => {
     delete order.delivery_post_index;
     delete order.delivery_address;
     delete order.payment_method;
-    delete order.tracking_token; // Не возвращаем токен в ответе
+
+    // Сохраняем tracking_token для админки (для создания ссылки отслеживания)
+    if (order.tracking_token) {
+      order.trackingToken = order.tracking_token;
+    }
+    delete order.tracking_token;
 
     order.createdAt = new Date(order.created_at);
     order.updatedAt = new Date(order.updated_at);
