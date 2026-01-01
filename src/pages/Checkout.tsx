@@ -12,7 +12,8 @@ import { Helmet } from "react-helmet-async";
 import { toast } from "@/hooks/use-toast";
 import { usePublicSettings } from "@/hooks/usePublicSettings";
 import { NovaPoshtaDelivery } from "@/components/NovaPoshtaDelivery";
-import type { NovaPoshtaCity, NovaPoshtaWarehouse } from "@/lib/api";
+import { UkrPoshtaDelivery } from "@/components/UkrPoshtaDelivery";
+import type { NovaPoshtaCity, NovaPoshtaWarehouse, UkrposhtaCity, UkrposhtaBranch } from "@/lib/api";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -56,6 +57,9 @@ const Checkout = () => {
           novaPoshtaDeliveryType: parsed.novaPoshtaDeliveryType || prev.novaPoshtaDeliveryType,
           novaPoshtaExpanded: false, // Всегда свернуто при загрузке
           ukrPoshtaCity: parsed.ukrPoshtaCity || prev.ukrPoshtaCity,
+          ukrPoshtaCityId: parsed.ukrPoshtaCityId || prev.ukrPoshtaCityId,
+          ukrPoshtaBranch: parsed.ukrPoshtaBranch || prev.ukrPoshtaBranch,
+          ukrPoshtaBranchId: parsed.ukrPoshtaBranchId || prev.ukrPoshtaBranchId,
           ukrPoshtaPostalCode: parsed.ukrPoshtaPostalCode || prev.ukrPoshtaPostalCode,
           ukrPoshtaAddress: parsed.ukrPoshtaAddress || prev.ukrPoshtaAddress,
           ukrPoshtaExpanded: false, // Всегда свернуто при загрузке
@@ -93,6 +97,9 @@ const Checkout = () => {
     novaPoshtaExpanded: false as boolean | undefined, // По умолчанию свернуто
     // Данные для Укрпошта
     ukrPoshtaCity: "",
+    ukrPoshtaCityId: null as string | null,
+    ukrPoshtaBranch: "",
+    ukrPoshtaBranchId: null as string | null,
     ukrPoshtaPostalCode: "",
     ukrPoshtaAddress: "",
     ukrPoshtaExpanded: false,
@@ -355,6 +362,9 @@ const Checkout = () => {
       novaPoshtaDeliveryType: formData.novaPoshtaDeliveryType,
       novaPoshtaExpanded: formData.novaPoshtaExpanded,
       ukrPoshtaCity: formData.ukrPoshtaCity,
+      ukrPoshtaCityId: formData.ukrPoshtaCityId,
+      ukrPoshtaBranch: formData.ukrPoshtaBranch,
+      ukrPoshtaBranchId: formData.ukrPoshtaBranchId,
       ukrPoshtaPostalCode: formData.ukrPoshtaPostalCode,
       ukrPoshtaAddress: formData.ukrPoshtaAddress,
       ukrPoshtaExpanded: formData.ukrPoshtaExpanded,
@@ -391,6 +401,9 @@ const Checkout = () => {
     } else if (formData.deliveryMethod === "ukr_poshta") {
       return {
         city: formData.ukrPoshtaCity,
+        cityId: formData.ukrPoshtaCityId,
+        branch: formData.ukrPoshtaBranch,
+        branchId: formData.ukrPoshtaBranchId,
         postalCode: formData.ukrPoshtaPostalCode,
         address: formData.ukrPoshtaAddress,
         completed: formData.ukrPoshtaCompleted,
@@ -421,6 +434,7 @@ const Checkout = () => {
     } else if (method === "ukr_poshta") {
       return {
         city: formData.ukrPoshtaCity,
+        branch: formData.ukrPoshtaBranch,
         postalCode: formData.ukrPoshtaPostalCode,
         address: formData.ukrPoshtaAddress,
         completed: formData.ukrPoshtaCompleted,
@@ -471,10 +485,10 @@ const Checkout = () => {
           return;
         }
       } else if (formData.deliveryMethod === "ukr_poshta") {
-        if (!deliveryData?.city || !deliveryData?.postalCode || !deliveryData?.address) {
+        if (!deliveryData?.city || !deliveryData?.branchId) {
           toast({
             title: "Помилка",
-            description: "Будь ласка, заповніть адресу доставки",
+            description: "Будь ласка, виберіть місто та відділення доставки",
             variant: "destructive"
           });
           return;
@@ -531,9 +545,9 @@ const Checkout = () => {
             return {
               method: formData.deliveryMethod,
               city: deliveryData.city || null,
-              warehouse: null,
-              warehouseRef: null,
-              cityRef: null,
+              warehouse: deliveryData.branch || null,
+              warehouseRef: deliveryData.branchId || null,
+              cityRef: deliveryData.cityId || null,
               postIndex: deliveryData.postalCode || null,
               address: deliveryData.address || null,
             };
@@ -1091,8 +1105,8 @@ const Checkout = () => {
                               return (
                                 <div className="space-y-1 text-sm mt-1">
                                   <div className="text-foreground">{savedData.city}</div>
-                                  {savedData.address && (
-                                    <div className="text-foreground">{savedData.address}</div>
+                                  {savedData.branch && (
+                                    <div className="text-foreground">{savedData.branch}</div>
                                   )}
                                 </div>
                               );
@@ -1105,57 +1119,34 @@ const Checkout = () => {
                         </div>
                       </label>
                       {formData.deliveryMethod === "ukr_poshta" && formData.ukrPoshtaExpanded !== false && (
-                        <div className="pl-4 pr-4 pb-4 space-y-4">
-                          <div className="grid sm:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="ukrPoshtaCity">Місто *</Label>
-                              <div className="relative">
-                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <Input
-                                  id="ukrPoshtaCity"
-                                  name="ukrPoshtaCity"
-                                  value={formData.ukrPoshtaCity}
-                                  onChange={(e) => {
-                                    setFormData(prev => ({ ...prev, ukrPoshtaCity: e.target.value, ukrPoshtaCompleted: false, ukrPoshtaExpanded: true }));
-                                  }}
-                                  placeholder="Введіть місто"
-                                  required
-                                  className="rounded-xl pl-10"
-                                />
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="ukrPoshtaPostalCode">Індекс *</Label>
-                              <Input
-                                id="ukrPoshtaPostalCode"
-                                name="ukrPoshtaPostalCode"
-                                value={formData.ukrPoshtaPostalCode}
-                                onChange={(e) => {
-                                  setFormData(prev => ({ ...prev, ukrPoshtaPostalCode: e.target.value, ukrPoshtaCompleted: false, ukrPoshtaExpanded: true }));
-                                }}
-                                placeholder="01001"
-                                required
-                                className="rounded-xl"
-                              />
-                            </div>
-                            <div className="space-y-2 sm:col-span-2">
-                              <Label htmlFor="ukrPoshtaAddress">Адреса *</Label>
-                              <Input
-                                id="ukrPoshtaAddress"
-                                name="ukrPoshtaAddress"
-                                value={formData.ukrPoshtaAddress}
-                                onChange={(e) => {
-                                  setFormData(prev => ({ ...prev, ukrPoshtaAddress: e.target.value, ukrPoshtaCompleted: false, ukrPoshtaExpanded: true }));
-                                }}
-                                placeholder="Вулиця, будинок, квартира"
-                                required
-                                className="rounded-xl"
-                              />
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            onClick={() => {
+                        <div className="pl-4 pr-4 pb-4">
+                          <UkrPoshtaDelivery
+                            cityId={formData.ukrPoshtaCityId}
+                            branchId={formData.ukrPoshtaBranchId}
+                            isExpanded={true}
+                            onCityChange={(city) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                ukrPoshtaCity: city ? city.name : "",
+                                ukrPoshtaCityId: city ? city.id : null,
+                                ukrPoshtaBranch: "",
+                                ukrPoshtaBranchId: null,
+                                ukrPoshtaPostalCode: "",
+                                ukrPoshtaAddress: "",
+                                ukrPoshtaCompleted: false
+                              }));
+                            }}
+                            onBranchChange={(branch) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                ukrPoshtaBranch: branch ? branch.name : "",
+                                ukrPoshtaBranchId: branch ? branch.id : null,
+                                ukrPoshtaPostalCode: branch ? branch.postalCode : "",
+                                ukrPoshtaAddress: branch ? branch.address : "",
+                                ukrPoshtaCompleted: !!branch
+                              }));
+                            }}
+                            onContinue={() => {
                               setFormData(prev => ({
                                 ...prev,
                                 ukrPoshtaExpanded: false,
@@ -1163,12 +1154,7 @@ const Checkout = () => {
                                 deliveryExpanded: false
                               }));
                             }}
-                            disabled={!formData.ukrPoshtaCity || !formData.ukrPoshtaPostalCode || !formData.ukrPoshtaAddress}
-                            variant="outline"
-                            className="w-full rounded-xl border h-10 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
-                          >
-                            Продовжити
-                          </Button>
+                          />
                         </div>
                       )}
                     </div>
@@ -1270,8 +1256,8 @@ const Checkout = () => {
                                 </button>
                               </div>
                               <div className="text-sm">{deliveryData.city}</div>
-                              {deliveryData.address && (
-                                <div className="text-sm">{deliveryData.address}</div>
+                              {deliveryData.branch && (
+                                <div className="text-sm">{deliveryData.branch}</div>
                               )}
                             </>
                           );

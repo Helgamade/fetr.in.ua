@@ -346,6 +346,38 @@ export const novaPoshtaAPI = {
   getWarehouse: (ref: string) => fetchAPI<NovaPoshtaWarehouse>(`/nova-poshta/warehouses/${ref}`),
 };
 
+// Ukrposhta API
+// Согласно документации "Рекомендації з пошуку індексів та відділень" (Search-offices-and-indexes-v3.pdf)
+// Используется адресный классификатор API: https://ukrposhta.ua/address-classifier-ws/
+export interface UkrposhtaCity {
+  id: string; // CITY_ID из адресного классификатора
+  name: string; // CITY_UA
+  postalCode: string; // POSTCODE (может быть пустым для населенного пункта)
+  region?: string; // REGION_UA
+  district?: string; // DISTRICT_UA
+  cityId?: string; // CITY_ID (для получения отделений)
+}
+
+export interface UkrposhtaBranch {
+  id: string; // POSTOFFICE_ID
+  name: string; // POSTOFFICE_UA
+  address: string; // ADDRESS_UA
+  postalCode: string; // POSTCODE
+  cityId?: string; // CITY_ID
+}
+
+export const ukrposhtaAPI = {
+  getPopularCities: () => fetchAPI<UkrposhtaCity[]>('/ukrposhta/cities/popular'),
+  searchCities: (query: string) => fetchAPI<UkrposhtaCity[]>(`/ukrposhta/cities/search?q=${encodeURIComponent(query)}`),
+  getCity: (id: string) => fetchAPI<UkrposhtaCity>(`/ukrposhta/cities/${id}`),
+  getBranches: (cityId: string, search?: string) => {
+    const params = new URLSearchParams({ cityId });
+    if (search) params.append('search', search);
+    return fetchAPI<UkrposhtaBranch[]>(`/ukrposhta/branches?${params.toString()}`);
+  },
+  getBranch: (id: string) => fetchAPI<UkrposhtaBranch>(`/ukrposhta/branches/${id}`),
+};
+
 // WayForPay API
 export const wayforpayAPI = {
   createPayment: (orderId: string) => fetchAPI<{ paymentUrl: string; paymentData: Record<string, string | number | string[]> }>('/wayforpay/create-payment', {
