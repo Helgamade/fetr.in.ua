@@ -235,8 +235,18 @@ router.get('/cities/search', async (req, res, next) => {
       
       const allCities = Array.from(citiesMap.values());
       
-      // Сортируем по алфавиту от А до Я (украинская локализация)
+      // Сортируем: сначала точные совпадения (начинаются с запроса), потом остальные
+      // Внутри каждой группы - сортировка по алфавиту от А до Я
       allCities.sort((a, b) => {
+        const qLower = q.toLowerCase();
+        const aStartsWith = a.name.toLowerCase().startsWith(qLower);
+        const bStartsWith = b.name.toLowerCase().startsWith(qLower);
+        
+        // Приоритет: точные совпадения первыми
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+        
+        // Внутри группы - сортировка по алфавиту
         return a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' });
       });
 
