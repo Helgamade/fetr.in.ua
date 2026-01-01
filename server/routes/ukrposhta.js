@@ -16,17 +16,29 @@ const router = express.Router();
 const ADDRESS_CLASSIFIER_BASE = 'https://ukrposhta.ua/address-classifier-ws';
 
 // Функция для вызова адресного классификатора API
+// ВАЖНО: API Укрпошты проверяет источник запроса и может блокировать серверные запросы
+// Используем максимально полный набор заголовков для имитации браузерного запроса
 async function callAddressClassifierAPI(endpoint) {
   const url = `${ADDRESS_CLASSIFIER_BASE}${endpoint}`;
   
   try {
     console.log(`📡 [Address Classifier API] GET ${url}`);
+    
+    // Используем полный набор заголовков для имитации браузерного запроса с сайта Укрпошты
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Accept-Encoding': 'gzip, deflate, br',
         'Referer': 'https://www.ukrposhta.ua/',
         'Origin': 'https://www.ukrposhta.ua',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
       },
     });
     
