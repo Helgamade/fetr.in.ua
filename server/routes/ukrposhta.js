@@ -11,32 +11,34 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 const router = express.Router();
 
 // Адресный классификатор API Укрпошты
-// Согласно документации "Address-classifier-v3.20-09122024.xml":
-// - Требуется Authorization Bearer токен (такой же, как для оформления отправлений)
-// - URL должен быть с www: https://www.ukrposhta.ua/address-classifier-ws/
-// - PRODUCTION BEARER eCom: 68cff37f-1e85-4fa9-b0a8-36c0f1ba5d40
-const ADDRESS_CLASSIFIER_BASE = 'https://www.ukrposhta.ua/address-classifier-ws';
-const UKRPOSHTA_BEARER_TOKEN = process.env.UKRPOSHTA_BEARER_TOKEN || '68cff37f-1e85-4fa9-b0a8-36c0f1ba5d40';
+// Согласно документации:
+// - Search-offices-and-indexes-v3.xml: URL без www: https://ukrposhta.ua/address-classifier-ws/
+// - Address-classifier-v3.20-09122024.xml (версия 2.0): "Для сервісу надано доступ без необхідності авторизації"
+// Пробуем без токена и с URL без www
+const ADDRESS_CLASSIFIER_BASE = 'https://ukrposhta.ua/address-classifier-ws';
+const UKRPOSHTA_BEARER_TOKEN = process.env.UKRPOSHTA_BEARER_TOKEN; // Опционально, если нужен
 
 // Функция для вызова адресного классификатора API
-// Согласно документации требуется Authorization Bearer токен
+// Согласно версии 2.0 документации, доступ предоставлен без авторизации
 async function callAddressClassifierAPI(endpoint) {
   const url = `${ADDRESS_CLASSIFIER_BASE}${endpoint}`;
-  
-  if (!UKRPOSHTA_BEARER_TOKEN) {
-    throw new Error('UKRPOSHTA_BEARER_TOKEN is not configured. Please set it in server/.env');
-  }
   
   try {
     console.log(`📡 [Address Classifier API] GET ${url}`);
     
-    // Согласно документации, требуется Authorization Bearer токен
+    // Пробуем сначала без токена (согласно версии 2.0 документации)
+    const headers = {
+      'Accept': 'application/json',
+    };
+    
+    // Если токен указан, добавляем его (на случай если нужен)
+    if (UKRPOSHTA_BEARER_TOKEN) {
+      headers['Authorization'] = `Bearer ${UKRPOSHTA_BEARER_TOKEN}`;
+    }
+    
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN}`,
-        'Accept': 'application/json',
-      },
+      headers: headers,
     });
     
     const responseText = await response.text();
