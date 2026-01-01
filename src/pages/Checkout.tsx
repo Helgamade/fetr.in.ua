@@ -171,35 +171,43 @@ const Checkout = () => {
 
   const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Разрешаем только кириллицу, пробелы и тире
+    const previousValue = formData.lastName;
+    
+    // Проверяем валидность нового значения
     if (value === "" || validateCyrillic(value)) {
       setFormData(prev => ({ ...prev, lastName: value }));
-      if (lastNameTouched) {
-        if (value.trim() === "") {
-          setLastNameError("Це обов'язкове поле");
-        } else if (!validateCyrillic(value)) {
-          setLastNameError("Використовуйте тільки кириличні символи");
-        } else {
-          setLastNameError("");
-        }
+      setLastNameTouched(true);
+      if (value.trim() === "") {
+        setLastNameError("Це обов'язкове поле");
+      } else {
+        setLastNameError("");
       }
+    } else {
+      // Если пытаются ввести невалидный символ, показываем ошибку
+      setLastNameTouched(true);
+      setLastNameError("Використовуйте тільки кириличні символи");
+      // Не обновляем значение, но показываем ошибку
     }
   };
 
   const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Разрешаем только кириллицу, пробелы и тире
+    const previousValue = formData.firstName;
+    
+    // Проверяем валидность нового значения
     if (value === "" || validateCyrillic(value)) {
       setFormData(prev => ({ ...prev, firstName: value }));
-      if (firstNameTouched) {
-        if (value.trim() === "") {
-          setFirstNameError("Це обов'язкове поле");
-        } else if (!validateCyrillic(value)) {
-          setFirstNameError("Використовуйте тільки кириличні символи");
-        } else {
-          setFirstNameError("");
-        }
+      setFirstNameTouched(true);
+      if (value.trim() === "") {
+        setFirstNameError("Це обов'язкове поле");
+      } else {
+        setFirstNameError("");
       }
+    } else {
+      // Если пытаются ввести невалидный символ, показываем ошибку
+      setFirstNameTouched(true);
+      setFirstNameError("Використовуйте тільки кириличні символи");
+      // Не обновляем значение, но показываем ошибку
     }
   };
 
@@ -209,62 +217,66 @@ const Checkout = () => {
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
     const cursorPosition = input.selectionStart || 0;
-    const oldValue = formData.phone === "" || formData.phone === "+380 (" ? "" : formData.phone;
-    let newValue = input.value;
+    const inputValue = input.value;
     
-    // Если поле было пустым (показывался плейсхолдер) и начался ввод
-    if ((oldValue === "" || oldValue === "+380 (") && newValue.length > 6) {
-      // Извлекаем введенные символы после "+380 ("
-      const afterPrefix = newValue.slice(6);
-      const digitsOnly = afterPrefix.replace(/\D/g, '');
-      if (digitsOnly.length > 0) {
-        newValue = '+380' + digitsOnly;
-      } else {
-        setFormData(prev => ({ ...prev, phone: "" }));
-        return;
-      }
-    } else if (newValue === "+380 (" || newValue === "" || newValue.length <= 6) {
-      // Если пользователь удалил все до "+380 (", возвращаем к пустому состоянию
+    // Получаем только цифры из ввода
+    const digitsOnly = inputValue.replace(/\D/g, '');
+    
+    // Всегда начинаем с 380
+    let phoneDigits = digitsOnly;
+    if (phoneDigits && !phoneDigits.startsWith('380')) {
+      phoneDigits = '380' + phoneDigits;
+    }
+    
+    // Ограничиваем до 12 цифр
+    phoneDigits = phoneDigits.slice(0, 12);
+    
+    // Если ничего не осталось, сбрасываем
+    if (phoneDigits.length <= 3) {
       setFormData(prev => ({ ...prev, phone: "" }));
+      if (phoneTouched) {
+        validatePhone("");
+      }
       return;
     }
     
-    // Убеждаемся что начинается с +380
-    if (!newValue.startsWith('+380')) {
-      const digitsOnly = newValue.replace(/\D/g, '');
-      if (digitsOnly.length > 0) {
-        newValue = '+380' + digitsOnly;
-      } else {
-        setFormData(prev => ({ ...prev, phone: "" }));
-        return;
-      }
-    }
-    
     // Форматируем
-    const formatted = formatPhone(newValue);
+    const formatted = formatPhone(phoneDigits);
     
-    // Вычисляем новую позицию курсора
-    const oldLength = oldValue.length || 6; // "+380 (" имеет длину 6
-    const newLength = formatted.length;
-    const lengthDiff = newLength - oldLength;
+    // Вычисляем позицию курсора
+    // Считаем количество цифр до курсора в исходном вводе (включая префикс 380)
+    const digitsBeforeCursor = inputValue.slice(0, cursorPosition).replace(/\D/g, '').length;
     
-    // Определяем позицию курсора в зависимости от длины
-    let newCursorPosition = cursorPosition + lengthDiff;
-    // После "+380 (" идет 2 цифры, затем закрывается скобка
-    if (formatted.includes(')')) {
-      // Если скобка закрыта, курсор должен быть после скобки
-      const bracketPos = formatted.indexOf(')');
-      if (cursorPosition <= bracketPos + 1) {
-        newCursorPosition = bracketPos + 2; // После ") "
+    // Находим позицию в отформатированной строке
+    let newCursorPosition = 7; // Позиция после "+380 ("
+    
+    // Если есть цифры после префикса
+    if (digitsBeforeCursor > 3) {
+      // Количество цифр после префикса "380"
+      const digitsAfterPrefix = digitsBeforeCursor - 3;
+      
+      // Ищем позицию в отформатированной строке
+      let digitCount = 0;
+      for (let i = 0; i < formatted.length; i++) {
+        if (/\d/.test(formatted[i])) {
+          digitCount++;
+          // После префикса "+380 " начинаем считать
+          if (digitCount === digitsAfterPrefix + 3) {
+            newCursorPosition = i + 1;
+            break;
+          }
+        }
       }
-    } else {
-      // Если скобка еще не закрыта, курсор после "+380 ("
-      newCursorPosition = Math.max(7, cursorPosition + lengthDiff);
+      
+      // Если все цифры введены, ставим курсор в конец
+      if (digitsBeforeCursor >= phoneDigits.length) {
+        newCursorPosition = formatted.length;
+      }
     }
     
     setFormData(prev => ({ ...prev, phone: formatted }));
     
-    // Устанавливаем позицию курсора после обновления DOM
+    // Устанавливаем позицию курсора
     setTimeout(() => {
       if (phoneInputRef.current) {
         phoneInputRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
@@ -273,6 +285,31 @@ const Checkout = () => {
     
     if (phoneTouched || formatted.length > 6) {
       validatePhone(formatted);
+    }
+  };
+
+  const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // При нажатии Backspace внутри префикса "+380 (", блокируем удаление
+    if (e.key === 'Backspace') {
+      const input = e.currentTarget;
+      const cursorPosition = input.selectionStart || 0;
+      
+      // Если курсор внутри или перед "+380 (", блокируем удаление
+      if (cursorPosition <= 7) {
+        e.preventDefault();
+        return;
+      }
+    }
+    
+    // При нажатии Delete внутри префикса, блокируем
+    if (e.key === 'Delete') {
+      const input = e.currentTarget;
+      const cursorPosition = input.selectionStart || 0;
+      
+      if (cursorPosition < 7) {
+        e.preventDefault();
+        return;
+      }
     }
   };
 
@@ -607,14 +644,18 @@ const Checkout = () => {
   
   // Цены доставки для справки (не включаются в стоимость заказа)
   const getDeliveryPriceInfo = () => {
+    // Если заказ от 1500 грн, все способы доставки бесплатные
+    if (orderTotal >= FREE_DELIVERY_THRESHOLD) {
+      if (formData.deliveryMethod === "pickup") {
+        return { price: 0, text: "Безкоштовно", showFree: false };
+      }
+      return { price: 0, text: "Безкоштовно", showFree: false };
+    }
+    
     if (formData.deliveryMethod === "nova_poshta") {
-      return orderTotal >= FREE_DELIVERY_THRESHOLD 
-        ? { price: 0, text: "Безкоштовно", showFree: false }
-        : { price: 60, text: "від 60 ₴", showFree: true };
+      return { price: 60, text: "від 60 ₴", showFree: true };
     } else if (formData.deliveryMethod === "ukr_poshta") {
-      return orderTotal >= FREE_DELIVERY_THRESHOLD
-        ? { price: 0, text: "Безкоштовно", showFree: false }
-        : { price: 45, text: "від 45 ₴", showFree: true };
+      return { price: 45, text: "від 45 ₴", showFree: true };
     } else if (formData.deliveryMethod === "pickup") {
       return { price: 0, text: "Безкоштовно", showFree: false };
     }
@@ -699,15 +740,17 @@ const Checkout = () => {
                   
                   {formData.contactInfoCompleted && !formData.contactInfoExpanded ? (
                     // Свернутый вид с информацией
-                    <div className="space-y-2 relative">
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, contactInfoExpanded: true }))}
-                        className="absolute top-0 right-0 text-muted-foreground hover:text-primary"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <div className="text-sm">{formData.lastName} {formData.firstName}</div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm">{formData.lastName} {formData.firstName}</div>
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, contactInfoExpanded: true }))}
+                          className="text-muted-foreground hover:text-primary"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      </div>
                       <div className="text-sm">{formData.phone}</div>
                     </div>
                   ) : (
@@ -724,6 +767,7 @@ const Checkout = () => {
                               type="tel"
                               value={formData.phone === "" ? "+380 (" : formData.phone}
                               onChange={handlePhoneChange}
+                              onKeyDown={handlePhoneKeyDown}
                               onFocus={handlePhoneFocus}
                               onBlur={handlePhoneBlur}
                               placeholder="+380 (__) ___-__-__"
@@ -822,8 +866,8 @@ const Checkout = () => {
                   <h2 
                     className="text-lg font-bold flex items-center gap-2 cursor-pointer"
                     onClick={() => {
-                      if (!formData.deliveryExpanded && formData.deliveryMethod) {
-                        setFormData(prev => ({ ...prev, deliveryExpanded: true }));
+                      if (formData.deliveryMethod && getCurrentDeliveryData()?.completed) {
+                        setFormData(prev => ({ ...prev, deliveryExpanded: !prev.deliveryExpanded }));
                       }
                     }}
                   >
@@ -1099,20 +1143,25 @@ const Checkout = () => {
                   </RadioGroup>
                   ) : (
                     // Свернутый вид блока доставки
-                    <div className="space-y-2 relative">
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, deliveryExpanded: true }))}
-                        className="absolute top-0 right-0 text-muted-foreground hover:text-primary"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
+                    <div className="space-y-2">
                       {(() => {
                         const deliveryData = getCurrentDeliveryData();
                         if (formData.deliveryMethod === "nova_poshta" && deliveryData) {
                           return (
                             <>
-                              <div className="text-sm font-medium">Нова Пошта</div>
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-medium">Нова Пошта</div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFormData(prev => ({ ...prev, deliveryExpanded: true }));
+                                  }}
+                                  className="text-muted-foreground hover:text-primary"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                              </div>
                               <div className="text-sm">{deliveryData.city}</div>
                               <div className="text-sm">{deliveryData.warehouse}</div>
                             </>
@@ -1120,7 +1169,19 @@ const Checkout = () => {
                         } else if (formData.deliveryMethod === "ukr_poshta" && deliveryData) {
                           return (
                             <>
-                              <div className="text-sm font-medium">Укрпошта</div>
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-medium">Укрпошта</div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFormData(prev => ({ ...prev, deliveryExpanded: true }));
+                                  }}
+                                  className="text-muted-foreground hover:text-primary"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                              </div>
                               <div className="text-sm">{deliveryData.city}</div>
                               {deliveryData.address && (
                                 <div className="text-sm">{deliveryData.address}</div>
@@ -1130,7 +1191,19 @@ const Checkout = () => {
                         } else if (formData.deliveryMethod === "pickup") {
                           return (
                             <>
-                              <div className="text-sm font-medium">Самовивіз</div>
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-medium">Самовивіз</div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFormData(prev => ({ ...prev, deliveryExpanded: true }));
+                                  }}
+                                  className="text-muted-foreground hover:text-primary"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                              </div>
                               <div className="text-sm">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
                             </>
                           );
@@ -1215,38 +1288,36 @@ const Checkout = () => {
                 </div>
 
                 {/* Reset Button */}
-                <div className="bg-card rounded-2xl p-6 shadow-soft">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => {
-                      setFormData(prev => ({
-                        ...prev,
-                        deliveryMethod: "",
-                        deliveryExpanded: true,
-                        paymentMethod: "",
-                        paymentCompleted: false,
-                        paymentExpanded: true,
-                        novaPoshtaCity: "",
-                        novaPoshtaCityRef: null,
-                        novaPoshtaPostOfficeWarehouse: "",
-                        novaPoshtaPostOfficeWarehouseRef: null,
-                        novaPoshtaPostOfficeCompleted: false,
-                        novaPoshtaPostomatWarehouse: "",
-                        novaPoshtaPostomatWarehouseRef: null,
-                        novaPoshtaPostomatCompleted: false,
-                        ukrPoshtaCity: "",
-                        ukrPoshtaPostalCode: "",
-                        ukrPoshtaAddress: "",
-                        ukrPoshtaCompleted: false,
-                        pickupCompleted: false
-                      }));
-                    }}
-                    className="w-full text-muted-foreground hover:text-foreground"
-                  >
-                    Скинути вибрані способи
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      deliveryMethod: "",
+                      deliveryExpanded: true,
+                      paymentMethod: "",
+                      paymentCompleted: false,
+                      paymentExpanded: true,
+                      novaPoshtaCity: "",
+                      novaPoshtaCityRef: null,
+                      novaPoshtaPostOfficeWarehouse: "",
+                      novaPoshtaPostOfficeWarehouseRef: null,
+                      novaPoshtaPostOfficeCompleted: false,
+                      novaPoshtaPostomatWarehouse: "",
+                      novaPoshtaPostomatWarehouseRef: null,
+                      novaPoshtaPostomatCompleted: false,
+                      ukrPoshtaCity: "",
+                      ukrPoshtaPostalCode: "",
+                      ukrPoshtaAddress: "",
+                      ukrPoshtaCompleted: false,
+                      pickupCompleted: false
+                    }));
+                  }}
+                  className="w-full rounded-xl border text-muted-foreground hover:text-foreground hover:bg-accent hover:border-primary/50"
+                >
+                  Скинути вибрані способи
+                </Button>
 
                 {/* Comment */}
                 <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
