@@ -218,7 +218,7 @@ export const NovaPoshtaDelivery = ({
             <span className={selectedCity ? "text-foreground" : "text-muted-foreground"}>
               {selectedCity ? selectedCity.full_description_ua : "Виберіть населений пункт"}
             </span>
-            <ChevronDown className={cn("h-4 w-4 transition-transform", isCitySearchOpen && "rotate-180")} />
+            <ChevronDown className={cn("h-4 w-4 transition-transform text-muted-foreground", isCitySearchOpen && "rotate-180")} />
           </div>
 
           {/* Раскрывающийся модуль с городами */}
@@ -324,7 +324,7 @@ export const NovaPoshtaDelivery = ({
               <span className={selectedWarehouse ? "text-foreground" : "text-muted-foreground"}>
                 {selectedWarehouse ? selectedWarehouse.description_ua : "Виберіть відділення"}
               </span>
-              <ChevronDown className={cn("h-4 w-4 transition-transform", isWarehouseSearchOpen && "rotate-180")} />
+              <ChevronDown className={cn("h-4 w-4 transition-transform text-muted-foreground", isWarehouseSearchOpen && "rotate-180")} />
             </div>
 
             {/* Раскрывающийся модуль с отделениями */}
@@ -391,7 +391,7 @@ export const NovaPoshtaDelivery = ({
             onClick={onContinue}
             disabled={!selectedCity || !selectedWarehouse}
             variant="outline"
-            className="w-full rounded-xl border h-10 hover:border hover:bg-transparent"
+            className="w-full rounded-xl border h-10 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
           >
             Продовжити
           </Button>

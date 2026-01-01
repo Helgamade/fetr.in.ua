@@ -841,7 +841,7 @@ const Checkout = () => {
                         type="button"
                         variant="outline"
                         disabled={!isPhoneValid || !isFirstNameValid || !isLastNameValid}
-                        className="w-full rounded-xl border h-10 hover:border hover:bg-transparent"
+                        className="w-full rounded-xl border h-10 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
                         onClick={() => {
                           if (isContactInfoValid) {
                             setFormData(prev => ({ ...prev, contactInfoCompleted: true, contactInfoExpanded: false }));
@@ -1096,7 +1096,7 @@ const Checkout = () => {
                             }}
                             disabled={!formData.ukrPoshtaCity || !formData.ukrPoshtaPostalCode || !formData.ukrPoshtaAddress}
                             variant="outline"
-                            className="w-full rounded-xl border h-10 hover:border hover:bg-transparent"
+                            className="w-full rounded-xl border h-10 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
                           >
                             Продовжити
                           </Button>
@@ -1145,7 +1145,7 @@ const Checkout = () => {
                               }));
                             }}
                             variant="outline"
-                            className="w-full rounded-xl border h-10 mt-4 hover:border hover:bg-transparent"
+                            className="w-full rounded-xl border h-10 mt-4 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
                           >
                             Продовжити
                           </Button>
@@ -1387,7 +1387,7 @@ const Checkout = () => {
                         maxLength={254}
                         className="w-full min-h-[100px] p-3 border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary bg-background"
                       />
-                      <div className="text-sm text-muted-foreground text-right">
+                      <div className="text-sm text-muted-foreground text-left">
                         Залишилось символів: {254 - formData.comment.length}
                       </div>
                     </div>
@@ -1399,7 +1399,7 @@ const Checkout = () => {
                   <Button 
                     type="submit" 
                     size="lg" 
-                    className="w-full rounded-full text-lg"
+                    className="w-full rounded-xl text-lg"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? "Обробка..." : `Підтвердити замовлення • ${orderTotal} ₴`}
@@ -1478,7 +1478,7 @@ const Checkout = () => {
                   <Button 
                     type="submit" 
                     size="lg" 
-                    className="w-full rounded-full"
+                    className="w-full rounded-xl"
                     disabled={isSubmitting}
                     onClick={handleSubmit}
                   >
