@@ -164,25 +164,98 @@ export function OrderDetail() {
             <div className="space-y-4">
               {order.items.map((item) => {
                 const product = products.find(p => p.code === item.productId);
+                const productPrice = product?.salePrice || product?.basePrice || 0;
+                const basePrice = product?.basePrice || 0;
+                const hasDiscount = product?.salePrice && product.salePrice < product.basePrice;
+                const discountPerItem = hasDiscount ? basePrice - (product.salePrice || 0) : 0;
+                const optionsPrice = item.selectedOptions.reduce((total, optId) => {
+                  const option = product?.options.find(o => o.code === optId);
+                  return total + (option?.price || 0);
+                }, 0);
+                const itemSubtotal = (productPrice + optionsPrice) * item.quantity;
+                const itemDiscount = discountPerItem * item.quantity;
+                const itemTotal = itemSubtotal - itemDiscount;
+                
                 return (
                   <div key={item.productId} className="flex gap-4 pb-4 border-b last:border-0 last:pb-0">
-                    {product?.image && (
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <div className="font-medium">{getProductName(item.productId)}</div>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        Кількість: {item.quantity}
-                      </div>
-                      {item.selectedOptions.length > 0 && (
-                        <div className="text-sm text-muted-foreground">
-                          Опції: {item.selectedOptions.join(', ')}
+                    {/* Изображение */}
+                    <div className="flex-shrink-0">
+                      {product?.images && product.images.length > 0 ? (
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-20 h-20 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 bg-muted rounded flex items-center justify-center">
+                          <Package className="h-8 w-8 text-muted-foreground" />
                         </div>
                       )}
+                    </div>
+                    
+                    {/* Информация о товаре */}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-base">{getProductName(item.productId)}</div>
+                      
+                      {/* Статус (если есть) */}
+                      <div className="text-sm text-green-600 mt-1">Готово к отправке</div>
+                      
+                      {/* Цена и количество */}
+                      <div className="flex items-center gap-3 mt-2">
+                        {hasDiscount ? (
+                          <>
+                            <span className="text-lg font-bold">{productPrice} ₴</span>
+                            <span className="text-sm text-muted-foreground line-through">{basePrice} ₴</span>
+                            <span className="text-sm text-green-600">-{discountPerItem.toFixed(0)} ₴</span>
+                          </>
+                        ) : (
+                          <span className="text-lg font-bold">{productPrice} ₴</span>
+                        )}
+                      </div>
+                      
+                      {/* Артикул */}
+                      {product?.code && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Артикул: {product.code}
+                        </div>
+                      )}
+                      
+                      {/* Остаток */}
+                      {product && (
+                        <div className="text-xs text-muted-foreground">
+                          Остаток: {product.stock}
+                        </div>
+                      )}
+                      
+                      {/* Количество */}
+                      <div className="text-sm mt-2">
+                        {item.quantity} {item.quantity === 1 ? 'шт.' : 'шт.'}
+                      </div>
+                      
+                      {/* Дополнительные опции */}
+                      {item.selectedOptions.length > 0 && (
+                        <div className="mt-3 pt-3 border-t">
+                          <div className="text-xs font-medium text-muted-foreground mb-2">Дополнительные опции:</div>
+                          <div className="space-y-1">
+                            {item.selectedOptions.map((optId) => {
+                              const option = product?.options.find(o => o.code === optId);
+                              if (!option) return null;
+                              return (
+                                <div key={optId} className="flex items-center justify-between text-sm bg-muted/50 rounded px-2 py-1">
+                                  <span className="font-medium">{option.name}</span>
+                                  <span className="text-muted-foreground">+{option.price} ₴</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Итого за товар */}
+                      <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                        <span className="text-sm font-medium">Итого за товар:</span>
+                        <span className="text-lg font-bold">{itemTotal.toFixed(0)} ₴</span>
+                      </div>
                     </div>
                   </div>
                 );

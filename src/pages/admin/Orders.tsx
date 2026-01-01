@@ -8,7 +8,9 @@ import {
   Phone,
   MapPin,
   ShoppingCart,
-  Package
+  Package,
+  CreditCard,
+  Clipboard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -230,20 +232,30 @@ export function Orders() {
 
                       {/* Доставка и оплата */}
                       <td className="py-4 px-4">
-                        <div className="space-y-1">
-                          <div className="text-sm font-medium">
-                            {deliveryLabels[order.delivery.method]}
-                          </div>
-                          {order.delivery.city && (
-                            <div className="text-xs text-muted-foreground">
-                              {order.delivery.city}
-                              {order.delivery.warehouse && `, ${order.delivery.warehouse}`}
+                        <div className="space-y-2 text-sm text-foreground">
+                          {/* Доставка */}
+                          <div className="flex items-start gap-2">
+                            <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                              <div>{deliveryLabels[order.delivery.method]}</div>
+                              {order.delivery.city && (
+                                <div className="text-xs mt-0.5">
+                                  {order.delivery.city}
+                                  {order.delivery.warehouse && `, ${order.delivery.warehouse}`}
+                                  {order.delivery.postIndex && `, ${order.delivery.postIndex}`}
+                                  {order.delivery.address && `, ${order.delivery.address}`}
+                                </div>
+                              )}
                             </div>
-                          )}
-                          <div className="text-xs text-muted-foreground">
-                            {order.payment.method === 'card' && 'Онлайн оплата'}
-                            {order.payment.method === 'cod' && 'Накладений платіж'}
-                            {order.payment.method === 'fop' && 'Оплата на рахунок ФОП'}
+                          </div>
+                          {/* Оплата */}
+                          <div className="flex items-start gap-2">
+                            <CreditCard className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                            <div>
+                              {order.payment.method === 'card' && 'Онлайн оплата (WayForPay)'}
+                              {order.payment.method === 'cod' && 'Накладений платіж'}
+                              {order.payment.method === 'fop' && 'Оплата на рахунок ФОП'}
+                            </div>
                           </div>
                         </div>
                       </td>
