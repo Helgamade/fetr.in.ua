@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { CartItem, CartState } from '@/types/store';
 import { useProducts } from '@/hooks/useProducts';
 import { useSettings } from '@/hooks/useSettings';
-import { toast } from 'sonner';
 
 interface CartContextType extends CartState {
   addToCart: (productId: string, selectedOptions: string[]) => void;
@@ -64,7 +63,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const removeFromCart = useCallback((productId: string) => {
     setItems(prev => prev.filter(item => item.productId !== productId));
-    toast.info('Товар видалено з кошика');
   }, []);
 
   const updateQuantity = useCallback((productId: string, quantity: number) => {
