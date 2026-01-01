@@ -1254,6 +1254,16 @@ const Checkout = () => {
                             </>
                           );
                         } else if (formData.deliveryMethod === "ukr_poshta" && deliveryData) {
+                          // Формируем название города с областью: "Город (Область)"
+                          const cityDisplayName = deliveryData.cityRegion
+                            ? `${deliveryData.city} (${deliveryData.cityRegion})`
+                            : deliveryData.city;
+                          
+                          // Формируем полный адрес отделения: {postalCode} {city}, {address}
+                          const fullAddress = deliveryData.postalCode && deliveryData.address
+                            ? `${deliveryData.postalCode} ${deliveryData.city}, ${deliveryData.address}`
+                            : deliveryData.branch || '';
+                          
                           return (
                             <>
                               <div className="flex items-center justify-between">
@@ -1272,9 +1282,9 @@ const Checkout = () => {
                                   <Pencil className="w-4 h-4" />
                                 </button>
                               </div>
-                              <div className="text-sm">{deliveryData.city}</div>
-                              {deliveryData.branch && (
-                                <div className="text-sm">{deliveryData.branch}</div>
+                              <div className="text-sm">{cityDisplayName}</div>
+                              {fullAddress && (
+                                <div className="text-sm">{fullAddress}</div>
                               )}
                             </>
                           );
