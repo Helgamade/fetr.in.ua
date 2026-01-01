@@ -1422,6 +1422,7 @@ const Checkout = () => {
                       novaPoshtaPostomatCompleted: false,
                       ukrPoshtaCity: "",
                       ukrPoshtaCityId: null,
+                      ukrPoshtaCityRegion: "",
                       ukrPoshtaBranch: "",
                       ukrPoshtaBranchId: null,
                       ukrPoshtaPostalCode: "",
