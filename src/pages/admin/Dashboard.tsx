@@ -36,7 +36,7 @@ export function Dashboard() {
   // Calculate stats from real orders
   const totalOrders = orders.length;
   const totalRevenue = orders.reduce((sum, order) => sum + (Number(order.total) || 0), 0);
-  const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
+  const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
   const completedOrders = orders.filter(o => o.status === 'completed').length;
   const repeatCustomers = new Set(orders.map(o => o.customer?.phone).filter(Boolean)).size;
   
@@ -57,7 +57,7 @@ export function Dashboard() {
     },
     {
       title: 'Середній чек',
-      value: `₴${averageOrderValue}`,
+      value: `₴${Number(averageOrderValue).toFixed(2)}`,
       change: '+0%',
       trend: 'up' as const,
       icon: TrendingUp,
@@ -104,7 +104,7 @@ export function Dashboard() {
     });
     return {
       date: date.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' }),
-      revenue: dayOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+      revenue: dayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0),
       orders: dayOrders.length,
     };
   });
@@ -162,7 +162,7 @@ export function Dashboard() {
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px'
                     }}
-                    formatter={(value: number) => [`₴${value}`, 'Дохід']}
+                    formatter={(value: number) => [`₴${Number(value).toFixed(2)}`, 'Дохід']}
                   />
                   <Line 
                     type="monotone" 
@@ -230,7 +230,7 @@ export function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold">₴{product.revenue.toLocaleString()}</div>
+                    <div className="font-semibold">₴{Number(product.revenue).toFixed(2)}</div>
                   </div>
                 </div>
               )) : (
