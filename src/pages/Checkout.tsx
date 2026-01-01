@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useProducts } from "@/hooks/useProducts";
@@ -1107,14 +1107,18 @@ const Checkout = () => {
                             const showSavedWhenNotSelected = formData.deliveryMethod !== "ukr_poshta" && savedData?.completed && savedData.city;
                             
                             if (showCollapsed || showSavedWhenNotSelected) {
-                              // Формируем название города с областью: "Город (Область)"
-                              const cityDisplayName = savedData.cityRegion
-                                ? `${savedData.city} (${savedData.cityRegion})`
-                                : savedData.city;
+                              // ВАЖНО: savedData.city уже содержит полное название "Город (Область)"
+                              // Если по какой-то причине нет области, формируем из сохраненных данных
+                              const cityDisplayName = savedData.city || 
+                                (savedData.cityRegion ? `${savedData.city} (${savedData.cityRegion})` : savedData.city);
                               
                               // Формируем полный адрес отделения: {postalCode} {city}, {address}
+                              // ВАЖНО: Используем только название города без области для адреса
+                              const cityNameOnly = savedData.cityRegion 
+                                ? savedData.city.replace(` (${savedData.cityRegion})`, '')
+                                : savedData.city;
                               const fullAddress = savedData.postalCode && savedData.address
-                                ? `${savedData.postalCode} ${savedData.city}, ${savedData.address}`
+                                ? `${savedData.postalCode} ${cityNameOnly}, ${savedData.address}`
                                 : savedData.branch || '';
                               
                               return (
@@ -1145,11 +1149,16 @@ const Checkout = () => {
                             savedBranchPostalCode={formData.ukrPoshtaPostalCode}
                             isExpanded={true}
                             onCityChange={(city) => {
+                              // ВАЖНО: Сохраняем полное название города с областью в формате "Город (Область)"
+                              const cityFullName = city && city.region 
+                                ? `${city.name} (${city.region})`
+                                : city ? city.name : "";
+                              
                               setFormData(prev => ({
                                 ...prev,
-                                ukrPoshtaCity: city ? city.name : "",
+                                ukrPoshtaCity: cityFullName, // Сохраняем полное название "Город (Область)"
                                 ukrPoshtaCityId: city ? city.id : null,
-                                ukrPoshtaCityRegion: city ? (city.region || "") : "", // Сохраняем область
+                                ukrPoshtaCityRegion: city ? (city.region || "") : "", // Сохраняем область отдельно для удобства
                                 // Сбрасываем отделение при смене города (как у Новой Почты)
                                 ukrPoshtaBranch: "",
                                 ukrPoshtaBranchId: null,
@@ -1259,14 +1268,18 @@ const Checkout = () => {
                             </>
                           );
                         } else if (formData.deliveryMethod === "ukr_poshta" && deliveryData) {
-                          // Формируем название города с областью: "Город (Область)"
-                          const cityDisplayName = deliveryData.cityRegion
-                            ? `${deliveryData.city} (${deliveryData.cityRegion})`
-                            : deliveryData.city;
+                          // ВАЖНО: deliveryData.city уже содержит полное название "Город (Область)"
+                          // Если по какой-то причине нет области, формируем из сохраненных данных
+                          const cityDisplayName = deliveryData.city || 
+                            (deliveryData.cityRegion ? `${deliveryData.city} (${deliveryData.cityRegion})` : deliveryData.city);
                           
                           // Формируем полный адрес отделения: {postalCode} {city}, {address}
+                          // ВАЖНО: Используем только название города без области для адреса
+                          const cityNameOnly = deliveryData.cityRegion 
+                            ? deliveryData.city.replace(` (${deliveryData.cityRegion})`, '')
+                            : deliveryData.city;
                           const fullAddress = deliveryData.postalCode && deliveryData.address
-                            ? `${deliveryData.postalCode} ${deliveryData.city}, ${deliveryData.address}`
+                            ? `${deliveryData.postalCode} ${cityNameOnly}, ${deliveryData.address}`
                             : deliveryData.branch || '';
                           
                           return (

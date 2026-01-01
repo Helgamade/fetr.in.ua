@@ -299,9 +299,15 @@ export const UkrPoshtaDelivery = ({
   }, [branchSearchQuery, isBranchSearchOpen]);
 
   const handleCitySelect = (city: UkrposhtaCity) => {
-    setSelectedCity(city);
+    // ВАЖНО: Сохраняем полное название города с областью
+    const cityWithFullName = {
+      ...city,
+      // Сохраняем полное название для отображения везде одинаково
+      displayName: getCityFullName(city),
+    };
+    setSelectedCity(cityWithFullName);
     setSelectedBranch(null);
-    onCityChange(city);
+    onCityChange(cityWithFullName);
     onBranchChange(null);
     setIsCitySearchOpen(false);
     setCitySearchQuery("");
@@ -314,10 +320,26 @@ export const UkrPoshtaDelivery = ({
     setBranchSearchQuery("");
   };
 
-  const displayedCities = citySearchQuery.length >= 2 ? searchCities : popularCities;
+  // Фильтруем города без области - не показываем их
+  const filteredSearchCities = searchCities.filter(city => city.region && city.region.trim() !== '');
+  const filteredPopularCities = popularCities.filter(city => city.region && city.region.trim() !== '');
+  const displayedCities = citySearchQuery.length >= 2 ? filteredSearchCities : filteredPopularCities;
   
-  const getCityDisplayName = (city: UkrposhtaCity) => {
-    return city.region ? `${city.name} (${city.region})` : city.name;
+  // Единая функция для форматирования города с областью
+  // ВАЖНО: Всегда показываем город с областью в формате "Город (Область)"
+  // Если области нет, город не должен отображаться (фильтруется выше)
+  const getCityDisplayName = (city: UkrposhtaCity): string => {
+    if (!city.region || city.region.trim() === '') {
+      // Если области нет, возвращаем только название (но такие города должны быть отфильтрованы)
+      return city.name;
+    }
+    // Формат: "Дніпро (Дніпропетровська обл.)"
+    return `${city.name} (${city.region})`;
+  };
+  
+  // Функция для получения полного названия города для сохранения
+  const getCityFullName = (city: UkrposhtaCity): string => {
+    return getCityDisplayName(city);
   };
 
   return (
@@ -369,10 +391,10 @@ export const UkrPoshtaDelivery = ({
               </div>
 
               {/* Популярные города (когда поиск пустой) */}
-              {citySearchQuery.length < 2 && popularCities.length > 0 && (
+              {citySearchQuery.length < 2 && filteredPopularCities.length > 0 && (
                 <div className="p-3 border-b">
                   <div className="flex flex-wrap gap-2">
-                    {popularCities.slice(0, 5).map((city) => (
+                    {filteredPopularCities.slice(0, 5).map((city) => (
                       <button
                         key={city.id}
                         type="button"
@@ -382,7 +404,7 @@ export const UkrPoshtaDelivery = ({
                         }}
                         className="px-3 py-1.5 text-sm border rounded-lg"
                       >
-                        {city.name}
+                        {getCityDisplayName(city)}
                       </button>
                     ))}
                   </div>
