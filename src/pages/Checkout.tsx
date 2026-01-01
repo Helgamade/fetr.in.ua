@@ -1498,100 +1498,102 @@ const Checkout = () => {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
-                <h2 className="text-lg font-bold">Ваше замовлення</h2>
-                
-                <div className="space-y-3 max-h-[300px] overflow-auto">
-                  {cartItemsWithProducts.map((item) => {
-                    const product = item.product!;
-                    const productOptions = item.selectedOptions.map(optId => 
-                      product.options.find(o => o.code === optId)
-                    ).filter(Boolean);
-                    const optionsTotal = productOptions.reduce((sum, opt) => sum + (opt?.price || 0), 0);
-                    
-                    return (
-                      <div key={item.productId + JSON.stringify(item.selectedOptions)} className="flex gap-3">
-                        <img 
-                          src={product.images[0]} 
-                          alt={product.name}
-                          className="w-16 h-16 object-cover rounded-lg"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate">{product.name}</div>
-                          <div className="text-xs text-muted-foreground">Кількість: {item.quantity}</div>
-                          {productOptions.length > 0 && (
-                            <div className="text-xs text-muted-foreground">
-                              + {productOptions.length} опц.
-                            </div>
-                          )}
+              <div className="sticky top-24 space-y-4">
+                {/* Order Block */}
+                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
+                  <h2 className="text-lg font-bold">Ваше замовлення</h2>
+                  
+                  <div className="space-y-3 max-h-[300px] overflow-auto">
+                    {cartItemsWithProducts.map((item) => {
+                      const product = item.product!;
+                      const productOptions = item.selectedOptions.map(optId => 
+                        product.options.find(o => o.code === optId)
+                      ).filter(Boolean);
+                      const optionsTotal = productOptions.reduce((sum, opt) => sum + (opt?.price || 0), 0);
+                      
+                      return (
+                        <div key={item.productId + JSON.stringify(item.selectedOptions)} className="flex gap-3">
+                          <img 
+                            src={product.images[0]} 
+                            alt={product.name}
+                            className="w-16 h-16 object-cover rounded-lg"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm truncate">{product.name}</div>
+                            <div className="text-xs text-muted-foreground">Кількість: {item.quantity}</div>
+                            {productOptions.length > 0 && (
+                              <div className="text-xs text-muted-foreground">
+                                + {productOptions.length} опц.
+                              </div>
+                            )}
+                          </div>
+                          <div className="font-medium text-sm">
+                            {((product.salePrice || product.basePrice) * item.quantity) + optionsTotal} грн
+                          </div>
                         </div>
-                        <div className="font-medium text-sm">
-                          {((product.salePrice || product.basePrice) * item.quantity) + optionsTotal} грн
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="border-t pt-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Вартість замовлення:</span>
-                    <span>{getSubtotal()} ₴</span>
+                      );
+                    })}
                   </div>
-                  {(getDiscount() > 0 || getPromoDiscount() > 0) && (
+
+                  <div className="border-t pt-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Знижка:</span>
-                      <span className="text-red-600">-{getTotalDiscount().toFixed(2)} ₴</span>
+                      <span className="text-muted-foreground">Вартість замовлення:</span>
+                      <span>{getSubtotal()} ₴</span>
                     </div>
-                  )}
-                  {formData.deliveryMethod && deliveryInfo && (
-                    <>
+                    {(getDiscount() > 0 || getPromoDiscount() > 0) && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{deliveryLabel}</span>
-                        <span className={deliveryInfo.price === 0 ? "text-green-600" : ""}>
-                          {deliveryInfo.text}
-                        </span>
+                        <span className="text-muted-foreground">Знижка:</span>
+                        <span className="text-red-600">-{getTotalDiscount().toFixed(2)} ₴</span>
                       </div>
-                      {deliveryInfo.showFree && (
-                        <div className="text-sm text-green-600">
-                          Безкоштовна доставка від 4000 ₴
+                    )}
+                    {formData.deliveryMethod && deliveryInfo && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">{deliveryLabel}</span>
+                          <span className={deliveryInfo.price === 0 ? "text-green-600" : ""}>
+                            {deliveryInfo.text}
+                          </span>
                         </div>
-                      )}
-                    </>
-                  )}
-                  <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                    <span>{orderTotal >= FREE_DELIVERY_THRESHOLD ? "До оплати з доставкою:" : "До оплати без доставки:"}</span>
-                    <span className="text-primary">
-                      {orderTotal.toFixed(2)} ₴
-                    </span>
+                        {deliveryInfo.showFree && (
+                          <div className="text-sm text-green-600">
+                            Безкоштовна доставка від 4000 ₴
+                          </div>
+                        )}
+                      </>
+                    )}
+                    <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                      <span>{orderTotal >= FREE_DELIVERY_THRESHOLD ? "До оплати з доставкою:" : "До оплати без доставки:"}</span>
+                      <span className="text-primary">
+                        {orderTotal.toFixed(2)} ₴
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Submit Button (Desktop) */}
+                  <div className="hidden lg:block pt-4">
+                    <Button 
+                      type="submit" 
+                      size="lg" 
+                      className="w-full rounded-xl"
+                      disabled={isSubmitting}
+                      onClick={handleSubmit}
+                    >
+                      {isSubmitting ? "Обробка..." : "Оформити замовлення"}
+                    </Button>
+                  </div>
+
+                  {/* Trust badges */}
+                  <div className="flex flex-wrap gap-2 pt-4 border-t justify-center text-xs text-muted-foreground">
+                    <span>🔒 Безпечна оплата</span>
+                    <span>•</span>
+                    <span>📦 Швидка доставка</span>
+                    <span>•</span>
+                    <span>↩️ 14 днів повернення</span>
                   </div>
                 </div>
 
-                {/* Submit Button (Desktop) */}
-                <div className="hidden lg:block pt-4">
-                  <Button 
-                    type="submit" 
-                    size="lg" 
-                    className="w-full rounded-xl"
-                    disabled={isSubmitting}
-                    onClick={handleSubmit}
-                  >
-                    {isSubmitting ? "Обробка..." : "Оформити замовлення"}
-                  </Button>
-                </div>
-
-                {/* Trust badges */}
-                <div className="flex flex-wrap gap-2 pt-4 border-t justify-center text-xs text-muted-foreground">
-                  <span>🔒 Безпечна оплата</span>
-                  <span>•</span>
-                  <span>📦 Швидка доставка</span>
-                  <span>•</span>
-                  <span>↩️ 14 днів повернення</span>
-                </div>
-              </div>
-
-              {/* Promo Code Section - отдельный блок */}
-              <div className="bg-card/50 rounded-2xl p-4 shadow-soft space-y-3 mt-4">
+                {/* Promo Code Section - отдельный блок */}
+                <div className="bg-card/50 rounded-2xl p-4 shadow-soft space-y-3">
                 <div 
                   className="flex items-center justify-between cursor-pointer"
                   onClick={() => setPromoCodeExpanded(!promoCodeExpanded)}
@@ -1645,6 +1647,7 @@ const Checkout = () => {
                     )}
                   </div>
                 )}
+                </div>
               </div>
             </div>
           </div>
