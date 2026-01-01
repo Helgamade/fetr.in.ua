@@ -141,10 +141,35 @@ const ThankYou = () => {
     }
   };
 
+  // Если нет идентификатора заказа, показываем сообщение
+  if (!identifier && !orderLoading) {
+    return (
+      <>
+        <Helmet>
+          <title>Помилка | FetrInUA</title>
+          <meta name="robots" content="noindex" />
+        </Helmet>
+        <div className="min-h-screen bg-gradient-to-b from-red-50 to-background flex items-center justify-center">
+          <div className="container mx-auto px-4 text-center">
+            <div className="bg-card rounded-2xl p-8 shadow-elegant max-w-md">
+              <h1 className="text-2xl font-bold mb-4 text-red-600">Помилка</h1>
+              <p className="text-muted-foreground mb-4">
+                Не вдалося знайти замовлення. Перевірте посилання або зверніться до підтримки.
+              </p>
+              <Link to="/">
+                <Button>Повернутися на головну</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Helmet>
-        <title>Дякуємо за замовлення! | FetrInUA</title>
+        <title>{isPaymentPending ? 'Очікуємо на оплату' : 'Дякуємо за замовлення!'} | FetrInUA</title>
         <meta name="robots" content="noindex" />
       </Helmet>
 
