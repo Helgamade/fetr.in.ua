@@ -43,7 +43,7 @@ export const UkrPoshtaDelivery = ({
   // Инициализация из сохраненных данных для мгновенного отображения
   useEffect(() => {
     if (cityId && savedCityName && !selectedCity) {
-      // ВАЖНО: savedCityName может содержать полное название "Город (Область)"
+      // ВАЖНО: savedCityName может содержать полное название "Город (Область)" или "Город (*)"
       // Извлекаем название города и область
       let cityName = savedCityName;
       let region = savedCityRegion || '';
@@ -52,7 +52,13 @@ export const UkrPoshtaDelivery = ({
       const match = savedCityName.match(/^(.+?)\s*\((.+?)\)$/);
       if (match) {
         cityName = match[1].trim();
-        region = match[2].trim();
+        const regionFromName = match[2].trim();
+        // Если это "*", значит области нет
+        if (regionFromName === '*') {
+          region = '';
+        } else {
+          region = regionFromName;
+        }
       }
       
       // Создаем объект города из сохраненных данных для мгновенного отображения
@@ -332,18 +338,15 @@ export const UkrPoshtaDelivery = ({
     setBranchSearchQuery("");
   };
 
-  // Фильтруем города без области - не показываем их
-  const filteredSearchCities = searchCities.filter(city => city.region && city.region.trim() !== '');
-  const filteredPopularCities = popularCities.filter(city => city.region && city.region.trim() !== '');
-  const displayedCities = citySearchQuery.length >= 2 ? filteredSearchCities : filteredPopularCities;
+  // НЕ фильтруем города без области - показываем все города
+  const displayedCities = citySearchQuery.length >= 2 ? searchCities : popularCities;
   
   // Единая функция для форматирования города с областью
-  // ВАЖНО: Всегда показываем город с областью в формате "Город (Область)"
-  // Если области нет, город не должен отображаться (фильтруется выше)
+  // ВАЖНО: Всегда показываем город в формате "Город (Область)" или "Город (*)" если области нет
   const getCityDisplayName = (city: UkrposhtaCity): string => {
     if (!city.region || city.region.trim() === '') {
-      // Если области нет, возвращаем только название (но такие города должны быть отфильтрованы)
-      return city.name;
+      // Если области нет, показываем "Город (*)"
+      return `${city.name} (*)`;
     }
     // Формат: "Дніпро (Дніпропетровська обл.)"
     return `${city.name} (${city.region})`;
@@ -403,10 +406,10 @@ export const UkrPoshtaDelivery = ({
               </div>
 
               {/* Популярные города (когда поиск пустой) */}
-              {citySearchQuery.length < 2 && filteredPopularCities.length > 0 && (
+              {citySearchQuery.length < 2 && popularCities.length > 0 && (
                 <div className="p-3 border-b">
                   <div className="flex flex-wrap gap-2">
-                    {filteredPopularCities.slice(0, 5).map((city) => (
+                    {popularCities.slice(0, 5).map((city) => (
                       <button
                         key={city.id}
                         type="button"

@@ -1149,14 +1149,16 @@ const Checkout = () => {
                             savedBranchPostalCode={formData.ukrPoshtaPostalCode}
                             isExpanded={true}
                             onCityChange={(city) => {
-                              // ВАЖНО: Сохраняем полное название города с областью в формате "Город (Область)"
-                              const cityFullName = city && city.region 
-                                ? `${city.name} (${city.region})`
-                                : city ? city.name : "";
+                              // ВАЖНО: Сохраняем полное название города с областью в формате "Город (Область)" или "Город (*)"
+                              const cityFullName = city 
+                                ? (city.region && city.region.trim() !== '' 
+                                    ? `${city.name} (${city.region})`
+                                    : `${city.name} (*)`)
+                                : "";
                               
                               setFormData(prev => ({
                                 ...prev,
-                                ukrPoshtaCity: cityFullName, // Сохраняем полное название "Город (Область)"
+                                ukrPoshtaCity: cityFullName, // Сохраняем полное название "Город (Область)" или "Город (*)"
                                 ukrPoshtaCityId: city ? city.id : null,
                                 ukrPoshtaCityRegion: city ? (city.region || "") : "", // Сохраняем область отдельно для удобства
                                 // Сбрасываем отделение при смене города (как у Новой Почты)
