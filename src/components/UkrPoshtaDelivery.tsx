@@ -60,14 +60,7 @@ export const UkrPoshtaDelivery = ({
   useEffect(() => {
     if (branchId && selectedCity) {
       const cityIdForBranch = selectedCity.cityId || selectedCity.id;
-      // Endpoint требует cityId как query параметр
-      fetch(`/api/ukrposhta/branches/${branchId}?cityId=${cityIdForBranch}`)
-        .then(res => {
-          if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
-          }
-          return res.json();
-        })
+      ukrposhtaAPI.getBranch(branchId, cityIdForBranch)
         .then(branch => {
           setSelectedBranch(branch);
           // Не вызываем onBranchChange здесь, чтобы не перезаписывать данные из props

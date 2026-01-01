@@ -425,14 +425,57 @@ router.get('/branches', async (req, res, next) => {
 });
 
 // Получить информацию об отделении по ID (POSTOFFICE_ID)
-// ПРИМЕЧАНИЕ: Endpoints /get_postoffice_by_id и /get_postoffice_by_postoffice_id не существуют в API
-// Для получения отделения нужно использовать /branches?cityId={CITY_ID} и найти нужное отделение
+// По аналогии с NovaPoshtaDelivery - получаем все отделения для города и находим нужное
 router.get('/branches/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    
-    console.log(`⚠️ [GET /branches/:id] Endpoints /get_postoffice_by_id and /get_postoffice_by_postoffice_id do not exist. Branch ID: ${id}`);
-    res.status(404).json({ error: 'Branch not found. Use /branches?cityId={CITY_ID} to get all branches for a city.' });
+    const { cityId } = req.query;
+
+    console.log(`🔍 [GET /branches/:id] Request:`, { id, cityId });
+
+    if (!cityId) {
+      console.log(`❌ [GET /branches/:id] Missing cityId query parameter. Branch ID: ${id}`);
+      return res.status(400).json({ error: 'cityId query parameter is required. Example: /branches/:id?cityId=12345' });
+    }
+
+    const cityIdNum = parseInt(cityId, 10);
+    if (isNaN(cityIdNum) || cityIdNum <= 0) {
+      console.log(`❌ [GET /branches/:id] Invalid cityId: "${cityId}". Branch ID: ${id}`);
+      return res.status(400).json({ error: `Invalid cityId: "${cityId}". CITY_ID must be a number.` });
+    }
+
+    // Получаем все отделения для города
+    try {
+      const data = await callAddressClassifierAPI(`/get_postoffices_by_postcode_cityid_cityvpzid?city_id=${cityIdNum}`);
+      const entries = data?.Entries?.Entry || [];
+      const branchesList = Array.isArray(entries) ? entries : [entries];
+      
+      console.log(`📦 [GET /branches/:id] Loaded ${branchesList.length} branches for cityId: ${cityIdNum}`);
+      
+      // Ищем отделение по ID
+      const foundBranch = branchesList.find(b => 
+        b.POSTOFFICE_ID?.toString() === id || 
+        b.POSTCODE === id ||
+        (b.POSTOFFICE_ID && b.POSTOFFICE_ID.toString() === id)
+      );
+
+      if (foundBranch) {
+        console.log(`✅ [GET /branches/:id] Found branch:`, { id, name: foundBranch.POSTOFFICE_UA });
+        return res.json({
+          id: foundBranch.POSTOFFICE_ID?.toString() || foundBranch.POSTCODE || id,
+          name: foundBranch.POSTOFFICE_UA || foundBranch.POSTOFFICE_EN || foundBranch.POSTOFFICE_NAME || '',
+          address: foundBranch.STREET_UA_VPZ || foundBranch.ADDRESS_UA || foundBranch.ADDRESS_EN || foundBranch.ADDRESS || '',
+          postalCode: foundBranch.POSTCODE || '',
+          cityId: cityId,
+        });
+      }
+
+      console.log(`⚠️ [GET /branches/:id] Branch not found. Branch ID: ${id}, City ID: ${cityId}`);
+      res.status(404).json({ error: 'Branch not found. Use /branches?cityId=... to list branches.' });
+    } catch (apiError) {
+      console.error('❌ [GET /branches/:id] Error loading branches:', apiError.message);
+      res.status(404).json({ error: 'Branch not found. API error.' });
+    }
   } catch (error) {
     next(error);
   }

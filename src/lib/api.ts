@@ -406,7 +406,12 @@ export const ukrposhtaAPI = {
     if (search) params.append('search', search);
     return fetchAPI<UkrposhtaBranch[]>(`/ukrposhta/branches?${params.toString()}`);
   },
-  getBranch: (id: string) => fetchAPI<UkrposhtaBranch>(`/ukrposhta/branches/${id}`),
+  getBranch: (id: string, cityId?: string) => {
+    const url = cityId 
+      ? `/ukrposhta/branches/${id}?cityId=${cityId}`
+      : `/ukrposhta/branches/${id}`;
+    return fetchAPI<UkrposhtaBranch>(url);
+  },
 };
 
 // WayForPay API
