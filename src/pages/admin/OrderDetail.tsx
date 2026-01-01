@@ -240,16 +240,16 @@ export function OrderDetail() {
                       
                       {/* Дополнительные опции */}
                       {item.selectedOptions.length > 0 && (
-                        <div className="mb-2">
-                          <div className="text-xs font-medium text-muted-foreground mb-1">Дополнительные опции:</div>
-                          <div className="space-y-1">
+                        <div className="mb-2 mt-3 pt-3 border-t border-primary/20">
+                          <div className="text-sm font-semibold text-foreground mb-2">Дополнительные опции:</div>
+                          <div className="space-y-2">
                             {item.selectedOptions.map((optId) => {
                               const option = product?.options.find(o => o.code === optId);
                               if (!option) return null;
                               return (
-                                <div key={optId} className="flex items-center justify-between text-xs bg-muted/50 rounded px-2 py-1">
-                                  <span className="font-medium">{option.name}</span>
-                                  <span className="text-muted-foreground">+{option.price} ₴</span>
+                                <div key={optId} className="flex items-center justify-between text-sm bg-primary/10 border border-primary/20 rounded-lg px-3 py-2">
+                                  <span className="font-semibold text-foreground">{option.name}</span>
+                                  <span className="font-bold text-primary">+{option.price} ₴</span>
                                 </div>
                               );
                             })}
