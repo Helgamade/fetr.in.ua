@@ -209,6 +209,7 @@ router.post('/', async (req, res, next) => {
       const initialStatus = payment.method === 'online' ? 'awaiting_payment' : 'created';
       
       // Convert payment method: 'online' -> 'card' for database compatibility
+      // Маппинг способов оплаты: 'online' -> 'card' для обратной совместимости, 'fop' -> 'fop'
       const dbPaymentMethod = payment.method === 'online' ? 'card' : payment.method;
       
       // Insert order - id is AUTO_INCREMENT, use order_number for string identifier

@@ -14,6 +14,7 @@ import { usePublicSettings } from "@/hooks/usePublicSettings";
 import { NovaPoshtaDelivery } from "@/components/NovaPoshtaDelivery";
 import { UkrPoshtaDelivery } from "@/components/UkrPoshtaDelivery";
 import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from "@/components/DeliveryLogos";
+import { CODPaymentLogo, WayForPayLogo, FOPPaymentLogo } from "@/components/PaymentLogos";
 import type { NovaPoshtaCity, NovaPoshtaWarehouse, UkrposhtaCity, UkrposhtaBranch } from "@/lib/api";
 
 const Checkout = () => {
@@ -1386,7 +1387,10 @@ const Checkout = () => {
                       {formData.paymentMethod === "online" && (
                         <>
                           <div className="flex items-center justify-between">
-                            <div className="text-sm font-medium">Онлайн оплата</div>
+                            <div className="text-sm font-medium flex items-center gap-2">
+                              <WayForPayLogo className="w-5 h-5" />
+                              Онлайн оплата
+                            </div>
                             <button
                               type="button"
                               onClick={() => {
@@ -1406,7 +1410,10 @@ const Checkout = () => {
                       {formData.paymentMethod === "cod" && (
                         <>
                           <div className="flex items-center justify-between">
-                            <div className="text-sm font-medium">Накладений платіж</div>
+                            <div className="text-sm font-medium flex items-center gap-2">
+                              <CODPaymentLogo className="w-5 h-5" />
+                              Накладений платіж
+                            </div>
                             <button
                               type="button"
                               onClick={() => {
@@ -1421,6 +1428,29 @@ const Checkout = () => {
                             </button>
                           </div>
                           <div className="text-sm text-muted-foreground">Оплата при отриманні (+20 грн комісія)</div>
+                        </>
+                      )}
+                      {formData.paymentMethod === "fop" && (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm font-medium flex items-center gap-2">
+                              <FOPPaymentLogo className="w-5 h-5" />
+                              Оплата на рахунок ФОП
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, paymentExpanded: true }));
+                                setTimeout(() => {
+                                  paymentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                                }, 150);
+                              }}
+                              className="text-muted-foreground hover:text-primary"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <div className="text-sm text-muted-foreground">Оплата на банківський рахунок ФОП</div>
                         </>
                       )}
                     </div>
@@ -1441,15 +1471,31 @@ const Checkout = () => {
                       <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
                         <RadioGroupItem value="online" id="online" />
                         <div>
-                          <div className="font-medium">Онлайн оплата</div>
+                          <div className="font-medium flex items-center gap-2">
+                            <WayForPayLogo className="w-5 h-5" />
+                            Онлайн оплата
+                          </div>
                           <div className="text-sm text-muted-foreground">Безпечна оплата карткою через WayForPay</div>
                         </div>
                       </label>
                       <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
                         <RadioGroupItem value="cod" id="cod" />
                         <div>
-                          <div className="font-medium">Накладений платіж</div>
+                          <div className="font-medium flex items-center gap-2">
+                            <CODPaymentLogo className="w-5 h-5" />
+                            Накладений платіж
+                          </div>
                           <div className="text-sm text-muted-foreground">Оплата при отриманні (+20 грн комісія)</div>
+                        </div>
+                      </label>
+                      <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
+                        <RadioGroupItem value="fop" id="fop" />
+                        <div>
+                          <div className="font-medium flex items-center gap-2">
+                            <FOPPaymentLogo className="w-5 h-5" />
+                            Оплата на рахунок ФОП
+                          </div>
+                          <div className="text-sm text-muted-foreground">Оплата на банківський рахунок ФОП</div>
                         </div>
                       </label>
                     </RadioGroup>
