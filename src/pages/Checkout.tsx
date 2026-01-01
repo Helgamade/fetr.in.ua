@@ -976,24 +976,35 @@ const Checkout = () => {
                                     ...prev,
                                     novaPoshtaPostOfficeWarehouse: warehouse ? warehouse.description_ua : "",
                                     novaPoshtaPostOfficeWarehouseRef: warehouse ? warehouse.ref : null,
-                                    novaPoshtaPostOfficeCompleted: false
+                                    novaPoshtaPostOfficeCompleted: !!warehouse
                                   };
                                 } else {
                                   return {
                                     ...prev,
                                     novaPoshtaPostomatWarehouse: warehouse ? warehouse.description_ua : "",
                                     novaPoshtaPostomatWarehouseRef: warehouse ? warehouse.ref : null,
-                                    novaPoshtaPostomatCompleted: false
+                                    novaPoshtaPostomatCompleted: !!warehouse
                                   };
                                 }
                               });
                             }}
                             onDeliveryTypeChange={(type) => {
-                              setFormData(prev => ({
-                                ...prev,
-                                novaPoshtaDeliveryType: type,
-                                // Не сбрасываем данные при переключении типа, город остается общим
-                              }));
+                              setFormData(prev => {
+                                // При переключении типа проверяем, выбрано ли соответствующее отделение/почтомат
+                                if (type === "PostOffice") {
+                                  return {
+                                    ...prev,
+                                    novaPoshtaDeliveryType: type,
+                                    novaPoshtaPostOfficeCompleted: !!prev.novaPoshtaPostOfficeWarehouseRef
+                                  };
+                                } else {
+                                  return {
+                                    ...prev,
+                                    novaPoshtaDeliveryType: type,
+                                    novaPoshtaPostomatCompleted: !!prev.novaPoshtaPostomatWarehouseRef
+                                  };
+                                }
+                              });
                             }}
                             onContinue={() => {
                               setFormData(prev => ({
