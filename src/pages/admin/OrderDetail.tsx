@@ -170,18 +170,15 @@ export function OrderDetail() {
                 const productPrice = salePrice || basePrice;
                 const discountPercent = hasDiscount ? Math.round(((basePrice - (salePrice || 0)) / basePrice) * 100) : 0;
                 
-                // Цена с учетом опций
+                // Цена опций
                 const optionsPrice = item.selectedOptions.reduce((total, optId) => {
                   const option = product?.options.find(o => o.code === optId);
                   return total + (option?.price || 0);
                 }, 0);
                 
-                // Итоговая цена за единицу (с учетом опций)
-                const pricePerUnit = productPrice + optionsPrice;
-                const basePricePerUnit = basePrice + optionsPrice;
-                
-                // Общая цена за все количество
-                const totalPrice = pricePerUnit * item.quantity;
+                // Итоговая цена товара БЕЗ опций (только цена товара со скидкой)
+                // Опции учитываются отдельно в общем подсчете заказа
+                const totalPrice = productPrice * item.quantity;
                 
                 return (
                   <div key={item.productId} className="flex gap-4 pb-4 border-b last:border-0 last:pb-0">
@@ -261,14 +258,15 @@ export function OrderDetail() {
                       )}
                     </div>
                     
-                    {/* Правая часть: количество и итоговая цена */}
-                    <div className="flex flex-col items-end justify-start gap-2 min-w-[120px]">
-                      {/* Количество */}
+                    {/* Центральная часть: количество */}
+                    <div className="flex items-center justify-center min-w-[80px]">
                       <div className="text-sm font-medium">
                         {item.quantity} шт.
                       </div>
-                      
-                      {/* Итоговая цена */}
+                    </div>
+                    
+                    {/* Правая часть: итоговая цена */}
+                    <div className="flex items-center justify-end min-w-[120px]">
                       <div className="text-lg font-bold">
                         {totalPrice.toFixed(0)} ₴
                       </div>
