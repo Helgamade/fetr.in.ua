@@ -367,8 +367,10 @@ export interface UkrposhtaBranch {
 }
 
 // Прямой вызов API Укрпошты с фронтенда (через браузер)
-// API Укрпошты блокирует серверные запросы (403), поэтому делаем запросы напрямую с фронтенда
-const UKRPOSHTA_API_BASE = 'https://ukrposhta.ua/address-classifier-ws';
+// Согласно документации требуется Authorization Bearer токен и URL с www
+// PRODUCTION BEARER eCom: 68cff37f-1e85-4fa9-b0a8-36c0f1ba5d40
+const UKRPOSHTA_API_BASE = 'https://www.ukrposhta.ua/address-classifier-ws';
+const UKRPOSHTA_BEARER_TOKEN = '68cff37f-1e85-4fa9-b0a8-36c0f1ba5d40'; // PRODUCTION BEARER eCom
 
 async function callUkrposhtaAPIDirect(endpoint: string): Promise<any> {
   const url = `${UKRPOSHTA_API_BASE}${endpoint}`;
@@ -377,8 +379,8 @@ async function callUkrposhtaAPIDirect(endpoint: string): Promise<any> {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN}`,
+        'Accept': 'application/json',
       },
     });
     

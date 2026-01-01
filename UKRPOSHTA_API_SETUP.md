@@ -4,26 +4,27 @@
 
 API Укрпошты состоит из двух частей:
 
-1. **Адресный классификатор** (`https://ukrposhta.ua/address-classifier-ws/`)
-   - Публичный API, **не требует токена**
+1. **Адресный классификатор** (`https://www.ukrposhta.ua/address-classifier-ws/`)
+   - **Требует Authorization Bearer токен** (такой же, как для оформления отправлений)
+   - URL должен быть с www: `https://www.ukrposhta.ua/address-classifier-ws/`
    - Используется для поиска городов и отделений
-   - См. документацию: `Search-offices-and-indexes-v3.pdf`
+   - См. документацию: `Search-offices-and-indexes-v3.pdf` и `Address-classifier-v3.20-09122024.xml`
 
 2. **ecom API** (`https://www.ukrposhta.ua/ecom/0.0.1`)
    - Требует Bearer токен
    - Используется для создания адресы, клиентов, отправлений
    - См. документацию: `API-інструкція.pdf`
 
-**Для текущей реализации (выбор города и отделения) используется только адресный классификатор, токен НЕ требуется.**
+**Для текущей реализации (выбор города и отделения) используется адресный классификатор, требуется Bearer токен.**
 
-## Добавление ключей в server/.env (для будущего использования ecom API)
+## Добавление ключей в server/.env
 
-Если в будущем понадобится создавать отправления через ecom API, добавьте следующие строки в файл `server/.env`:
+Добавьте следующие строки в файл `server/.env`:
 
 ```env
 # Укрпошта API настройки (PRODUCTION)
-UKRPOSHTA_API_BASE=https://www.ukrposhta.ua/ecom/0.0.1
-UKRPOSHTA_BEARER_TOKEN=67f02a7c-3af7-34d1-aa18-7eb4d96f3be4
+# Bearer токен для адресного классификатора и ecom API
+UKRPOSHTA_BEARER_TOKEN=68cff37f-1e85-4fa9-b0a8-36c0f1ba5d40
 ```
 
 ### Для тестирования (Sandbox):

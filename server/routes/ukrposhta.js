@@ -10,35 +10,32 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const router = express.Router();
 
-// Адресный классификатор API Укрпошты (публичный API, не требует токена)
-// Согласно документации: "Рекомендації з пошуку індексів та відділень" (Search-offices-and-indexes-v3.pdf)
-// URI: https://ukrposhta.ua/address-classifier-ws/
-const ADDRESS_CLASSIFIER_BASE = 'https://ukrposhta.ua/address-classifier-ws';
+// Адресный классификатор API Укрпошты
+// Согласно документации "Address-classifier-v3.20-09122024.xml":
+// - Требуется Authorization Bearer токен (такой же, как для оформления отправлений)
+// - URL должен быть с www: https://www.ukrposhta.ua/address-classifier-ws/
+// - PRODUCTION BEARER eCom: 68cff37f-1e85-4fa9-b0a8-36c0f1ba5d40
+const ADDRESS_CLASSIFIER_BASE = 'https://www.ukrposhta.ua/address-classifier-ws';
+const UKRPOSHTA_BEARER_TOKEN = process.env.UKRPOSHTA_BEARER_TOKEN || '68cff37f-1e85-4fa9-b0a8-36c0f1ba5d40';
 
 // Функция для вызова адресного классификатора API
-// ВАЖНО: API Укрпошты проверяет источник запроса и может блокировать серверные запросы
-// Используем максимально полный набор заголовков для имитации браузерного запроса
+// Согласно документации требуется Authorization Bearer токен
 async function callAddressClassifierAPI(endpoint) {
   const url = `${ADDRESS_CLASSIFIER_BASE}${endpoint}`;
+  
+  if (!UKRPOSHTA_BEARER_TOKEN) {
+    throw new Error('UKRPOSHTA_BEARER_TOKEN is not configured. Please set it in server/.env');
+  }
   
   try {
     console.log(`📡 [Address Classifier API] GET ${url}`);
     
-    // Используем полный набор заголовков для имитации браузерного запроса с сайта Укрпошты
+    // Согласно документации, требуется Authorization Bearer токен
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Referer': 'https://www.ukrposhta.ua/',
-        'Origin': 'https://www.ukrposhta.ua',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'cross-site',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
+        'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN}`,
+        'Accept': 'application/json',
       },
     });
     
