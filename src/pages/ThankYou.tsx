@@ -27,6 +27,14 @@ const ThankYou = () => {
     enabled: !!orderId,
   });
 
+  // Debug: log order data
+  useEffect(() => {
+    if (order) {
+      console.log('[ThankYou] Order data:', order);
+      console.log('[ThankYou] Payment method:', order.payment?.method);
+    }
+  }, [order]);
+
   const timelineSteps: TimelineStep[] = [
     {
       id: "ordered",
@@ -265,7 +273,7 @@ const ThankYou = () => {
           )}
 
           {/* Payment Info for FOP */}
-          {order && order.payment.method === 'fop' && (
+          {order && order.payment && order.payment.method === 'fop' && (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8">
               <h2 className="font-bold text-amber-800 mb-2 flex items-center gap-2">
                 <CreditCard className="w-5 h-5" />
