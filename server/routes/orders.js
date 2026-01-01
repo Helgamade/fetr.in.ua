@@ -45,6 +45,16 @@ router.get('/', async (req, res, next) => {
         phone: order.customer_phone
       };
 
+      // Добавляем данные получателя, если они есть
+      if (order.recipient_name || order.recipient_phone) {
+        order.recipient = {
+          name: order.recipient_name || undefined,
+          phone: order.recipient_phone || undefined,
+          firstName: order.recipient_first_name || undefined,
+          lastName: order.recipient_last_name || undefined,
+        };
+      }
+
       order.delivery = {
         method: order.delivery_method,
         city: order.delivery_city || undefined,
@@ -71,6 +81,10 @@ router.get('/', async (req, res, next) => {
       delete order.customer_name;
       delete order.customer_phone;
       delete order.customer_email;
+      delete order.recipient_name;
+      delete order.recipient_phone;
+      delete order.recipient_first_name;
+      delete order.recipient_last_name;
       delete order.promo_code;
       delete order.delivery_method;
       delete order.delivery_city;
@@ -142,6 +156,17 @@ router.get('/:id', async (req, res, next) => {
       name: order.customer_name,
       phone: order.customer_phone
     };
+
+    // Добавляем данные получателя, если они есть
+    if (order.recipient_name || order.recipient_phone) {
+      order.recipient = {
+        name: order.recipient_name || undefined,
+        phone: order.recipient_phone || undefined,
+        firstName: order.recipient_first_name || undefined,
+        lastName: order.recipient_last_name || undefined,
+      };
+    }
+
     order.delivery = {
       method: order.delivery_method,
       city: order.delivery_city || undefined,
@@ -161,6 +186,10 @@ router.get('/:id', async (req, res, next) => {
     delete order.customer_name;
     delete order.customer_phone;
     delete order.customer_email;
+    delete order.recipient_name;
+    delete order.recipient_phone;
+    delete order.recipient_first_name;
+    delete order.recipient_last_name;
     delete order.promo_code;
     delete order.delivery_method;
     delete order.delivery_city;
@@ -213,15 +242,21 @@ router.post('/', async (req, res, next) => {
       const dbPaymentMethod = payment.method === 'online' ? 'card' : payment.method;
       
       // Insert order - id is AUTO_INCREMENT, use order_number for string identifier
+      const recipient = req.body.recipient || null;
       const [orderResult] = await connection.execute(`
         INSERT INTO orders (order_number, customer_name, customer_phone,
+          recipient_name, recipient_phone, recipient_first_name, recipient_last_name,
           delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
           payment_method, subtotal, discount, delivery_cost, total, status, comment, promo_code)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         id, // order_number (VARCHAR)
         customer.name || null, 
-        customer.phone || null, 
+        customer.phone || null,
+        recipient ? (recipient.name || null) : null,
+        recipient ? (recipient.phone || null) : null,
+        recipient ? (recipient.firstName || null) : null,
+        recipient ? (recipient.lastName || null) : null, 
         delivery.method || null, 
         toNull(delivery.city), 
         toNull(delivery.cityRef),

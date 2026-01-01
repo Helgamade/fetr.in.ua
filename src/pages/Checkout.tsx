@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Package, CreditCard, Truck, MapPin, Phone, Mail, User, CheckCircle, Pencil, ChevronDown, ChevronUp } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { toast } from "@/hooks/use-toast";
@@ -83,6 +84,10 @@ const Checkout = () => {
     lastName: "",
     name: "", // Объединенное имя для отправки на сервер
     phone: "",
+    hasDifferentRecipient: false, // Чекбокс "Інший отримувач замовлення"
+    recipientFirstName: "",
+    recipientLastName: "",
+    recipientPhone: "",
     paymentMethod: "",
     paymentCompleted: false,
     paymentExpanded: true,
@@ -125,6 +130,14 @@ const Checkout = () => {
   const [lastNameError, setLastNameError] = useState("");
   const [firstNameTouched, setFirstNameTouched] = useState(false);
   const [firstNameError, setFirstNameError] = useState("");
+  // Состояния для полей получателя
+  const [recipientPhoneTouched, setRecipientPhoneTouched] = useState(false);
+  const [recipientPhoneError, setRecipientPhoneError] = useState("");
+  const recipientPhoneInputRef = useRef<HTMLInputElement>(null);
+  const [recipientLastNameTouched, setRecipientLastNameTouched] = useState(false);
+  const [recipientLastNameError, setRecipientLastNameError] = useState("");
+  const [recipientFirstNameTouched, setRecipientFirstNameTouched] = useState(false);
+  const [recipientFirstNameError, setRecipientFirstNameError] = useState("");
   
   // Promo code state
   const [promoCode, setPromoCode] = useState("");
@@ -335,11 +348,137 @@ const Checkout = () => {
     validatePhone(formData.phone === "" || formData.phone === "+380" ? "" : formData.phone);
   };
 
+  // Обработчики для полей получателя
+  const handleRecipientLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === "" || validateCyrillic(value)) {
+      setFormData(prev => ({ ...prev, recipientLastName: value }));
+      setRecipientLastNameTouched(true);
+      if (value.trim() === "") {
+        setRecipientLastNameError("Це обов'язкове поле");
+      } else {
+        setRecipientLastNameError("");
+      }
+    } else {
+      setRecipientLastNameTouched(true);
+      setRecipientLastNameError("Використовуйте тільки кириличні символи");
+    }
+  };
+
+  const handleRecipientFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === "" || validateCyrillic(value)) {
+      setFormData(prev => ({ ...prev, recipientFirstName: value }));
+      setRecipientFirstNameTouched(true);
+      if (value.trim() === "") {
+        setRecipientFirstNameError("Це обов'язкове поле");
+      } else {
+        setRecipientFirstNameError("");
+      }
+    } else {
+      setRecipientFirstNameTouched(true);
+      setRecipientFirstNameError("Використовуйте тільки кириличні символи");
+    }
+  };
+
+  const handleRecipientPhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const cursorPosition = input.selectionStart || 0;
+    const inputValue = input.value;
+    
+    const digitsOnly = inputValue.replace(/\D/g, '');
+    let phoneDigits = digitsOnly;
+    if (phoneDigits && !phoneDigits.startsWith('380')) {
+      phoneDigits = '380' + phoneDigits;
+    }
+    phoneDigits = phoneDigits.slice(0, 12);
+    
+    if (phoneDigits.length <= 3) {
+      setFormData(prev => ({ ...prev, recipientPhone: "" }));
+      if (recipientPhoneTouched) {
+        validatePhone("");
+      }
+      return;
+    }
+    
+    const formatted = '+' + phoneDigits;
+    const digitsBeforeCursor = inputValue.slice(0, cursorPosition).replace(/\D/g, '').length;
+    let newCursorPosition = 4;
+    
+    if (digitsBeforeCursor > 3) {
+      const digitsAfterPrefix = digitsBeforeCursor - 3;
+      newCursorPosition = 4 + digitsAfterPrefix;
+    }
+    
+    if (digitsBeforeCursor >= phoneDigits.length) {
+      newCursorPosition = formatted.length;
+    }
+    
+    setFormData(prev => ({ ...prev, recipientPhone: formatted }));
+    
+    setTimeout(() => {
+      if (recipientPhoneInputRef.current) {
+        recipientPhoneInputRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+      }
+    }, 0);
+    
+    if (recipientPhoneTouched || formatted.length > 4) {
+      validatePhone(formatted);
+    }
+  };
+
+  const handleRecipientPhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      const input = e.currentTarget;
+      const cursorPosition = input.selectionStart || 0;
+      if (cursorPosition <= 4) {
+        e.preventDefault();
+        return;
+      }
+    }
+    if (e.key === 'Delete') {
+      const input = e.currentTarget;
+      const cursorPosition = input.selectionStart || 0;
+      if (cursorPosition < 4) {
+        e.preventDefault();
+        return;
+      }
+    }
+  };
+
+  const handleRecipientPhoneFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    setTimeout(() => {
+      if (recipientPhoneInputRef.current) {
+        const phone = formData.recipientPhone === "" ? "+380" : formData.recipientPhone;
+        if (phone.length > 4) {
+          recipientPhoneInputRef.current.setSelectionRange(phone.length, phone.length);
+        } else {
+          recipientPhoneInputRef.current.setSelectionRange(4, 4);
+        }
+      }
+    }, 0);
+  };
+  
+  const handleRecipientPhoneBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (formData.recipientPhone === "" || formData.recipientPhone === "+380") {
+      setFormData(prev => ({ ...prev, recipientPhone: "" }));
+    }
+    setRecipientPhoneTouched(true);
+    validatePhone(formData.recipientPhone === "" || formData.recipientPhone === "+380" ? "" : formData.recipientPhone);
+  };
+
   const isPhoneValid = (formData.phone === "" || formData.phone === "+380" ? "" : formData.phone).replace(/\D/g, '').length === 12 && (formData.phone === "" || formData.phone === "+380" ? "" : formData.phone).replace(/\D/g, '').startsWith('380');
   
   const isLastNameValid = formData.lastName.trim() !== "" && validateCyrillic(formData.lastName);
   const isFirstNameValid = formData.firstName.trim() !== "" && validateCyrillic(formData.firstName);
-  const isContactInfoValid = isPhoneValid && isLastNameValid && isFirstNameValid;
+  
+  // Валидация для полей получателя (только если чекбокс включен)
+  const isRecipientPhoneValid = !formData.hasDifferentRecipient || ((formData.recipientPhone === "" || formData.recipientPhone === "+380" ? "" : formData.recipientPhone).replace(/\D/g, '').length === 12 && (formData.recipientPhone === "" || formData.recipientPhone === "+380" ? "" : formData.recipientPhone).replace(/\D/g, '').startsWith('380'));
+  const isRecipientLastNameValid = !formData.hasDifferentRecipient || (formData.recipientLastName.trim() !== "" && validateCyrillic(formData.recipientLastName));
+  const isRecipientFirstNameValid = !formData.hasDifferentRecipient || (formData.recipientFirstName.trim() !== "" && validateCyrillic(formData.recipientFirstName));
+  const isRecipientInfoValid = !formData.hasDifferentRecipient || (isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid);
+  
+  const isContactInfoValid = isPhoneValid && isLastNameValid && isFirstNameValid && isRecipientInfoValid;
 
   // Save to localStorage whenever formData changes
   useEffect(() => {
@@ -348,6 +487,10 @@ const Checkout = () => {
       firstName: formData.firstName,
       lastName: formData.lastName,
       phone: formData.phone,
+      hasDifferentRecipient: formData.hasDifferentRecipient,
+      recipientFirstName: formData.recipientFirstName,
+      recipientLastName: formData.recipientLastName,
+      recipientPhone: formData.recipientPhone,
       contactInfoCompleted: formData.contactInfoCompleted,
       contactInfoExpanded: formData.contactInfoExpanded,
       deliveryExpanded: formData.deliveryExpanded,
@@ -468,6 +611,18 @@ const Checkout = () => {
       return;
     }
     
+    // Валидация данных получателя, если чекбокс включен
+    if (formData.hasDifferentRecipient) {
+      if (!formData.recipientFirstName || !formData.recipientLastName || !formData.recipientPhone) {
+        toast({
+          title: "Помилка",
+          description: "Будь ласка, заповніть дані отримувача",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+    
     // Объединяем имя и фамилию для отправки
     const fullName = `${formData.firstName} ${formData.lastName}`.trim();
 
@@ -534,7 +689,15 @@ const Checkout = () => {
         customer: {
           name: fullName,
           phone: formData.phone,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
         },
+        recipient: formData.hasDifferentRecipient ? {
+          name: `${formData.recipientFirstName} ${formData.recipientLastName}`.trim(),
+          phone: formData.recipientPhone,
+          firstName: formData.recipientFirstName,
+          lastName: formData.recipientLastName,
+        } : null,
         promoCode: promoCodeApplied?.code || null,
         delivery: (() => {
           const deliveryData = getCurrentDeliveryData();
@@ -914,12 +1077,141 @@ const Checkout = () => {
                             <p className="text-sm text-red-500">{firstNameError}</p>
                           )}
                         </div>
+
+                        {/* Чекбокс "Інший отримувач замовлення" */}
+                        <div className="flex items-center space-x-2 pt-2">
+                          <Checkbox
+                            id="hasDifferentRecipient"
+                            checked={formData.hasDifferentRecipient}
+                            onCheckedChange={(checked) => {
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                hasDifferentRecipient: checked as boolean,
+                                // Очищаем поля получателя при снятии чекбокса
+                                ...(checked ? {} : {
+                                  recipientFirstName: "",
+                                  recipientLastName: "",
+                                  recipientPhone: ""
+                                })
+                              }));
+                              // Сбрасываем ошибки
+                              if (!checked) {
+                                setRecipientFirstNameTouched(false);
+                                setRecipientFirstNameError("");
+                                setRecipientLastNameTouched(false);
+                                setRecipientLastNameError("");
+                                setRecipientPhoneTouched(false);
+                                setRecipientPhoneError("");
+                              }
+                            }}
+                          />
+                          <Label 
+                            htmlFor="hasDifferentRecipient" 
+                            className="text-sm font-normal cursor-pointer flex items-center gap-1"
+                          >
+                            Інший отримувач замовлення
+                            <span className="text-muted-foreground">?</span>
+                          </Label>
+                        </div>
+
+                        {/* Поля получателя (показываются только если чекбокс включен) */}
+                        {formData.hasDifferentRecipient && (
+                          <div className="space-y-4 pt-4 border-t">
+                            <div className="space-y-2">
+                              <Label htmlFor="recipientPhone">Номер телефону отримувача *</Label>
+                              <div className="relative">
+                                <Input
+                                  ref={recipientPhoneInputRef}
+                                  id="recipientPhone"
+                                  name="recipientPhone"
+                                  type="tel"
+                                  value={formData.recipientPhone === "" ? "+380" : formData.recipientPhone}
+                                  onChange={handleRecipientPhoneChange}
+                                  onKeyDown={handleRecipientPhoneKeyDown}
+                                  onFocus={handleRecipientPhoneFocus}
+                                  onBlur={handleRecipientPhoneBlur}
+                                  placeholder="+380"
+                                  required
+                                  className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${formData.recipientPhone === "" || formData.recipientPhone === "+380" ? 'text-muted-foreground' : ''} ${recipientPhoneTouched && recipientPhoneError ? 'border-red-500' : ''}`}
+                                />
+                                {isRecipientPhoneValid && (
+                                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                                )}
+                              </div>
+                              {recipientPhoneTouched && recipientPhoneError && (
+                                <p className="text-sm text-red-500">{recipientPhoneError}</p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="recipientLastName">Прізвище отримувача *</Label>
+                              <div className="relative">
+                                <Input
+                                  id="recipientLastName"
+                                  name="recipientLastName"
+                                  value={formData.recipientLastName}
+                                  onChange={handleRecipientLastNameChange}
+                                  onBlur={() => {
+                                    setRecipientLastNameTouched(true);
+                                    if (formData.recipientLastName.trim() === "") {
+                                      setRecipientLastNameError("Це обов'язкове поле");
+                                    } else if (!validateCyrillic(formData.recipientLastName)) {
+                                      setRecipientLastNameError("Використовуйте тільки кириличні символи");
+                                    } else {
+                                      setRecipientLastNameError("");
+                                    }
+                                  }}
+                                  placeholder="Введіть прізвище кирилицею"
+                                  required
+                                  className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${recipientLastNameTouched && recipientLastNameError ? 'border-red-500' : ''}`}
+                                />
+                                {isRecipientLastNameValid && (
+                                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                                )}
+                              </div>
+                              {recipientLastNameTouched && recipientLastNameError && (
+                                <p className="text-sm text-red-500">{recipientLastNameError}</p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="recipientFirstName">Ім'я отримувача *</Label>
+                              <div className="relative">
+                                <Input
+                                  id="recipientFirstName"
+                                  name="recipientFirstName"
+                                  value={formData.recipientFirstName}
+                                  onChange={handleRecipientFirstNameChange}
+                                  onBlur={() => {
+                                    setRecipientFirstNameTouched(true);
+                                    if (formData.recipientFirstName.trim() === "") {
+                                      setRecipientFirstNameError("Це обов'язкове поле");
+                                    } else if (!validateCyrillic(formData.recipientFirstName)) {
+                                      setRecipientFirstNameError("Використовуйте тільки кириличні символи");
+                                    } else {
+                                      setRecipientFirstNameError("");
+                                    }
+                                  }}
+                                  placeholder="Введіть Ім'я кирилицею"
+                                  required
+                                  className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${recipientFirstNameTouched && recipientFirstNameError ? 'border-red-500' : ''}`}
+                                />
+                                {isRecipientFirstNameValid && (
+                                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                                )}
+                              </div>
+                              {recipientFirstNameTouched && recipientFirstNameError && (
+                                <p className="text-sm text-red-500">{recipientFirstNameError}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <Button
                         type="button"
                         variant="outline"
-                        disabled={!isPhoneValid || !isFirstNameValid || !isLastNameValid}
+                        disabled={!isContactInfoValid}
                         className="w-full rounded-xl border h-10 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
                         onClick={() => {
                           if (isContactInfoValid) {

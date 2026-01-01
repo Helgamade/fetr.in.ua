@@ -235,7 +235,7 @@ export function Orders() {
 
               {/* Customer */}
               <div className="space-y-2">
-                <h4 className="font-semibold">Клієнт</h4>
+                <h4 className="font-semibold">Замовник</h4>
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <div className="font-medium">{selectedOrder.customer.name}</div>
                   <div className="flex items-center gap-2 text-sm">
@@ -250,6 +250,20 @@ export function Orders() {
                   )}
                 </div>
               </div>
+
+              {/* Recipient (если есть) */}
+              {selectedOrder.recipient && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Отримувач</h4>
+                  <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                    <div className="font-medium">{selectedOrder.recipient.name}</div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4" />
+                      {selectedOrder.recipient.phone}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Delivery */}
               <div className="space-y-2">
