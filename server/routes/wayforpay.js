@@ -141,24 +141,34 @@ router.post('/callback', async (req, res, next) => {
       const keys = Object.keys(callbackData);
       
       console.log('[WayForPay] Callback keys:', keys);
+      console.log('[WayForPay] Callback data type:', typeof callbackData);
       
       // Ищем ключ, который содержит JSON строку (обычно это первый ключ, который выглядит как JSON)
       for (const key of keys) {
-        console.log('[WayForPay] Checking key:', key, 'Type:', typeof key, 'Starts with {:', key.startsWith('{'));
+        // Пропускаем merchantSignature, если он есть отдельно
+        if (key === 'merchantSignature') {
+          continue;
+        }
+        
+        console.log('[WayForPay] Checking key:', key.substring(0, 100), '...', 'Starts with {:', key.startsWith('{'));
         
         // Если сам ключ - это JSON строка
         if (key.startsWith('{') && key.endsWith('}')) {
           try {
             const parsed = JSON.parse(key);
-            console.log('[WayForPay] Successfully parsed JSON from key:', parsed);
+            console.log('[WayForPay] Successfully parsed JSON from key, orderReference:', parsed.orderReference);
             // Если распарсилось успешно и содержит нужные поля - используем это
             if (parsed.orderReference || parsed.transactionStatus) {
+              // Сохраняем merchantSignature из исходного объекта, если он есть
+              if (callbackData.merchantSignature) {
+                parsed.merchantSignature = callbackData.merchantSignature;
+              }
               callbackData = parsed;
               console.log('[WayForPay] Using parsed data from key');
               break;
             }
           } catch (parseError) {
-            console.error('[WayForPay] Failed to parse JSON from key:', parseError);
+            console.error('[WayForPay] Failed to parse JSON from key:', parseError.message);
           }
         }
         
@@ -167,15 +177,19 @@ router.post('/callback', async (req, res, next) => {
         if (typeof value === 'string' && value.startsWith('{') && value.endsWith('}')) {
           try {
             const parsed = JSON.parse(value);
-            console.log('[WayForPay] Successfully parsed JSON from value:', parsed);
+            console.log('[WayForPay] Successfully parsed JSON from value, orderReference:', parsed.orderReference);
             // Если распарсилось успешно и содержит нужные поля - используем это
             if (parsed.orderReference || parsed.transactionStatus) {
+              // Сохраняем merchantSignature из исходного объекта, если он есть
+              if (callbackData.merchantSignature) {
+                parsed.merchantSignature = callbackData.merchantSignature;
+              }
               callbackData = parsed;
               console.log('[WayForPay] Using parsed data from value');
               break;
             }
           } catch (parseError) {
-            console.error('[WayForPay] Failed to parse JSON from value:', parseError);
+            console.error('[WayForPay] Failed to parse JSON from value:', parseError.message);
           }
         }
       }
