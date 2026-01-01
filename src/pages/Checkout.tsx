@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useProducts } from "@/hooks/useProducts";
@@ -37,7 +37,9 @@ const Checkout = () => {
           name: parsed.name || prev.name,
           firstName: parsed.firstName || prev.firstName,
           lastName: parsed.lastName || prev.lastName,
-          phone: parsed.phone || prev.phone,
+          phone: parsed.phone || prev.phone || "+380",
+          contactInfoCompleted: parsed.contactInfoCompleted || false,
+          contactInfoExpanded: parsed.contactInfoExpanded !== undefined ? parsed.contactInfoExpanded : true,
           email: parsed.email || prev.email,
           paymentMethod: parsed.paymentMethod || prev.paymentMethod,
           deliveryMethod: parsed.deliveryMethod || prev.deliveryMethod,
@@ -69,7 +71,7 @@ const Checkout = () => {
     firstName: "",
     lastName: "",
     name: "", // Объединенное имя для отправки на сервер
-    phone: "",
+    phone: "+380",
     email: "",
     paymentMethod: "online",
     deliveryMethod: "",
@@ -93,11 +95,14 @@ const Checkout = () => {
     // Данные для Самовывоза
     pickupExpanded: false,
     pickupCompleted: false,
-    comment: ""
+    comment: "",
+    contactInfoCompleted: false,
+    contactInfoExpanded: true
   });
 
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [phoneError, setPhoneError] = useState("");
+  const phoneInputRef = useRef<HTMLInputElement>(null);
 
   const validatePhone = (phone: string): boolean => {
     // Убираем все символы кроме цифр
@@ -115,12 +120,82 @@ const Checkout = () => {
     return true;
   };
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setFormData(prev => ({ ...prev, phone: value }));
-    if (phoneTouched) {
-      validatePhone(value);
+  // Форматирование телефона в формат +380 (XX) XXX-XX-XX
+  const formatPhone = (value: string): string => {
+    // Убираем все символы кроме цифр
+    const digitsOnly = value.replace(/\D/g, '');
+    
+    // Если начинается не с 380, добавляем 380
+    let phoneDigits = digitsOnly;
+    if (phoneDigits.length > 0 && !phoneDigits.startsWith('380')) {
+      phoneDigits = '380' + phoneDigits;
     }
+    
+    // Ограничиваем длину до 12 цифр (380XXXXXXXXX)
+    phoneDigits = phoneDigits.slice(0, 12);
+    
+    // Форматируем
+    if (phoneDigits.length <= 3) {
+      return '+' + phoneDigits;
+    } else if (phoneDigits.length <= 6) {
+      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3)}`;
+    } else if (phoneDigits.length <= 9) {
+      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 6)}) ${phoneDigits.slice(6)}`;
+    } else if (phoneDigits.length <= 11) {
+      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 6)}) ${phoneDigits.slice(6, 9)}-${phoneDigits.slice(9)}`;
+    } else {
+      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 6)}) ${phoneDigits.slice(6, 9)}-${phoneDigits.slice(9, 11)}-${phoneDigits.slice(11)}`;
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const cursorPosition = input.selectionStart || 0;
+    const oldValue = formData.phone;
+    let newValue = input.value;
+    
+    // Если пользователь пытается удалить +380, предотвращаем это
+    if (newValue.length < 4 || !newValue.startsWith('+380')) {
+      newValue = '+380';
+    }
+    
+    // Форматируем
+    const formatted = formatPhone(newValue);
+    
+    // Вычисляем новую позицию курсора
+    const oldLength = oldValue.length;
+    const newLength = formatted.length;
+    const lengthDiff = newLength - oldLength;
+    let newCursorPosition = cursorPosition + lengthDiff;
+    
+    // Если курсор был в начале +380, оставляем его после +380 (
+    if (cursorPosition <= 4) {
+      newCursorPosition = Math.min(7, formatted.length); // После "+380 ("
+    }
+    
+    setFormData(prev => ({ ...prev, phone: formatted }));
+    
+    // Устанавливаем позицию курсора после обновления DOM
+    setTimeout(() => {
+      if (phoneInputRef.current) {
+        phoneInputRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+      }
+    }, 0);
+    
+    if (phoneTouched) {
+      validatePhone(formatted);
+    }
+  };
+
+  const handlePhoneFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // При фокусе перемещаем курсор после +380 (
+    setTimeout(() => {
+      if (phoneInputRef.current) {
+        const value = phoneInputRef.current.value;
+        const cursorPos = value.length >= 7 ? 7 : value.length; // После "+380 ("
+        phoneInputRef.current.setSelectionRange(cursorPos, cursorPos);
+      }
+    }, 0);
   };
 
   const handlePhoneBlur = () => {
@@ -137,6 +212,8 @@ const Checkout = () => {
       firstName: formData.firstName,
       lastName: formData.lastName,
       phone: formData.phone,
+      contactInfoCompleted: formData.contactInfoCompleted,
+      contactInfoExpanded: formData.contactInfoExpanded,
       email: formData.email,
       paymentMethod: formData.paymentMethod,
       deliveryMethod: formData.deliveryMethod,
@@ -492,76 +569,110 @@ const Checkout = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Contact Info */}
                 <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4 border">
-                  <h2 className="text-lg font-bold flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">1</span>
+                  <h2 
+                    className="text-lg font-bold flex items-center gap-2 cursor-pointer"
+                    onClick={() => {
+                      if (formData.contactInfoCompleted) {
+                        setFormData(prev => ({ ...prev, contactInfoExpanded: !prev.contactInfoExpanded }));
+                      }
+                    }}
+                  >
+                    {formData.contactInfoCompleted ? (
+                      <CheckCircle className="w-6 h-6 text-green-500" />
+                    ) : (
+                      <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">1</span>
+                    )}
                     Контактні дані *
                   </h2>
                   
-                  <div className="space-y-4">
+                  {formData.contactInfoCompleted && !formData.contactInfoExpanded ? (
+                    // Свернутый вид с информацией
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Телефон *</Label>
-                      <div className="relative">
-                        <Input
-                          id="phone"
-                          name="phone"
-                          type="tel"
-                          value={formData.phone}
-                          onChange={handlePhoneChange}
-                          onBlur={handlePhoneBlur}
-                          placeholder="+380 (__) ___-__-__"
-                          required
-                          className={`rounded-xl pr-10 ${phoneTouched && phoneError ? 'border-red-500' : ''} ${isPhoneValid ? 'border-green-500' : ''}`}
-                        />
-                        {isPhoneValid && (
-                          <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
-                        )}
+                      <div className="text-sm">{formData.lastName} {formData.firstName}</div>
+                      <div className="text-sm">{formData.phone}</div>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, contactInfoExpanded: true }))}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Редагувати
+                      </button>
+                    </div>
+                  ) : (
+                    // Развернутый вид с формой
+                    <>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Телефон *</Label>
+                          <div className="relative">
+                            <Input
+                              ref={phoneInputRef}
+                              id="phone"
+                              name="phone"
+                              type="tel"
+                              value={formData.phone}
+                              onChange={handlePhoneChange}
+                              onFocus={handlePhoneFocus}
+                              onBlur={handlePhoneBlur}
+                              placeholder="+380 (__) ___-__-__"
+                              required
+                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${phoneTouched && phoneError ? 'border-red-500' : ''} ${isPhoneValid ? 'border-green-500' : ''}`}
+                            />
+                            {isPhoneValid && (
+                              <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                            )}
+                          </div>
+                          {phoneTouched && phoneError && (
+                            <p className="text-sm text-red-500">{phoneError}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="lastName">Прізвище *</Label>
+                          <Input
+                            id="lastName"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleInputChange}
+                            placeholder="Введіть прізвище кирилицею"
+                            required
+                            className="rounded-xl focus-visible:ring-0 focus-visible:ring-offset-0"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="firstName">Ім'я *</Label>
+                          <Input
+                            id="firstName"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleInputChange}
+                            placeholder="Введіть Ім'я кирилицею"
+                            required
+                            className="rounded-xl focus-visible:ring-0 focus-visible:ring-offset-0"
+                          />
+                        </div>
                       </div>
-                      {phoneTouched && phoneError && (
-                        <p className="text-sm text-red-500">{phoneError}</p>
-                      )}
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Прізвище *</Label>
-                      <Input
-                        id="lastName"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        placeholder="Введіть прізвище кирилицею"
-                        required
-                        className="rounded-xl"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">Ім'я *</Label>
-                      <Input
-                        id="firstName"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleInputChange}
-                        placeholder="Введіть Ім'я кирилицею"
-                        required
-                        className="rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={!isPhoneValid || !formData.firstName.trim() || !formData.lastName.trim()}
-                    className="w-full rounded-full border-2"
-                  >
-                    Продовжити
-                  </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={!isPhoneValid || !formData.firstName.trim() || !formData.lastName.trim()}
+                        className="w-full rounded-full border-2"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, contactInfoCompleted: true, contactInfoExpanded: false }));
+                        }}
+                      >
+                        Продовжити
+                      </Button>
+                    </>
+                  )}
                 </div>
 
                 {/* Delivery */}
                 <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
                   <h2 className="text-lg font-bold flex items-center gap-2">
-                    <Truck className="w-5 h-5 text-primary" />
+                    <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">2</span>
                     Доставка
                   </h2>
                   
@@ -826,7 +937,7 @@ const Checkout = () => {
                 {/* Payment */}
                 <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
                   <h2 className="text-lg font-bold flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-primary" />
+                    <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">3</span>
                     Спосіб оплати
                   </h2>
                   
