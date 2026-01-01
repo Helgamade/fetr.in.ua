@@ -161,10 +161,12 @@ router.get('/cities/search', async (req, res, next) => {
       
       // Согласно тестированию, endpoint работает БЕЗ region_id (поиск по всей Украине)
       // GET /get_city_by_region_id_and_district_id_and_city_ua?city_ua={cityUa}
+      // ВАЖНО: Используем URLSearchParams для правильного кодирования кириллицы
       try {
         console.log(`🔍 [Ukrposhta API] Searching without region_id (all Ukraine)`);
+        const params = new URLSearchParams({ city_ua: q });
         const data = await callAddressClassifierAPI(
-          `/get_city_by_region_id_and_district_id_and_city_ua?city_ua=${encodeURIComponent(q)}`
+          `/get_city_by_region_id_and_district_id_and_city_ua?${params.toString()}`
         );
         const entries = data?.Entries?.Entry || [];
         apiCities = Array.isArray(entries) ? entries : [entries];
@@ -175,8 +177,12 @@ router.get('/cities/search', async (req, res, next) => {
         console.log(`🔄 [Ukrposhta API] Fallback: searching in popular regions`);
         const searchPromises = popularRegions.map(async (region) => {
           try {
+            const params = new URLSearchParams({ 
+              region_id: region.id,
+              city_ua: q 
+            });
             const data = await callAddressClassifierAPI(
-              `/get_city_by_region_id_and_district_id_and_city_ua?region_id=${region.id}&city_ua=${encodeURIComponent(q)}`
+              `/get_city_by_region_id_and_district_id_and_city_ua?${params.toString()}`
             );
             const entries = data?.Entries?.Entry || [];
             const result = Array.isArray(entries) ? entries : [entries];
