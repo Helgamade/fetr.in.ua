@@ -986,13 +986,18 @@ const Checkout = () => {
                         }
                       }}
                     >
-                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
-                        <RadioGroupItem value="nova_poshta" id="nova_poshta" />
-                        <div className="flex-1">
-                          <div className="font-medium flex items-center gap-2">
+                      <label className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors">
+                        <div className="flex items-center gap-3">
+                          <RadioGroupItem value="nova_poshta" id="nova_poshta" />
+                          <div className="font-medium flex items-center gap-2 flex-1">
                             <NovaPoshtaLogo className="w-5 h-5" />
                             Нова Пошта
                           </div>
+                          <div className="text-sm font-medium">
+                            {orderTotal >= FREE_DELIVERY_THRESHOLD ? <span className="text-green-600">Безкоштовно</span> : "від 60 ₴"}
+                          </div>
+                        </div>
+                        <div className="pl-8">
                           {(() => {
                             const savedData = getSavedDeliveryData("nova_poshta");
                             const isCollapsed = formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded === false;
@@ -1001,7 +1006,7 @@ const Checkout = () => {
                             
                             if (showCollapsed || showSavedWhenNotSelected) {
                               return (
-                                <div className="space-y-1 text-sm mt-1">
+                                <div className="space-y-1 text-sm">
                                   <div className="text-foreground">{savedData.city}</div>
                                   <div className="text-foreground">{savedData.warehouse}</div>
                                 </div>
@@ -1009,9 +1014,6 @@ const Checkout = () => {
                             }
                             return <div className="text-sm text-muted-foreground">1-2 дні по Україні</div>;
                           })()}
-                        </div>
-                        <div className="text-sm font-medium">
-                          {orderTotal >= FREE_DELIVERY_THRESHOLD ? <span className="text-green-600">Безкоштовно</span> : "від 60 ₴"}
                         </div>
                       </label>
                       {formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded !== false && (
@@ -1100,13 +1102,18 @@ const Checkout = () => {
                         }
                       }}
                     >
-                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
-                        <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
-                        <div className="flex-1">
-                          <div className="font-medium flex items-center gap-2">
+                      <label className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors">
+                        <div className="flex items-center gap-3">
+                          <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
+                          <div className="font-medium flex items-center gap-2 flex-1">
                             <UkrposhtaLogo className="w-5 h-5" />
                             Укрпошта
                           </div>
+                          <div className="text-sm font-medium">
+                            {orderTotal >= FREE_DELIVERY_THRESHOLD ? <span className="text-green-600">Безкоштовно</span> : "від 45 грн"}
+                          </div>
+                        </div>
+                        <div className="pl-8">
                           {(() => {
                             const savedData = getSavedDeliveryData("ukr_poshta");
                             const isCollapsed = formData.deliveryMethod === "ukr_poshta" && formData.ukrPoshtaExpanded === false;
@@ -1129,7 +1136,7 @@ const Checkout = () => {
                                 : savedData.branch || '';
                               
                               return (
-                                <div className="space-y-1 text-sm mt-1">
+                                <div className="space-y-1 text-sm">
                                   <div className="text-foreground">{cityDisplayName}</div>
                                   {fullAddress && (
                                     <div className="text-foreground">{fullAddress}</div>
@@ -1139,9 +1146,6 @@ const Checkout = () => {
                             }
                             return <div className="text-sm text-muted-foreground">3-5 днів по Україні</div>;
                           })()}
-                        </div>
-                        <div className="text-sm font-medium">
-                          {orderTotal >= FREE_DELIVERY_THRESHOLD ? <span className="text-green-600">Безкоштовно</span> : "від 45 грн"}
                         </div>
                       </label>
                       {formData.deliveryMethod === "ukr_poshta" && formData.ukrPoshtaExpanded !== false && (
@@ -1201,22 +1205,24 @@ const Checkout = () => {
 
                     {/* Самовивіз */}
                     <div className="border rounded-xl transition-all">
-                      <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
-                        <RadioGroupItem value="pickup" id="pickup" />
-                        <div className="flex-1">
-                          <div className="font-medium flex items-center gap-2">
+                      <label className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors">
+                        <div className="flex items-center gap-3">
+                          <RadioGroupItem value="pickup" id="pickup" />
+                          <div className="font-medium flex items-center gap-2 flex-1">
                             <PickupLogo className="w-5 h-5" />
                             Самовивіз
                           </div>
-                          <div className="text-sm text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
+                          <div className="text-sm font-medium">
+                            {(() => {
+                              const novaPoshtaInfo = orderTotal >= FREE_DELIVERY_THRESHOLD 
+                                ? { text: "Безкоштовно", price: 0 }
+                                : { text: "від 60 грн", price: 60 };
+                              return <span className={novaPoshtaInfo.price === 0 ? "text-green-600" : ""}>{novaPoshtaInfo.text}</span>;
+                            })()}
+                          </div>
                         </div>
-                        <div className="text-sm font-medium">
-                          {(() => {
-                            const novaPoshtaInfo = orderTotal >= FREE_DELIVERY_THRESHOLD 
-                              ? { text: "Безкоштовно", price: 0 }
-                              : { text: "від 60 грн", price: 60 };
-                            return <span className={novaPoshtaInfo.price === 0 ? "text-green-600" : ""}>{novaPoshtaInfo.text}</span>;
-                          })()}
+                        <div className="pl-8">
+                          <div className="text-sm text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
                         </div>
                       </label>
                       {formData.deliveryMethod === "pickup" && (
