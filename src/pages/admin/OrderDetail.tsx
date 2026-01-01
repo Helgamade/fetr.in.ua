@@ -209,18 +209,18 @@ export function OrderDetail() {
                         
                         {/* Сумма опций (оранжевым цветом) */}
                         {optionsPrice > 0 && (
-                          <div className="text-sm font-bold text-primary whitespace-nowrap">
+                          <div className="text-base font-bold text-primary whitespace-nowrap ml-8">
                             +{optionsPrice} ₴
                           </div>
                         )}
                         
                         {/* Количество */}
-                        <div className="text-sm font-medium whitespace-nowrap">
+                        <div className="text-base font-medium whitespace-nowrap ml-8">
                           {item.quantity} шт.
                         </div>
                         
                         {/* Итоговая цена */}
-                        <div className="text-lg font-bold whitespace-nowrap">
+                        <div className="text-lg font-bold whitespace-nowrap ml-8">
                           {totalPrice.toFixed(0)} ₴
                         </div>
                       </div>
@@ -256,9 +256,9 @@ export function OrderDetail() {
                       
                       {/* Дополнительные опции */}
                       {item.selectedOptions.length > 0 && (
-                        <div className="mb-2 mt-3 pt-3 border-t border-primary/20">
+                        <div className="mb-2 mt-3">
                           <div className="text-sm font-semibold text-foreground mb-2">Дополнительные опции:</div>
-                          <div className="space-y-2">
+                          <div className="space-y-2 max-w-md">
                             {item.selectedOptions.map((optId) => {
                               const option = product?.options.find(o => o.code === optId);
                               if (!option) return null;
