@@ -5,7 +5,6 @@ import {
   Filter,
   ChevronDown,
   Phone,
-  Mail,
   MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -243,10 +242,12 @@ export function Orders() {
                     <Phone className="h-4 w-4" />
                     {selectedOrder.customer.phone}
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4" />
-                    {selectedOrder.customer.email}
-                  </div>
+                  {selectedOrder.promoCode && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">Промокод:</span>
+                      <span className="font-medium text-green-600">{selectedOrder.promoCode}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

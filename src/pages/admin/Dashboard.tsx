@@ -38,7 +38,7 @@ export function Dashboard() {
   const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
   const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
   const completedOrders = orders.filter(o => o.status === 'completed').length;
-  const repeatCustomers = new Set(orders.map(o => o.customer?.email).filter(Boolean)).size;
+  const repeatCustomers = new Set(orders.map(o => o.customer?.phone).filter(Boolean)).size;
   
   const statsCards = [
     {

@@ -41,7 +41,6 @@ const Checkout = () => {
           deliveryExpanded: parsed.deliveryExpanded !== undefined ? parsed.deliveryExpanded : true,
           contactInfoCompleted: parsed.contactInfoCompleted || false,
           contactInfoExpanded: parsed.contactInfoExpanded !== undefined ? parsed.contactInfoExpanded : true,
-          email: parsed.email || prev.email,
           paymentMethod: parsed.paymentMethod || prev.paymentMethod || "",
           paymentCompleted: parsed.paymentCompleted || false,
           paymentExpanded: parsed.paymentExpanded !== undefined ? parsed.paymentExpanded : true,
@@ -77,7 +76,6 @@ const Checkout = () => {
     lastName: "",
     name: "", // Объединенное имя для отправки на сервер
     phone: "",
-    email: "",
     paymentMethod: "",
     paymentCompleted: false,
     paymentExpanded: true,
@@ -342,7 +340,6 @@ const Checkout = () => {
       contactInfoCompleted: formData.contactInfoCompleted,
       contactInfoExpanded: formData.contactInfoExpanded,
       deliveryExpanded: formData.deliveryExpanded,
-      email: formData.email,
       paymentMethod: formData.paymentMethod,
       paymentCompleted: formData.paymentCompleted,
       paymentExpanded: formData.paymentExpanded,
@@ -516,8 +513,8 @@ const Checkout = () => {
         customer: {
           name: fullName,
           phone: formData.phone,
-          email: formData.email && formData.email.trim() ? formData.email.trim() : null,
         },
+        promoCode: promoCodeApplied?.code || null,
         delivery: (() => {
           const deliveryData = getCurrentDeliveryData();
           if (formData.deliveryMethod === "nova_poshta" && deliveryData) {

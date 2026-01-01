@@ -48,7 +48,6 @@ export interface CartState {
 export interface CustomerInfo {
   name: string;
   phone: string;
-  email: string;
 }
 
 export interface DeliveryInfo {
@@ -74,6 +73,7 @@ export interface Order {
   deliveryCost: number;
   total: number;
   status: OrderStatus;
+  promoCode?: string;
   createdAt: Date;
   updatedAt: Date;
 }

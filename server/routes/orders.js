@@ -42,8 +42,7 @@ router.get('/', async (req, res, next) => {
       // Format customer, delivery, payment
       order.customer = {
         name: order.customer_name,
-        phone: order.customer_phone,
-        email: order.customer_email
+        phone: order.customer_phone
       };
 
       order.delivery = {
@@ -63,10 +62,16 @@ router.get('/', async (req, res, next) => {
         order.comment = order.comment;
       }
 
+      // Include promo_code if it exists
+      if (order.promo_code) {
+        order.promoCode = order.promo_code;
+      }
+
       // Remove old fields
       delete order.customer_name;
       delete order.customer_phone;
       delete order.customer_email;
+      delete order.promo_code;
       delete order.delivery_method;
       delete order.delivery_city;
       delete order.delivery_warehouse;
@@ -135,8 +140,7 @@ router.get('/:id', async (req, res, next) => {
     order.items = Array.from(itemsMap.values());
     order.customer = {
       name: order.customer_name,
-      phone: order.customer_phone,
-      email: order.customer_email
+      phone: order.customer_phone
     };
     order.delivery = {
       method: order.delivery_method,
@@ -149,9 +153,15 @@ router.get('/:id', async (req, res, next) => {
       method: order.payment_method
     };
 
+    // Include promo_code if it exists
+    if (order.promo_code) {
+      order.promoCode = order.promo_code;
+    }
+
     delete order.customer_name;
     delete order.customer_phone;
     delete order.customer_email;
+    delete order.promo_code;
     delete order.delivery_method;
     delete order.delivery_city;
     delete order.delivery_warehouse;
@@ -178,7 +188,7 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const {
-      id, customer, delivery, payment, items, subtotal, discount, deliveryCost, total
+      id, customer, delivery, payment, items, subtotal, discount, deliveryCost, total, promoCode
     } = req.body;
 
     // Validate required fields
@@ -202,17 +212,15 @@ router.post('/', async (req, res, next) => {
       const dbPaymentMethod = payment.method === 'online' ? 'card' : payment.method;
       
       // Insert order - id is AUTO_INCREMENT, use order_number for string identifier
-      // customer_email can be NULL, but provide empty string if needed
       const [orderResult] = await connection.execute(`
-        INSERT INTO orders (order_number, customer_name, customer_phone, customer_email,
+        INSERT INTO orders (order_number, customer_name, customer_phone,
           delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
-          payment_method, subtotal, discount, delivery_cost, total, status, comment)
+          payment_method, subtotal, discount, delivery_cost, total, status, comment, promo_code)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         id, // order_number (VARCHAR)
         customer.name || null, 
         customer.phone || null, 
-        toNull(customer.email),
         delivery.method || null, 
         toNull(delivery.city), 
         toNull(delivery.cityRef),
@@ -226,7 +234,8 @@ router.post('/', async (req, res, next) => {
         Number(deliveryCost) || 0, 
         Number(total) || 0,
         initialStatus,
-        toNull(req.body.comment)
+        toNull(req.body.comment),
+        toNull(promoCode)
       ]);
 
       const orderId = orderResult.insertId; // Get the AUTO_INCREMENT id (INT)
@@ -315,14 +324,14 @@ router.put('/:id', async (req, res, next) => {
     // id is order_number (VARCHAR), not INT id
     await pool.execute(`
       UPDATE orders SET
-        customer_name = ?, customer_phone = ?, customer_email = ?,
+        customer_name = ?, customer_phone = ?,
         delivery_method = ?, delivery_city = ?, delivery_warehouse = ?,
         delivery_post_index = ?, delivery_address = ?,
         payment_method = ?, status = ?, subtotal = ?, discount = ?,
         delivery_cost = ?, total = ?, updated_at = CURRENT_TIMESTAMP
       WHERE order_number = ?
     `, [
-      customer.name, customer.phone, toNull(customer.email),
+      customer.name, customer.phone,
       delivery.method, toNull(delivery.city), toNull(delivery.warehouse),
       toNull(delivery.postIndex), toNull(delivery.address),
       payment.method, status, subtotal, discount, deliveryCost, total, id
