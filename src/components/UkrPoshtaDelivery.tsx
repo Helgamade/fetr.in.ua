@@ -316,16 +316,58 @@ export const UkrPoshtaDelivery = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchSearchQuery, isBranchSearchOpen]);
 
-  const handleCitySelect = (city: UkrposhtaCity) => {
-    // ВАЖНО: Сохраняем полное название города с областью
-    const cityWithFullName = {
-      ...city,
-      // Сохраняем полное название для отображения везде одинаково
-      displayName: getCityFullName(city),
-    };
-    setSelectedCity(cityWithFullName);
+  const handleCitySelect = async (city: UkrposhtaCity) => {
+    // ВАЖНО: Если у города нет числового cityId (популярный город со строковым id),
+    // нужно найти его через API, чтобы получить числовой CITY_ID
+    let cityToSave = city;
+    
+    const cityIdNum = city.cityId ? parseInt(city.cityId.toString(), 10) : null;
+    if (!cityIdNum || isNaN(cityIdNum)) {
+      // Популярный город без числового CITY_ID - ищем через API
+      console.log(`🔍 [UkrPoshtaDelivery] Popular city "${city.name}" has no numeric CITY_ID, searching via API...`);
+      try {
+        const foundCities = await ukrposhtaAPI.searchCities(city.name);
+        const foundCity = foundCities.find(c => 
+          c.name.toLowerCase() === city.name.toLowerCase() && 
+          c.region === city.region &&
+          c.cityId && 
+          !isNaN(parseInt(c.cityId.toString(), 10))
+        );
+        
+        if (foundCity && foundCity.cityId) {
+          console.log(`✅ [UkrPoshtaDelivery] Found CITY_ID ${foundCity.cityId} for popular city "${city.name}"`);
+          cityToSave = {
+            ...foundCity,
+            // Сохраняем полное название для отображения везде одинаково
+            displayName: getCityFullName(foundCity),
+          };
+        } else {
+          console.warn(`⚠️ [UkrPoshtaDelivery] Could not find numeric CITY_ID for popular city "${city.name}"`);
+          // Используем город как есть, но с предупреждением
+          cityToSave = {
+            ...city,
+            displayName: getCityFullName(city),
+          };
+        }
+      } catch (error) {
+        console.error(`❌ [UkrPoshtaDelivery] Error searching for popular city "${city.name}":`, error);
+        // Используем город как есть при ошибке
+        cityToSave = {
+          ...city,
+          displayName: getCityFullName(city),
+        };
+      }
+    } else {
+      // У города уже есть числовой CITY_ID
+      cityToSave = {
+        ...city,
+        displayName: getCityFullName(city),
+      };
+    }
+    
+    setSelectedCity(cityToSave);
     setSelectedBranch(null);
-    onCityChange(cityWithFullName);
+    onCityChange(cityToSave);
     onBranchChange(null);
     setIsCitySearchOpen(false);
     setCitySearchQuery("");
