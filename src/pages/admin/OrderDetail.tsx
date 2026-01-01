@@ -176,9 +176,8 @@ export function OrderDetail() {
                   return total + (option?.price || 0);
                 }, 0);
                 
-                // Итоговая цена товара БЕЗ опций (только цена товара со скидкой)
-                // Опции учитываются отдельно в общем подсчете заказа
-                const totalPrice = productPrice * item.quantity;
+                // Итоговая цена товара: ((Цена товара - Скидка) + Сумма опций) * Количество
+                const totalPrice = (productPrice + optionsPrice) * item.quantity;
                 
                 return (
                   <div key={item.productId} className="flex gap-4 pb-4 border-b last:border-0 last:pb-0">
@@ -199,14 +198,31 @@ export function OrderDetail() {
                     
                     {/* Информация о товаре */}
                     <div className="flex-1 min-w-0">
-                      {/* Название и скидка */}
-                      <div className="flex items-start gap-2 mb-2">
+                      {/* Название, скидка, количество, сумма опций и итоговая цена в одной строке */}
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
                         {hasDiscount && (
                           <div className="bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">
                             -{discountPercent}%
                           </div>
                         )}
-                        <div className="font-medium text-base flex-1">{getProductName(item.productId)}</div>
+                        <div className="font-medium text-base flex-1 min-w-0">{getProductName(item.productId)}</div>
+                        
+                        {/* Сумма опций (оранжевым цветом) */}
+                        {optionsPrice > 0 && (
+                          <div className="text-sm font-bold text-primary whitespace-nowrap">
+                            +{optionsPrice} ₴
+                          </div>
+                        )}
+                        
+                        {/* Количество */}
+                        <div className="text-sm font-medium whitespace-nowrap">
+                          {item.quantity} шт.
+                        </div>
+                        
+                        {/* Итоговая цена */}
+                        <div className="text-lg font-bold whitespace-nowrap">
+                          {totalPrice.toFixed(0)} ₴
+                        </div>
                       </div>
                       
                       {/* Статус */}
@@ -256,20 +272,6 @@ export function OrderDetail() {
                           </div>
                         </div>
                       )}
-                    </div>
-                    
-                    {/* Центральная часть: количество */}
-                    <div className="flex items-center justify-center min-w-[80px]">
-                      <div className="text-sm font-medium">
-                        {item.quantity} шт.
-                      </div>
-                    </div>
-                    
-                    {/* Правая часть: итоговая цена */}
-                    <div className="flex items-center justify-end min-w-[120px]">
-                      <div className="text-lg font-bold">
-                        {totalPrice.toFixed(0)} ₴
-                      </div>
                     </div>
                   </div>
                 );
