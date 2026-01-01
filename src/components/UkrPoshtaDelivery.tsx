@@ -565,7 +565,7 @@ export const UkrPoshtaDelivery = ({
           <div className="space-y-2">
             <div
               className={cn(
-                "flex h-10 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm cursor-pointer",
+                "flex min-h-10 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm cursor-pointer",
                 "hover:border-primary transition-colors",
                 !selectedCity && "opacity-60"
               )}
@@ -576,10 +576,13 @@ export const UkrPoshtaDelivery = ({
                 }
               }}
             >
-              <span className={selectedBranch ? "text-foreground" : "text-muted-foreground"}>
+              <span className={cn(
+                "flex-1 break-words pr-2",
+                selectedBranch ? "text-foreground" : "text-muted-foreground"
+              )}>
                 {selectedBranch ? `${selectedBranch.name}, ${selectedBranch.address}` : "Виберіть відділення"}
               </span>
-              <ChevronDown className={cn("h-4 w-4 transition-transform text-muted-foreground", isBranchSearchOpen && "rotate-180")} />
+              <ChevronDown className={cn("h-4 w-4 transition-transform text-muted-foreground flex-shrink-0", isBranchSearchOpen && "rotate-180")} />
             </div>
 
             {/* Раскрывающийся модуль с отделениями */}

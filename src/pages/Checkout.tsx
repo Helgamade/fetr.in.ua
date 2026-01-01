@@ -971,23 +971,35 @@ const Checkout = () => {
                   
                   {isContactInfoValid && formData.contactInfoCompleted && !formData.contactInfoExpanded ? (
                     // Свернутый вид с информацией
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm">{formData.lastName} {formData.firstName}</div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, contactInfoExpanded: true }));
-                            setTimeout(() => {
-                              contactInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
-                            }, 150);
-                          }}
-                          className="text-muted-foreground hover:text-primary"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
+                    <div className="space-y-3">
+                      {/* Данные заказчика */}
+                      <div className="space-y-1">
+                        <div className="text-xs text-muted-foreground">Замовник</div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm">{formData.lastName} {formData.firstName}</div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, contactInfoExpanded: true }));
+                              setTimeout(() => {
+                                contactInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                              }, 150);
+                            }}
+                            className="text-muted-foreground hover:text-primary"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="text-sm">{formData.phone}</div>
                       </div>
-                      <div className="text-sm">{formData.phone}</div>
+                      {/* Данные получателя (если указан другой получатель) */}
+                      {formData.hasDifferentRecipient && formData.recipientFirstName && formData.recipientLastName && (
+                        <div className="space-y-1 pt-2 border-t">
+                          <div className="text-xs text-muted-foreground">Отримувач</div>
+                          <div className="text-sm">{formData.recipientLastName} {formData.recipientFirstName}</div>
+                          <div className="text-sm">{formData.recipientPhone}</div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     // Развернутый вид с формой
@@ -1119,7 +1131,7 @@ const Checkout = () => {
 
                         {/* Поля получателя (показываются только если чекбокс включен) */}
                         {formData.hasDifferentRecipient && (
-                          <div className="space-y-4 pt-4 border-t">
+                          <div className="space-y-4 pt-4">
                             <div className="space-y-2">
                               <Label htmlFor="recipientPhone">Номер телефону отримувача *</Label>
                               <div className="relative">

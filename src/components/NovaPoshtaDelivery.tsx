@@ -313,7 +313,7 @@ export const NovaPoshtaDelivery = ({
           <div className="space-y-2">
             <div
               className={cn(
-                "flex h-10 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm cursor-pointer",
+                "flex min-h-10 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm cursor-pointer",
                 "hover:border-primary transition-colors",
                 !selectedCity && "opacity-60"
               )}
@@ -324,10 +324,13 @@ export const NovaPoshtaDelivery = ({
                 }
               }}
             >
-              <span className={selectedWarehouse ? "text-foreground" : "text-muted-foreground"}>
+              <span className={cn(
+                "flex-1 break-words pr-2",
+                selectedWarehouse ? "text-foreground" : "text-muted-foreground"
+              )}>
                 {selectedWarehouse ? selectedWarehouse.description_ua : (deliveryType === 'PostOffice' ? "Виберіть відділення" : "Виберіть поштомат")}
               </span>
-              <ChevronDown className={cn("h-4 w-4 transition-transform text-muted-foreground", isWarehouseSearchOpen && "rotate-180")} />
+              <ChevronDown className={cn("h-4 w-4 transition-transform text-muted-foreground flex-shrink-0", isWarehouseSearchOpen && "rotate-180")} />
             </div>
 
             {/* Раскрывающийся модуль с отделениями */}
