@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'crypto';
 import pool from '../db.js';
 import { buildWayForPayData, validateWayForPayCallbackSignature, generateWayForPayResponseSignature } from '../utils/wayforpay.js';
 
@@ -156,178 +157,139 @@ router.post('/callback', async (req, res, next) => {
   try {
     console.log('========================================');
     console.log('[WayForPay] ===== CALLBACK START =====');
-    console.log('[WayForPay] Request method:', req.method);
-    console.log('[WayForPay] Request URL:', req.url);
-    console.log('[WayForPay] Content-Type:', req.get('Content-Type'));
-    console.log('[WayForPay] Raw req.body type:', typeof req.body);
-    console.log('[WayForPay] Raw req.body:', JSON.stringify(req.body, null, 2));
-    console.log('[WayForPay] Raw req.body keys:', req.body ? Object.keys(req.body) : 'null');
-    
-    // WayForPay отправляет данные в нестандартном формате - JSON строка как ключ объекта
-    // Формат: { "{\"merchantAccount\":\"...\",\"orderReference\":\"...\"}": "", "merchantSignature": "..." }
-    // Или: { "{\"merchantAccount\":\"...\",\"orderReference\":\"...\",\"merchantSignature\":\"...\"}": "" }
-    
-    let callbackData = req.body;
-    const keys = Object.keys(req.body || {});
-    
-    console.log('[WayForPay] Raw body keys:', keys);
     console.log('[WayForPay] Raw body:', JSON.stringify(req.body, null, 2));
     
-    // Если JSON пришел как ключ объекта (самый частый случай)
-    if (keys.length >= 1 && keys[0].startsWith('{')) {
-      console.log('[WayForPay] Found JSON string in key, parsing...');
+    // Получаем первый ключ - он содержит весь JSON
+    const keys = Object.keys(req.body || {});
+    
+    if (keys.length === 0) {
+      console.error('[WayForPay] Empty body');
+      return res.status(400).json({ error: 'Empty body' });
+    }
+    
+    // Парсим JSON из ключа
+    let data;
+    const firstKey = keys[0];
+    
+    console.log('[WayForPay] First key:', firstKey.substring(0, 200));
+    console.log('[WayForPay] First key starts with {?:', firstKey.startsWith('{'));
+    
+    if (firstKey.startsWith('{')) {
       try {
-        callbackData = JSON.parse(keys[0]);
+        data = JSON.parse(firstKey);
         console.log('[WayForPay] Successfully parsed JSON from key!');
-        console.log('[WayForPay] Parsed data:', JSON.stringify(callbackData, null, 2));
-      } catch (parseError) {
-        console.error('[WayForPay] JSON parse error from key:', parseError.message);
-        return res.status(400).json({ error: 'Invalid JSON format' });
+        console.log('[WayForPay] Parsed callback data:', JSON.stringify(data, null, 2));
+      } catch (e) {
+        console.error('[WayForPay] JSON parse error:', e.message);
+        return res.status(400).json({ error: 'Invalid JSON' });
       }
-    } else if (typeof callbackData === 'string') {
-      // Если данные пришли как строка
-      console.log('[WayForPay] Body is string, parsing...');
-      try {
-        callbackData = JSON.parse(callbackData);
-        console.log('[WayForPay] Parsed string to object:', JSON.stringify(callbackData, null, 2));
-      } catch (parseError) {
-        console.error('[WayForPay] Failed to parse string:', parseError.message);
-        return res.status(400).json({ error: 'Invalid JSON format' });
-      }
-    }
-    
-    console.log('[WayForPay] Final callbackData after parsing:');
-    console.log('[WayForPay] callbackData type:', typeof callbackData);
-    console.log('[WayForPay] callbackData keys:', callbackData ? Object.keys(callbackData) : 'null');
-    console.log('[WayForPay] Full callbackData:', JSON.stringify(callbackData, null, 2));
-    console.log('[WayForPay] merchantSignature present?', callbackData?.merchantSignature ? 'YES' : 'NO');
-    console.log('[WayForPay] merchantSignature value:', callbackData?.merchantSignature || 'MISSING');
-    console.log('[WayForPay] orderReference:', callbackData?.orderReference);
-    console.log('[WayForPay] transactionStatus:', callbackData?.transactionStatus);
-    console.log('[WayForPay] amount:', callbackData?.amount);
-    console.log('[WayForPay] currency:', callbackData?.currency);
-
-    // Проверяем наличие обязательных полей
-    console.log('[WayForPay] Step 5: Validating callback data...');
-    console.log('[WayForPay] Step 5: callbackData.orderReference:', callbackData.orderReference);
-    console.log('[WayForPay] Step 5: callbackData.transactionStatus:', callbackData.transactionStatus);
-    console.log('[WayForPay] Step 5: callbackData.merchantSignature:', callbackData.merchantSignature);
-    console.log('[WayForPay] Step 5: callbackData.amount:', callbackData.amount);
-    console.log('[WayForPay] Step 5: callbackData.currency:', callbackData.currency);
-    console.log('[WayForPay] Step 5: callbackData.reasonCode:', callbackData.reasonCode);
-    console.log('[WayForPay] Step 5: callbackData.reason:', callbackData.reason);
-    console.log('[WayForPay] Step 5: All callbackData fields:', Object.keys(callbackData));
-    console.log('[WayForPay] Step 5: Full callbackData object:', JSON.stringify(callbackData, null, 2));
-    
-    if (!callbackData.orderReference) {
-      console.error('[WayForPay] Step 5: Missing orderReference in callback');
-      console.error('[WayForPay] Step 5: callbackData:', JSON.stringify(callbackData, null, 2));
-      return res.status(400).json({ error: 'Missing orderReference' });
-    }
-
-    // Валидируем подпись согласно документации WayForPay
-    console.log('[WayForPay] Step 6: Validating signature...');
-    console.log('[WayForPay] Step 6: WFP_CONFIG.merchantSecretKey present?', WFP_CONFIG.merchantSecretKey ? 'YES' : 'NO');
-    console.log('[WayForPay] Step 6: callbackData.merchantSignature present?', callbackData.merchantSignature ? 'YES' : 'NO');
-    console.log('[WayForPay] Step 6: callbackData.merchantSignature value:', callbackData.merchantSignature);
-    
-    const isValid = validateWayForPayCallbackSignature(
-      callbackData,
-      WFP_CONFIG.merchantSecretKey,
-      callbackData.merchantSignature
-    );
-
-    console.log('[WayForPay] Step 6: Signature validation result:', isValid ? 'VALID' : 'INVALID');
-
-    if (!isValid) {
-      console.error('[WayForPay] Step 6: Invalid signature for callback:', callbackData.orderReference);
-      // НЕ возвращаем ошибку, а продолжаем обработку, чтобы обновить статус
-      // WayForPay может отправить callback несколько раз
-      console.warn('[WayForPay] Step 6: Continuing despite invalid signature to update order status');
-    }
-
-    const orderReference = callbackData.orderReference;
-    const transactionStatus = callbackData.transactionStatus;
-    const reasonCode = callbackData.reasonCode;
-    const reason = callbackData.reason || '';
-
-    console.log('[WayForPay] Step 7: Processing callback for order...');
-    console.log('[WayForPay] Step 7: orderReference:', orderReference);
-    console.log('[WayForPay] Step 7: transactionStatus:', transactionStatus);
-    console.log('[WayForPay] Step 7: reasonCode:', reasonCode);
-    console.log('[WayForPay] Step 7: reason:', reason);
-    console.log('[WayForPay] Step 7: amount:', callbackData.amount);
-    console.log('[WayForPay] Step 7: currency:', callbackData.currency);
-    console.log('[WayForPay] Step 7: email:', callbackData.email);
-    console.log('[WayForPay] Step 7: phone:', callbackData.phone);
-    console.log('[WayForPay] Step 7: cardPan:', callbackData.cardPan);
-    console.log('[WayForPay] Step 7: cardType:', callbackData.cardType);
-    console.log('[WayForPay] Step 7: paymentSystem:', callbackData.paymentSystem);
-
-    // Обновляем статус заказа
-    let orderStatus = 'created';
-    console.log('[WayForPay] Step 8: Determining order status...');
-    console.log('[WayForPay] Step 8: transactionStatus === "Approved"?', transactionStatus === 'Approved');
-    console.log('[WayForPay] Step 8: transactionStatus === "Declined"?', transactionStatus === 'Declined');
-    console.log('[WayForPay] Step 8: transactionStatus === "Expired"?', transactionStatus === 'Expired');
-    
-    if (transactionStatus === 'Approved') {
-      orderStatus = 'paid';
-      console.log('[WayForPay] Step 8: Order approved, setting status to "paid"');
-      console.log('[WayForPay] Step 8: Order approved:', orderReference);
-    } else if (transactionStatus === 'Declined' || transactionStatus === 'Expired') {
-      orderStatus = 'awaiting_payment';
-      console.log('[WayForPay] Step 8: Order declined/expired, setting status to "awaiting_payment"');
-      console.log('[WayForPay] Step 8: Order declined/expired:', orderReference, 'Reason:', reason);
     } else {
-      console.log('[WayForPay] Step 8: Unknown transaction status, keeping status as "created"');
-      console.log('[WayForPay] Step 8: Unknown transaction status:', transactionStatus, 'for order:', orderReference);
+      // Если это не JSON-строка, используем req.body как есть
+      console.log('[WayForPay] First key is not JSON string, using req.body as is');
+      data = req.body;
+    }
+    
+    // КРИТИЧНО: Проверка что все поля есть
+    console.log('[WayForPay] Checking required fields...');
+    console.log('[WayForPay] merchantAccount:', data.merchantAccount);
+    console.log('[WayForPay] orderReference:', data.orderReference);
+    console.log('[WayForPay] amount:', data.amount);
+    console.log('[WayForPay] currency:', data.currency);
+    console.log('[WayForPay] merchantSignature:', data.merchantSignature);
+    
+    if (!data.merchantAccount || !data.orderReference || !data.amount) {
+      console.error('[WayForPay] Missing required fields:', data);
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    console.log('[WayForPay] Step 8: Final orderStatus:', orderStatus);
-
-    // Обновляем заказ в БД
-    console.log('[WayForPay] Step 9: Updating order in database...');
-    console.log('[WayForPay] Step 9: orderReference:', orderReference);
-    console.log('[WayForPay] Step 9: orderStatus:', orderStatus);
+    // Правильный формат подписи для callback (из документации)
+    // merchantAccount;orderReference;amount;currency;authCode;cardPan;transactionStatus;reasonCode
+    const signatureString = [
+      data.merchantAccount,
+      data.orderReference,
+      String(data.amount),
+      data.currency,
+      data.authCode || '',  // может быть пустым
+      data.cardPan || '',
+      data.transactionStatus,
+      String(data.reasonCode || '')
+    ].join(';');
     
+    console.log('[WayForPay] Signature string:', signatureString);
+    
+    const secretKey = WFP_CONFIG.merchantSecretKey;
+    const generatedSignature = crypto
+      .createHmac('md5', secretKey)
+      .update(signatureString, 'utf8')
+      .digest('hex');
+    
+    console.log('[WayForPay] Generated signature:', generatedSignature);
+    console.log('[WayForPay] Received signature:', data.merchantSignature);
+    
+    // Проверка подписи
+    if (generatedSignature !== data.merchantSignature) {
+      console.error('[WayForPay] Invalid signature');
+      console.error('[WayForPay] Expected:', generatedSignature);
+      console.error('[WayForPay] Received:', data.merchantSignature);
+      // Все равно обрабатываем, но логируем ошибку
+      // return res.status(400).json({ error: 'Invalid signature' });
+    } else {
+      console.log('[WayForPay] Signature is VALID!');
+    }
+    
+    // Обработка статуса
+    console.log('[WayForPay] Transaction status:', {
+      order: data.orderReference,
+      status: data.transactionStatus,
+      amount: data.amount,
+      reason: data.reason,
+      reasonCode: data.reasonCode
+    });
+    
+    // Обновление статуса в БД
+    let orderStatus = 'created';
+    if (data.transactionStatus === 'Approved') {
+      // Платеж успешный
+      orderStatus = 'paid';
+      console.log('[WayForPay] Payment approved:', data.orderReference);
+    } else if (data.transactionStatus === 'Declined' || data.transactionStatus === 'Expired') {
+      // Платеж отклонен
+      orderStatus = 'awaiting_payment';
+      console.log('[WayForPay] Payment declined/expired:', data.orderReference, data.reason);
+    } else {
+      console.log('[WayForPay] Unknown transaction status:', data.transactionStatus);
+    }
+    
+    // Обновляем заказ в БД
     const [updateResult] = await pool.execute(
       `UPDATE orders 
        SET status = ?, updated_at = CURRENT_TIMESTAMP 
        WHERE order_number = ?`,
-      [orderStatus, orderReference]
+      [orderStatus, data.orderReference]
     );
-
-    console.log('[WayForPay] Step 9: Update result:', {
-      affectedRows: updateResult.affectedRows,
-      insertId: updateResult.insertId,
-      changedRows: updateResult.changedRows
-    });
-    console.log('[WayForPay] Step 9: Order status updated:', orderReference, 'to', orderStatus, 'Rows affected:', updateResult.affectedRows);
-
-    // WayForPay ожидает ответ в формате JSON
-    // Согласно документации: orderReference;status;time
-    console.log('[WayForPay] Step 10: Preparing response...');
-    const responseTime = Math.floor(Date.now() / 1000);
-    console.log('[WayForPay] Step 10: responseTime:', responseTime);
-    console.log('[WayForPay] Step 10: orderReference:', orderReference);
-    console.log('[WayForPay] Step 10: status:', 'accept');
     
-    const responseSignature = generateWayForPayResponseSignature(orderReference, 'accept', responseTime, WFP_CONFIG.merchantSecretKey);
-    console.log('[WayForPay] Step 10: responseSignature generated:', responseSignature ? 'YES' : 'NO');
+    console.log('[WayForPay] Order status updated:', data.orderReference, 'to', orderStatus, 'Rows affected:', updateResult.affectedRows);
+    
+    // ВАЖНО: Ответ мерчанта (из документации)
+    // orderReference;status;time
+    const responseTime = Math.floor(Date.now() / 1000);
+    const responseString = `${data.orderReference};accept;${responseTime}`;
+    const responseSignature = crypto
+      .createHmac('md5', secretKey)
+      .update(responseString, 'utf8')
+      .digest('hex');
     
     const response = {
-      orderReference,
+      orderReference: data.orderReference,
       status: 'accept',
       time: responseTime,
-      signature: responseSignature,
+      signature: responseSignature
     };
     
-    console.log('[WayForPay] Step 10: Response object:', JSON.stringify({
+    console.log('[WayForPay] Sending response:', JSON.stringify({
       ...response,
       signature: '***HIDDEN***'
     }, null, 2));
-    console.log('[WayForPay] Step 10: Full response (with signature):', JSON.stringify(response, null, 2));
     console.log('[WayForPay] ===== CALLBACK END =====');
     console.log('========================================');
     

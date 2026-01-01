@@ -48,6 +48,21 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Специальный middleware для WayForPay callback - обрабатывает raw body
+app.use('/api/wayforpay/callback', express.text({ type: '*/*' }), (req, res, next) => {
+  // Если body пришел как строка (raw), преобразуем в объект с ключом
+  if (req.body && typeof req.body === 'string' && req.body.startsWith('{')) {
+    try {
+      // WayForPay может отправить JSON строку как raw body
+      req.body = { [req.body]: '' };
+      console.log('[WayForPay Middleware] Converted string body to object with key');
+    } catch (e) {
+      // ignore
+    }
+  }
+  next();
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
