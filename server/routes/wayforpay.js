@@ -140,20 +140,25 @@ router.post('/callback', async (req, res, next) => {
     if (typeof callbackData === 'object' && callbackData !== null) {
       const keys = Object.keys(callbackData);
       
+      console.log('[WayForPay] Callback keys:', keys);
+      
       // Ищем ключ, который содержит JSON строку (обычно это первый ключ, который выглядит как JSON)
       for (const key of keys) {
+        console.log('[WayForPay] Checking key:', key, 'Type:', typeof key, 'Starts with {:', key.startsWith('{'));
+        
         // Если сам ключ - это JSON строка
         if (key.startsWith('{') && key.endsWith('}')) {
           try {
             const parsed = JSON.parse(key);
+            console.log('[WayForPay] Successfully parsed JSON from key:', parsed);
             // Если распарсилось успешно и содержит нужные поля - используем это
             if (parsed.orderReference || parsed.transactionStatus) {
               callbackData = parsed;
-              console.log('[WayForPay] Parsed JSON string from callback key (key is JSON)');
+              console.log('[WayForPay] Using parsed data from key');
               break;
             }
           } catch (parseError) {
-            // Игнорируем ошибки парсинга
+            console.error('[WayForPay] Failed to parse JSON from key:', parseError);
           }
         }
         
@@ -162,14 +167,15 @@ router.post('/callback', async (req, res, next) => {
         if (typeof value === 'string' && value.startsWith('{') && value.endsWith('}')) {
           try {
             const parsed = JSON.parse(value);
+            console.log('[WayForPay] Successfully parsed JSON from value:', parsed);
             // Если распарсилось успешно и содержит нужные поля - используем это
             if (parsed.orderReference || parsed.transactionStatus) {
               callbackData = parsed;
-              console.log('[WayForPay] Parsed JSON string from callback value');
+              console.log('[WayForPay] Using parsed data from value');
               break;
             }
           } catch (parseError) {
-            // Игнорируем ошибки парсинга для этого ключа
+            console.error('[WayForPay] Failed to parse JSON from value:', parseError);
           }
         }
       }
