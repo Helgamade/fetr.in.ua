@@ -235,13 +235,9 @@ router.get('/cities/search', async (req, res, next) => {
       
       const allCities = Array.from(citiesMap.values());
       
-      // Сортируем: сначала точные совпадения, потом по алфавиту
+      // Сортируем по алфавиту от А до Я (украинская локализация)
       allCities.sort((a, b) => {
-        const aExact = a.name.toLowerCase().startsWith(q.toLowerCase());
-        const bExact = b.name.toLowerCase().startsWith(q.toLowerCase());
-        if (aExact && !bExact) return -1;
-        if (!aExact && bExact) return 1;
-        return a.name.localeCompare(b.name, 'uk');
+        return a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' });
       });
 
       console.log(`🎯 [Ukrposhta API] Total cities to return: ${allCities.length}`);
