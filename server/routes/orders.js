@@ -10,32 +10,33 @@ router.get('/', async (req, res, next) => {
       SELECT * FROM orders ORDER BY created_at DESC
     `);
 
-    // Get items for each order
-    for (const order of orders) {
-      const orderIdInt = order.id; // Save INT id before renaming
-      const [items] = await pool.execute(`
-        SELECT oi.*, oio.option_id, p.code as product_code
-        FROM order_items oi
-        LEFT JOIN order_item_options oio ON oi.id = oio.order_item_id
-        LEFT JOIN products p ON oi.product_id = p.id
-        WHERE oi.order_id = ?
-        ORDER BY oi.id
-      `, [orderIdInt]);
+      // Get items for each order
+      for (const order of orders) {
+        const orderIdInt = order.id; // Save INT id before renaming
+        const [items] = await pool.execute(`
+          SELECT oi.*, oio.option_id, p.code as product_code, po.code as option_code
+          FROM order_items oi
+          LEFT JOIN order_item_options oio ON oi.id = oio.order_item_id
+          LEFT JOIN products p ON oi.product_id = p.id
+          LEFT JOIN product_options po ON oio.option_id = po.id
+          WHERE oi.order_id = ?
+          ORDER BY oi.id
+        `, [orderIdInt]);
 
-      // Group items by order_item_id and convert product_id INT to code
-      const itemsMap = new Map();
-      items.forEach(item => {
-        if (!itemsMap.has(item.id)) {
-          itemsMap.set(item.id, {
-            productId: item.product_code || item.product_id, // Use code if available from JOIN
-            quantity: item.quantity,
-            selectedOptions: []
-          });
-        }
-        if (item.option_id) {
-          itemsMap.get(item.id).selectedOptions.push(item.option_id);
-        }
-      });
+        // Group items by order_item_id and convert product_id INT to code
+        const itemsMap = new Map();
+        items.forEach(item => {
+          if (!itemsMap.has(item.id)) {
+            itemsMap.set(item.id, {
+              productId: item.product_code || item.product_id, // Use code if available from JOIN
+              quantity: item.quantity,
+              selectedOptions: []
+            });
+          }
+          if (item.option_code) {
+            itemsMap.get(item.id).selectedOptions.push(item.option_code);
+          }
+        });
 
       order.items = Array.from(itemsMap.values());
 
@@ -128,11 +129,13 @@ router.get('/:id', async (req, res, next) => {
 
     // Get items using INT id (order_items.order_id references orders.id INT)
     // JOIN products to get code instead of INT id
+    // JOIN product_options to get option code instead of INT id
     const [items] = await pool.execute(`
-      SELECT oi.*, oio.option_id, p.code as product_code
+      SELECT oi.*, oio.option_id, p.code as product_code, po.code as option_code
       FROM order_items oi
       LEFT JOIN order_item_options oio ON oi.id = oio.order_item_id
       LEFT JOIN products p ON oi.product_id = p.id
+      LEFT JOIN product_options po ON oio.option_id = po.id
       WHERE oi.order_id = ?
       ORDER BY oi.id
     `, [orderIdInt]);
@@ -146,8 +149,8 @@ router.get('/:id', async (req, res, next) => {
           selectedOptions: []
         });
       }
-      if (item.option_id) {
-        itemsMap.get(item.id).selectedOptions.push(item.option_id);
+      if (item.option_code) {
+        itemsMap.get(item.id).selectedOptions.push(item.option_code);
       }
     });
 

@@ -1,7 +1,12 @@
 import { useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Package, CreditCard, Cog, Box, Truck, MapPin, Home, Star, ArrowRight } from "lucide-react";
+import { CheckCircle, Package, CreditCard, Cog, Box, Truck, MapPin, Home, Star, ArrowRight, User, Phone } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import { useQuery } from "@tanstack/react-query";
+import { ordersAPI } from "@/lib/api";
+import { usePublicSettings } from "@/hooks/usePublicSettings";
+import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from "@/components/DeliveryLogos";
+import { CODPaymentLogo, WayForPayLogo, FOPPaymentLogo } from "@/components/PaymentLogos";
 
 interface TimelineStep {
   id: string;
@@ -13,7 +18,14 @@ interface TimelineStep {
 
 const ThankYou = () => {
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get("order") || "FTR-XXXXXX";
+  const orderId = searchParams.get("order") || "";
+  const { data: storeSettings } = usePublicSettings();
+  
+  const { data: order, isLoading: orderLoading } = useQuery({
+    queryKey: ['order', orderId],
+    queryFn: () => orderId ? ordersAPI.getOrder(orderId) : null,
+    enabled: !!orderId,
+  });
 
   const timelineSteps: TimelineStep[] = [
     {
@@ -140,33 +152,123 @@ const ThankYou = () => {
             </div>
           </div>
 
-          {/* Payment Info */}
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8">
-            <h2 className="font-bold text-amber-800 mb-2 flex items-center gap-2">
-              <CreditCard className="w-5 h-5" />
-              Інформація про оплату
-            </h2>
-            <p className="text-amber-700 text-sm mb-4">
-              Для завершення замовлення переведіть суму на картку:
-            </p>
-            <div className="bg-white rounded-xl p-4 space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Картка ПриватБанк:</span>
-                <span className="font-mono font-bold">5168 XXXX XXXX XXXX</span>
+          {/* Order Details */}
+          {order && (
+            <div className="bg-card rounded-2xl p-6 shadow-soft mb-8 space-y-6">
+              {/* Customer Info */}
+              <div>
+                <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Дані замовника
+                </h2>
+                <div className="bg-muted/30 rounded-xl p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Ім'я:</span>
+                    <span className="font-medium">{order.customer.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Телефон:</span>
+                    <span className="font-medium">{order.customer.phone}</span>
+                  </div>
+                  {order.recipient && (
+                    <>
+                      <div className="pt-2 border-t">
+                        <div className="text-sm text-muted-foreground mb-2">Отримувач замовлення:</div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">Ім'я:</span>
+                          <span className="font-medium">{order.recipient.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">Телефон:</span>
+                          <span className="font-medium">{order.recipient.phone}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Отримувач:</span>
-                <span className="font-medium">Петренко О.В.</span>
+
+              {/* Delivery Info */}
+              <div>
+                <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
+                  <MapPin className="w-5 h-5" />
+                  Доставка
+                </h2>
+                <div className="bg-muted/30 rounded-xl p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    {order.delivery.method === 'nova_poshta' && <NovaPoshtaLogo className="w-5 h-5" />}
+                    {order.delivery.method === 'ukrposhta' && <UkrposhtaLogo className="w-5 h-5" />}
+                    {order.delivery.method === 'pickup' && <PickupLogo className="w-5 h-5" />}
+                    <span className="font-medium">
+                      {order.delivery.method === 'nova_poshta' && 'Нова Пошта'}
+                      {order.delivery.method === 'ukrposhta' && 'Укрпошта'}
+                      {order.delivery.method === 'pickup' && 'Самовивіз'}
+                    </span>
+                  </div>
+                  {order.delivery.city && (
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Місто:</span> {order.delivery.city}
+                    </div>
+                  )}
+                  {order.delivery.warehouse && (
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Відділення:</span> {order.delivery.warehouse}
+                    </div>
+                  )}
+                  {order.delivery.postIndex && (
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Індекс:</span> {order.delivery.postIndex}
+                    </div>
+                  )}
+                  {order.delivery.address && (
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Адреса:</span> {order.delivery.address}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Призначення:</span>
-                <span className="font-medium">Замовлення {orderId}</span>
+
+              {/* Payment Info */}
+              <div>
+                <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Оплата
+                </h2>
+                <div className="bg-muted/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2">
+                    {order.payment.method === 'card' && <WayForPayLogo className="w-5 h-5" />}
+                    {order.payment.method === 'cod' && <CODPaymentLogo className="w-5 h-5" />}
+                    {order.payment.method === 'fop' && <FOPPaymentLogo className="w-5 h-5" />}
+                    <span className="font-medium">
+                      {order.payment.method === 'card' && 'Онлайн оплата (WayForPay)'}
+                      {order.payment.method === 'cod' && 'Накладений платіж'}
+                      {order.payment.method === 'fop' && 'Оплата на рахунок ФОП'}
+                    </span>
+                  </div>
+                  {order.payment.method === 'fop' && (
+                    <div className="mt-3 pt-3 border-t text-sm text-muted-foreground">
+                      Реквізити для оплати будуть надіслані вам на email або SMS
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            <p className="text-xs text-amber-600 mt-3">
-              Після оплати надішліть скріншот у Telegram або Viber для швидкого підтвердження
-            </p>
-          </div>
+          )}
+
+          {/* Payment Info for FOP */}
+          {order && order.payment.method === 'fop' && (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8">
+              <h2 className="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Інформація про оплату
+              </h2>
+              <p className="text-amber-700 text-sm mb-4">
+                Для завершення замовлення переведіть суму на рахунок ФОП. Реквізити будуть надіслані вам на email або SMS.
+              </p>
+            </div>
+          )}
 
           {/* Timeline */}
           <div className="bg-card rounded-2xl p-6 shadow-soft mb-8">
@@ -227,16 +329,27 @@ const ThankYou = () => {
               Зв'яжіться з нами у зручний спосіб
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              <Button variant="outline" size="sm" className="rounded-full">
-                📞 +380 XX XXX XX XX
-              </Button>
-              <Button variant="outline" size="sm" className="rounded-full">
-                💬 Telegram
-              </Button>
-              <Button variant="outline" size="sm" className="rounded-full">
-                📱 Viber
-              </Button>
+              {storeSettings?.store_phone && (
+                <Button variant="outline" size="sm" className="rounded-full" asChild>
+                  <a href={`tel:${storeSettings.store_phone}`}>
+                    📞 {storeSettings.store_phone}
+                  </a>
+                </Button>
+              )}
+              {storeSettings?.store_email && (
+                <Button variant="outline" size="sm" className="rounded-full" asChild>
+                  <a href={`mailto:${storeSettings.store_email}`}>
+                    ✉️ {storeSettings.store_email}
+                  </a>
+                </Button>
+              )}
             </div>
+            {storeSettings?.store_address && (
+              <div className="mt-4 text-sm text-muted-foreground">
+                <MapPin className="w-4 h-4 inline mr-1" />
+                {storeSettings.store_address}
+              </div>
+            )}
           </div>
 
           {/* Back to Shop */}

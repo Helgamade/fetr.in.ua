@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+1mport { useState, useEffect, useRef } from "react";                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useProducts } from "@/hooks/useProducts";
@@ -713,7 +713,7 @@ const Checkout = () => {
             };
           } else if (formData.deliveryMethod === "ukr_poshta" && deliveryData) {
             return {
-              method: formData.deliveryMethod,
+              method: "ukrposhta", // Исправляем: в базе данных используется "ukrposhta" без подчеркивания
               city: deliveryData.city || null,
               warehouse: deliveryData.branch || null,
               warehouseRef: deliveryData.branchId || null,
