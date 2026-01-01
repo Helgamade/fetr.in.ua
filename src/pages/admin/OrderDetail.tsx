@@ -164,17 +164,24 @@ export function OrderDetail() {
             <div className="space-y-4">
               {order.items.map((item) => {
                 const product = products.find(p => p.code === item.productId);
-                const productPrice = product?.salePrice || product?.basePrice || 0;
                 const basePrice = product?.basePrice || 0;
-                const hasDiscount = product?.salePrice && product.salePrice < product.basePrice;
-                const discountPerItem = hasDiscount ? basePrice - (product.salePrice || 0) : 0;
+                const salePrice = product?.salePrice;
+                const hasDiscount = salePrice && salePrice < basePrice;
+                const productPrice = salePrice || basePrice;
+                const discountPercent = hasDiscount ? Math.round(((basePrice - (salePrice || 0)) / basePrice) * 100) : 0;
+                
+                // Цена с учетом опций
                 const optionsPrice = item.selectedOptions.reduce((total, optId) => {
                   const option = product?.options.find(o => o.code === optId);
                   return total + (option?.price || 0);
                 }, 0);
-                const itemSubtotal = (productPrice + optionsPrice) * item.quantity;
-                const itemDiscount = discountPerItem * item.quantity;
-                const itemTotal = itemSubtotal - itemDiscount;
+                
+                // Итоговая цена за единицу (с учетом опций)
+                const pricePerUnit = productPrice + optionsPrice;
+                const basePricePerUnit = basePrice + optionsPrice;
+                
+                // Общая цена за все количество
+                const totalPrice = pricePerUnit * item.quantity;
                 
                 return (
                   <div key={item.productId} className="flex gap-4 pb-4 border-b last:border-0 last:pb-0">
@@ -195,53 +202,55 @@ export function OrderDetail() {
                     
                     {/* Информация о товаре */}
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-base">{getProductName(item.productId)}</div>
+                      {/* Название и скидка */}
+                      <div className="flex items-start gap-2 mb-2">
+                        {hasDiscount && (
+                          <div className="bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">
+                            -{discountPercent}%
+                          </div>
+                        )}
+                        <div className="font-medium text-base flex-1">{getProductName(item.productId)}</div>
+                      </div>
                       
-                      {/* Статус (если есть) */}
-                      <div className="text-sm text-green-600 mt-1">Готово к отправке</div>
+                      {/* Статус */}
+                      <div className="text-sm text-green-600 mb-2">Готово к отправке</div>
                       
-                      {/* Цена и количество */}
-                      <div className="flex items-center gap-3 mt-2">
+                      {/* Цены */}
+                      <div className="flex items-center gap-2 mb-2">
                         {hasDiscount ? (
                           <>
-                            <span className="text-lg font-bold">{productPrice} ₴</span>
+                            <span className="text-base font-bold">{productPrice} ₴</span>
                             <span className="text-sm text-muted-foreground line-through">{basePrice} ₴</span>
-                            <span className="text-sm text-green-600">-{discountPerItem.toFixed(0)} ₴</span>
                           </>
                         ) : (
-                          <span className="text-lg font-bold">{productPrice} ₴</span>
+                          <span className="text-base font-bold">{basePrice} ₴</span>
                         )}
                       </div>
                       
                       {/* Артикул */}
                       {product?.code && (
-                        <div className="text-xs text-muted-foreground mt-1">
+                        <div className="text-xs text-muted-foreground mb-1">
                           Артикул: {product.code}
                         </div>
                       )}
                       
                       {/* Остаток */}
                       {product && (
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-muted-foreground mb-2">
                           Остаток: {product.stock}
                         </div>
                       )}
                       
-                      {/* Количество */}
-                      <div className="text-sm mt-2">
-                        {item.quantity} {item.quantity === 1 ? 'шт.' : 'шт.'}
-                      </div>
-                      
                       {/* Дополнительные опции */}
                       {item.selectedOptions.length > 0 && (
-                        <div className="mt-3 pt-3 border-t">
-                          <div className="text-xs font-medium text-muted-foreground mb-2">Дополнительные опции:</div>
+                        <div className="mb-2">
+                          <div className="text-xs font-medium text-muted-foreground mb-1">Дополнительные опции:</div>
                           <div className="space-y-1">
                             {item.selectedOptions.map((optId) => {
                               const option = product?.options.find(o => o.code === optId);
                               if (!option) return null;
                               return (
-                                <div key={optId} className="flex items-center justify-between text-sm bg-muted/50 rounded px-2 py-1">
+                                <div key={optId} className="flex items-center justify-between text-xs bg-muted/50 rounded px-2 py-1">
                                   <span className="font-medium">{option.name}</span>
                                   <span className="text-muted-foreground">+{option.price} ₴</span>
                                 </div>
@@ -250,11 +259,18 @@ export function OrderDetail() {
                           </div>
                         </div>
                       )}
+                    </div>
+                    
+                    {/* Правая часть: количество и итоговая цена */}
+                    <div className="flex flex-col items-end justify-start gap-2 min-w-[120px]">
+                      {/* Количество */}
+                      <div className="text-sm font-medium">
+                        {item.quantity} шт.
+                      </div>
                       
-                      {/* Итого за товар */}
-                      <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                        <span className="text-sm font-medium">Итого за товар:</span>
-                        <span className="text-lg font-bold">{itemTotal.toFixed(0)} ₴</span>
+                      {/* Итоговая цена */}
+                      <div className="text-lg font-bold">
+                        {totalPrice.toFixed(0)} ₴
                       </div>
                     </div>
                   </div>
