@@ -8,6 +8,7 @@ export interface PublicSettings {
   store_address?: string;
   store_working_hours_weekdays?: string;
   store_working_hours_weekend?: string;
+  free_delivery_threshold?: string | number;
 }
 
 export function usePublicSettings() {

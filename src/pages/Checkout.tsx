@@ -1959,7 +1959,7 @@ const Checkout = () => {
                         </div>
                         {deliveryInfo.showFree && (
                           <div className="text-sm text-green-600">
-                            Безкоштовна доставка від 4000 ₴
+                            Безкоштовна доставка від {FREE_DELIVERY_THRESHOLD} ₴
                           </div>
                         )}
                       </>
