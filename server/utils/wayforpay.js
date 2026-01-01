@@ -192,8 +192,31 @@ export function buildWayForPayData(order, config) {
     merchantSignature,
   };
   
+  console.log('========================================');
+  console.log('[buildWayForPayData] ===== BUILD PAYMENT DATA START =====');
+  console.log('[buildWayForPayData] Input order:', JSON.stringify(order, null, 2));
+  console.log('[buildWayForPayData] Input config:', {
+    merchantAccount: config.merchantAccount,
+    merchantDomainName: config.merchantDomainName,
+    returnUrl: config.returnUrl,
+    serviceUrl: config.serviceUrl,
+    merchantSecretKey: config.merchantSecretKey ? '***PRESENT***' : '***MISSING***'
+  });
+  console.log('[buildWayForPayData] Products prepared:', JSON.stringify(products, null, 2));
+  console.log('[buildWayForPayData] orderDate:', orderDate);
+  console.log('[buildWayForPayData] amount:', amount);
+  console.log('[buildWayForPayData] paramsForSignature:', JSON.stringify(paramsForSignature, null, 2));
+  console.log('[buildWayForPayData] merchantSignature generated:', merchantSignature);
   console.log('[buildWayForPayData] returnUrl from config:', returnUrl);
+  console.log('[buildWayForPayData] serviceUrl from config:', serviceUrl);
   console.log('[buildWayForPayData] returnUrl in result:', result.returnUrl);
+  console.log('[buildWayForPayData] serviceUrl in result:', result.serviceUrl);
+  console.log('[buildWayForPayData] Full result:', JSON.stringify({
+    ...result,
+    merchantSignature: '***HIDDEN***'
+  }, null, 2));
+  console.log('[buildWayForPayData] ===== BUILD PAYMENT DATA END =====');
+  console.log('========================================');
   
   return result;
 }
