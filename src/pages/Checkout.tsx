@@ -58,6 +58,7 @@ const Checkout = () => {
           novaPoshtaExpanded: false, // Всегда свернуто при загрузке
           ukrPoshtaCity: parsed.ukrPoshtaCity || prev.ukrPoshtaCity,
           ukrPoshtaCityId: parsed.ukrPoshtaCityId || prev.ukrPoshtaCityId,
+          ukrPoshtaCityRegion: parsed.ukrPoshtaCityRegion || prev.ukrPoshtaCityRegion,
           ukrPoshtaBranch: parsed.ukrPoshtaBranch || prev.ukrPoshtaBranch,
           ukrPoshtaBranchId: parsed.ukrPoshtaBranchId || prev.ukrPoshtaBranchId,
           ukrPoshtaPostalCode: parsed.ukrPoshtaPostalCode || prev.ukrPoshtaPostalCode,
@@ -98,6 +99,7 @@ const Checkout = () => {
     // Данные для Укрпошта - по аналогии с Новой Почтой (только строки и ID)
     ukrPoshtaCity: "",
     ukrPoshtaCityId: null as string | null,
+    ukrPoshtaCityRegion: "", // Область для отображения города с областью
     ukrPoshtaBranch: "",
     ukrPoshtaBranchId: null as string | null,
     ukrPoshtaPostalCode: "",
@@ -363,6 +365,7 @@ const Checkout = () => {
       novaPoshtaExpanded: formData.novaPoshtaExpanded,
       ukrPoshtaCity: formData.ukrPoshtaCity,
       ukrPoshtaCityId: formData.ukrPoshtaCityId,
+      ukrPoshtaCityRegion: formData.ukrPoshtaCityRegion,
       ukrPoshtaBranch: formData.ukrPoshtaBranch,
       ukrPoshtaBranchId: formData.ukrPoshtaBranchId,
       ukrPoshtaPostalCode: formData.ukrPoshtaPostalCode,
@@ -434,6 +437,7 @@ const Checkout = () => {
     } else if (method === "ukr_poshta") {
       return {
         city: formData.ukrPoshtaCity,
+        cityRegion: formData.ukrPoshtaCityRegion,
         branch: formData.ukrPoshtaBranch,
         postalCode: formData.ukrPoshtaPostalCode,
         address: formData.ukrPoshtaAddress,
@@ -1102,6 +1106,11 @@ const Checkout = () => {
                             const showSavedWhenNotSelected = formData.deliveryMethod !== "ukr_poshta" && savedData?.completed && savedData.city;
                             
                             if (showCollapsed || showSavedWhenNotSelected) {
+                              // Формируем название города с областью: "Город (Область)"
+                              const cityDisplayName = savedData.cityRegion
+                                ? `${savedData.city} (${savedData.cityRegion})`
+                                : savedData.city;
+                              
                               // Формируем полный адрес отделения: {postalCode} {city}, {address}
                               const fullAddress = savedData.postalCode && savedData.address
                                 ? `${savedData.postalCode} ${savedData.city}, ${savedData.address}`
@@ -1109,7 +1118,7 @@ const Checkout = () => {
                               
                               return (
                                 <div className="space-y-1 text-sm mt-1">
-                                  <div className="text-foreground">{savedData.city}</div>
+                                  <div className="text-foreground">{cityDisplayName}</div>
                                   {fullAddress && (
                                     <div className="text-foreground">{fullAddress}</div>
                                   )}
@@ -1134,6 +1143,7 @@ const Checkout = () => {
                                 ...prev,
                                 ukrPoshtaCity: city ? city.name : "",
                                 ukrPoshtaCityId: city ? city.id : null,
+                                ukrPoshtaCityRegion: city ? (city.region || "") : "", // Сохраняем область
                                 // Сбрасываем отделение при смене города (как у Новой Почты)
                                 ukrPoshtaBranch: "",
                                 ukrPoshtaBranchId: null,
