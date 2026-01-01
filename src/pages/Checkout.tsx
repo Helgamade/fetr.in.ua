@@ -734,8 +734,8 @@ const Checkout = () => {
                           onClick={() => {
                             setFormData(prev => ({ ...prev, contactInfoExpanded: true }));
                             setTimeout(() => {
-                              contactInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }, 100);
+                              contactInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                            }, 150);
                           }}
                           className="text-muted-foreground hover:text-primary"
                         >
@@ -1169,8 +1169,8 @@ const Checkout = () => {
                                     e.stopPropagation();
                                     setFormData(prev => ({ ...prev, deliveryExpanded: true }));
                                     setTimeout(() => {
-                                      deliveryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                    }, 100);
+                                      deliveryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                                    }, 150);
                                   }}
                                   className="text-muted-foreground hover:text-primary"
                                 >
@@ -1192,8 +1192,8 @@ const Checkout = () => {
                                     e.stopPropagation();
                                     setFormData(prev => ({ ...prev, deliveryExpanded: true }));
                                     setTimeout(() => {
-                                      deliveryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                    }, 100);
+                                      deliveryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                                    }, 150);
                                   }}
                                   className="text-muted-foreground hover:text-primary"
                                 >
@@ -1217,8 +1217,8 @@ const Checkout = () => {
                                     e.stopPropagation();
                                     setFormData(prev => ({ ...prev, deliveryExpanded: true }));
                                     setTimeout(() => {
-                                      deliveryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                    }, 100);
+                                      deliveryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                                    }, 150);
                                   }}
                                   className="text-muted-foreground hover:text-primary"
                                 >
@@ -1265,8 +1265,8 @@ const Checkout = () => {
                               onClick={() => {
                                 setFormData(prev => ({ ...prev, paymentExpanded: true }));
                                 setTimeout(() => {
-                                  paymentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                }, 100);
+                                  paymentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                                }, 150);
                               }}
                               className="text-muted-foreground hover:text-primary"
                             >
@@ -1285,8 +1285,8 @@ const Checkout = () => {
                               onClick={() => {
                                 setFormData(prev => ({ ...prev, paymentExpanded: true }));
                                 setTimeout(() => {
-                                  paymentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                }, 100);
+                                  paymentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                                }, 150);
                               }}
                               className="text-muted-foreground hover:text-primary"
                             >
@@ -1385,7 +1385,7 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         placeholder="Введіть коментар"
                         maxLength={254}
-                        className="w-full min-h-[100px] p-3 border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                        className="w-full min-h-[100px] p-3 border rounded-xl resize-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-background"
                       />
                       <div className="text-sm text-muted-foreground text-left">
                         Залишилось символів: {254 - formData.comment.length}

@@ -206,7 +206,8 @@ export const NovaPoshtaDelivery = ({
           <div
             className={cn(
               "flex h-10 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm cursor-pointer",
-              "hover:border-primary transition-colors"
+              "hover:border-primary transition-colors",
+              !selectedCity && "opacity-60"
             )}
             onClick={() => {
               setIsCitySearchOpen(!isCitySearchOpen);
@@ -312,7 +313,8 @@ export const NovaPoshtaDelivery = ({
             <div
               className={cn(
                 "flex h-10 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm cursor-pointer",
-                "hover:border-primary transition-colors"
+                "hover:border-primary transition-colors",
+                !selectedCity && "opacity-60"
               )}
               onClick={() => {
                 setIsWarehouseSearchOpen(!isWarehouseSearchOpen);
