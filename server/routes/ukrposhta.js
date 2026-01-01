@@ -265,24 +265,84 @@ router.get('/cities/search', async (req, res, next) => {
   }
 });
 
-// Получить информацию о городе по ID (CITY_ID) или индексу
-// Согласно документации "Рекомендації з пошуку індексів та відділень"
-// Используем адресный классификатор для получения информации о населенном пункте
+// Получить информацию о городе по ID (CITY_ID)
+// По аналогии с NovaPoshtaDelivery - возвращаем данные из популярных городов или ищем через API
 router.get('/cities/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
     // Проверяем популярные города
-    const popularCity = POPULAR_CITIES.find(c => c.id === id || c.postalCode === id);
+    const popularCity = POPULAR_CITIES.find(c => c.id === id || c.cityId === id || c.postalCode === id);
     if (popularCity) {
+      // Если у популярного города нет cityId, пытаемся найти его через API
+      if (!popularCity.cityId && popularCity.name) {
+        try {
+          const params = new URLSearchParams({ city_ua: popularCity.name });
+          const data = await callAddressClassifierAPI(
+            `/get_city_by_region_id_and_district_id_and_city_ua?${params.toString()}`
+          );
+          const entries = data?.Entries?.Entry || [];
+          const cities = Array.isArray(entries) ? entries : [entries];
+          const foundCity = cities.find(c => c.CITY_ID?.toString() === id || c.CITY_UA === popularCity.name);
+          if (foundCity) {
+            return res.json({
+              id: foundCity.CITY_ID?.toString() || id,
+              name: foundCity.CITY_UA || popularCity.name,
+              postalCode: popularCity.postalCode || '',
+              region: foundCity.REGION_UA || popularCity.region || '',
+              district: foundCity.DISTRICT_UA || '',
+              cityId: foundCity.CITY_ID?.toString() || id,
+            });
+          }
+        } catch (apiError) {
+          console.error('❌ [GET /cities/:id] Error searching city:', apiError.message);
+        }
+      }
       return res.json(popularCity);
     }
 
-    // ПРИМЕЧАНИЕ: Endpoint /get_city_by_city_id не существует в API
-    // Для получения города по ID нужно использовать поиск или вернуть 404
-    // Если id - это CITY_ID (число), можно попробовать поиск по всем городам
-    // Но это неэффективно, поэтому просто возвращаем 404
-    console.log(`⚠️ [GET /cities/:id] Endpoint /get_city_by_city_id does not exist. City ID: ${id}`);
+    // Если id - это CITY_ID (число), пытаемся найти город через поиск по всем регионам
+    // Это неэффективно, но необходимо для восстановления данных
+    const cityIdNum = parseInt(id, 10);
+    if (!isNaN(cityIdNum) && cityIdNum > 0) {
+      // Пробуем поиск в популярных регионах
+      const popularRegions = [
+        { id: '270', name: 'Київська' },
+        { id: '14', name: 'Львівська' },
+        { id: '63', name: 'Харківська' },
+        { id: '51', name: 'Одеська' },
+        { id: '12', name: 'Дніпропетровська' },
+        { id: '23', name: 'Запорізька' },
+        { id: '32', name: 'Київ' },
+      ];
+      
+      for (const region of popularRegions) {
+        try {
+          // Ищем города в регионе (без фильтра по названию, чтобы получить все)
+          const data = await callAddressClassifierAPI(
+            `/get_city_by_region_id_and_district_id_and_city_ua?region_id=${region.id}`
+          );
+          const entries = data?.Entries?.Entry || [];
+          const cities = Array.isArray(entries) ? entries : [entries];
+          const foundCity = cities.find(c => c.CITY_ID?.toString() === id);
+          if (foundCity) {
+            return res.json({
+              id: foundCity.CITY_ID?.toString() || id,
+              name: foundCity.CITY_UA || '',
+              postalCode: '',
+              region: foundCity.REGION_UA || '',
+              district: foundCity.DISTRICT_UA || '',
+              cityId: foundCity.CITY_ID?.toString() || id,
+            });
+          }
+        } catch (apiError) {
+          // Продолжаем поиск в следующем регионе
+          continue;
+        }
+      }
+    }
+
+    console.log(`⚠️ [GET /cities/:id] City not found. City ID: ${id}`);
     res.status(404).json({ error: 'City not found. Use /cities/search to find cities.' });
   } catch (error) {
     next(error);
