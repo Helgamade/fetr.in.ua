@@ -456,7 +456,7 @@ export const UkrPoshtaDelivery = ({
         <div className="space-y-2">
           <div
             className={cn(
-              "flex h-10 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm cursor-pointer",
+              "flex min-h-10 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm cursor-pointer",
               "hover:border-primary transition-colors",
               !selectedCity && "opacity-60"
             )}
