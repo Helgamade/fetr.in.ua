@@ -394,10 +394,11 @@ router.get('/cities/:id', async (req, res, next) => {
           
           // ВАЖНО: Если отделения загружаются, значит город существует
           // Возвращаем минимальную информацию о городе на основе CITY_ID
+          // НЕ возвращаем postalCode из отделения, так как это индекс отделения, а не города
           return res.json({
             id: cityIdNum.toString(),
             name: firstBranch.CITY_UA || firstBranch.CITY_NAME || `City ${cityIdNum}`, // Может быть в ответе отделения
-            postalCode: firstBranch.POSTCODE || '',
+            postalCode: '', // Не используем POSTCODE из отделения - это индекс отделения, а не города
             region: firstBranch.REGION_UA || firstBranch.REGION_NAME || '',
             district: firstBranch.DISTRICT_UA || firstBranch.DISTRICT_NAME || '',
             cityId: cityIdNum.toString(),
