@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useProducts } from "@/hooks/useProducts";
@@ -974,22 +974,22 @@ const Checkout = () => {
                       {/* Данные заказчика */}
                       <div className="space-y-1">
                         <div className="text-xs text-muted-foreground">Замовник</div>
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm">{formData.lastName} {formData.firstName}</div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFormData(prev => ({ ...prev, contactInfoExpanded: true }));
-                              setTimeout(() => {
-                                contactInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
-                              }, 150);
-                            }}
-                            className="text-muted-foreground hover:text-primary"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                        </div>
-                        <div className="text-sm">{formData.phone}</div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm">{formData.lastName} {formData.firstName}</div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, contactInfoExpanded: true }));
+                            setTimeout(() => {
+                              contactInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                            }, 150);
+                          }}
+                          className="text-muted-foreground hover:text-primary"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="text-sm">{formData.phone}</div>
                       </div>
                       {/* Данные получателя (если указан другой получатель) */}
                       {formData.hasDifferentRecipient && formData.recipientFirstName && formData.recipientLastName && (
@@ -1295,7 +1295,7 @@ const Checkout = () => {
                     >
                       <label className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors">
                         <div className="flex items-center gap-3">
-                          <RadioGroupItem value="nova_poshta" id="nova_poshta" />
+                        <RadioGroupItem value="nova_poshta" id="nova_poshta" />
                           <div className="font-medium flex items-center gap-2 flex-1">
                             <NovaPoshtaLogo className="w-5 h-5" />
                             Нова Пошта
@@ -1411,7 +1411,7 @@ const Checkout = () => {
                     >
                       <label className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors">
                         <div className="flex items-center gap-3">
-                          <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
+                        <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
                           <div className="font-medium flex items-center gap-2 flex-1">
                             <UkrposhtaLogo className="w-5 h-5" />
                             Укрпошта
@@ -1514,18 +1514,18 @@ const Checkout = () => {
                     <div className="border rounded-xl transition-all">
                       <label className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors">
                         <div className="flex items-center gap-3">
-                          <RadioGroupItem value="pickup" id="pickup" />
+                        <RadioGroupItem value="pickup" id="pickup" />
                           <div className="font-medium flex items-center gap-2 flex-1">
                             <PickupLogo className="w-5 h-5" />
                             Самовивіз
-                          </div>
-                          <div className="text-sm font-medium">
-                            {(() => {
-                              const novaPoshtaInfo = orderTotal >= FREE_DELIVERY_THRESHOLD 
-                                ? { text: "Безкоштовно", price: 0 }
-                                : { text: "від 60 грн", price: 60 };
-                              return <span className={novaPoshtaInfo.price === 0 ? "text-green-600" : ""}>{novaPoshtaInfo.text}</span>;
-                            })()}
+                        </div>
+                        <div className="text-sm font-medium">
+                          {(() => {
+                            const novaPoshtaInfo = orderTotal >= FREE_DELIVERY_THRESHOLD 
+                              ? { text: "Безкоштовно", price: 0 }
+                              : { text: "від 60 грн", price: 60 };
+                            return <span className={novaPoshtaInfo.price === 0 ? "text-green-600" : ""}>{novaPoshtaInfo.text}</span>;
+                          })()}
                           </div>
                         </div>
                         <div className="ml-[28px]">

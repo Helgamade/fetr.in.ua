@@ -27,7 +27,7 @@ const ThankYou = () => {
   // Используем trackingToken если есть, иначе orderId, иначе orderRef (от WayForPay)
   const identifier = trackingToken || orderId || orderRef || "";
   
-  const { data: order, isLoading: orderLoading } = useQuery({
+  const { data: order, isLoading: orderLoading, refetch } = useQuery({
     queryKey: ['order', identifier, trackingToken ? 'track' : (orderRef ? 'orderRef' : 'id')],
     queryFn: () => {
       if (trackingToken) {
@@ -41,6 +41,14 @@ const ThankYou = () => {
       return null;
     },
     enabled: !!identifier,
+    // Обновляем данные каждые 5 секунд, если оплата не прошла (для WayForPay)
+    refetchInterval: (query) => {
+      const orderData = query.state.data;
+      if (orderData?.status === 'awaiting_payment' && orderData?.payment?.method === 'wayforpay') {
+        return 5000; // Обновляем каждые 5 секунд
+      }
+      return false;
+    },
   });
 
   // Определяем статус оплаты
@@ -57,6 +65,17 @@ const ThankYou = () => {
       console.log('[ThankYou] Order status:', order.status);
     }
   }, [order, trackingToken]);
+
+  // Принудительно обновляем данные при возврате с WayForPay (если есть orderRef)
+  useEffect(() => {
+    if (orderRef && !orderLoading) {
+      // Небольшая задержка, чтобы дать серверу время обновить статус после callback
+      const timer = setTimeout(() => {
+        refetch();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [orderRef, orderLoading, refetch]);
 
   // Debug: log order data
   useEffect(() => {
@@ -201,8 +220,8 @@ const ThankYou = () => {
             </div>
             {isPaymentPending ? (
               <>
-                <h1 className="text-2xl md:text-3xl font-bold mb-2">Очікуємо на оплату</h1>
-                <p className="text-yellow-100">Ваше замовлення оформлено, але оплата ще не підтверджена</p>
+                <h1 className="text-2xl md:text-3xl font-bold mb-2">Оплата не пройшла</h1>
+                <p className="text-yellow-100">Ваше замовлення оформлено, але оплата не була завершена. Будь ласка, спробуйте оплатити ще раз.</p>
               </>
             ) : (
               <>
@@ -343,9 +362,6 @@ const ThankYou = () => {
                       )}
                       {isPaymentPending && order.payment.method === 'wayforpay' && (
                         <div className="mt-4 pt-4 border-t">
-                          <p className="text-sm text-muted-foreground mb-3">
-                            Оплата не була завершена. Будь ласка, спробуйте оплатити замовлення ще раз.
-                          </p>
                           <Button
                             onClick={async () => {
                               try {
@@ -385,11 +401,11 @@ const ThankYou = () => {
                                 alert('Не вдалося створити платіж. Спробуйте пізніше.');
                               }
                             }}
-                            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+                            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold text-lg py-6"
                             size="lg"
                           >
-                            <CreditCard className="w-4 h-4 mr-2" />
-                            Спробувати оплатити ще раз
+                            <CreditCard className="w-5 h-5 mr-2" />
+                            ПОВТОРНО ОПЛАТИТЬ
                           </Button>
                         </div>
                       )}
