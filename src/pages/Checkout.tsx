@@ -1400,7 +1400,7 @@ const Checkout = () => {
                       <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     )}
                   </div>
-                  {formData.commentExpanded && (
+                  {formData.commentExpanded ? (
                     <div className="space-y-2">
                       <textarea
                         id="comment"
@@ -1414,7 +1414,23 @@ const Checkout = () => {
                       <div className="text-sm text-muted-foreground text-left">
                         Залишилось символів: {254 - formData.comment.length}
                       </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full rounded-xl border h-10 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, commentExpanded: false }));
+                        }}
+                      >
+                        Зберегти
+                      </Button>
                     </div>
+                  ) : (
+                    formData.comment && (
+                      <div className="text-sm text-muted-foreground">
+                        {formData.comment.length > 100 ? formData.comment.substring(0, 100) + '...' : formData.comment}
+                      </div>
+                    )
                   )}
                 </div>
 
@@ -1490,7 +1506,7 @@ const Checkout = () => {
                     </>
                   )}
                   <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                    <span>До оплати без доставки:</span>
+                    <span>{orderTotal >= FREE_DELIVERY_THRESHOLD ? "До оплати з доставкою:" : "До оплати без доставки:"}</span>
                     <span className="text-primary">
                       {orderTotal} ₴
                     </span>
