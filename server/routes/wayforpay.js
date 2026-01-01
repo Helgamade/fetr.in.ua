@@ -117,19 +117,32 @@ router.post('/callback', async (req, res, next) => {
   try {
     let callbackData = req.body;
     
+    console.log('[WayForPay] Raw callback body:', JSON.stringify(req.body, null, 2));
+    console.log('[WayForPay] Body type:', typeof req.body);
+    console.log('[WayForPay] Body keys:', Object.keys(req.body || {}));
+    
     // WayForPay иногда отправляет данные как JSON строку в ключе объекта
-    // Проверяем и парсим, если нужно
-    if (typeof callbackData === 'object' && Object.keys(callbackData).length === 1) {
-      const firstKey = Object.keys(callbackData)[0];
-      const firstValue = callbackData[firstKey];
+    // Проверяем все ключи и парсим, если нужно
+    if (typeof callbackData === 'object' && callbackData !== null) {
+      const keys = Object.keys(callbackData);
       
-      // Если значение - строка, которая выглядит как JSON
-      if (typeof firstValue === 'string' && (firstValue.startsWith('{') || firstValue.startsWith('['))) {
-        try {
-          callbackData = JSON.parse(firstValue);
-          console.log('[WayForPay] Parsed JSON string from callback');
-        } catch (parseError) {
-          console.error('[WayForPay] Failed to parse JSON string:', parseError);
+      // Ищем ключ, который содержит JSON строку
+      for (const key of keys) {
+        const value = callbackData[key];
+        
+        // Если значение - строка, которая выглядит как JSON
+        if (typeof value === 'string' && (value.startsWith('{') || value.startsWith('['))) {
+          try {
+            const parsed = JSON.parse(value);
+            // Если распарсилось успешно и содержит нужные поля - используем это
+            if (parsed.orderReference || parsed.transactionStatus) {
+              callbackData = parsed;
+              console.log('[WayForPay] Parsed JSON string from callback key:', key);
+              break;
+            }
+          } catch (parseError) {
+            // Игнорируем ошибки парсинга для этого ключа
+          }
         }
       }
     }
