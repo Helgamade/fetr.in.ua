@@ -77,6 +77,20 @@ export function Dashboard() {
     return acc;
   }, {} as Record<string, number>);
   
+  // Group orders by payment method
+  const ordersByPayment = orders.reduce((acc, order) => {
+    const method = order.payment?.method || 'unknown';
+    acc[method] = (acc[method] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const paymentLabels: Record<string, string> = {
+    card: 'Онлайн оплата (WayForPay)',
+    cod: 'Накладений платіж',
+    fop: 'Оплата на рахунок ФОП',
+    unknown: 'Невідомо',
+  };
+  
   // Get top products (simplified - would need product data)
   const topProducts: { name: string; count: number; revenue: number }[] = [];
   
@@ -239,7 +253,35 @@ export function Dashboard() {
                 <div key={status} className="flex items-center gap-4">
                   <Package className="h-4 w-4 text-muted-foreground" />
                   <div className="flex-1">
-                    <div className="text-sm">{statusLabels[status]}</div>
+                    <div className="text-sm">{statusLabels[status] || status}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary rounded-full"
+                        style={{ width: `${totalOrders > 0 ? (count / totalOrders) * 100 : 0}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium w-8 text-right">{count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Orders by payment method */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Замовлення за способом оплати</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {Object.entries(ordersByPayment).map(([method, count]) => (
+                <div key={method} className="flex items-center gap-4">
+                  <Package className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1">
+                    <div className="text-sm">{paymentLabels[method] || method}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
