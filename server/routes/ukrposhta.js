@@ -35,29 +35,21 @@ async function callAddressClassifierAPI(endpoint) {
     console.log(`📡 [Address Classifier API] GET ${url}`);
     console.log(`🔑 [Address Classifier API] Using token: ${UKRPOSHTA_BEARER_TOKEN.substring(0, 20)}...`);
     
-    // ВАЖНО: Используем простой объект для заголовков (Node.js fetch поддерживает это)
-    // Authorization должен быть передан правильно
-    const headers = {
-      'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN}`,
-      'Accept': 'application/json',
-      'Accept-Language': 'uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Referer': 'https://www.ukrposhta.ua/',
-      'Origin': 'https://www.ukrposhta.ua',
-    };
-    
-    // Логируем заголовки для отладки
-    console.log(`📋 [Address Classifier API] Headers:`, {
-      'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN.substring(0, 20)}...`,
-      'Accept': headers.Accept,
-      'hasAuth': !!headers.Authorization,
-      'authLength': headers.Authorization.length,
-    });
-    
+    // ВАЖНО: Передаем заголовки явно, как в примере пользователя
+    // Используем минимальный набор заголовков для избежания проблем с Cloudflare
     const response = await fetch(url, {
       method: 'GET',
-      headers: headers,
+      headers: {
+        'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN}`,
+        'Accept': 'application/json',
+      },
     });
+    
+    // Логируем результат для отладки
+    console.log(`📋 [Address Classifier API] Response status: ${response.status}`);
+    if (!response.ok) {
+      console.log(`📋 [Address Classifier API] Response headers:`, Object.fromEntries(response.headers.entries()));
+    }
     
     const responseText = await response.text();
     
