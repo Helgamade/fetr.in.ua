@@ -19,22 +19,35 @@ const ADDRESS_CLASSIFIER_BASE = 'https://www.ukrposhta.ua/address-classifier-ws'
 const UKRPOSHTA_BEARER_TOKEN = process.env.UKRPOSHTA_BEARER_TOKEN || 'ab714b81-60a5-4dc5-a106-1a382f8d84bf';
 
 // Функция для вызова адресного классификатора API
-// Согласно документации раздел 3.2: /get_city_by_name
 async function callAddressClassifierAPI(endpoint) {
   const url = `${ADDRESS_CLASSIFIER_BASE}${endpoint}`;
   
   try {
+    // Проверяем, что токен определён
+    if (!UKRPOSHTA_BEARER_TOKEN) {
+      throw new Error('UKRPOSHTA_BEARER_TOKEN is not defined! Check server/.env file.');
+    }
+    
     console.log(`📡 [Address Classifier API] GET ${url}`);
+    console.log(`🔑 [Address Classifier API] Using token: ${UKRPOSHTA_BEARER_TOKEN.substring(0, 20)}...`);
     
     // Полный набор заголовков для имитации браузера и обхода Cloudflare
+    // ВАЖНО: Authorization должен быть первым заголовком
     const headers = {
       'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN}`,
-      'Accept': 'application/json, text/plain, */*',
+      'Accept': 'application/json',
       'Accept-Language': 'uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7',
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Referer': 'https://www.ukrposhta.ua/',
       'Origin': 'https://www.ukrposhta.ua',
     };
+    
+    // Логируем заголовки для отладки (без полного токена)
+    console.log(`📋 [Address Classifier API] Headers:`, {
+      'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN.substring(0, 20)}...`,
+      'Accept': headers.Accept,
+      'User-Agent': headers['User-Agent'].substring(0, 50) + '...',
+    });
     
     const response = await fetch(url, {
       method: 'GET',
