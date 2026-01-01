@@ -1102,11 +1102,16 @@ const Checkout = () => {
                             const showSavedWhenNotSelected = formData.deliveryMethod !== "ukr_poshta" && savedData?.completed && savedData.city;
                             
                             if (showCollapsed || showSavedWhenNotSelected) {
+                              // Формируем полный адрес отделения: {postalCode} {city}, {address}
+                              const fullAddress = savedData.postalCode && savedData.address
+                                ? `${savedData.postalCode} ${savedData.city}, ${savedData.address}`
+                                : savedData.branch || '';
+                              
                               return (
                                 <div className="space-y-1 text-sm mt-1">
                                   <div className="text-foreground">{savedData.city}</div>
-                                  {savedData.branch && (
-                                    <div className="text-foreground">{savedData.branch}</div>
+                                  {fullAddress && (
+                                    <div className="text-foreground">{fullAddress}</div>
                                   )}
                                 </div>
                               );
