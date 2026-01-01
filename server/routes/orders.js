@@ -321,6 +321,15 @@ router.get('/:id', async (req, res, next) => {
     delete order.delivery_address;
     delete order.payment_method;
 
+    // Сохраняем tracking_token для админки (для создания ссылки отслеживания)
+    if (order.tracking_token) {
+      order.trackingToken = String(order.tracking_token);
+      console.log('[Get Order] tracking_token found:', order.tracking_token, '-> trackingToken:', order.trackingToken);
+    } else {
+      console.log('[Get Order] WARNING: tracking_token is NULL or empty for order id:', order.id);
+    }
+    delete order.tracking_token;
+
     order.createdAt = new Date(order.created_at);
     order.updatedAt = new Date(order.updated_at);
     delete order.created_at;
