@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useProducts } from "@/hooks/useProducts";
-import { ordersAPI } from "@/lib/api";
+import { ordersAPI, promoAPI } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -116,6 +116,13 @@ const Checkout = () => {
   const [lastNameError, setLastNameError] = useState("");
   const [firstNameTouched, setFirstNameTouched] = useState(false);
   const [firstNameError, setFirstNameError] = useState("");
+  
+  // Promo code state
+  const [promoCode, setPromoCode] = useState("");
+  const [promoCodeExpanded, setPromoCodeExpanded] = useState(false);
+  const [promoCodeApplied, setPromoCodeApplied] = useState<{ code: string; discount: number; message: string } | null>(null);
+  const [promoCodeError, setPromoCodeError] = useState("");
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   
   // Refs для скролла к блокам
   const contactInfoRef = useRef<HTMLDivElement>(null);
@@ -492,10 +499,10 @@ const Checkout = () => {
     try {
       // Calculate order totals
       const subtotal = getSubtotal();
-      const discount = getDiscount();
+      const discount = getTotalDiscount(); // Include promo code discount
       // Доставка не включается в стоимость заказа, отправляем 0
       const deliveryCost = 0;
-      const orderTotal = subtotal - discount; // Стоимость заказа БЕЗ доставки
+      const orderTotal = subtotal - discount; // Стоимость заказа БЕЗ доставки (после всех скидок)
       
       // Add COD commission if needed
       const finalTotal = orderTotal + (formData.paymentMethod === "cod" ? 20 : 0);
@@ -635,13 +642,54 @@ const Checkout = () => {
     }
   };
 
-  // Стоимость заказа БЕЗ доставки
-  const orderTotal = getSubtotal() - getDiscount();
-  const FREE_DELIVERY_THRESHOLD = 1500;
+  // Calculate promo code discount
+  const getPromoDiscount = () => {
+    if (!promoCodeApplied) return 0;
+    const subtotal = getSubtotal();
+    const productDiscount = getDiscount();
+    const priceAfterProductDiscount = subtotal - productDiscount;
+    const promoDiscount = (priceAfterProductDiscount * promoCodeApplied.discount) / 100;
+    return promoDiscount;
+  };
+
+  // Total discount = product discount + promo discount
+  const getTotalDiscount = () => {
+    return getDiscount() + getPromoDiscount();
+  };
+
+  // Apply promo code
+  const handleApplyPromoCode = async () => {
+    if (!promoCode.trim()) {
+      setPromoCodeError("Введіть промокод");
+      return;
+    }
+
+    setIsApplyingPromo(true);
+    setPromoCodeError("");
+
+    try {
+      const response = await promoAPI.validate(promoCode, items.map(item => ({ productId: item.productId })));
+      setPromoCodeApplied({
+        code: response.code,
+        discount: response.discount,
+        message: response.message
+      });
+      setPromoCode("");
+    } catch (error) {
+      setPromoCodeError(error instanceof Error ? error.message : "Помилка застосування промокоду");
+      setPromoCodeApplied(null);
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+  
+  // Стоимость заказа БЕЗ доставки (после всех скидок)
+  const orderTotal = getSubtotal() - getTotalDiscount();
+  const FREE_DELIVERY_THRESHOLD = 4000;
   
   // Цены доставки для справки (не включаются в стоимость заказа)
   const getDeliveryPriceInfo = () => {
-    // Если заказ от 1500 грн, все способы доставки бесплатные
+    // Если заказ от 4000 грн, все способы доставки бесплатные
     if (orderTotal >= FREE_DELIVERY_THRESHOLD) {
       if (formData.deliveryMethod === "pickup") {
         return { price: 0, text: "Безкоштовно", showFree: false };
@@ -1442,7 +1490,7 @@ const Checkout = () => {
                     className="w-full rounded-xl text-lg"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Обробка..." : `Підтвердити замовлення • ${orderTotal} ₴`}
+                    {isSubmitting ? "Обробка..." : `Оформити замовлення • ${orderTotal.toFixed(2)} ₴`}
                   </Button>
                 </div>
               </form>
@@ -1488,8 +1536,14 @@ const Checkout = () => {
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Вартість замовлення:</span>
-                    <span>{orderTotal} ₴</span>
+                    <span>{getSubtotal()} ₴</span>
                   </div>
+                  {(getDiscount() > 0 || getPromoDiscount() > 0) && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Знижка:</span>
+                      <span className="text-red-600">-{getTotalDiscount().toFixed(2)} ₴</span>
+                    </div>
+                  )}
                   {formData.deliveryMethod && deliveryInfo && (
                     <>
                       <div className="flex justify-between text-sm">
@@ -1500,7 +1554,7 @@ const Checkout = () => {
                       </div>
                       {deliveryInfo.showFree && (
                         <div className="text-sm text-green-600">
-                          Безкоштовна доставка від 1500 ₴
+                          Безкоштовна доставка від 4000 ₴
                         </div>
                       )}
                     </>
@@ -1508,9 +1562,66 @@ const Checkout = () => {
                   <div className="flex justify-between text-lg font-bold pt-2 border-t">
                     <span>{orderTotal >= FREE_DELIVERY_THRESHOLD ? "До оплати з доставкою:" : "До оплати без доставки:"}</span>
                     <span className="text-primary">
-                      {orderTotal} ₴
+                      {orderTotal.toFixed(2)} ₴
                     </span>
                   </div>
+                </div>
+
+                {/* Promo Code Section */}
+                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4 border">
+                  <div 
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={() => setPromoCodeExpanded(!promoCodeExpanded)}
+                  >
+                    <h3 className="font-medium">Ввести промокод</h3>
+                    {promoCodeExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  
+                  {promoCodeExpanded && (
+                    <div className="space-y-3">
+                      {promoCodeApplied ? (
+                        <div className="flex items-center gap-2 text-green-600 text-sm">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>{promoCodeApplied.message}</span>
+                        </div>
+                      ) : (
+                        <>
+                          <Input
+                            type="text"
+                            placeholder="Промокод"
+                            value={promoCode}
+                            onChange={(e) => {
+                              setPromoCode(e.target.value);
+                              setPromoCodeError("");
+                            }}
+                            className={`rounded-xl ${promoCodeError ? 'border-red-500' : ''}`}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleApplyPromoCode();
+                              }
+                            }}
+                          />
+                          {promoCodeError && (
+                            <p className="text-sm text-red-500">{promoCodeError}</p>
+                          )}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleApplyPromoCode}
+                            disabled={!promoCode.trim() || isApplyingPromo}
+                            className="w-full rounded-xl border h-10 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
+                          >
+                            {isApplyingPromo ? "Застосування..." : "Застосувати"}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Submit Button (Desktop) */}
@@ -1522,7 +1633,7 @@ const Checkout = () => {
                     disabled={isSubmitting}
                     onClick={handleSubmit}
                   >
-                    {isSubmitting ? "Обробка..." : "Підтвердити замовлення"}
+                    {isSubmitting ? "Обробка..." : "Оформити замовлення"}
                   </Button>
                 </div>
 

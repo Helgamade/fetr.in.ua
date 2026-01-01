@@ -354,3 +354,17 @@ export const wayforpayAPI = {
   }),
 };
 
+// Promo Code API
+export interface PromoCodeResponse {
+  code: string;
+  discount: number;
+  message: string;
+}
+
+export const promoAPI = {
+  validate: (code: string, items: Array<{ productId: string }>) => fetchAPI<PromoCodeResponse>('/promo/validate', {
+    method: 'POST',
+    body: JSON.stringify({ code, items }),
+  }),
+};
+

@@ -17,6 +17,7 @@ import instagramRoutes from './routes/instagram.js';
 import textsRoutes from './routes/texts.js';
 import novaPoshtaRoutes from './routes/nova-poshta.js';
 import wayforpayRoutes from './routes/wayforpay.js';
+import promoRoutes from './routes/promo.js';
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -68,6 +69,7 @@ app.use('/api/instagram', instagramRoutes);
 app.use('/api/texts', textsRoutes);
 app.use('/api/nova-poshta', novaPoshtaRoutes);
 app.use('/api/wayforpay', wayforpayRoutes);
+app.use('/api/promo', promoRoutes);
 
 // Serve uploaded files
 const UPLOADS_DIR = join(__dirname, '..', 'uploads');
