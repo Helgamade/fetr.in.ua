@@ -9,6 +9,10 @@ import { cn } from "@/lib/utils";
 interface UkrPoshtaDeliveryProps {
   cityId: string | null;
   branchId: string | null;
+  cityName?: string; // Сохраненное название города для fallback
+  branchName?: string; // Сохраненное название отделения для fallback
+  branchAddress?: string; // Сохраненный адрес отделения для fallback
+  branchPostalCode?: string; // Сохраненный индекс для fallback
   isExpanded?: boolean;
   onCityChange: (city: UkrposhtaCity | null) => void;
   onBranchChange: (branch: UkrposhtaBranch | null) => void;
@@ -18,6 +22,10 @@ interface UkrPoshtaDeliveryProps {
 export const UkrPoshtaDelivery = ({
   cityId,
   branchId,
+  cityName,
+  branchName,
+  branchAddress,
+  branchPostalCode,
   isExpanded = true,
   onCityChange,
   onBranchChange,
@@ -41,6 +49,7 @@ export const UkrPoshtaDelivery = ({
 
   // Загрузка выбранного города при монтировании или изменении cityId
   // По аналогии с NovaPoshtaDelivery - загружаем по ID через API
+  // Fallback: если API не работает, создаем объект из сохраненных данных
   useEffect(() => {
     if (cityId) {
       ukrposhtaAPI.getCity(cityId)
@@ -50,16 +59,25 @@ export const UkrPoshtaDelivery = ({
         })
         .catch((error) => {
           console.error('❌ [UkrPoshtaDelivery] Error loading city by ID:', error);
-          // Если endpoint не работает, пытаемся найти город через поиск по сохраненному названию
-          // Это fallback для случаев, когда getCity не работает
+          // Fallback: создаем объект города из сохраненных данных
+          if (cityName && cityId) {
+            console.log('🔄 [UkrPoshtaDelivery] Using fallback city data:', { cityName, cityId });
+            setSelectedCity({
+              id: cityId,
+              name: cityName,
+              postalCode: '',
+              cityId: cityId,
+            });
+          }
         });
     } else {
       setSelectedCity(null);
     }
-  }, [cityId]);
+  }, [cityId, cityName]);
 
   // Загрузка выбранного отделения при монтировании или изменении branchId
   // По аналогии с NovaPoshtaDelivery - загружаем по ID через API
+  // Fallback: если API не работает, создаем объект из сохраненных данных
   useEffect(() => {
     if (branchId && selectedCity) {
       ukrposhtaAPI.getBranch(branchId)
@@ -69,13 +87,23 @@ export const UkrPoshtaDelivery = ({
         })
         .catch((error) => {
           console.error('❌ [UkrPoshtaDelivery] Error loading branch by ID:', error);
-          // Если endpoint не работает, отделение не восстановится автоматически
+          // Fallback: создаем объект отделения из сохраненных данных
+          if (branchName && branchId && selectedCity) {
+            console.log('🔄 [UkrPoshtaDelivery] Using fallback branch data:', { branchName, branchId, branchAddress, branchPostalCode });
+            setSelectedBranch({
+              id: branchId,
+              name: branchName,
+              address: branchAddress || '',
+              postalCode: branchPostalCode || '',
+              cityId: selectedCity.cityId || selectedCity.id,
+            });
+          }
         });
     } else {
       setSelectedBranch(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [branchId, selectedCity]);
+  }, [branchId, selectedCity, branchName, branchAddress, branchPostalCode]);
 
   // Поиск городов
   useEffect(() => {
