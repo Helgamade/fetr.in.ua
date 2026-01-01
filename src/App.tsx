@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { Dashboard } from "./pages/admin/Dashboard";
 import { Orders } from "./pages/admin/Orders";
+import { OrderDetail } from "./pages/admin/OrderDetail";
 import { Products } from "./pages/admin/Products";
 import { Settings } from "./pages/admin/Settings";
 import { Comparison } from "./pages/admin/Comparison";
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<Dashboard />} />
                   <Route path="orders" element={<Orders />} />
+                  <Route path="orders/:id" element={<OrderDetail />} />
                   <Route path="products" element={<Products />} />
                   <Route path="options" element={<Options />} />
                   <Route path="galleries" element={<Galleries />} />

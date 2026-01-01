@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Eye, 
   Search,
   Filter,
   ChevronDown,
   Phone,
-  MapPin
+  MapPin,
+  ShoppingCart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,12 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Order, OrderStatus } from '@/types/store';
 import { useOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
@@ -62,13 +58,24 @@ const deliveryLabels = {
   pickup: 'Самовивіз',
 };
 
+// Форматирование даты заказа в формате "12:57, 01.01.2026"
+const formatOrderDate = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${hours}:${minutes}, ${day}.${month}.${year}`;
+};
+
 export function Orders() {
+  const navigate = useNavigate();
   const { data: orders = [], isLoading } = useOrders();
   const { data: products = [] } = useProducts();
   const updateStatus = useUpdateOrderStatus();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
@@ -86,9 +93,7 @@ export function Orders() {
       { id: orderId, status: newStatus },
       {
         onSuccess: () => {
-          if (selectedOrder?.id === orderId) {
-            setSelectedOrder(prev => prev ? { ...prev, status: newStatus, updatedAt: new Date() } : null);
-          }
+          // Status updated
         },
       }
     );
@@ -137,73 +142,156 @@ export function Orders() {
         </CardContent>
       </Card>
 
-      {/* Orders list */}
+      {/* Orders list - Table format */}
       <Card>
         <CardHeader>
-          <CardTitle>Замовлення ({filteredOrders.length})</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5" />
+              Список замовлень
+            </CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredOrders.map((order) => (
-              <div
-                key={order.id}
-                className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                  {/* Order info */}
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono font-bold">{order.id}</span>
-                      <Badge className={statusColors[order.status]}>
-                        {statusLabels[order.status]}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {order.customer.name} • {order.customer.phone}
-                    </div>
-                    <div className="text-sm">
-                      {order.items.map(item => (
-                        <span key={item.productId}>
-                          {getProductName(item.productId)} x{item.quantity}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Order total */}
-                  <div className="text-right">
-                    <div className="text-lg font-bold">₴{order.total}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(order.createdAt).toLocaleDateString('uk-UA')}
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={order.status}
-                      onValueChange={(value) => handleStatusChange(order.id, value as OrderStatus)}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-3 px-4 font-medium">Заказ</th>
+                  <th className="text-left py-3 px-4 font-medium">Сумма</th>
+                  <th className="text-left py-3 px-4 font-medium">Покупатель</th>
+                  <th className="text-left py-3 px-4 font-medium">Доставка и оплата</th>
+                  <th className="text-left py-3 px-4 font-medium">Статус</th>
+                  <th className="text-right py-3 px-4 font-medium">Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOrders.map((order) => {
+                  const firstItem = order.items[0];
+                  const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
+                  const product = products.find(p => p.code === firstItem?.productId);
+                  
+                  return (
+                    <tr
+                      key={order.id}
+                      className="border-b hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/admin/orders/${order.id}`)}
                     >
-                      <SelectTrigger className="w-40">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(statusLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setSelectedOrder(order)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
+                      {/* Заказ */}
+                      <td className="py-4 px-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0">
+                            {product?.image ? (
+                              <img
+                                src={product.image}
+                                alt={product.name}
+                                className="w-12 h-12 object-cover rounded"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                                <Package className="h-6 w-6 text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-mono font-bold text-sm">{order.id}</div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {formatOrderDate(order.createdAt)}
+                            </div>
+                            <div className="text-sm font-medium mt-1 truncate">
+                              {firstItem ? getProductName(firstItem.productId) : 'Товар'}
+                            </div>
+                            {order.items.length > 1 && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                +{order.items.length - 1} товарів в замовленні
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Сумма */}
+                      <td className="py-4 px-4">
+                        <div className="font-bold">₴{order.total}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {totalItems} {totalItems === 1 ? 'шт.' : 'шт.'}
+                        </div>
+                      </td>
+
+                      {/* Покупатель */}
+                      <td className="py-4 px-4">
+                        <div className="font-medium">{order.customer.name}</div>
+                        <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                          <Phone className="h-3 w-3" />
+                          {order.customer.phone}
+                        </div>
+                      </td>
+
+                      {/* Доставка и оплата */}
+                      <td className="py-4 px-4">
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium">
+                            {deliveryLabels[order.delivery.method]}
+                          </div>
+                          {order.delivery.city && (
+                            <div className="text-xs text-muted-foreground">
+                              {order.delivery.city}
+                              {order.delivery.warehouse && `, ${order.delivery.warehouse}`}
+                            </div>
+                          )}
+                          <div className="text-xs text-muted-foreground">
+                            {order.payment.method === 'card' && 'Онлайн оплата'}
+                            {order.payment.method === 'cod' && 'Накладений платіж'}
+                            {order.payment.method === 'fop' && 'Оплата на рахунок ФОП'}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Статус */}
+                      <td className="py-4 px-4">
+                        <div className="space-y-2">
+                          <Select
+                            value={order.status}
+                            onValueChange={(value) => {
+                              handleStatusChange(order.id, value as OrderStatus);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <SelectTrigger className="w-40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(statusLabels).map(([value, label]) => (
+                                <SelectItem key={value} value={value}>{label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {order.status === 'paid' && (
+                            <Badge className="bg-green-100 text-green-800 text-xs">
+                              Оплачено
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Действия */}
+                      <td className="py-4 px-4 text-right">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/admin/orders/${order.id}`);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
 
             {filteredOrders.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
@@ -213,153 +301,6 @@ export function Orders() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Order details dialog */}
-      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Замовлення {selectedOrder?.id}</DialogTitle>
-          </DialogHeader>
-          
-          {selectedOrder && (
-            <div className="space-y-6">
-              {/* Status */}
-              <div className="flex items-center justify-between">
-                <Badge className={statusColors[selectedOrder.status]}>
-                  {statusLabels[selectedOrder.status]}
-                </Badge>
-                <span className="text-sm text-muted-foreground">
-                  Створено: {new Date(selectedOrder.createdAt).toLocaleString('uk-UA')}
-                </span>
-              </div>
-
-              {/* Customer */}
-              <div className="space-y-2">
-                <h4 className="font-semibold">Замовник</h4>
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                  <div className="font-medium">{selectedOrder.customer.name}</div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4" />
-                    {selectedOrder.customer.phone}
-                  </div>
-                  {selectedOrder.promoCode && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground">Промокод:</span>
-                      <span className="font-medium text-green-600">{selectedOrder.promoCode}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Recipient (если есть) */}
-              {selectedOrder.recipient && (
-                <div className="space-y-2">
-                  <h4 className="font-semibold">Отримувач</h4>
-                  <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                    <div className="font-medium">{selectedOrder.recipient.name}</div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="h-4 w-4" />
-                      {selectedOrder.recipient.phone}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Delivery */}
-              <div className="space-y-2">
-                <h4 className="font-semibold">Доставка</h4>
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    {deliveryLabels[selectedOrder.delivery.method]}
-                  </div>
-                  {selectedOrder.delivery.city && (
-                    <div className="text-sm">м. {selectedOrder.delivery.city}</div>
-                  )}
-                  {selectedOrder.delivery.warehouse && (
-                    <div className="text-sm">{selectedOrder.delivery.warehouse}</div>
-                  )}
-                  {selectedOrder.delivery.address && (
-                    <div className="text-sm">{selectedOrder.delivery.address}</div>
-                  )}
-                </div>
-              </div>
-
-              {/* Comment */}
-              {selectedOrder.comment && (
-                <div className="space-y-2">
-                  <h4 className="font-semibold">Коментар</h4>
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <div className="text-sm whitespace-pre-wrap">{selectedOrder.comment}</div>
-                  </div>
-                </div>
-              )}
-
-              {/* Items */}
-              <div className="space-y-2">
-                <h4 className="font-semibold">Товари</h4>
-                <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                  {selectedOrder.items.map((item) => (
-                    <div key={item.productId} className="flex justify-between">
-                      <div>
-                        <div className="font-medium">{getProductName(item.productId)}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Кількість: {item.quantity}
-                        </div>
-                        {item.selectedOptions.length > 0 && (
-                          <div className="text-sm text-muted-foreground">
-                            Опції: {item.selectedOptions.join(', ')}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Total */}
-              <div className="border-t pt-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Підсумок</span>
-                  <span>₴{selectedOrder.subtotal}</span>
-                </div>
-                {selectedOrder.discount > 0 && (
-                  <div className="flex justify-between text-sm text-green-600">
-                    <span>Знижка</span>
-                    <span>-₴{selectedOrder.discount}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm">
-                  <span>Доставка</span>
-                  <span>{selectedOrder.deliveryCost > 0 ? `₴${selectedOrder.deliveryCost}` : 'Безкоштовно'}</span>
-                </div>
-                <div className="flex justify-between font-bold text-lg border-t pt-2">
-                  <span>Всього</span>
-                  <span>₴{selectedOrder.total}</span>
-                </div>
-              </div>
-
-              {/* Change status */}
-              <div className="border-t pt-4">
-                <label className="text-sm font-medium mb-2 block">Змінити статус</label>
-                <Select
-                  value={selectedOrder.status}
-                  onValueChange={(value) => handleStatusChange(selectedOrder.id, value as OrderStatus)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(statusLabels).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
