@@ -60,6 +60,7 @@ export const optionsAPI = {
 export const ordersAPI = {
   getAll: () => fetchAPI<Order[]>('/orders'),
   getById: (id: string) => fetchAPI<Order>(`/orders/${id}`),
+  getOrder: (id: string) => fetchAPI<Order>(`/orders/${id}`), // Alias for getById
   create: (data: any) => fetchAPI<any>('/orders', {
     method: 'POST',
     body: JSON.stringify(data),
