@@ -136,7 +136,7 @@ export const ComparisonSection: React.FC = () => {
                       className="w-full"
                     >
                       <ShoppingBag className="w-4 h-4" />
-                      Замовити
+                      Купити
                     </Button>
                   </td>
                 ))}
@@ -158,7 +158,7 @@ export const ComparisonSection: React.FC = () => {
             const optimalProduct = sortedProducts.find(p => p.code === 'optimal');
             return (
               <Button variant="hero" onClick={() => optimalProduct && addToCart(optimalProduct.code, [])}>
-                {t('recommend.button')}
+                Купити зараз
                 <ArrowRight className="w-4 h-4" />
               </Button>
             );

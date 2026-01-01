@@ -53,21 +53,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return [...prev, { productId, quantity: 1, selectedOptions }];
     });
     
-    // productId is code (string like 'starter')
-    const product = products.find(p => p.code === productId);
-    toast.success(`${product?.name} додано до кошика!`, {
-      description: 'Перейдіть до оформлення замовлення',
-      action: {
-        label: 'Кошик',
-        onClick: () => setIsOpen(true),
-      },
-    });
+    // Открываем корзину сразу без всплывающего сообщения
+    setIsOpen(true);
     
     // Track analytics
     window.dispatchEvent(new CustomEvent('analytics', {
       detail: { event: 'add_to_cart', productId, selectedOptions }
     }));
-  }, [products]);
+  }, []);
 
   const removeFromCart = useCallback((productId: string) => {
     setItems(prev => prev.filter(item => item.productId !== productId));

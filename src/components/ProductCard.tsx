@@ -165,7 +165,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
             onClick={handleQuickAdd}
           >
             <ShoppingBag className="w-4 h-4" />
-            Замовити
+            Купити
           </Button>
           <Button 
             variant="outline"
