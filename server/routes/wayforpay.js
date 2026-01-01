@@ -158,7 +158,6 @@ router.post('/callback', async (req, res, next) => {
     console.log('[WayForPay] ===== CALLBACK START =====');
     console.log('[WayForPay] Request method:', req.method);
     console.log('[WayForPay] Request URL:', req.url);
-    console.log('[WayForPay] Request headers:', JSON.stringify(req.headers, null, 2));
     console.log('[WayForPay] Content-Type:', req.get('Content-Type'));
     console.log('[WayForPay] Raw req.body type:', typeof req.body);
     console.log('[WayForPay] Raw req.body:', JSON.stringify(req.body, null, 2));
@@ -166,139 +165,68 @@ router.post('/callback', async (req, res, next) => {
     
     let callbackData = req.body;
     
-    // WayForPay отправляет данные как JSON в теле запроса
-    // Но иногда может прийти как строка или в другом формате
-    console.log('[WayForPay] Step 1: Checking callbackData type:', typeof callbackData);
-    console.log('[WayForPay] Step 1: callbackData is null?', callbackData === null);
-    console.log('[WayForPay] Step 1: callbackData value:', callbackData);
+    // WayForPay отправляет данные в нестандартном формате - JSON строка как ключ объекта
+    // Формат: { "{\"merchantAccount\":\"...\",\"orderReference\":\"...\"}": "", "merchantSignature": "..." }
+    // Или: { "{\"merchantAccount\":\"...\",\"orderReference\":\"...\",\"merchantSignature\":\"...\"}": "" }
     
+    // Проверяем если данные пришли как строка
     if (typeof callbackData === 'string') {
-      console.log('[WayForPay] Step 2: callbackData is string, attempting to parse...');
+      console.log('[WayForPay] Body is string, parsing...');
       try {
         callbackData = JSON.parse(callbackData);
-        console.log('[WayForPay] Step 2: Successfully parsed JSON string from body');
-        console.log('[WayForPay] Step 2: Parsed data:', JSON.stringify(callbackData, null, 2));
+        console.log('[WayForPay] Parsed string to object:', JSON.stringify(callbackData, null, 2));
       } catch (parseError) {
-        console.error('[WayForPay] Step 2: Failed to parse JSON string:', parseError);
-        console.error('[WayForPay] Step 2: Parse error message:', parseError.message);
-        console.error('[WayForPay] Step 2: Parse error stack:', parseError.stack);
+        console.error('[WayForPay] Failed to parse string:', parseError.message);
         return res.status(400).json({ error: 'Invalid JSON format' });
       }
     }
     
-    // Если данные пришли в нестандартном формате (JSON строка в ключе объекта)
-    // WayForPay иногда отправляет данные как: { "{\"orderReference\":\"...\"}": "", "merchantSignature": "..." }
-    console.log('[WayForPay] Step 3: Checking if callbackData is object...');
-    console.log('[WayForPay] Step 3: callbackData type:', typeof callbackData);
-    console.log('[WayForPay] Step 3: callbackData is null?', callbackData === null);
-    
+    // Проверяем если данные пришли как объект с JSON строкой в ключе
     if (typeof callbackData === 'object' && callbackData !== null) {
       const keys = Object.keys(callbackData);
+      console.log('[WayForPay] Body is object, keys:', keys);
+      console.log('[WayForPay] Keys count:', keys.length);
       
-      console.log('[WayForPay] Step 3: Callback keys count:', keys.length);
-      console.log('[WayForPay] Step 3: Callback keys:', keys);
-      console.log('[WayForPay] Step 3: Callback data type:', typeof callbackData);
-      console.log('[WayForPay] Step 3: Full callback data:', JSON.stringify(callbackData, null, 2));
-      
-      // Ищем ключ, который содержит JSON строку (обычно это первый ключ, который выглядит как JSON)
-      for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
-        console.log(`[WayForPay] Step 3.${i + 1}: Processing key ${i + 1}/${keys.length}:`, key.substring(0, 200));
-        console.log(`[WayForPay] Step 3.${i + 1}: Key type:`, typeof key);
-        console.log(`[WayForPay] Step 3.${i + 1}: Key length:`, key.length);
-        console.log(`[WayForPay] Step 3.${i + 1}: Key starts with {?:`, key.startsWith('{'));
-        console.log(`[WayForPay] Step 3.${i + 1}: Key ends with }?:`, key.endsWith('}'));
-        
-        // Пропускаем merchantSignature, если он есть отдельно
-        if (key === 'merchantSignature') {
-          console.log(`[WayForPay] Step 3.${i + 1}: Skipping merchantSignature key`);
-          console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature value:`, callbackData[key]);
-          continue;
+      // Если есть один ключ который начинается с '{' - это JSON строка в ключе
+      if (keys.length === 1 && keys[0].startsWith('{')) {
+        console.log('[WayForPay] Found JSON string in key, parsing...');
+        try {
+          callbackData = JSON.parse(keys[0]);
+          console.log('[WayForPay] Successfully parsed JSON from key!');
+          console.log('[WayForPay] Parsed data:', JSON.stringify(callbackData, null, 2));
+        } catch (parseError) {
+          console.error('[WayForPay] Failed to parse JSON from key:', parseError.message);
+          return res.status(400).json({ error: 'Invalid JSON format in key' });
         }
-        
-        // Если сам ключ - это JSON строка
-        if (key.startsWith('{') && key.endsWith('}')) {
-          console.log(`[WayForPay] Step 3.${i + 1}: Key looks like JSON, attempting to parse...`);
-          try {
-            const parsed = JSON.parse(key);
-            console.log(`[WayForPay] Step 3.${i + 1}: Successfully parsed JSON from key!`);
-            console.log(`[WayForPay] Step 3.${i + 1}: Parsed data:`, JSON.stringify(parsed, null, 2));
-            console.log(`[WayForPay] Step 3.${i + 1}: Parsed orderReference:`, parsed.orderReference);
-            console.log(`[WayForPay] Step 3.${i + 1}: Parsed transactionStatus:`, parsed.transactionStatus);
-            
-            // Если распарсилось успешно и содержит нужные поля - используем это
-            if (parsed.orderReference || parsed.transactionStatus) {
-              console.log(`[WayForPay] Step 3.${i + 1}: Parsed data contains orderReference or transactionStatus`);
-              // merchantSignature должен быть ВНУТРИ распарсенного JSON, а не в исходном объекте
-              console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature in parsed data:`, parsed.merchantSignature);
-              console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature in original object:`, callbackData.merchantSignature);
-              // Используем merchantSignature из распарсенного JSON (он там должен быть)
-              // Если его нет в распарсенном, пробуем из исходного объекта
-              if (!parsed.merchantSignature && callbackData.merchantSignature) {
-                console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature not in parsed, using from original:`, callbackData.merchantSignature);
-                parsed.merchantSignature = callbackData.merchantSignature;
+      } else if (keys.length > 1) {
+        // Если несколько ключей, ищем ключ который начинается с '{'
+        for (const key of keys) {
+          if (key.startsWith('{') && key.endsWith('}')) {
+            console.log('[WayForPay] Found JSON string in key (multiple keys), parsing...');
+            try {
+              callbackData = JSON.parse(key);
+              console.log('[WayForPay] Successfully parsed JSON from key!');
+              console.log('[WayForPay] Parsed data:', JSON.stringify(callbackData, null, 2));
+              // Если merchantSignature был в исходном объекте отдельно, сохраняем его
+              if (req.body.merchantSignature && !callbackData.merchantSignature) {
+                console.log('[WayForPay] Preserving merchantSignature from original object');
+                callbackData.merchantSignature = req.body.merchantSignature;
               }
-              callbackData = parsed;
-              console.log(`[WayForPay] Step 3.${i + 1}: Using parsed data from key`);
-              console.log(`[WayForPay] Step 3.${i + 1}: Final callbackData.merchantSignature:`, callbackData.merchantSignature);
               break;
-            } else {
-              console.log(`[WayForPay] Step 3.${i + 1}: Parsed data does NOT contain orderReference or transactionStatus`);
+            } catch (parseError) {
+              console.error('[WayForPay] Failed to parse JSON from key:', parseError.message);
             }
-          } catch (parseError) {
-            console.error(`[WayForPay] Step 3.${i + 1}: Failed to parse JSON from key:`, parseError.message);
-            console.error(`[WayForPay] Step 3.${i + 1}: Parse error stack:`, parseError.stack);
-          }
-        }
-        
-        // Если значение - строка, которая выглядит как JSON
-        const value = callbackData[key];
-        console.log(`[WayForPay] Step 3.${i + 1}: Checking value for key "${key}"`);
-        console.log(`[WayForPay] Step 3.${i + 1}: Value type:`, typeof value);
-        console.log(`[WayForPay] Step 3.${i + 1}: Value:`, value);
-        
-        if (typeof value === 'string' && value.startsWith('{') && value.endsWith('}')) {
-          console.log(`[WayForPay] Step 3.${i + 1}: Value looks like JSON, attempting to parse...`);
-          try {
-            const parsed = JSON.parse(value);
-            console.log(`[WayForPay] Step 3.${i + 1}: Successfully parsed JSON from value!`);
-            console.log(`[WayForPay] Step 3.${i + 1}: Parsed data:`, JSON.stringify(parsed, null, 2));
-            console.log(`[WayForPay] Step 3.${i + 1}: Parsed orderReference:`, parsed.orderReference);
-            console.log(`[WayForPay] Step 3.${i + 1}: Parsed transactionStatus:`, parsed.transactionStatus);
-            
-            // Если распарсилось успешно и содержит нужные поля - используем это
-            if (parsed.orderReference || parsed.transactionStatus) {
-              console.log(`[WayForPay] Step 3.${i + 1}: Parsed data contains orderReference or transactionStatus`);
-              // merchantSignature должен быть ВНУТРИ распарсенного JSON, а не в исходном объекте
-              console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature in parsed data:`, parsed.merchantSignature);
-              console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature in original object:`, callbackData.merchantSignature);
-              // Используем merchantSignature из распарсенного JSON (он там должен быть)
-              // Если его нет в распарсенном, пробуем из исходного объекта
-              if (!parsed.merchantSignature && callbackData.merchantSignature) {
-                console.log(`[WayForPay] Step 3.${i + 1}: merchantSignature not in parsed, using from original:`, callbackData.merchantSignature);
-                parsed.merchantSignature = callbackData.merchantSignature;
-              }
-              callbackData = parsed;
-              console.log(`[WayForPay] Step 3.${i + 1}: Using parsed data from value`);
-              console.log(`[WayForPay] Step 3.${i + 1}: Final callbackData.merchantSignature:`, callbackData.merchantSignature);
-              break;
-            } else {
-              console.log(`[WayForPay] Step 3.${i + 1}: Parsed data does NOT contain orderReference or transactionStatus`);
-            }
-          } catch (parseError) {
-            console.error(`[WayForPay] Step 3.${i + 1}: Failed to parse JSON from value:`, parseError.message);
-            console.error(`[WayForPay] Step 3.${i + 1}: Parse error stack:`, parseError.stack);
           }
         }
       }
     }
     
-    console.log('[WayForPay] Step 4: Final callbackData after parsing:');
-    console.log('[WayForPay] Step 4: callbackData type:', typeof callbackData);
-    console.log('[WayForPay] Step 4: callbackData keys:', callbackData ? Object.keys(callbackData) : 'null');
-    console.log('[WayForPay] Step 4: Full callbackData:', JSON.stringify(callbackData, null, 2));
-    console.log('[WayForPay] Step 4: merchantSignature present?', callbackData?.merchantSignature ? 'YES' : 'NO');
-    console.log('[WayForPay] Step 4: merchantSignature value:', callbackData?.merchantSignature || 'MISSING');
+    console.log('[WayForPay] Final callbackData after parsing:');
+    console.log('[WayForPay] callbackData type:', typeof callbackData);
+    console.log('[WayForPay] callbackData keys:', callbackData ? Object.keys(callbackData) : 'null');
+    console.log('[WayForPay] Full callbackData:', JSON.stringify(callbackData, null, 2));
+    console.log('[WayForPay] merchantSignature present?', callbackData?.merchantSignature ? 'YES' : 'NO');
+    console.log('[WayForPay] merchantSignature value:', callbackData?.merchantSignature || 'MISSING');
 
     // Проверяем наличие обязательных полей
     console.log('[WayForPay] Step 5: Validating callback data...');
