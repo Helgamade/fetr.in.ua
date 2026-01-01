@@ -21,18 +21,22 @@ const ThankYou = () => {
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get("order"); // Старый способ (для обратной совместимости)
   const trackingToken = searchParams.get("track"); // Новый способ (только цифры)
+  const orderRef = searchParams.get("orderRef"); // WayForPay orderReference (номер заказа)
   const { data: storeSettings } = usePublicSettings();
   
-  // Используем trackingToken если есть, иначе orderId
-  const identifier = trackingToken || orderId || "";
+  // Используем trackingToken если есть, иначе orderId, иначе orderRef (от WayForPay)
+  const identifier = trackingToken || orderId || orderRef || "";
   
   const { data: order, isLoading: orderLoading } = useQuery({
-    queryKey: ['order', identifier, trackingToken ? 'track' : 'id'],
+    queryKey: ['order', identifier, trackingToken ? 'track' : (orderRef ? 'orderRef' : 'id')],
     queryFn: () => {
       if (trackingToken) {
         return ordersAPI.getByTrackingToken(trackingToken);
       } else if (orderId) {
         return ordersAPI.getOrder(orderId);
+      } else if (orderRef) {
+        // WayForPay передает orderReference (номер заказа)
+        return ordersAPI.getOrder(orderRef);
       }
       return null;
     },
