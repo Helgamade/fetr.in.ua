@@ -68,12 +68,23 @@ export const UkrPoshtaDelivery = ({
         console.log(`🔍 [UkrPoshtaDelivery] Saved cityId "${cityId}" is not numeric, searching via API for "${cityName}"...`);
         ukrposhtaAPI.searchCities(cityName)
           .then((cities) => {
-            const foundCity = cities.find(c => 
-              c.name.toLowerCase() === cityName.toLowerCase() && 
-              (region ? c.region === region : true) &&
-              c.cityId && 
-              !isNaN(parseInt(c.cityId.toString(), 10))
-            );
+            // Нормализуем область для сравнения (убираем "обл." и лишние пробелы)
+            const normalizeRegion = (region: string) => {
+              if (!region) return '';
+              return region.replace(/\s*обл\.?\s*$/i, '').trim();
+            };
+            
+            const regionNormalized = normalizeRegion(region);
+            
+            const foundCity = cities.find(c => {
+              const nameMatch = c.name.toLowerCase() === cityName.toLowerCase();
+              const regionMatch = regionNormalized 
+                ? normalizeRegion(c.region || '') === regionNormalized
+                : true; // Если области нет, не проверяем
+              const hasNumericCityId = c.cityId && !isNaN(parseInt(c.cityId.toString(), 10));
+              
+              return nameMatch && regionMatch && hasNumericCityId;
+            });
             
             if (foundCity && foundCity.cityId) {
               console.log(`✅ [UkrPoshtaDelivery] Found numeric CITY_ID ${foundCity.cityId} for saved city "${cityName}"`);
@@ -381,12 +392,25 @@ export const UkrPoshtaDelivery = ({
       console.log(`🔍 [UkrPoshtaDelivery] Popular city "${city.name}" has no numeric CITY_ID, searching via API...`);
       try {
         const foundCities = await ukrposhtaAPI.searchCities(city.name);
-        const foundCity = foundCities.find(c => 
-          c.name.toLowerCase() === city.name.toLowerCase() && 
-          c.region === city.region &&
-          c.cityId && 
-          !isNaN(parseInt(c.cityId.toString(), 10))
-        );
+        
+        // Нормализуем область для сравнения (убираем "обл." и лишние пробелы)
+        const normalizeRegion = (region: string) => {
+          if (!region) return '';
+          return region.replace(/\s*обл\.?\s*$/i, '').trim();
+        };
+        
+        const cityRegionNormalized = normalizeRegion(city.region || '');
+        
+        // Ищем город по названию и области (с нормализацией)
+        const foundCity = foundCities.find(c => {
+          const nameMatch = c.name.toLowerCase() === city.name.toLowerCase();
+          const regionMatch = cityRegionNormalized 
+            ? normalizeRegion(c.region || '') === cityRegionNormalized
+            : true; // Если области нет, не проверяем
+          const hasNumericCityId = c.cityId && !isNaN(parseInt(c.cityId.toString(), 10));
+          
+          return nameMatch && regionMatch && hasNumericCityId;
+        });
         
         if (foundCity && foundCity.cityId) {
           console.log(`✅ [UkrPoshtaDelivery] Found CITY_ID ${foundCity.cityId} for popular city "${city.name}"`);
