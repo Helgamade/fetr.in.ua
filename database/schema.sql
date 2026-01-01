@@ -81,10 +81,12 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Таблица заказов
 CREATE TABLE IF NOT EXISTS orders (
-  id VARCHAR(50) PRIMARY KEY,
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_number VARCHAR(20) NULL,
+  tracking_token VARCHAR(15) NULL,
   customer_name VARCHAR(255) NOT NULL,
   customer_phone VARCHAR(50) NOT NULL,
-  customer_email VARCHAR(255) NOT NULL,
+  customer_email VARCHAR(255) NULL,
   delivery_method ENUM('nova_poshta', 'ukrposhta', 'pickup') NOT NULL,
   delivery_city VARCHAR(255) NULL,
   delivery_warehouse VARCHAR(255) NULL,
@@ -100,14 +102,19 @@ CREATE TABLE IF NOT EXISTS orders (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_status (status),
   INDEX idx_created_at (created_at),
-  INDEX idx_customer_email (customer_email)
+  INDEX idx_customer_email (customer_email),
+  UNIQUE INDEX idx_order_number (order_number),
+  UNIQUE INDEX idx_tracking_token (tracking_token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Устанавливаем AUTO_INCREMENT на 305317 для удобочитаемых номеров заказов
+-- ALTER TABLE orders AUTO_INCREMENT = 305317;
 
 -- Таблица позиций заказа
 CREATE TABLE IF NOT EXISTS order_items (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  order_id VARCHAR(50) NOT NULL,
-  product_id VARCHAR(50) NOT NULL,
+  order_id INT NOT NULL,
+  product_id INT NOT NULL,
   quantity INT NOT NULL,
   price DECIMAL(10, 2) NOT NULL,
   FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
