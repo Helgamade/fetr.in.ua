@@ -130,7 +130,7 @@ const Checkout = () => {
     return true;
   };
 
-  // Форматирование телефона в формат +380 (XX) XXX-XX-XX (в скобках только 2 цифры)
+  // Форматирование телефона - просто +380 и цифры
   const formatPhone = (value: string): string => {
     // Убираем все символы кроме цифр
     const digitsOnly = value.replace(/\D/g, '');
@@ -144,21 +144,11 @@ const Checkout = () => {
     // Ограничиваем длину до 12 цифр (380XXXXXXXXX)
     phoneDigits = phoneDigits.slice(0, 12);
     
-    // Форматируем: +380 (XX) XXX-XX-XX
+    // Просто возвращаем +380 и цифры
     if (phoneDigits.length <= 3) {
       return '+' + phoneDigits;
-    } else if (phoneDigits.length <= 5) {
-      // После +380 идут 2 цифры в скобках
-      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3)}`;
-    } else if (phoneDigits.length === 6) {
-      // После ввода второй цифры закрываем скобку
-      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 5)}) ${phoneDigits.slice(5)}`;
-    } else if (phoneDigits.length <= 9) {
-      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 5)}) ${phoneDigits.slice(5)}`;
-    } else if (phoneDigits.length <= 11) {
-      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 5)}) ${phoneDigits.slice(5, 8)}-${phoneDigits.slice(8)}`;
     } else {
-      return `+${phoneDigits.slice(0, 3)} (${phoneDigits.slice(3, 5)}) ${phoneDigits.slice(5, 8)}-${phoneDigits.slice(8, 10)}-${phoneDigits.slice(10)}`;
+      return '+' + phoneDigits;
     }
   };
 
@@ -237,38 +227,24 @@ const Checkout = () => {
       return;
     }
     
-    // Форматируем
-    const formatted = formatPhone(phoneDigits);
+    // Форматируем (просто +380 и цифры)
+    const formatted = '+' + phoneDigits;
     
     // Вычисляем позицию курсора
-    // Считаем количество цифр до курсора в исходном вводе (включая префикс 380)
     const digitsBeforeCursor = inputValue.slice(0, cursorPosition).replace(/\D/g, '').length;
     
-    // Находим позицию в отформатированной строке
-    let newCursorPosition = 7; // Позиция после "+380 ("
+    // Новая позиция курсора - после префикса +380 или в конце
+    let newCursorPosition = 4; // Позиция после "+380"
     
-    // Если есть цифры после префикса
     if (digitsBeforeCursor > 3) {
       // Количество цифр после префикса "380"
       const digitsAfterPrefix = digitsBeforeCursor - 3;
-      
-      // Ищем позицию в отформатированной строке
-      let digitCount = 0;
-      for (let i = 0; i < formatted.length; i++) {
-        if (/\d/.test(formatted[i])) {
-          digitCount++;
-          // После префикса "+380 " начинаем считать
-          if (digitCount === digitsAfterPrefix + 3) {
-            newCursorPosition = i + 1;
-            break;
-          }
-        }
-      }
-      
-      // Если все цифры введены, ставим курсор в конец
-      if (digitsBeforeCursor >= phoneDigits.length) {
-        newCursorPosition = formatted.length;
-      }
+      newCursorPosition = 4 + digitsAfterPrefix;
+    }
+    
+    // Если все цифры введены, ставим курсор в конец
+    if (digitsBeforeCursor >= phoneDigits.length) {
+      newCursorPosition = formatted.length;
     }
     
     setFormData(prev => ({ ...prev, phone: formatted }));
@@ -280,19 +256,19 @@ const Checkout = () => {
       }
     }, 0);
     
-    if (phoneTouched || formatted.length > 6) {
+    if (phoneTouched || formatted.length > 4) {
       validatePhone(formatted);
     }
   };
 
   const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // При нажатии Backspace внутри префикса "+380 (", блокируем удаление
+    // При нажатии Backspace внутри префикса "+380", блокируем удаление
     if (e.key === 'Backspace') {
       const input = e.currentTarget;
       const cursorPosition = input.selectionStart || 0;
       
-      // Если курсор внутри или перед "+380 (", блокируем удаление
-      if (cursorPosition <= 7) {
+      // Если курсор внутри или перед "+380", блокируем удаление
+      if (cursorPosition <= 4) {
         e.preventDefault();
         return;
       }
@@ -303,7 +279,7 @@ const Checkout = () => {
       const input = e.currentTarget;
       const cursorPosition = input.selectionStart || 0;
       
-      if (cursorPosition < 7) {
+      if (cursorPosition < 4) {
         e.preventDefault();
         return;
       }
@@ -311,24 +287,24 @@ const Checkout = () => {
   };
 
   const handlePhoneFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    // При фокусе всегда ставим курсор после "+380 ("
+    // При фокусе всегда ставим курсор после "+380"
     setTimeout(() => {
       if (phoneInputRef.current) {
-        phoneInputRef.current.setSelectionRange(7, 7);
+        phoneInputRef.current.setSelectionRange(4, 4);
       }
     }, 0);
   };
   
   const handlePhoneBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     // При потере фокуса, если поле пустое, очищаем значение для плейсхолдера
-    if (formData.phone === "" || formData.phone === "+380 (") {
+    if (formData.phone === "" || formData.phone === "+380") {
       setFormData(prev => ({ ...prev, phone: "" }));
     }
     setPhoneTouched(true);
-    validatePhone(formData.phone === "" || formData.phone === "+380 (" ? "" : formData.phone);
+    validatePhone(formData.phone === "" || formData.phone === "+380" ? "" : formData.phone);
   };
 
-  const isPhoneValid = (formData.phone === "" || formData.phone === "+380 (" ? "" : formData.phone).replace(/\D/g, '').length === 12 && (formData.phone === "" || formData.phone === "+380 (" ? "" : formData.phone).replace(/\D/g, '').startsWith('380');
+  const isPhoneValid = (formData.phone === "" || formData.phone === "+380" ? "" : formData.phone).replace(/\D/g, '').length === 12 && (formData.phone === "" || formData.phone === "+380" ? "" : formData.phone).replace(/\D/g, '').startsWith('380');
   
   const isLastNameValid = formData.lastName.trim() !== "" && validateCyrillic(formData.lastName);
   const isFirstNameValid = formData.firstName.trim() !== "" && validateCyrillic(formData.firstName);
@@ -768,14 +744,14 @@ const Checkout = () => {
                               id="phone"
                               name="phone"
                               type="tel"
-                              value={formData.phone === "" ? "+380 (" : formData.phone}
+                              value={formData.phone === "" ? "+380" : formData.phone}
                               onChange={handlePhoneChange}
                               onKeyDown={handlePhoneKeyDown}
                               onFocus={handlePhoneFocus}
                               onBlur={handlePhoneBlur}
-                              placeholder="+380 (__) ___-__-__"
+                              placeholder="+380"
                               required
-                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${formData.phone === "" || formData.phone === "+380 (" ? 'text-muted-foreground' : ''} ${phoneTouched && phoneError ? 'border-red-500' : ''} ${isPhoneValid ? 'border-green-500' : ''}`}
+                              className={`rounded-xl pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 ${formData.phone === "" || formData.phone === "+380" ? 'text-muted-foreground' : ''} ${phoneTouched && phoneError ? 'border-red-500' : ''} ${isPhoneValid ? 'border-green-500' : ''}`}
                             />
                             {isPhoneValid && (
                               <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
@@ -853,7 +829,7 @@ const Checkout = () => {
                         type="button"
                         variant="outline"
                         disabled={!isPhoneValid || !isFirstNameValid || !isLastNameValid}
-                        className="w-full rounded-full border-2"
+                        className="w-full rounded-xl border h-10"
                         onClick={() => {
                           if (isContactInfoValid) {
                             setFormData(prev => ({ ...prev, contactInfoCompleted: true, contactInfoExpanded: false }));
@@ -1033,7 +1009,9 @@ const Checkout = () => {
                             return <div className="text-sm text-muted-foreground">3-5 днів по Україні</div>;
                           })()}
                         </div>
-                        <div className="text-sm font-medium">від 45 грн</div>
+                        <div className="text-sm font-medium">
+                          {orderTotal >= FREE_DELIVERY_THRESHOLD ? <span className="text-green-600">Безкоштовно</span> : "від 45 грн"}
+                        </div>
                       </label>
                       {formData.deliveryMethod === "ukr_poshta" && formData.ukrPoshtaExpanded !== false && (
                         <div className="pl-4 pr-4 pb-4 space-y-4">
@@ -1096,7 +1074,7 @@ const Checkout = () => {
                             }}
                             disabled={!formData.ukrPoshtaCity || !formData.ukrPoshtaPostalCode || !formData.ukrPoshtaAddress}
                             variant="outline"
-                            className="w-full rounded-full border-2"
+                            className="w-full rounded-xl border h-10"
                           >
                             Продовжити
                           </Button>
@@ -1145,7 +1123,7 @@ const Checkout = () => {
                               }));
                             }}
                             variant="outline"
-                            className="w-full rounded-full border-2 mt-4"
+                            className="w-full rounded-xl border h-10 mt-4"
                           >
                             Продовжити
                           </Button>
