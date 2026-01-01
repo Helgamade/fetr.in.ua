@@ -40,8 +40,19 @@ const ThankYou = () => {
   });
 
   // Определяем статус оплаты
+  // Для WayForPay: если статус awaiting_payment - оплата не прошла
+  // Для других способов оплаты: если статус не awaiting_payment - все ок
   const isPaymentPending = order?.status === 'awaiting_payment' && order?.payment?.method === 'wayforpay';
   const isPaymentPaid = order?.status === 'paid' || (order?.status !== 'awaiting_payment' && order?.payment?.method !== 'wayforpay');
+  
+  // Если заказ найден, но нет trackingToken в URL - это может быть возврат от WayForPay
+  // В этом случае показываем статус на основе данных заказа
+  useEffect(() => {
+    if (order && !trackingToken && order.payment?.method === 'wayforpay') {
+      console.warn('[ThankYou] Order found but no trackingToken in URL. This might be a WayForPay return without token.');
+      console.log('[ThankYou] Order status:', order.status);
+    }
+  }, [order, trackingToken]);
 
   // Debug: log order data
   useEffect(() => {

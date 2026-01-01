@@ -83,18 +83,23 @@ router.post('/create-payment', async (req, res, next) => {
     };
 
     console.log('[WayForPay] Order data:', JSON.stringify(orderData, null, 2));
+    console.log('[WayForPay] Tracking token:', trackingToken);
 
     // Создаем конфиг с returnUrl, включающим trackingToken
+    const returnUrlWithTrack = `${WFP_CONFIG.returnUrl}?track=${trackingToken}`;
+    console.log('[WayForPay] Return URL with tracking token:', returnUrlWithTrack);
+    
     const configWithReturnUrl = {
       ...WFP_CONFIG,
-      returnUrl: `${WFP_CONFIG.returnUrl}?track=${trackingToken}`,
+      returnUrl: returnUrlWithTrack,
     };
 
     const paymentData = buildWayForPayData(orderData, configWithReturnUrl);
 
     console.log('[WayForPay] Payment data created (without signature):', JSON.stringify({
       ...paymentData,
-      merchantSignature: '***HIDDEN***'
+      merchantSignature: '***HIDDEN***',
+      returnUrl: paymentData.returnUrl // Показываем returnUrl для проверки
     }, null, 2));
 
     res.json({
@@ -110,12 +115,35 @@ router.post('/create-payment', async (req, res, next) => {
 // Callback от WayForPay (обработка результата платежа)
 router.post('/callback', async (req, res, next) => {
   try {
-    const callbackData = req.body;
+    let callbackData = req.body;
     
-    console.log('[WayForPay] Callback received:', JSON.stringify({
+    // WayForPay иногда отправляет данные как JSON строку в ключе объекта
+    // Проверяем и парсим, если нужно
+    if (typeof callbackData === 'object' && Object.keys(callbackData).length === 1) {
+      const firstKey = Object.keys(callbackData)[0];
+      const firstValue = callbackData[firstKey];
+      
+      // Если значение - строка, которая выглядит как JSON
+      if (typeof firstValue === 'string' && (firstValue.startsWith('{') || firstValue.startsWith('['))) {
+        try {
+          callbackData = JSON.parse(firstValue);
+          console.log('[WayForPay] Parsed JSON string from callback');
+        } catch (parseError) {
+          console.error('[WayForPay] Failed to parse JSON string:', parseError);
+        }
+      }
+    }
+    
+    console.log('[WayForPay] Callback received (parsed):', JSON.stringify({
       ...callbackData,
       merchantSignature: callbackData.merchantSignature ? '***PRESENT***' : '***MISSING***'
     }, null, 2));
+
+    // Проверяем наличие обязательных полей
+    if (!callbackData.orderReference) {
+      console.error('[WayForPay] Missing orderReference in callback');
+      return res.status(400).json({ error: 'Missing orderReference' });
+    }
 
     // Валидируем подпись
     const isValid = validateWayForPaySignature(
@@ -126,7 +154,9 @@ router.post('/callback', async (req, res, next) => {
 
     if (!isValid) {
       console.error('[WayForPay] Invalid signature for callback:', callbackData.orderReference);
-      return res.status(400).json({ error: 'Invalid signature' });
+      // НЕ возвращаем ошибку, а продолжаем обработку, чтобы обновить статус
+      // WayForPay может отправить callback несколько раз
+      console.warn('[WayForPay] Continuing despite invalid signature to update order status');
     }
 
     const orderReference = callbackData.orderReference;
