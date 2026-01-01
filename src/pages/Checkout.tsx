@@ -211,9 +211,6 @@ const Checkout = () => {
     }
   };
 
-  const isLastNameValid = formData.lastName.trim() !== "" && validateCyrillic(formData.lastName);
-  const isFirstNameValid = formData.firstName.trim() !== "" && validateCyrillic(formData.firstName);
-
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
     const cursorPosition = input.selectionStart || 0;
@@ -332,6 +329,10 @@ const Checkout = () => {
   };
 
   const isPhoneValid = (formData.phone === "" || formData.phone === "+380 (" ? "" : formData.phone).replace(/\D/g, '').length === 12 && (formData.phone === "" || formData.phone === "+380 (" ? "" : formData.phone).replace(/\D/g, '').startsWith('380');
+  
+  const isLastNameValid = formData.lastName.trim() !== "" && validateCyrillic(formData.lastName);
+  const isFirstNameValid = formData.firstName.trim() !== "" && validateCyrillic(formData.firstName);
+  const isContactInfoValid = isPhoneValid && isLastNameValid && isFirstNameValid;
 
   // Save to localStorage whenever formData changes
   useEffect(() => {
@@ -725,20 +726,22 @@ const Checkout = () => {
                   <h2 
                     className="text-lg font-bold flex items-center gap-2 cursor-pointer"
                     onClick={() => {
-                      if (formData.contactInfoCompleted) {
+                      if (isContactInfoValid) {
                         setFormData(prev => ({ ...prev, contactInfoExpanded: !prev.contactInfoExpanded }));
                       }
                     }}
                   >
-                    {formData.contactInfoCompleted ? (
+                    {isContactInfoValid ? (
                       <CheckCircle className="w-6 h-6 text-green-500" />
+                    ) : (formData.phone || formData.firstName || formData.lastName ? (
+                      <span className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-medium">1</span>
                     ) : (
                       <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">1</span>
-                    )}
+                    ))}
                     Контактні дані *
                   </h2>
                   
-                  {formData.contactInfoCompleted && !formData.contactInfoExpanded ? (
+                  {isContactInfoValid && formData.contactInfoCompleted && !formData.contactInfoExpanded ? (
                     // Свернутый вид с информацией
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -852,7 +855,9 @@ const Checkout = () => {
                         disabled={!isPhoneValid || !isFirstNameValid || !isLastNameValid}
                         className="w-full rounded-full border-2"
                         onClick={() => {
-                          setFormData(prev => ({ ...prev, contactInfoCompleted: true, contactInfoExpanded: false }));
+                          if (isContactInfoValid) {
+                            setFormData(prev => ({ ...prev, contactInfoCompleted: true, contactInfoExpanded: false }));
+                          }
                         }}
                       >
                         Продовжити
@@ -1107,7 +1112,14 @@ const Checkout = () => {
                           <div className="font-medium">Самовивіз</div>
                           <div className="text-sm text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
                         </div>
-                        <div className="text-sm font-medium text-green-600">Безкоштовно</div>
+                        <div className="text-sm font-medium">
+                          {(() => {
+                            const novaPoshtaInfo = orderTotal >= FREE_DELIVERY_THRESHOLD 
+                              ? { text: "Безкоштовно", price: 0 }
+                              : { text: "від 60 грн", price: 60 };
+                            return <span className={novaPoshtaInfo.price === 0 ? "text-green-600" : ""}>{novaPoshtaInfo.text}</span>;
+                          })()}
+                        </div>
                       </label>
                       {formData.deliveryMethod === "pickup" && (
                         <div className="pl-4 pr-4 pb-4">
@@ -1314,7 +1326,7 @@ const Checkout = () => {
                       pickupCompleted: false
                     }));
                   }}
-                  className="w-full rounded-xl border text-muted-foreground hover:text-foreground hover:bg-accent hover:border-primary/50"
+                  className="w-full rounded-xl border border-muted-foreground/30 text-muted-foreground hover:text-foreground hover:border-primary bg-transparent hover:bg-transparent active:bg-transparent"
                 >
                   Скинути вибрані способи
                 </Button>
