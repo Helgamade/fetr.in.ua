@@ -339,7 +339,7 @@ export const NovaPoshtaDelivery = ({
                       placeholder="Виберіть відділення"
                       value={warehouseSearchQuery}
                       onChange={(e) => setWarehouseSearchQuery(e.target.value)}
-                      className="pl-10 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
+                      className="pl-10 rounded-xl border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
                       autoFocus
                       onClick={(e) => e.stopPropagation()}
                     />
@@ -391,7 +391,7 @@ export const NovaPoshtaDelivery = ({
             onClick={onContinue}
             disabled={!selectedCity || !selectedWarehouse}
             variant="outline"
-            className="w-full rounded-full border-2"
+            className="w-full rounded-xl border h-10"
           >
             Продовжити
           </Button>

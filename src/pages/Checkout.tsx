@@ -113,6 +113,11 @@ const Checkout = () => {
   const [lastNameError, setLastNameError] = useState("");
   const [firstNameTouched, setFirstNameTouched] = useState(false);
   const [firstNameError, setFirstNameError] = useState("");
+  
+  // Refs для скролла к блокам
+  const contactInfoRef = useRef<HTMLDivElement>(null);
+  const deliveryRef = useRef<HTMLDivElement>(null);
+  const paymentRef = useRef<HTMLDivElement>(null);
 
   const validatePhone = (phone: string): boolean => {
     // Убираем все символы кроме цифр
@@ -698,7 +703,7 @@ const Checkout = () => {
             <div className="lg:col-span-2 space-y-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Contact Info */}
-                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4 border">
+                <div ref={contactInfoRef} className="bg-card rounded-2xl p-6 shadow-soft space-y-4 border">
                   <h2 
                     className="text-lg font-bold flex items-center gap-2 cursor-pointer"
                     onClick={() => {
@@ -724,7 +729,12 @@ const Checkout = () => {
                         <div className="text-sm">{formData.lastName} {formData.firstName}</div>
                         <button
                           type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, contactInfoExpanded: true }))}
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, contactInfoExpanded: true }));
+                            setTimeout(() => {
+                              contactInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }, 100);
+                          }}
                           className="text-muted-foreground hover:text-primary"
                         >
                           <Pencil className="w-4 h-4" />
@@ -1146,6 +1156,9 @@ const Checkout = () => {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setFormData(prev => ({ ...prev, deliveryExpanded: true }));
+                                    setTimeout(() => {
+                                      deliveryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }, 100);
                                   }}
                                   className="text-muted-foreground hover:text-primary"
                                 >
@@ -1166,6 +1179,9 @@ const Checkout = () => {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setFormData(prev => ({ ...prev, deliveryExpanded: true }));
+                                    setTimeout(() => {
+                                      deliveryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }, 100);
                                   }}
                                   className="text-muted-foreground hover:text-primary"
                                 >
@@ -1188,6 +1204,9 @@ const Checkout = () => {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setFormData(prev => ({ ...prev, deliveryExpanded: true }));
+                                    setTimeout(() => {
+                                      deliveryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }, 100);
                                   }}
                                   className="text-muted-foreground hover:text-primary"
                                 >
@@ -1224,23 +1243,44 @@ const Checkout = () => {
                   
                   {formData.paymentCompleted && !formData.paymentExpanded ? (
                     // Свернутый вид блока оплаты
-                    <div className="space-y-2 relative">
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, paymentExpanded: true }))}
-                        className="absolute top-0 right-0 text-muted-foreground hover:text-primary"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
+                    <div className="space-y-2">
                       {formData.paymentMethod === "online" && (
                         <>
-                          <div className="text-sm font-medium">Онлайн оплата</div>
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm font-medium">Онлайн оплата</div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, paymentExpanded: true }));
+                                setTimeout(() => {
+                                  paymentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }, 100);
+                              }}
+                              className="text-muted-foreground hover:text-primary"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          </div>
                           <div className="text-sm text-muted-foreground">Безпечна оплата карткою через WayForPay</div>
                         </>
                       )}
                       {formData.paymentMethod === "cod" && (
                         <>
-                          <div className="text-sm font-medium">Накладений платіж</div>
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm font-medium">Накладений платіж</div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, paymentExpanded: true }));
+                                setTimeout(() => {
+                                  paymentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }, 100);
+                              }}
+                              className="text-muted-foreground hover:text-primary"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          </div>
                           <div className="text-sm text-muted-foreground">Оплата при отриманні (+20 грн комісія)</div>
                         </>
                       )}
