@@ -26,10 +26,32 @@
 </IfModule>
 
 # MIME types for JavaScript modules (КРИТИЧНО для module scripts!)
+# ВАЖНО: Без правильных MIME типов браузер не загрузит module scripts!
 <IfModule mod_mime.c>
+  # Основной MIME тип для JavaScript модулей
   AddType application/javascript .js
   AddType application/javascript .mjs
+  
+  # Альтернативный MIME тип (для совместимости)
   AddType text/javascript .js
+  
+  # Явно указываем MIME тип для всех JS файлов в assets/
+  <FilesMatch "\.js$">
+    ForceType application/javascript
+  </FilesMatch>
+  
+  # Для .mjs файлов
+  <FilesMatch "\.mjs$">
+    ForceType application/javascript
+  </FilesMatch>
+</IfModule>
+
+# Дополнительная настройка для правильной обработки module scripts
+<IfModule mod_headers.c>
+  # Устанавливаем правильный Content-Type для JS файлов
+  <FilesMatch "\.(js|mjs)$">
+    Header set Content-Type "application/javascript; charset=utf-8"
+  </FilesMatch>
 </IfModule>
 
 # Cache static assets
