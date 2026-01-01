@@ -12,7 +12,8 @@ router.get('/public', async (req, res, next) => {
       'store_phone',
       'store_address',
       'store_working_hours_weekdays',
-      'store_working_hours_weekend'
+      'store_working_hours_weekend',
+      'free_delivery_threshold'
     ];
     
     const placeholders = publicKeys.map(() => '?').join(',');
