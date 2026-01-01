@@ -343,45 +343,14 @@ router.get('/branches', async (req, res, next) => {
 });
 
 // Получить информацию об отделении по ID (POSTOFFICE_ID)
-// Согласно документации "Рекомендації з пошуку індексів та відділень"
-// ПРИМЕЧАНИЕ: Точный endpoint для получения отделения по ID нужно проверить в документации адресного классификатора
+// ПРИМЕЧАНИЕ: Endpoints /get_postoffice_by_id и /get_postoffice_by_postoffice_id не существуют в API
+// Для получения отделения нужно использовать /branches?cityId={CITY_ID} и найти нужное отделение
 router.get('/branches/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-
-    try {
-      // Пробуем получить отделение по POSTOFFICE_ID
-      // Возможные варианты: /get_postoffice_by_id?postoffice_id=... или /get_postoffice_by_postoffice_id?postoffice_id=...
-      let data;
-      try {
-        data = await callAddressClassifierAPI(`/get_postoffice_by_id?postoffice_id=${encodeURIComponent(id)}`);
-      } catch (error1) {
-        try {
-          data = await callAddressClassifierAPI(`/get_postoffice_by_postoffice_id?postoffice_id=${encodeURIComponent(id)}`);
-        } catch (error2) {
-          throw error2;
-        }
-      }
-
-      const entries = data?.Entries?.Entry || [];
-      const branchData = Array.isArray(entries) ? entries[0] : entries;
-      
-      if (!branchData) {
-        throw new Error('Branch not found');
-      }
-
-      const branch = {
-        id: branchData.POSTOFFICE_ID?.toString() || id,
-        name: branchData.POSTOFFICE_UA || branchData.POSTOFFICE_EN || branchData.POSTOFFICE_NAME || '',
-        address: branchData.STREET_UA_VPZ || branchData.ADDRESS_UA || branchData.ADDRESS_EN || branchData.ADDRESS || '',
-        postalCode: branchData.POSTCODE || '',
-        cityId: branchData.CITY_ID?.toString() || null,
-      };
-      res.json(branch);
-    } catch (apiError) {
-      console.error('❌ [Address Classifier API] Get branch error:', apiError.message);
-      res.status(404).json({ error: 'Branch not found' });
-    }
+    
+    console.log(`⚠️ [GET /branches/:id] Endpoints /get_postoffice_by_id and /get_postoffice_by_postoffice_id do not exist. Branch ID: ${id}`);
+    res.status(404).json({ error: 'Branch not found. Use /branches?cityId={CITY_ID} to get all branches for a city.' });
   } catch (error) {
     next(error);
   }
