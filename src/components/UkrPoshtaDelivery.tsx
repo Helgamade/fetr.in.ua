@@ -382,78 +382,30 @@ export const UkrPoshtaDelivery = ({
   }, [branchSearchQuery, isBranchSearchOpen]);
 
   const handleCitySelect = async (city: UkrposhtaCity) => {
-    // ВАЖНО: Если у города нет числового cityId (популярный город со строковым id),
-    // нужно найти его через API, чтобы получить числовой CITY_ID
+    // ВАЖНО: Популярные города теперь загружаются из БД с числовым CITY_ID
+    // Если у города нет числового cityId, это может быть только результат поиска
+    // В таком случае используем cityId из результата поиска (он уже числовой)
     let cityToSave = city;
     
+    // Проверяем, что у города есть числовой CITY_ID
     const cityIdNum = city.cityId ? parseInt(city.cityId.toString(), 10) : null;
+    
     if (!cityIdNum || isNaN(cityIdNum)) {
-      // Популярный город без числового CITY_ID - ищем через API
-      console.log(`🔍 [UkrPoshtaDelivery] Popular city "${city.name}" has no numeric CITY_ID, searching via API...`);
-      try {
-        const foundCities = await ukrposhtaAPI.searchCities(city.name);
-        
-        // Нормализуем область для сравнения (убираем "обл." и лишние пробелы)
-        // ВАЖНО: Популярные города теперь уже без "обл.", но на всякий случай нормализуем
-        const normalizeRegion = (region: string) => {
-          if (!region) return '';
-          return region.replace(/\s*обл\.?\s*$/i, '').trim();
-        };
-        
-        const cityRegionNormalized = normalizeRegion(city.region || '');
-        
-        // Ищем город по названию и области (с нормализацией)
-        // ВАЖНО: Сначала ищем точное совпадение по названию и области
-        // Если не находим, пробуем только по названию (на случай, если область отличается)
-        let foundCity = foundCities.find(c => {
-          const nameMatch = c.name.toLowerCase() === city.name.toLowerCase();
-          const regionMatch = cityRegionNormalized 
-            ? normalizeRegion(c.region || '') === cityRegionNormalized
-            : true; // Если области нет, не проверяем
-          const hasNumericCityId = c.cityId && !isNaN(parseInt(c.cityId.toString(), 10));
-          
-          return nameMatch && regionMatch && hasNumericCityId;
-        });
-        
-        // Если не нашли с учетом области, пробуем только по названию (берем первый с числовым CITY_ID)
-        if (!foundCity && cityRegionNormalized) {
-          foundCity = foundCities.find(c => {
-            const nameMatch = c.name.toLowerCase() === city.name.toLowerCase();
-            const hasNumericCityId = c.cityId && !isNaN(parseInt(c.cityId.toString(), 10));
-            return nameMatch && hasNumericCityId;
-          });
-        }
-        
-        if (foundCity && foundCity.cityId) {
-          console.log(`✅ [UkrPoshtaDelivery] Found CITY_ID ${foundCity.cityId} for popular city "${city.name}"`);
-          // ВАЖНО: Сохраняем город с числовым CITY_ID для надежного сохранения
-          cityToSave = {
-            ...foundCity,
-            id: foundCity.cityId.toString(), // Используем числовой CITY_ID как id
-            cityId: foundCity.cityId.toString(), // Сохраняем числовой CITY_ID
-            // Сохраняем полное название для отображения везде одинаково
-            displayName: getCityFullName(foundCity),
-          };
-        } else {
-          console.warn(`⚠️ [UkrPoshtaDelivery] Could not find numeric CITY_ID for popular city "${city.name}"`);
-          // Используем город как есть, но с предупреждением
-          cityToSave = {
-            ...city,
-            displayName: getCityFullName(city),
-          };
-        }
-      } catch (error) {
-        console.error(`❌ [UkrPoshtaDelivery] Error searching for popular city "${city.name}":`, error);
-        // Используем город как есть при ошибке
-        cityToSave = {
-          ...city,
-          displayName: getCityFullName(city),
-        };
-      }
-    } else {
-      // У города уже есть числовой CITY_ID
+      // Если CITY_ID отсутствует, это ошибка - популярные города должны иметь CITY_ID из БД
+      // Для результатов поиска CITY_ID должен быть всегда
+      console.warn(`⚠️ [UkrPoshtaDelivery] City "${city.name}" has no numeric CITY_ID. This should not happen for popular cities from DB.`);
+      // Используем город как есть, но с предупреждением
       cityToSave = {
         ...city,
+        displayName: getCityFullName(city),
+      };
+    } else {
+      // У города есть числовой CITY_ID - используем его
+      // ВАЖНО: Используем числовой CITY_ID как основной id
+      cityToSave = {
+        ...city,
+        id: city.cityId.toString(), // Используем числовой CITY_ID как id
+        cityId: city.cityId.toString(), // Сохраняем числовой CITY_ID
         displayName: getCityFullName(city),
       };
     }

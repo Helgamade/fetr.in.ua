@@ -1,5 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import pool from '../db.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -75,13 +76,11 @@ async function callAddressClassifierAPI(endpoint) {
   }
 }
 
-// Популярные города Украины (хардкод для быстрого доступа)
-// ВАЖНО: Эти города используются только для отображения в UI
-// Для получения отделений нужно использовать CITY_ID из API через cities/search
-// Популярные города НЕ должны использоваться для получения отделений напрямую
-// ВАЖНО: Область указывается БЕЗ "обл." для единообразия с API
-const POPULAR_CITIES = [
-  { id: 'kyiv', name: 'Київ', postalCode: '01001', region: 'Київська', cityId: null }, // cityId должен быть получен через API
+// Популярные города загружаются из БД (таблица ukrposhta_popular_cities)
+// CITY_ID обновляется по крону ежедневно через скрипт update-ukrposhta-popular-cities.js
+// Fallback на хардкод, если БД недоступна
+const POPULAR_CITIES_FALLBACK = [
+  { id: 'kyiv', name: 'Київ', postalCode: '01001', region: 'Київська', cityId: null },
   { id: 'odesa', name: 'Одеса', postalCode: '65001', region: 'Одеська', cityId: null },
   { id: 'dnipro', name: 'Дніпро', postalCode: '49001', region: 'Дніпропетровська', cityId: null },
   { id: 'kharkiv', name: 'Харків', postalCode: '61001', region: 'Харківська', cityId: null },
@@ -89,12 +88,38 @@ const POPULAR_CITIES = [
   { id: 'zaporizhzhia', name: 'Запоріжжя', postalCode: '69001', region: 'Запорізька', cityId: null },
 ];
 
-// Получить популярные города
+// Получить популярные города из БД
 router.get('/cities/popular', async (req, res, next) => {
   try {
-    res.json(POPULAR_CITIES);
+    // Загружаем популярные города из БД
+    const [cities] = await pool.execute(`
+      SELECT 
+        COALESCE(city_id, id) as id,
+        name,
+        region,
+        postal_code as postalCode,
+        city_id as cityId,
+        sort_order as sortOrder
+      FROM ukrposhta_popular_cities 
+      ORDER BY sort_order ASC, name ASC
+    `);
+    
+    // Форматируем для фронтенда
+    // ВАЖНО: Используем cityId (числовой CITY_ID) как основной id
+    const formattedCities = cities.map(city => ({
+      id: city.cityId || city.id.toString(), // Используем cityId если есть, иначе id из БД
+      name: city.name,
+      postalCode: city.postalCode || '',
+      region: city.region,
+      cityId: city.cityId || null, // Числовой CITY_ID из API
+    }));
+    
+    console.log(`✅ [GET /cities/popular] Loaded ${formattedCities.length} cities from DB`);
+    res.json(formattedCities);
   } catch (error) {
-    next(error);
+    console.error('❌ [GET /cities/popular] DB error, using fallback:', error.message);
+    // Fallback на хардкод, если БД недоступна
+    res.json(POPULAR_CITIES_FALLBACK);
   }
 });
 
@@ -122,11 +147,31 @@ router.get('/cities/search', async (req, res, next) => {
       return res.json([]);
     }
 
-    // Проверяем популярные города для быстрого ответа
-    const popularMatches = POPULAR_CITIES.filter(city => 
-      city.name.toLowerCase().includes(q.toLowerCase()) ||
-      city.region.toLowerCase().includes(q.toLowerCase())
-    );
+    // Загружаем популярные города из БД для быстрого ответа
+    let popularMatches = [];
+    try {
+      const [popularCities] = await pool.execute(`
+        SELECT name, region, city_id 
+        FROM ukrposhta_popular_cities 
+        WHERE name LIKE ? OR region LIKE ?
+        ORDER BY sort_order ASC
+      `, [`%${q}%`, `%${q}%`]);
+      
+      popularMatches = popularCities.map(city => ({
+        id: city.city_id || city.id?.toString() || '',
+        name: city.name,
+        postalCode: '',
+        region: city.region,
+        cityId: city.city_id || null,
+      }));
+    } catch (dbError) {
+      console.warn('⚠️ [Ukrposhta API] Error loading popular cities from DB:', dbError.message);
+      // Fallback на хардкод
+      popularMatches = POPULAR_CITIES_FALLBACK.filter(city => 
+        city.name.toLowerCase().includes(q.toLowerCase()) ||
+        city.region.toLowerCase().includes(q.toLowerCase())
+      );
+    }
     
     console.log(`📋 [Ukrposhta API] Found ${popularMatches.length} popular matches`);
 
@@ -272,34 +317,34 @@ router.get('/cities/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // Проверяем популярные города
-    const popularCity = POPULAR_CITIES.find(c => c.id === id || c.cityId === id || c.postalCode === id);
-    if (popularCity) {
-      // Если у популярного города нет cityId, пытаемся найти его через API
-      if (!popularCity.cityId && popularCity.name) {
-        try {
-          const params = new URLSearchParams({ city_ua: popularCity.name });
-          const data = await callAddressClassifierAPI(
-            `/get_city_by_region_id_and_district_id_and_city_ua?${params.toString()}`
-          );
-          const entries = data?.Entries?.Entry || [];
-          const cities = Array.isArray(entries) ? entries : [entries];
-          const foundCity = cities.find(c => c.CITY_ID?.toString() === id || c.CITY_UA === popularCity.name);
-          if (foundCity) {
-            return res.json({
-              id: foundCity.CITY_ID?.toString() || id,
-              name: foundCity.CITY_UA || popularCity.name,
-              postalCode: popularCity.postalCode || '',
-              region: foundCity.REGION_UA || popularCity.region || '',
-              district: foundCity.DISTRICT_UA || '',
-              cityId: foundCity.CITY_ID?.toString() || id,
-            });
-          }
-        } catch (apiError) {
-          console.error('❌ [GET /cities/:id] Error searching city:', apiError.message);
-        }
+    // Проверяем популярные города в БД
+    try {
+      const [popularCities] = await pool.execute(`
+        SELECT id, name, region, city_id, postal_code 
+        FROM ukrposhta_popular_cities 
+        WHERE city_id = ? OR id = ?
+        LIMIT 1
+      `, [id, id]);
+      
+      if (popularCities.length > 0) {
+        const popularCity = popularCities[0];
+        // ВАЖНО: Используем cityId (числовой CITY_ID) как основной id
+        return res.json({
+          id: popularCity.city_id || popularCity.id.toString(),
+          name: popularCity.name,
+          postalCode: popularCity.postal_code || '',
+          region: popularCity.region,
+          district: '',
+          cityId: popularCity.city_id || null, // Числовой CITY_ID из БД
+        });
       }
-      return res.json(popularCity);
+    } catch (dbError) {
+      console.warn('⚠️ [GET /cities/:id] Error loading popular city from DB:', dbError.message);
+      // Fallback на хардкод
+      const popularCity = POPULAR_CITIES_FALLBACK.find(c => c.id === id || c.cityId === id);
+      if (popularCity) {
+        return res.json(popularCity);
+      }
     }
 
     // Если id - это CITY_ID (число), пытаемся найти город через API
