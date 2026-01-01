@@ -19,13 +19,24 @@ interface TimelineStep {
 
 const ThankYou = () => {
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get("order") || "";
+  const orderId = searchParams.get("order"); // Старый способ (для обратной совместимости)
+  const trackingToken = searchParams.get("track"); // Новый способ (только цифры)
   const { data: storeSettings } = usePublicSettings();
   
+  // Используем trackingToken если есть, иначе orderId
+  const identifier = trackingToken || orderId || "";
+  
   const { data: order, isLoading: orderLoading } = useQuery({
-    queryKey: ['order', orderId],
-    queryFn: () => orderId ? ordersAPI.getOrder(orderId) : null,
-    enabled: !!orderId,
+    queryKey: ['order', identifier, trackingToken ? 'track' : 'id'],
+    queryFn: () => {
+      if (trackingToken) {
+        return ordersAPI.getByTrackingToken(trackingToken);
+      } else if (orderId) {
+        return ordersAPI.getOrder(orderId);
+      }
+      return null;
+    },
+    enabled: !!identifier,
   });
 
   // Debug: log order data
@@ -149,7 +160,7 @@ const ThankYou = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <div className="text-sm text-muted-foreground">Номер замовлення</div>
-                <div className="text-xl font-bold font-mono">{orderId}</div>
+                <div className="text-xl font-bold font-mono">{order?.id || orderId || ''}</div>
               </div>
               <div className="text-right">
                 <div className="text-sm text-muted-foreground">Статус</div>

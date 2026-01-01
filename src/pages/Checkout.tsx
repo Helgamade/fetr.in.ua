@@ -680,12 +680,10 @@ const Checkout = () => {
       // Add COD commission if needed
       const finalTotal = orderTotal + (formData.paymentMethod === "nalojka" ? 20 : 0);
       
-      // Generate order ID
-      const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
+      // Номер заказа генерируется на сервере (начиная с 305317)
       // Prepare order data - convert undefined/empty strings to null for SQL
       const orderData = {
-        id: orderId,
+        // id убран - генерируется на сервере
         customer: {
           name: fullName,
           phone: formData.phone,
@@ -758,9 +756,9 @@ const Checkout = () => {
       if (formData.paymentMethod === "wayforpay") {
         try {
           const { wayforpayAPI } = await import("@/lib/api");
-          console.log('[Checkout] Creating WayForPay payment for order:', order.id);
+          console.log('[Checkout] Creating WayForPay payment for order:', order.orderId);
           
-          const paymentResponse = await wayforpayAPI.createPayment(order.id);
+          const paymentResponse = await wayforpayAPI.createPayment(order.orderId);
           
           console.log('[Checkout] Payment response received:', paymentResponse);
           
@@ -810,7 +808,8 @@ const Checkout = () => {
       
       // Для наложенного платежа - обычный флоу
       clearCart();
-      navigate(`/thank-you?order=${order.id}`);
+      // Используем trackingToken для безопасной ссылки отслеживания
+      navigate(`/thank-you?track=${order.trackingToken}`);
     } catch (error) {
       console.error('Order submission error:', error);
       toast({

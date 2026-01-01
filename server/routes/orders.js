@@ -1,5 +1,6 @@
 import express from 'express';
 import pool from '../db.js';
+import { generateTrackingToken, getOrderNumber } from '../utils/orderUtils.js';
 
 const router = express.Router();
 
@@ -100,8 +101,8 @@ router.get('/', async (req, res, next) => {
       delete order.created_at;
       delete order.updated_at;
       
-      // Use order_number as id for frontend compatibility
-      order.id = order.order_number;
+      // Use order_number as id for frontend compatibility (или просто id если order_number NULL)
+      order.id = order.order_number || String(order.id);
       delete order.order_number;
     }
 
@@ -111,14 +112,124 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// Get order by ID
+// Get order by tracking token (публичный доступ для страницы thank-you)
+router.get('/track/:token', async (req, res, next) => {
+  try {
+    const { token } = req.params;
+    
+    const [orders] = await pool.execute(`
+      SELECT * FROM orders WHERE tracking_token = ?
+    `, [token]);
+
+    if (orders.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const order = orders[0];
+    const orderIdInt = order.id; // INT id
+
+    // Get items using INT id
+    const [items] = await pool.execute(`
+      SELECT oi.*, oio.option_id, p.code as product_code, po.code as option_code
+      FROM order_items oi
+      LEFT JOIN order_item_options oio ON oi.id = oio.order_item_id
+      LEFT JOIN products p ON oi.product_id = p.id
+      LEFT JOIN product_options po ON oio.option_id = po.id
+      WHERE oi.order_id = ?
+      ORDER BY oi.id
+    `, [orderIdInt]);
+
+    const itemsMap = new Map();
+    items.forEach(item => {
+      if (!itemsMap.has(item.id)) {
+        itemsMap.set(item.id, {
+          productId: item.product_code || item.product_id,
+          quantity: item.quantity,
+          selectedOptions: []
+        });
+      }
+      if (item.option_code) {
+        itemsMap.get(item.id).selectedOptions.push(item.option_code);
+      }
+    });
+
+    order.items = Array.from(itemsMap.values());
+    order.customer = {
+      name: order.customer_name,
+      phone: order.customer_phone
+    };
+
+    if (order.recipient_name || order.recipient_phone) {
+      order.recipient = {
+        name: order.recipient_name || undefined,
+        phone: order.recipient_phone || undefined,
+        firstName: order.recipient_first_name || undefined,
+        lastName: order.recipient_last_name || undefined,
+      };
+    }
+
+    order.delivery = {
+      method: order.delivery_method,
+      city: order.delivery_city || undefined,
+      warehouse: order.delivery_warehouse || undefined,
+      postIndex: order.delivery_post_index || undefined,
+      address: order.delivery_address || undefined
+    };
+    
+    order.payment = {
+      method: order.payment_method
+    };
+
+    if (order.promo_code) {
+      order.promoCode = order.promo_code;
+    }
+
+    delete order.customer_name;
+    delete order.customer_phone;
+    delete order.customer_email;
+    delete order.recipient_name;
+    delete order.recipient_phone;
+    delete order.recipient_first_name;
+    delete order.recipient_last_name;
+    delete order.promo_code;
+    delete order.delivery_method;
+    delete order.delivery_city;
+    delete order.delivery_warehouse;
+    delete order.delivery_post_index;
+    delete order.delivery_address;
+    delete order.payment_method;
+    delete order.tracking_token; // Не возвращаем токен в ответе
+
+    order.createdAt = new Date(order.created_at);
+    order.updatedAt = new Date(order.updated_at);
+    delete order.created_at;
+    delete order.updated_at;
+    
+    // Используем order_number как id для фронтенда (или просто id если order_number NULL)
+    order.id = order.order_number || String(order.id);
+    delete order.order_number;
+
+    res.json(order);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get order by ID (может быть order_number или числовой id)
 router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    // id is order_number (VARCHAR), not INT id
-    const [orders] = await pool.execute(`
+    // Пробуем найти по order_number, если не найдено - по числовому id
+    let [orders] = await pool.execute(`
       SELECT * FROM orders WHERE order_number = ?
     `, [id]);
+    
+    // Если не найдено по order_number, пробуем по числовому id
+    if (orders.length === 0 && /^\d+$/.test(id)) {
+      [orders] = await pool.execute(`
+        SELECT * FROM orders WHERE id = ?
+      `, [parseInt(id)]);
+    }
 
     if (orders.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
@@ -221,11 +332,11 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const {
-      id, customer, delivery, payment, items, subtotal, discount, deliveryCost, total, promoCode
+      customer, delivery, payment, items, subtotal, discount, deliveryCost, total, promoCode
     } = req.body;
 
-    // Validate required fields
-    if (!id || !customer?.name || !customer?.phone || !delivery?.method || !payment?.method || !items || items.length === 0) {
+    // Validate required fields (убрали проверку id - генерируется на сервере)
+    if (!customer?.name || !customer?.phone || !delivery?.method || !payment?.method || !items || items.length === 0) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -246,16 +357,15 @@ router.post('/', async (req, res, next) => {
       const dbPaymentMethod = payment.method;
       console.log('[Create Order] Payment method:', payment.method, '-> DB:', dbPaymentMethod);
       
-      // Insert order - id is AUTO_INCREMENT, use order_number for string identifier
+      // Insert order БЕЗ order_number (используем AUTO_INCREMENT id)
       const recipient = req.body.recipient || null;
       const [orderResult] = await connection.execute(`
-        INSERT INTO orders (order_number, customer_name, customer_phone,
+        INSERT INTO orders (customer_name, customer_phone,
           recipient_name, recipient_phone, recipient_first_name, recipient_last_name,
           delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
           payment_method, subtotal, discount, delivery_cost, total, status, comment, promo_code)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-        id, // order_number (VARCHAR)
         customer.name || null, 
         customer.phone || null,
         recipient ? (recipient.name || null) : null,
@@ -279,7 +389,22 @@ router.post('/', async (req, res, next) => {
         toNull(promoCode)
       ]);
 
-      const orderId = orderResult.insertId; // Get the AUTO_INCREMENT id (INT)
+      const orderIdInt = orderResult.insertId; // Get the AUTO_INCREMENT id (INT) - начинается с 305317
+      
+      // Генерируем номер заказа (просто число: 305317, 305318, ...)
+      const orderNumber = getOrderNumber(orderIdInt);
+      
+      // Генерируем цифровой токен отслеживания
+      const trackingToken = generateTrackingToken(orderNumber);
+      
+      console.log('[Create Order] Generated order number:', orderNumber, 'tracking token:', trackingToken);
+      
+      // Обновляем заказ с order_number и tracking_token
+      await connection.execute(`
+        UPDATE orders 
+        SET order_number = ?, tracking_token = ?
+        WHERE id = ?
+      `, [String(orderNumber), trackingToken, orderIdInt]);
 
       // Insert items
       for (const item of items) {
@@ -299,7 +424,7 @@ router.post('/', async (req, res, next) => {
         const [itemResult] = await connection.execute(`
           INSERT INTO order_items (order_id, product_id, quantity, price)
           VALUES (?, ?, ?, ?)
-        `, [orderId, productIdInt, item.quantity, itemPrice]);
+        `, [orderIdInt, productIdInt, item.quantity, itemPrice]);
 
         const orderItemId = itemResult.insertId;
 
@@ -323,7 +448,11 @@ router.post('/', async (req, res, next) => {
       }
 
       await connection.commit();
-      res.status(201).json({ id: id, message: 'Order created' });
+      res.status(201).json({ 
+        message: 'Order created successfully', 
+        orderId: orderNumber, // Просто число: 305317
+        trackingToken: trackingToken // Цифровой токен: 1234567890
+      });
     } catch (error) {
       await connection.rollback();
       throw error;
