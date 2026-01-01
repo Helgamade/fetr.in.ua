@@ -11,12 +11,13 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 const router = express.Router();
 
 // Адресный классификатор API Укрпошты
-// ✅ Согласно официальной информации от Укрпошты:
-// Для Address Classifier API нужно использовать PROD_COUNTERPARTY TOKEN
+// ✅ Тестирование показало, что оба токена работают
+// Попробуем PRODUCTION BEARER eCom (как предложено для решения проблемы с заголовками)
 // URL: https://www.ukrposhta.ua/address-classifier-ws (с www)
-// PROD_COUNTERPARTY TOKEN (из АРІ_ключі.pdf): ab714b81-60a5-4dc5-a106-1a382f8d84bf
+// PRODUCTION BEARER eCom (из АРІ_ключі.pdf): 67f02a7c-3af7-34d1-aa18-7eb4d96f3be4
+// PROD_COUNTERPARTY TOKEN (альтернатива): ab714b81-60a5-4dc5-a106-1a382f8d84bf
 const ADDRESS_CLASSIFIER_BASE = 'https://www.ukrposhta.ua/address-classifier-ws';
-const UKRPOSHTA_BEARER_TOKEN = process.env.UKRPOSHTA_BEARER_TOKEN || 'ab714b81-60a5-4dc5-a106-1a382f8d84bf';
+const UKRPOSHTA_BEARER_TOKEN = process.env.UKRPOSHTA_BEARER_TOKEN || '67f02a7c-3af7-34d1-aa18-7eb4d96f3be4';
 
 // Функция для вызова адресного классификатора API
 async function callAddressClassifierAPI(endpoint) {
@@ -49,10 +50,28 @@ async function callAddressClassifierAPI(endpoint) {
       'User-Agent': headers['User-Agent'].substring(0, 50) + '...',
     });
     
-    const response = await fetch(url, {
+    // ВАЖНО: Убеждаемся, что заголовки передаются правильно
+    // Node.js fetch может требовать явного указания всех заголовков
+    const fetchOptions = {
       method: 'GET',
-      headers: headers,
+      headers: {
+        'Authorization': `Bearer ${UKRPOSHTA_BEARER_TOKEN}`,
+        'Accept': 'application/json',
+        'Accept-Language': 'uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://www.ukrposhta.ua/',
+        'Origin': 'https://www.ukrposhta.ua',
+      },
+    };
+    
+    console.log(`🔍 [Address Classifier API] Fetch options:`, {
+      method: fetchOptions.method,
+      url: url,
+      hasAuth: !!fetchOptions.headers.Authorization,
+      authPrefix: fetchOptions.headers.Authorization?.substring(0, 20),
     });
+    
+    const response = await fetch(url, fetchOptions);
     
     const responseText = await response.text();
     
