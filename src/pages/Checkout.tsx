@@ -13,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { usePublicSettings } from "@/hooks/usePublicSettings";
 import { NovaPoshtaDelivery } from "@/components/NovaPoshtaDelivery";
 import { UkrPoshtaDelivery } from "@/components/UkrPoshtaDelivery";
+import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from "@/components/DeliveryLogos";
 import type { NovaPoshtaCity, NovaPoshtaWarehouse, UkrposhtaCity, UkrposhtaBranch } from "@/lib/api";
 
 const Checkout = () => {
@@ -989,9 +990,7 @@ const Checkout = () => {
                         <RadioGroupItem value="nova_poshta" id="nova_poshta" />
                         <div className="flex-1">
                           <div className="font-medium flex items-center gap-2">
-                            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="flex-shrink-0">
-                              <path fill="#DA292B" fillRule="evenodd" d="m21.506 10.808-3.277-3.276v8.929l3.277-3.27c.659-.658.659-1.724 0-2.383ZM10.238 5.772v4.15h3.529v-4.15h2.698l-3.277-3.278a1.685 1.685 0 0 0-2.385 0L7.528 5.772h2.71ZM5.772 16.46V7.532l-3.277 3.276c-.66.66-.66 1.725 0 2.384l3.277 3.269Zm7.995 1.767v-4.15h-3.529v4.15H7.54l3.277 3.278c.66.659 1.725.659 2.384 0l3.277-3.278h-2.711Z" clipRule="evenodd"></path>
-                            </svg>
+                            <NovaPoshtaLogo className="w-5 h-5" />
                             Нова Пошта
                           </div>
                           {(() => {
@@ -1105,9 +1104,7 @@ const Checkout = () => {
                         <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
                         <div className="flex-1">
                           <div className="font-medium flex items-center gap-2">
-                            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="flex-shrink-0">
-                              <path fill="#FABC26" fillRule="evenodd" d="M18.1 13.5 11.5 12c-2-.4-3.2-2.4-2.8-4.4.4-2 2.4-3.2 4.4-2.8 2 .4 3.2 2.4 2.8 4.4-.2 1-.8 1.8-1.6 2.3v.1s0 .1.1.1l2.9.7c.1 0 .1 0 .2-.1.8-1.1 1.3-2.4 1.3-3.9 0-3.4-2.7-6.2-6-6.4h-.3c-1.5 0-3 .4-4.3 1.3C4.8 5.6 4 10.2 6.3 13.5l5.9 8.4.1.1s.1 0 .1-.1l5.8-8.2v-.1s0-.1-.1-.1Z" clipRule="evenodd"></path>
-                            </svg>
+                            <UkrposhtaLogo className="w-5 h-5" />
                             Укрпошта
                           </div>
                           {(() => {
@@ -1207,7 +1204,10 @@ const Checkout = () => {
                       <label className="flex items-center gap-3 p-4 cursor-pointer hover:border-primary transition-colors">
                         <RadioGroupItem value="pickup" id="pickup" />
                         <div className="flex-1">
-                          <div className="font-medium">Самовивіз</div>
+                          <div className="font-medium flex items-center gap-2">
+                            <PickupLogo className="w-5 h-5" />
+                            Самовивіз
+                          </div>
                           <div className="text-sm text-muted-foreground">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
                         </div>
                         <div className="text-sm font-medium">
@@ -1260,12 +1260,7 @@ const Checkout = () => {
                           return (
                             <>
                               <div className="flex items-center justify-between">
-                                <div className="text-sm font-medium flex items-center gap-2">
-                                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="flex-shrink-0">
-                                    <path fill="#DA292B" fillRule="evenodd" d="m21.506 10.808-3.277-3.276v8.929l3.277-3.27c.659-.658.659-1.724 0-2.383ZM10.238 5.772v4.15h3.529v-4.15h2.698l-3.277-3.278a1.685 1.685 0 0 0-2.385 0L7.528 5.772h2.71ZM5.772 16.46V7.532l-3.277 3.276c-.66.66-.66 1.725 0 2.384l3.277 3.269Zm7.995 1.767v-4.15h-3.529v4.15H7.54l3.277 3.278c.66.659 1.725.659 2.384 0l3.277-3.278h-2.711Z" clipRule="evenodd"></path>
-                                  </svg>
-                                  Нова Пошта
-                                </div>
+                                <div className="text-sm font-medium">Нова Пошта</div>
                                 <button
                                   type="button"
                                   onClick={(e) => {
@@ -1303,9 +1298,7 @@ const Checkout = () => {
                             <>
                               <div className="flex items-center justify-between">
                                 <div className="text-sm font-medium flex items-center gap-2">
-                                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" className="flex-shrink-0">
-                                    <path fill="#FABC26" fillRule="evenodd" d="M18.1 13.5 11.5 12c-2-.4-3.2-2.4-2.8-4.4.4-2 2.4-3.2 4.4-2.8 2 .4 3.2 2.4 2.8 4.4-.2 1-.8 1.8-1.6 2.3v.1s0 .1.1.1l2.9.7c.1 0 .1 0 .2-.1.8-1.1 1.3-2.4 1.3-3.9 0-3.4-2.7-6.2-6-6.4h-.3c-1.5 0-3 .4-4.3 1.3C4.8 5.6 4 10.2 6.3 13.5l5.9 8.4.1.1s.1 0 .1-.1l5.8-8.2v-.1s0-.1-.1-.1Z" clipRule="evenodd"></path>
-                                  </svg>
+                                  <UkrposhtaLogo className="w-4 h-4" />
                                   Укрпошта
                                 </div>
                                 <button
@@ -1332,7 +1325,10 @@ const Checkout = () => {
                           return (
                             <>
                               <div className="flex items-center justify-between">
-                                <div className="text-sm font-medium">Самовивіз</div>
+                                <div className="text-sm font-medium flex items-center gap-2">
+                                  <PickupLogo className="w-4 h-4" />
+                                  Самовивіз
+                                </div>
                                 <button
                                   type="button"
                                   onClick={(e) => {
@@ -1603,7 +1599,12 @@ const Checkout = () => {
                     {formData.deliveryMethod && deliveryInfo && (
                       <>
                         <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{deliveryLabel}</span>
+                          <span className="text-muted-foreground flex items-center gap-2">
+                            {formData.deliveryMethod === "nova_poshta" && <NovaPoshtaLogo className="w-4 h-4" />}
+                            {formData.deliveryMethod === "ukr_poshta" && <UkrposhtaLogo className="w-4 h-4" />}
+                            {formData.deliveryMethod === "pickup" && <PickupLogo className="w-4 h-4" />}
+                            {deliveryLabel}
+                          </span>
                           <span className={deliveryInfo.price === 0 ? "text-green-600" : ""}>
                             {deliveryInfo.text}
                           </span>
