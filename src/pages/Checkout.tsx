@@ -1567,63 +1567,6 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Promo Code Section */}
-                <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4 border">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer"
-                    onClick={() => setPromoCodeExpanded(!promoCodeExpanded)}
-                  >
-                    <h3 className="font-medium">Ввести промокод</h3>
-                    {promoCodeExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </div>
-                  
-                  {promoCodeExpanded && (
-                    <div className="space-y-3">
-                      {promoCodeApplied ? (
-                        <div className="flex items-center gap-2 text-green-600 text-sm">
-                          <CheckCircle className="w-4 h-4" />
-                          <span>{promoCodeApplied.message}</span>
-                        </div>
-                      ) : (
-                        <>
-                          <Input
-                            type="text"
-                            placeholder="Промокод"
-                            value={promoCode}
-                            onChange={(e) => {
-                              setPromoCode(e.target.value);
-                              setPromoCodeError("");
-                            }}
-                            className={`rounded-xl ${promoCodeError ? 'border-red-500' : ''}`}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleApplyPromoCode();
-                              }
-                            }}
-                          />
-                          {promoCodeError && (
-                            <p className="text-sm text-red-500">{promoCodeError}</p>
-                          )}
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleApplyPromoCode}
-                            disabled={!promoCode.trim() || isApplyingPromo}
-                            className="w-full rounded-xl border h-10 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
-                          >
-                            {isApplyingPromo ? "Застосування..." : "Застосувати"}
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-
                 {/* Submit Button (Desktop) */}
                 <div className="hidden lg:block pt-4">
                   <Button 
@@ -1645,6 +1588,63 @@ const Checkout = () => {
                   <span>•</span>
                   <span>↩️ 14 днів повернення</span>
                 </div>
+              </div>
+
+              {/* Promo Code Section - отдельный блок */}
+              <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4 border mt-6">
+                <div 
+                  className="flex items-center justify-between cursor-pointer"
+                  onClick={() => setPromoCodeExpanded(!promoCodeExpanded)}
+                >
+                  <h3 className="font-medium">Ввести промокод</h3>
+                  {promoCodeExpanded ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </div>
+                
+                {promoCodeExpanded && (
+                  <div className="space-y-3">
+                    {promoCodeApplied ? (
+                      <div className="flex items-center gap-2 text-green-600 text-sm">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>{promoCodeApplied.message}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Input
+                          type="text"
+                          placeholder="Промокод"
+                          value={promoCode}
+                          onChange={(e) => {
+                            setPromoCode(e.target.value);
+                            setPromoCodeError("");
+                          }}
+                          className={`rounded-xl ${promoCodeError ? 'border-red-500' : ''}`}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleApplyPromoCode();
+                            }
+                          }}
+                        />
+                        {promoCodeError && (
+                          <p className="text-sm text-red-500">{promoCodeError}</p>
+                        )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleApplyPromoCode}
+                          disabled={!promoCode.trim() || isApplyingPromo}
+                          className="w-full rounded-xl border h-10 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
+                        >
+                          {isApplyingPromo ? "Застосування..." : "Застосувати"}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
