@@ -1385,7 +1385,7 @@ const Checkout = () => {
                         onChange={handleInputChange}
                         placeholder="Введіть коментар"
                         maxLength={254}
-                        className="w-full min-h-[100px] p-3 border rounded-xl resize-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-background"
+                        className="w-full min-h-[100px] p-3 border rounded-xl resize-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-background"
                       />
                       <div className="text-sm text-muted-foreground text-left">
                         Залишилось символів: {254 - formData.comment.length}
