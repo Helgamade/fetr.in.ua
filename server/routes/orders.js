@@ -180,6 +180,7 @@ router.get('/:id', async (req, res, next) => {
     order.payment = {
       method: order.payment_method
     };
+    console.log('[Get Order] Payment method from DB:', order.payment_method, '-> Response:', order.payment.method);
 
     // Include promo_code if it exists
     if (order.promo_code) {
@@ -243,6 +244,7 @@ router.post('/', async (req, res, next) => {
       // Convert payment method: 'online' -> 'card' for database compatibility
       // Маппинг способов оплаты: 'online' -> 'card' для обратной совместимости, 'fop' -> 'fop'
       const dbPaymentMethod = payment.method === 'online' ? 'card' : payment.method;
+      console.log('[Create Order] Payment method:', payment.method, '-> DB:', dbPaymentMethod);
       
       // Insert order - id is AUTO_INCREMENT, use order_number for string identifier
       const recipient = req.body.recipient || null;
