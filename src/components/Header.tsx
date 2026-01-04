@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ShoppingBag, Menu, X, Phone, Instagram } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
@@ -7,6 +8,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { usePublicSettings } from '@/hooks/usePublicSettings';
 
 export const Header: React.FC = () => {
+  const location = useLocation();
   const { t } = useTranslation('nav');
   const { t: tCommon } = useTranslation('common');
   const { data: settings = {} } = usePublicSettings();
@@ -16,6 +18,7 @@ export const Header: React.FC = () => {
   const itemCount = getItemCount();
   
   const storePhone = settings.store_phone || '+380501234567';
+  const isHomePage = location.pathname === '/';
 
   const navLinks = [
     { href: '#hero', label: t('home') },
@@ -38,9 +41,15 @@ export const Header: React.FC = () => {
 
   const handleNavClick = (href: string) => {
     setIsMobileMenuOpen(false);
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+    if (isHomePage) {
+      // На главной странице - скроллим к секции
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // На других страницах - переходим на главную с якорем
+      window.location.href = `/${href}`;
     }
   };
 
@@ -56,7 +65,7 @@ export const Header: React.FC = () => {
       >
         <div className="container-tight flex items-center justify-between">
           {/* Logo */}
-          <a href="#hero" className="flex items-center gap-2 z-50">
+          <a href="/" className="flex items-center gap-2 z-50">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
               <span className="text-primary-foreground font-heading font-bold text-lg">F</span>
             </div>

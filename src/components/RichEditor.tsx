@@ -43,7 +43,7 @@ export function RichEditor({ content, onChange, placeholder = 'Введіть т
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[300px] p-4',
+        class: 'prose prose-lg max-w-none focus:outline-none min-h-[300px] p-4 prose-headings:font-heading prose-headings:font-bold prose-headings:text-foreground prose-headings:tracking-tight prose-h1:text-4xl prose-h1:sm:text-5xl prose-h1:lg:text-6xl prose-h1:mb-6 prose-h1:mt-8 prose-h1:font-heading prose-h1:font-bold prose-h2:text-3xl prose-h2:sm:text-4xl prose-h2:mb-4 prose-h2:mt-8 prose-h2:font-heading prose-h2:font-bold prose-h3:text-2xl prose-h3:sm:text-3xl prose-h3:mb-3 prose-h3:mt-6 prose-h3:font-heading prose-h3:font-bold prose-h4:text-xl prose-h4:sm:text-2xl prose-h4:mb-2 prose-h4:mt-4 prose-h4:font-heading prose-h4:font-bold prose-p:text-lg prose-p:text-foreground prose-p:mb-4 prose-p:font-body prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-strong:font-bold prose-em:text-foreground prose-em:italic prose-ul:text-lg prose-ul:text-foreground prose-ul:mb-4 prose-ul:font-body prose-ol:text-lg prose-ol:text-foreground prose-ol:mb-4 prose-ol:font-body prose-li:text-foreground prose-li:mb-2 prose-li:font-body prose-img:rounded-lg prose-img:my-6 prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-blockquote:font-body dark:prose-invert',
       },
     },
   });
