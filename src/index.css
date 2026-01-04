@@ -393,8 +393,36 @@
 .prose blockquote {
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+  padding: 1rem;
+  padding-left: 1.5rem;
+  border-left: 4px solid hsl(var(--primary));
+  background: hsl(var(--muted) / 0.3);
+  font-style: italic;
+}
+
+.prose .indent-block {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+  padding-right: 1rem;
+  border-left: 2px solid hsl(var(--border));
+}
+
+.prose .highlight-block {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: hsl(var(--muted) / 0.5);
+  border-radius: 0.5rem;
+}
+
+.prose .bordered-block {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  background: hsl(var(--background));
 }
 
 .prose hr {

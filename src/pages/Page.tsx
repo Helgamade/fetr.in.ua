@@ -100,7 +100,7 @@ export default function Page() {
                     prose-li:text-foreground prose-li:font-body
                     prose-img:rounded-lg prose-img:my-6
                     prose-hr:border-t prose-hr:border-border
-                    prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-6 prose-blockquote:pr-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-blockquote:font-body prose-blockquote:bg-muted/30
+                    prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-6 prose-blockquote:pr-4 prose-blockquote:py-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-blockquote:font-body prose-blockquote:bg-muted/30
                     prose-pre:bg-muted prose-pre:text-foreground prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto
                     prose-code:text-sm prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono
                     prose-dt:font-bold prose-dt:text-foreground

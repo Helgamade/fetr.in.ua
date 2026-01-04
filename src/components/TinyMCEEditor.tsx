@@ -36,10 +36,37 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
             'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
             'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
           ],
-          toolbar: 'undo redo | blocks | bold italic | ' +
+          toolbar: 'undo redo | blocks | styles | bold italic | ' +
             'alignleft aligncenter alignright alignjustify | ' +
-            'bullist numlist outdent indent | link image | ' +
+            'bullist numlist outdent indent | blockquote | link image | ' +
             'removeformat | code | help',
+          style_formats: [
+            {
+              title: 'Цитата',
+              block: 'blockquote',
+              wrapper: true,
+              classes: 'quote-style'
+            },
+            {
+              title: 'Блок з відступом',
+              block: 'div',
+              classes: 'indent-block',
+              wrapper: true
+            },
+            {
+              title: 'Блок з фоном',
+              block: 'div',
+              classes: 'highlight-block',
+              wrapper: true
+            },
+            {
+              title: 'Блок з рамкою',
+              block: 'div',
+              classes: 'bordered-block',
+              wrapper: true
+            }
+          ],
+          style_formats_merge: false,
           content_style: `
             body { 
               font-family: Nunito, sans-serif; 
