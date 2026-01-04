@@ -43,7 +43,6 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/thank-you" element={<ThankYou />} />
-                <Route path="/:slug" element={<Page />} />
                 
                 {/* Admin routes */}
                 <Route path="/admin" element={<AdminLayout />}>
@@ -62,6 +61,9 @@ const App = () => (
                   <Route path="settings" element={<Settings />} />
                   <Route path="comparison" element={<Comparison />} />
                 </Route>
+                
+                {/* Dynamic page routes - must be after admin routes */}
+                <Route path="/:slug" element={<Page />} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
