@@ -137,6 +137,23 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
               margin-top: 0.5rem;
               margin-bottom: 0.5rem;
             }
+            ul ul, ol ol, ul ol, ol ul {
+              margin-top: 0.5rem;
+              margin-bottom: 0.5rem;
+              padding-left: 1.5rem;
+            }
+            ul ul {
+              list-style-type: circle;
+            }
+            ul ul ul {
+              list-style-type: square;
+            }
+            ol ol {
+              list-style-type: lower-alpha;
+            }
+            ol ol ol {
+              list-style-type: lower-roman;
+            }
             blockquote {
               margin-top: 1.5rem;
               margin-bottom: 1.5rem;
