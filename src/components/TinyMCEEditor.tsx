@@ -134,9 +134,35 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
               margin-top: 1.5rem;
               margin-bottom: 1.5rem;
               padding: 1rem;
-              border-left: 4px solid hsl(var(--primary));
-              background: hsl(var(--muted) / 0.3);
+              padding-left: 1.5rem;
+              border-left: 4px solid #f97316;
+              background: rgba(245, 245, 245, 0.5);
               font-style: italic;
+            }
+            .indent-block {
+              margin-top: 1rem;
+              margin-bottom: 1rem;
+              padding-left: 2rem;
+              padding-right: 1rem;
+              border-left: 2px solid #e5e7eb;
+              display: block;
+            }
+            .highlight-block {
+              margin-top: 1rem;
+              margin-bottom: 1rem;
+              padding: 1rem;
+              background: rgba(245, 245, 245, 0.8);
+              border-radius: 0.5rem;
+              display: block;
+            }
+            .bordered-block {
+              margin-top: 1rem;
+              margin-bottom: 1rem;
+              padding: 1rem;
+              border: 1px solid #e5e7eb;
+              border-radius: 0.5rem;
+              background: #ffffff;
+              display: block;
             }
             hr {
               margin-top: 2rem;
