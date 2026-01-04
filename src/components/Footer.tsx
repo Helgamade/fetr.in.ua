@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Send, Phone, Mail, CreditCard, Truck, Shield } from 'lucide-react';
+import { Instagram, Send, Phone, Mail, CreditCard, Truck, Shield, MessageCircle } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePublicSettings } from '@/hooks/usePublicSettings';
 import { usePages } from '@/hooks/usePages';
+import { getViberLink, getTelegramLink, getWhatsAppLink } from '@/lib/messengerLinks';
 
 export const Footer: React.FC = () => {
   const { t } = useTranslation('footer');

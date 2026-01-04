@@ -3,6 +3,7 @@ import { MessageCircle, X, Send, Instagram } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { usePublicSettings } from '@/hooks/usePublicSettings';
+import { getViberLink, getTelegramLink, getWhatsAppLink } from '@/lib/messengerLinks';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -71,7 +72,7 @@ export const ChatWidget: React.FC = () => {
             </a>
 
             <a
-              href="https://t.me/helgamade_ua"
+              href={getTelegramLink(storePhone)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-4 rounded-xl bg-[#0088cc]/10 hover:bg-[#0088cc]/20 transition-colors"
@@ -79,6 +80,32 @@ export const ChatWidget: React.FC = () => {
               <Send className="w-6 h-6 text-[#0088cc]" />
               <div>
                 <p className="font-medium">Telegram</p>
+                <p className="text-xs text-muted-foreground">Швидка відповідь</p>
+              </div>
+            </a>
+
+            <a
+              href={getViberLink(storePhone)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-4 rounded-xl bg-[#7360f2]/10 hover:bg-[#7360f2]/20 transition-colors"
+            >
+              <MessageCircle className="w-6 h-6 text-[#7360f2]" />
+              <div>
+                <p className="font-medium">Viber</p>
+                <p className="text-xs text-muted-foreground">Швидка відповідь</p>
+              </div>
+            </a>
+
+            <a
+              href={getWhatsAppLink(storePhone)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
+            >
+              <MessageCircle className="w-6 h-6 text-[#25D366]" />
+              <div>
+                <p className="font-medium">WhatsApp</p>
                 <p className="text-xs text-muted-foreground">Швидка відповідь</p>
               </div>
             </a>

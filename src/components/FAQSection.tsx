@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/accordion';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePublicSettings } from '@/hooks/usePublicSettings';
+import { getViberLink, getTelegramLink, getWhatsAppLink } from '@/lib/messengerLinks';
 
 export const FAQSection: React.FC = () => {
   const { t } = useTranslation('faq');
@@ -67,7 +68,7 @@ export const FAQSection: React.FC = () => {
             {t('cta.title')}
           </p>
           <p className="text-muted-foreground">
-            Напишіть нам у <a href="https://instagram.com/helgamade_ua" target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">Instagram</a> або зателефонуйте за номером <a href={`tel:${storePhone.replace(/\s/g, '')}`} className="text-primary font-medium hover:underline">{storePhone}</a>
+            Напишіть нам у <a href="https://instagram.com/helgamade_ua" target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">Instagram</a>, <a href={getTelegramLink(storePhone)} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">Telegram</a>, <a href={getViberLink(storePhone)} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">Viber</a> або <a href={getWhatsAppLink(storePhone)} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">WhatsApp</a>, або зателефонуйте за номером <a href={`tel:${storePhone.replace(/\s/g, '')}`} className="text-primary font-medium hover:underline">{storePhone}</a>
           </p>
         </div>
       </div>

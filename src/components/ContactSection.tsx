@@ -3,6 +3,7 @@ import { MapPin, Phone, Mail, Clock, Instagram, MessageCircle, Send } from 'luci
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePublicSettings } from '@/hooks/usePublicSettings';
+import { getViberLink, getTelegramLink, getWhatsAppLink } from '@/lib/messengerLinks';
 
 export const ContactSection: React.FC = () => {
   const { t } = useTranslation('contact');
@@ -91,7 +92,7 @@ export const ContactSection: React.FC = () => {
             </div>
 
             {/* Social links */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <Button variant="soft" size="lg" className="flex-1" asChild>
                 <a href="https://instagram.com/helgamade_ua" target="_blank" rel="noopener noreferrer">
                   <Instagram className="w-5 h-5" />
@@ -99,9 +100,21 @@ export const ContactSection: React.FC = () => {
                 </a>
               </Button>
               <Button variant="soft" size="lg" className="flex-1" asChild>
-                <a href="https://t.me/helgamade_ua" target="_blank" rel="noopener noreferrer">
+                <a href={getTelegramLink(storePhone)} target="_blank" rel="noopener noreferrer">
                   <Send className="w-5 h-5" />
                   Telegram
+                </a>
+              </Button>
+              <Button variant="soft" size="lg" className="flex-1" asChild>
+                <a href={getViberLink(storePhone)} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="w-5 h-5" />
+                  Viber
+                </a>
+              </Button>
+              <Button variant="soft" size="lg" className="flex-1" asChild>
+                <a href={getWhatsAppLink(storePhone)} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="w-5 h-5" />
+                  WhatsApp
                 </a>
               </Button>
             </div>
