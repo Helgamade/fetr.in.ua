@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { usePages, useUpdatePage, useDeletePage, Page } from '@/hooks/usePages';
 import { useToast } from '@/hooks/use-toast';
-import { RichEditor } from '@/components/RichEditor';
+import { TinyMCEEditor } from '@/components/TinyMCEEditor';
 import { pagesAPI } from '@/lib/api';
 
 export function PageDetail() {
@@ -276,7 +276,7 @@ export function PageDetail() {
             <CardTitle>Зміст сторінки *</CardTitle>
           </CardHeader>
           <CardContent>
-            <RichEditor
+            <TinyMCEEditor
               content={formData.content}
               onChange={(content) => setFormData({ ...formData, content })}
               placeholder="Введіть текст сторінки..."
