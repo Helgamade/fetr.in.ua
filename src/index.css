@@ -319,3 +319,32 @@
 .comparison-scroll::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary));
 }
+
+/* Custom styles for prose lists with p tags inside li */
+.prose ul,
+.prose ol {
+  display: block;
+  list-style-type: disc;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  padding-left: 1.5rem;
+}
+
+.prose ol {
+  list-style-type: decimal;
+}
+
+.prose li {
+  display: list-item;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose li > p {
+  margin-top: 0;
+  margin-bottom: 0.5em;
+}
+
+.prose li > p:last-child {
+  margin-bottom: 0;
+}
