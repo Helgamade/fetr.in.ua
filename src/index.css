@@ -321,30 +321,71 @@
 }
 
 /* Custom styles for prose lists with p tags inside li */
-.prose ul,
-.prose ol {
-  display: block;
-  list-style-type: disc;
-  margin-top: 1em;
-  margin-bottom: 1em;
-  padding-left: 1.5rem;
-}
+@layer components {
+  .prose ul,
+  .prose ol {
+    display: block !important;
+    list-style-type: disc !important;
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+    padding-left: 1.5rem !important;
+  }
 
-.prose ol {
-  list-style-type: decimal;
-}
+  .prose ol {
+    list-style-type: decimal !important;
+  }
 
-.prose li {
-  display: list-item;
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-}
+  .prose li {
+    display: list-item !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
 
-.prose li > p {
-  margin-top: 0;
-  margin-bottom: 0.5em;
-}
+  .prose li > p {
+    margin-top: 0 !important;
+    margin-bottom: 0.5rem !important;
+  }
 
-.prose li > p:last-child {
-  margin-bottom: 0;
+  .prose li > p:last-child {
+    margin-bottom: 0 !important;
+  }
+  
+  /* Ensure proper spacing for all prose elements */
+  .prose blockquote {
+    margin-top: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+  
+  .prose hr {
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
+  }
+  
+  .prose pre {
+    margin-top: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    padding: 1rem !important;
+  }
+  
+  .prose figure {
+    margin-top: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .prose dl {
+    margin-top: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .prose dt {
+    margin-top: 1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .prose dd {
+    margin-bottom: 1rem !important;
+    margin-left: 1rem !important;
+  }
 }
