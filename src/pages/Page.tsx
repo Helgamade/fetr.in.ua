@@ -85,12 +85,12 @@ export default function Page() {
                 <div 
                   className="prose prose-lg max-w-none 
                     prose-headings:font-heading prose-headings:font-bold prose-headings:text-foreground prose-headings:tracking-tight
-                    prose-h1:text-4xl prose-h1:sm:text-5xl prose-h1:lg:text-6xl prose-h1:font-heading prose-h1:font-bold
+                    prose-h1:text-[36px] prose-h1:font-heading prose-h1:font-bold
                     prose-h2:text-[24px] prose-h2:font-heading prose-h2:font-semibold
-                    prose-h3:text-2xl prose-h3:sm:text-3xl prose-h3:font-heading prose-h3:font-bold
-                    prose-h4:text-xl prose-h4:sm:text-2xl prose-h4:font-heading prose-h4:font-bold
-                    prose-h5:text-lg prose-h5:sm:text-xl prose-h5:font-heading prose-h5:font-bold
-                    prose-h6:text-base prose-h6:sm:text-lg prose-h6:font-heading prose-h6:font-bold
+                    prose-h3:text-[16px] prose-h3:font-heading prose-h3:font-bold
+                    prose-h4:text-[14px] prose-h4:font-heading prose-h4:font-bold
+                    prose-h5:text-[13px] prose-h5:font-heading prose-h5:font-bold
+                    prose-h6:text-[12px] prose-h6:font-heading prose-h6:font-bold
                     prose-p:text-lg prose-p:text-foreground prose-p:font-body
                     prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline
                     prose-strong:text-foreground prose-strong:font-bold
