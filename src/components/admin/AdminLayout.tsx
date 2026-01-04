@@ -43,6 +43,7 @@ const menuItems = [
   { icon: Users, label: 'Наша команда', path: '/admin/team' },
   { icon: Instagram, label: 'Слідкуйте за нами', path: '/admin/instagram' },
   { icon: FileText, label: 'Тексти сайту', path: '/admin/texts' },
+  { icon: FileText, label: 'Сторінки', path: '/admin/pages' },
   { icon: Table2, label: 'Порівняння', path: '/admin/comparison' },
   { icon: Settings, label: 'Налаштування', path: '/admin/settings' },
 ];

@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Checkout from "./pages/Checkout";
 import ThankYou from "./pages/ThankYou";
 import NotFound from "./pages/NotFound";
+import Page from "./pages/Page";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { Dashboard } from "./pages/admin/Dashboard";
 import { Orders } from "./pages/admin/Orders";
@@ -24,6 +25,7 @@ import { FAQ } from "./pages/admin/FAQ";
 import { Team } from "./pages/admin/Team";
 import { Instagram } from "./pages/admin/Instagram";
 import { Texts } from "./pages/admin/Texts";
+import { Pages } from "./pages/admin/Pages";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/thank-you" element={<ThankYou />} />
+                <Route path="/:slug" element={<Page />} />
                 
                 {/* Admin routes */}
                 <Route path="/admin" element={<AdminLayout />}>
@@ -55,6 +58,7 @@ const App = () => (
                   <Route path="team" element={<Team />} />
                   <Route path="instagram" element={<Instagram />} />
                   <Route path="texts" element={<Texts />} />
+                  <Route path="pages" element={<Pages />} />
                   <Route path="settings" element={<Settings />} />
                   <Route path="comparison" element={<Comparison />} />
                 </Route>
