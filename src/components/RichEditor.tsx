@@ -104,13 +104,7 @@ export function RichEditor({ content, onChange, placeholder = 'Введіть т
           type="button"
           variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => {
-            if (editor.isActive('bulletList')) {
-              editor.chain().focus().toggleBulletList().run();
-            } else {
-              editor.chain().focus().toggleBulletList().run();
-            }
-          }}
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
         >
           <List className="h-4 w-4" />
         </Button>
@@ -118,13 +112,7 @@ export function RichEditor({ content, onChange, placeholder = 'Введіть т
           type="button"
           variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => {
-            if (editor.isActive('orderedList')) {
-              editor.chain().focus().toggleOrderedList().run();
-            } else {
-              editor.chain().focus().toggleOrderedList().run();
-            }
-          }}
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
         >
           <ListOrdered className="h-4 w-4" />
         </Button>
