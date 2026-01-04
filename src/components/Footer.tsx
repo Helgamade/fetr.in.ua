@@ -1,18 +1,24 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Instagram, Send, Phone, Mail, CreditCard, Truck, Shield } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePublicSettings } from '@/hooks/usePublicSettings';
+import { usePages } from '@/hooks/usePages';
 
 export const Footer: React.FC = () => {
   const { t } = useTranslation('footer');
   const { t: tNav } = useTranslation('nav');
   const { data: settings = {} } = usePublicSettings();
+  const { data: pages = [] } = usePages();
   const currentYear = new Date().getFullYear();
   
   const storeName = settings.store_name || 'FetrInUA';
   const storePhone = settings.store_phone || '+380501234567';
   const storeEmail = settings.store_email || 'hello@fetr.in.ua';
   const storeAddress = settings.store_address || 'м. Київ, вул. Урлівська 30';
+  
+  // Фильтруем только опубликованные страницы
+  const publishedPages = pages.filter(page => page.is_published);
 
   return (
     <footer className="bg-foreground text-primary-foreground">
@@ -125,26 +131,22 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="font-heading font-bold mb-4">Інформація</h4>
             <ul className="space-y-2">
-              <li>
-                <a href="#" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
-                  {t('legal.privacy')}
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
-                  {t('legal.terms')}
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
-                  Доставка та оплата
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm">
-                  Повернення та обмін
-                </a>
-              </li>
+              {publishedPages.length > 0 ? (
+                publishedPages.map(page => (
+                  <li key={page.id}>
+                    <Link 
+                      to={`/${page.slug}`} 
+                      className="text-primary-foreground/60 hover:text-primary-foreground transition-colors text-sm"
+                    >
+                      {page.title}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <li className="text-primary-foreground/40 text-sm">
+                  Немає доступних сторінок
+                </li>
+              )}
             </ul>
           </div>
         </div>
