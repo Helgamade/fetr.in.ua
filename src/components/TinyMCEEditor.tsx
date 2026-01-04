@@ -19,7 +19,7 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
   return (
     <div className={cn('border rounded-lg overflow-hidden', className)}>
       <Editor
-        apiKey="qagffr3pkuv17a8on1afax661irst1hbr4e6tbv888sz91jc" // Пример бесплатного API key, замените на свой
+        apiKey="5d1p6abbg6cfswxaikso0fiwwlpcvppyeqv09wld5lk9w4sx"
         onInit={(evt, editor) => {
           editorRef.current = editor;
         }}
