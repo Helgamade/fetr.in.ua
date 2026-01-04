@@ -86,7 +86,7 @@ export default function Page() {
                   className="prose prose-lg max-w-none 
                     prose-headings:font-heading prose-headings:font-bold prose-headings:text-foreground prose-headings:tracking-tight
                     prose-h1:text-4xl prose-h1:sm:text-5xl prose-h1:lg:text-6xl prose-h1:font-heading prose-h1:font-bold
-                    prose-h2:text-3xl prose-h2:sm:text-4xl prose-h2:font-heading prose-h2:font-bold
+                    prose-h2:text-[24px] prose-h2:font-heading prose-h2:font-semibold
                     prose-h3:text-2xl prose-h3:sm:text-3xl prose-h3:font-heading prose-h3:font-bold
                     prose-h4:text-xl prose-h4:sm:text-2xl prose-h4:font-heading prose-h4:font-bold
                     prose-h5:text-lg prose-h5:sm:text-xl prose-h5:font-heading prose-h5:font-bold

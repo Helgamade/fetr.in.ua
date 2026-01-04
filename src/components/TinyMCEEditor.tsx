@@ -57,8 +57,8 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
             }
             h2 {
               font-family: Montserrat, sans-serif;
-              font-size: 2rem;
-              font-weight: bold;
+              font-size: 24px;
+              font-weight: 600;
               margin-top: 2rem;
               margin-bottom: 1rem;
             }
