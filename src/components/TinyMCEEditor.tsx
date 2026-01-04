@@ -48,12 +48,47 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
               color: hsl(var(--foreground));
               background: hsl(var(--background));
             }
-            h1, h2, h3, h4, h5, h6 {
+            h1 {
               font-family: Montserrat, sans-serif;
-              font-size: inherit;
-              font-weight: inherit;
+              font-size: 2.5rem;
+              font-weight: bold;
+              margin-top: 2rem;
+              margin-bottom: 1.5rem;
+            }
+            h2 {
+              font-family: Montserrat, sans-serif;
+              font-size: 2rem;
+              font-weight: bold;
               margin-top: 2rem;
               margin-bottom: 1rem;
+            }
+            h3 {
+              font-family: Montserrat, sans-serif;
+              font-size: 1.5rem;
+              font-weight: bold;
+              margin-top: 1.5rem;
+              margin-bottom: 0.75rem;
+            }
+            h4 {
+              font-family: Montserrat, sans-serif;
+              font-size: 1.25rem;
+              font-weight: bold;
+              margin-top: 1rem;
+              margin-bottom: 0.5rem;
+            }
+            h5 {
+              font-family: Montserrat, sans-serif;
+              font-size: 1.125rem;
+              font-weight: bold;
+              margin-top: 1rem;
+              margin-bottom: 0.5rem;
+            }
+            h6 {
+              font-family: Montserrat, sans-serif;
+              font-size: 1rem;
+              font-weight: bold;
+              margin-top: 0.75rem;
+              margin-bottom: 0.5rem;
             }
             p {
               margin-top: 0;
