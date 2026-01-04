@@ -28,7 +28,7 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
           onChange(content);
         }}
         init={{
-          height: 500,
+          height: 700,
           menubar: false,
           placeholder,
           plugins: [
@@ -39,7 +39,7 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
           toolbar: 'undo redo | blocks | styles | bold italic | ' +
             'alignleft aligncenter alignright alignjustify | ' +
             'bullist numlist outdent indent | blockquote | link image | ' +
-            'removeformat | code | help',
+            'removeformat | code | fullscreen | help',
           style_formats: [
             {
               title: 'Цитата',
