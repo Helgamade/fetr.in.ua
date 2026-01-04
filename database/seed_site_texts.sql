@@ -64,6 +64,14 @@ INSERT INTO site_texts (`key`, value, namespace, description) VALUES
 ('about.trust.item5', 'Гарантія якості', 'about', 'Элемент доверия 5'),
 ('about.trust.item6', 'Безкоштовна доставка від 1500 ₴', 'about', 'Элемент доверия 6'),
 
+-- Contact section
+('contact.badge', 'Контакти', 'contact', 'Бейдж в секції контактів'),
+('contact.title', 'Зв''яжіться з нами', 'contact', 'Заголовок секції контактів'),
+('contact.subtitle', 'Ми завжди раді відповісти на ваші запитання', 'contact', 'Підзаголовок секції контактів'),
+('contact.address.pickup', 'Самовивіз за попереднім записом', 'contact', 'Текст под адресой - самовывоз по записи'),
+('contact.phone.messengers', 'Viber, Telegram, WhatsApp', 'contact', 'Текст под телефоном - мессенджеры'),
+('contact.email.responseTime', 'Відповідаємо протягом 24 годин', 'contact', 'Текст под email - время ответа'),
+
 -- Footer
 ('footer.freeDelivery.title', 'Безкоштовна доставка', 'footer', 'Footer - бесплатная доставка заголовок'),
 ('footer.freeDelivery.subtitle', 'від 1500 ₴', 'footer', 'Footer - бесплатная доставка подзаголовок'),
