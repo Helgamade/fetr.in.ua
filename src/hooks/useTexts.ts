@@ -16,7 +16,7 @@ export function useTexts() {
       if (!response.ok) throw new Error('Failed to fetch texts');
       return response.json();
     },
-    staleTime: 5 * 60 * 1000, // 5 минут
+    refetchOnMount: true,
   });
 }
 
