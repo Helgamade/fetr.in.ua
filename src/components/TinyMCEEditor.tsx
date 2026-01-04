@@ -34,13 +34,24 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
           plugins: [
             'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
             'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-            'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+            'insertdatetime', 'media', 'table', 'help', 'wordcount',
+            'emoticons', 'codesample', 'nonbreaking', 'pagebreak', 'save', 'visualchars', 'autoresize', 'accordion'
           ],
           toolbar: 'undo redo | blocks | styles | bold italic | ' +
             'alignleft aligncenter alignright alignjustify | ' +
-            'bullist numlist outdent indent | blockquote | link image | ' +
-            'removeformat | code | fullscreen | help',
+            'bullist numlist outdent indent | blockquote | ' +
+            'link image media | charmap emoticons | ' +
+            'insertdatetime | anchor | table | codesample | ' +
+            'visualblocks visualchars | searchreplace | ' +
+            'nonbreaking pagebreak | save accordion | ' +
+            'removeformat | code | preview | fullscreen | help',
           style_formats: [
+            {
+              title: 'Текст без обгортки',
+              inline: 'span',
+              remove: 'p',
+              styles: { display: 'inline' }
+            },
             {
               title: 'Цитата',
               block: 'blockquote',
@@ -77,8 +88,8 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
             }
             h1 {
               font-family: Montserrat, sans-serif;
-              font-size: 2.5rem;
-              font-weight: bold;
+              font-size: 36px;
+              font-weight: 700;
               margin-top: 2rem;
               margin-bottom: 1.5rem;
             }
@@ -91,29 +102,29 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
             }
             h3 {
               font-family: Montserrat, sans-serif;
-              font-size: 1.5rem;
-              font-weight: bold;
+              font-size: 16px;
+              font-weight: 700;
               margin-top: 1.5rem;
               margin-bottom: 0.75rem;
             }
             h4 {
               font-family: Montserrat, sans-serif;
-              font-size: 1.25rem;
-              font-weight: bold;
+              font-size: 14px;
+              font-weight: 700;
               margin-top: 1rem;
               margin-bottom: 0.5rem;
             }
             h5 {
               font-family: Montserrat, sans-serif;
-              font-size: 1.125rem;
-              font-weight: bold;
+              font-size: 13px;
+              font-weight: 700;
               margin-top: 1rem;
               margin-bottom: 0.5rem;
             }
             h6 {
               font-family: Montserrat, sans-serif;
-              font-size: 1rem;
-              font-weight: bold;
+              font-size: 12px;
+              font-weight: 700;
               margin-top: 0.75rem;
               margin-bottom: 0.5rem;
             }

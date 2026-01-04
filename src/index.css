@@ -323,6 +323,8 @@
 /* Custom styles for prose - applied directly without @layer for higher specificity */
 /* Headings spacing */
 .prose h1 {
+  font-size: 36px;
+  font-weight: 700;
   margin-top: 2rem;
   margin-bottom: 1.5rem;
 }
@@ -335,21 +337,29 @@
 }
 
 .prose h3 {
+  font-size: 16px;
+  font-weight: 700;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
 }
 
 .prose h4 {
+  font-size: 14px;
+  font-weight: 700;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
 }
 
 .prose h5 {
+  font-size: 13px;
+  font-weight: 700;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
 }
 
 .prose h6 {
+  font-size: 12px;
+  font-weight: 700;
   margin-top: 0.75rem;
   margin-bottom: 0.5rem;
 }
