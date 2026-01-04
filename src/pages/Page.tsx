@@ -52,8 +52,8 @@ export default function Page() {
 
   // Очистка HTML контента для безопасности
   const sanitizedContent = page.content ? DOMPurify.sanitize(page.content, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre'],
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class'],
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'hr', 'div', 'span'],
+    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style'],
   }) : '';
 
   return (
@@ -73,7 +73,7 @@ export default function Page() {
         <Header />
         
         <main className="pt-24 pb-20">
-          <section className="py-20">
+          <section style={{ paddingTop: '1rem', paddingBottom: '5rem' }}>
             <div className="container-tight">
               <article className="max-w-4xl mx-auto">
                 {/* Заголовок страницы */}
@@ -97,6 +97,7 @@ export default function Page() {
                     prose-ol:text-lg prose-ol:text-foreground prose-ol:mb-4 prose-ol:font-body
                     prose-li:text-foreground prose-li:mb-2 prose-li:font-body
                     prose-img:rounded-lg prose-img:my-6
+                    prose-hr:border-t prose-hr:border-border prose-hr:my-8
                     prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-blockquote:font-body
                     dark:prose-invert"
                   dangerouslySetInnerHTML={{ __html: sanitizedContent }}
