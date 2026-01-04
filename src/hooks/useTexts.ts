@@ -12,11 +12,20 @@ export function useTexts() {
   return useQuery<SiteText[]>({
     queryKey: ['siteTexts'],
     queryFn: async () => {
-      const response = await fetch('/api/texts');
+      const response = await fetch('/api/texts', {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch texts');
       return response.json();
     },
-    refetchOnMount: true,
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 
