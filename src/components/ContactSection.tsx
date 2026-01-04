@@ -92,26 +92,26 @@ export const ContactSection: React.FC = () => {
             </div>
 
             {/* Social links */}
-            <div className="flex gap-3 flex-wrap">
-              <Button variant="soft" size="lg" className="flex-1" asChild>
-                <a href="https://instagram.com/helgamade_ua" target="_blank" rel="noopener noreferrer">
-                  <Instagram className="w-5 h-5" />
-                  Instagram
-                </a>
-              </Button>
-              <Button variant="soft" size="lg" className="flex-1" asChild>
-                <a href={getTelegramLink(storePhone)} target="_blank" rel="noopener noreferrer">
-                  <Send className="w-5 h-5" />
-                  Telegram
-                </a>
-              </Button>
-              <Button variant="soft" size="lg" className="flex-1" asChild>
+            <div className="grid grid-cols-2 gap-3">
+              <Button variant="soft" size="lg" className="w-full" asChild>
                 <a href={getViberLink(storePhone)} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="w-5 h-5" />
                   Viber
                 </a>
               </Button>
-              <Button variant="soft" size="lg" className="flex-1" asChild>
+              <Button variant="soft" size="lg" className="w-full" asChild>
+                <a href={getTelegramLink(storePhone)} target="_blank" rel="noopener noreferrer">
+                  <Send className="w-5 h-5" />
+                  Telegram
+                </a>
+              </Button>
+              <Button variant="soft" size="lg" className="w-full" asChild>
+                <a href="https://instagram.com/helgamade_ua" target="_blank" rel="noopener noreferrer">
+                  <Instagram className="w-5 h-5" />
+                  Instagram
+                </a>
+              </Button>
+              <Button variant="soft" size="lg" className="w-full" asChild>
                 <a href={getWhatsAppLink(storePhone)} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="w-5 h-5" />
                   WhatsApp
