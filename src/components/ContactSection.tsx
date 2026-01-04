@@ -42,7 +42,7 @@ export const ContactSection: React.FC = () => {
                 <div>
                   <h3 className="font-heading font-bold mb-1">Адреса</h3>
                   <p className="text-muted-foreground">{storeAddress}</p>
-                  <p className="text-sm text-muted-foreground/60 mt-1">Самовивіз за попереднім записом</p>
+                  <p className="text-sm text-muted-foreground/60 mt-1">{t('address.pickup')}</p>
                 </div>
               </div>
             </div>
@@ -57,7 +57,7 @@ export const ContactSection: React.FC = () => {
                   <a href={`tel:${storePhone.replace(/\s/g, '')}`} className="text-primary hover:underline">
                     {storePhone}
                   </a>
-                  <p className="text-sm text-muted-foreground/60 mt-1">Viber, Telegram, WhatsApp</p>
+                  <p className="text-sm text-muted-foreground/60 mt-1">{t('phone.messengers')}</p>
                 </div>
               </div>
             </div>
@@ -72,7 +72,7 @@ export const ContactSection: React.FC = () => {
                   <a href={`mailto:${storeEmail}`} className="text-primary hover:underline">
                     {storeEmail}
                   </a>
-                  <p className="text-sm text-muted-foreground/60 mt-1">Відповідаємо протягом 24 годин</p>
+                  <p className="text-sm text-muted-foreground/60 mt-1">{t('email.responseTime')}</p>
                 </div>
               </div>
             </div>
