@@ -35,16 +35,12 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
             'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
             'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
             'insertdatetime', 'media', 'table', 'help', 'wordcount',
-            'emoticons', 'codesample', 'nonbreaking', 'pagebreak', 'save', 'visualchars', 'autoresize', 'accordion'
+            'emoticons', 'codesample', 'nonbreaking', 'pagebreak', 'save', 'visualchars', 'accordion'
           ],
-          toolbar: 'undo redo | blocks | styles | bold italic | ' +
-            'alignleft aligncenter alignright alignjustify | ' +
-            'bullist numlist outdent indent | blockquote | ' +
-            'link image media | charmap emoticons | ' +
-            'insertdatetime | anchor | table | codesample | ' +
-            'visualblocks visualchars | searchreplace | ' +
-            'nonbreaking pagebreak | save accordion | ' +
-            'removeformat | code | preview | fullscreen | help',
+          toolbar: [
+            'undo redo | blocks | styles | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | blockquote',
+            'link image media | charmap emoticons | insertdatetime | anchor | table | codesample | visualblocks visualchars | searchreplace | nonbreaking pagebreak | save accordion | removeformat | code | preview | fullscreen | help'
+          ],
           style_formats: [
             {
               title: 'Текст без обгортки',
