@@ -59,15 +59,15 @@ export const ChatWidget: React.FC = () => {
 
           <div className="space-y-3">
             <a
-              href="https://instagram.com/helgamade_ua"
+              href={getViberLink(storePhone)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-orange-500/10 hover:from-purple-500/20 hover:via-pink-500/20 hover:to-orange-500/20 transition-colors"
+              className="flex items-center gap-3 p-4 rounded-xl bg-[#7360f2]/10 hover:bg-[#7360f2]/20 transition-colors"
             >
-              <Instagram className="w-6 h-6 text-pink-500" />
+              <MessageCircle className="w-6 h-6 text-[#7360f2]" />
               <div>
-                <p className="font-medium">Instagram Direct</p>
-                <p className="text-xs text-muted-foreground">@helgamade_ua</p>
+                <p className="font-medium">Viber</p>
+                <p className="text-xs text-muted-foreground">Швидка відповідь</p>
               </div>
             </a>
 
@@ -85,15 +85,15 @@ export const ChatWidget: React.FC = () => {
             </a>
 
             <a
-              href={getViberLink(storePhone)}
+              href="https://instagram.com/helgamade_ua"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 p-4 rounded-xl bg-[#7360f2]/10 hover:bg-[#7360f2]/20 transition-colors"
+              className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-orange-500/10 hover:from-purple-500/20 hover:via-pink-500/20 hover:to-orange-500/20 transition-colors"
             >
-              <MessageCircle className="w-6 h-6 text-[#7360f2]" />
+              <Instagram className="w-6 h-6 text-pink-500" />
               <div>
-                <p className="font-medium">Viber</p>
-                <p className="text-xs text-muted-foreground">Швидка відповідь</p>
+                <p className="font-medium">Instagram Direct</p>
+                <p className="text-xs text-muted-foreground">@helgamade_ua</p>
               </div>
             </a>
 
