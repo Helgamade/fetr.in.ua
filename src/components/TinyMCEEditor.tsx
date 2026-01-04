@@ -2,6 +2,10 @@ import { Editor } from '@tinymce/tinymce-react';
 import { useRef } from 'react';
 import { cn } from '@/lib/utils';
 
+// Для TinyMCE нужен API key (даже бесплатный) от https://www.tiny.cloud/
+// Или использовать self-hosted версию (см. документацию)
+// Временное решение - использовать бесплатный API key
+
 interface TinyMCEEditorProps {
   content: string;
   onChange: (content: string) => void;
@@ -15,7 +19,7 @@ export function TinyMCEEditor({ content, onChange, placeholder = 'Введіть
   return (
     <div className={cn('border rounded-lg overflow-hidden', className)}>
       <Editor
-        apiKey="no-api-key" // Для локального использования без ключа API
+        apiKey="qagffr3pkuv17a8on1afax661irst1hbr4e6tbv888sz91jc" // Пример бесплатного API key, замените на свой
         onInit={(evt, editor) => {
           editorRef.current = editor;
         }}
