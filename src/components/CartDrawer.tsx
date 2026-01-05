@@ -135,7 +135,7 @@ export const CartDrawer: React.FC = () => {
 
                   return (
                     <li key={item.productId} className={cn("py-4", index > 0 && "border-t border-border")}>
-                      <div className="flex gap-4">
+                      <div className="flex gap-4 bg-card rounded-lg p-3">
                         {/* Image */}
                         <div className="flex-shrink-0">
                           <div className="w-20 h-20 rounded-lg overflow-hidden">
