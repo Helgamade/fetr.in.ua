@@ -112,7 +112,7 @@ export const CartDrawer: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <div className="p-1 bg-muted/50">
+            <div className="bg-muted/50">
               <div className="p-3">
                 {/* Items list */}
                 <ul className="space-y-0">
@@ -134,15 +134,13 @@ export const CartDrawer: React.FC = () => {
                   const itemTotalBasePrice = unitBasePrice * item.quantity;
 
                   const isFirst = index === 0;
-                  const isLast = index === items.length - 1;
 
                   return (
                     <li key={item.productId}>
                       <div className={cn(
                         "flex gap-4 bg-card p-3",
-                        isFirst && !isLast && "rounded-t-lg",
-                        !isFirst && "border-t border-border",
-                        isFirst && isLast && "rounded-lg"
+                        isFirst && "rounded-t-lg",
+                        !isFirst && "border-t border-border"
                       )}>
                         {/* Image */}
                         <div className="flex-shrink-0">
