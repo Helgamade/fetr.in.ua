@@ -130,7 +130,7 @@ export const CartDrawer: React.FC = () => {
                   const unitBasePrice = product.basePrice + optionsPrice;
 
                   return (
-                    <li key={item.productId} className={index > 0 ? "border-t border-border pt-4 mt-4" : index < items.length - 1 ? "pb-4" : ""}>
+                    <li key={item.productId} className={index > 0 ? "border-t border-border pt-4 mt-4" : ""}>
                       <div className="flex gap-4">
                         {/* Image */}
                         <div className="flex-shrink-0">
