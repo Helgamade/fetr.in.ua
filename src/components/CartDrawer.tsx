@@ -22,6 +22,7 @@ export const CartDrawer: React.FC = () => {
     getSubtotal,
     getDiscount,
     amountToFreeDelivery,
+    getItemCount,
   } = useCart();
 
   const handleCheckout = () => {
@@ -62,7 +63,7 @@ export const CartDrawer: React.FC = () => {
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 text-primary" />
             <span className="font-heading font-bold text-lg">Кошик</span>
-            <span className="text-sm text-muted-foreground">({items.length})</span>
+            <span className="text-sm text-muted-foreground">({getItemCount()})</span>
           </div>
           <Button variant="ghost" size="icon" onClick={closeCart}>
             <X className="w-5 h-5" />
@@ -124,12 +125,12 @@ export const CartDrawer: React.FC = () => {
                     return sum + (option?.price || 0);
                   }, 0);
                   
-                  // Price per unit (product + options)
+                  // Price per unit (product + options) - показываем цену за единицу
                   const unitPrice = currentPrice + optionsPrice;
                   const unitBasePrice = product.basePrice + optionsPrice;
 
                   return (
-                    <li key={item.productId} className={index > 0 ? "border-t border-border pt-4 mt-4" : ""}>
+                    <li key={item.productId} className={index > 0 ? "border-t border-border pt-4 mt-4" : index < items.length - 1 ? "pb-4" : ""}>
                       <div className="flex gap-4">
                         {/* Image */}
                         <div className="flex-shrink-0">
@@ -220,7 +221,9 @@ export const CartDrawer: React.FC = () => {
               </ul>
 
               {/* Separator */}
-              <hr className="my-4 border-border" />
+              {items.length > 0 && (
+                <hr className="mt-4 mb-4 border-border" />
+              )}
 
               {/* Totals and checkout button - right after items */}
               <div className="space-y-4">
