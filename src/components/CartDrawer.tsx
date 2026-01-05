@@ -113,7 +113,7 @@ export const CartDrawer: React.FC = () => {
             </div>
           ) : (
             <div className="p-1 bg-muted/50">
-              <div className="p-3 space-y-3">
+              <div className="p-3">
                 {/* Items list */}
                 <ul className="space-y-0">
                 {items.map((item, index) => {
@@ -233,7 +233,7 @@ export const CartDrawer: React.FC = () => {
               </ul>
 
               {/* Totals and checkout button */}
-              <div className="mt-4 space-y-4">
+              <div className="bg-card rounded-b-lg p-4 space-y-4 border-t border-border">
                 {/* Totals */}
                 {hasFreeDelivery ? (
                   <div className="space-y-2">
