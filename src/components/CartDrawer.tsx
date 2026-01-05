@@ -174,7 +174,7 @@ export const CartDrawer: React.FC = () => {
                                 onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                                 disabled={item.quantity <= 1}
                                 className={cn(
-                                  "h-8 w-8 flex items-center justify-center rounded-lg border border-border transition-colors text-sm font-medium",
+                                  "h-8 w-8 flex items-center justify-center rounded-xl border border-border transition-colors text-sm font-medium",
                                   item.quantity <= 1 
                                     ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground" 
                                     : "hover:bg-muted hover:border-primary text-foreground"
@@ -188,7 +188,7 @@ export const CartDrawer: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                                className="h-8 w-8 flex items-center justify-center rounded-lg border border-border hover:bg-muted hover:border-primary transition-colors text-foreground text-sm font-medium"
+                                className="h-8 w-8 flex items-center justify-center rounded-xl border border-border hover:bg-muted hover:border-primary transition-colors text-foreground text-sm font-medium"
                               >
                                 <Plus className="w-3 h-3" />
                               </button>
@@ -198,11 +198,11 @@ export const CartDrawer: React.FC = () => {
                             <div className="flex flex-col items-end">
                               {hasDiscount ? (
                                 <>
-                                  <span className="text-base font-bold text-destructive">
-                                    {unitPrice} ₴
-                                  </span>
                                   <span className="text-sm text-muted-foreground line-through">
                                     {unitBasePrice} ₴
+                                  </span>
+                                  <span className="text-base font-bold text-destructive">
+                                    {unitPrice} ₴
                                   </span>
                                 </>
                               ) : (
@@ -233,13 +233,13 @@ export const CartDrawer: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between w-full">
                       <span className="text-base font-bold text-foreground">До оплати з доставкою:</span>
-                      <span className="text-base font-bold text-primary">{finalTotal} ₴</span>
+                      <span className="text-base font-bold text-foreground">{finalTotal} ₴</span>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between w-full">
                     <span className="text-base font-bold text-foreground">До оплати без доставки:</span>
-                    <span className="text-base font-bold text-primary">{finalTotal} ₴</span>
+                    <span className="text-base font-bold text-foreground">{finalTotal} ₴</span>
                   </div>
                 )}
 
