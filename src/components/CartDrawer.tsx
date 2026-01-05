@@ -133,9 +133,17 @@ export const CartDrawer: React.FC = () => {
                   const itemTotalPrice = unitPrice * item.quantity;
                   const itemTotalBasePrice = unitBasePrice * item.quantity;
 
+                  const isFirst = index === 0;
+                  const isLast = index === items.length - 1;
+
                   return (
                     <li key={item.productId}>
-                      <div className="flex gap-4 bg-card rounded-lg p-3">
+                      <div className={cn(
+                        "flex gap-4 bg-card p-3",
+                        isFirst && !isLast && "rounded-t-lg",
+                        !isFirst && !isLast && "border-t border-border",
+                        isFirst && isLast && "rounded-lg"
+                      )}>
                         {/* Image */}
                         <div className="flex-shrink-0">
                           <div className="w-20 h-20 rounded-lg overflow-hidden">
