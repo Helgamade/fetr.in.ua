@@ -55,6 +55,7 @@ export const CartDrawer: React.FC = () => {
       <div
         className={cn(
           'fixed top-0 right-0 bottom-0 w-full sm:w-[420px] bg-card z-50 transition-transform duration-300 shadow-large flex flex-col',
+          'rounded-l-2xl',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
@@ -222,13 +223,8 @@ export const CartDrawer: React.FC = () => {
                 })}
               </ul>
 
-              {/* Separator */}
-              {items.length > 0 && (
-                <hr className="mt-4 mb-4 border-border" />
-              )}
-
-              {/* Totals and checkout button - right after items */}
-              <div className="space-y-4">
+              {/* Totals and checkout button - separate block with border */}
+              <div className="mt-4 p-4 rounded-xl border border-border bg-muted/30 space-y-4">
                 {/* Totals */}
                 {hasFreeDelivery ? (
                   <div className="space-y-2">
