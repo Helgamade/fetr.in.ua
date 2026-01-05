@@ -99,8 +99,8 @@ export const CartDrawer: React.FC = () => {
           </div>
         )}
 
-        {/* Cart items */}
-        <div className="flex-1 overflow-y-auto">
+            {/* Cart items */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-4">
               <ShoppingBag className="w-16 h-16 text-muted-foreground/30 mb-4" />
@@ -165,7 +165,7 @@ export const CartDrawer: React.FC = () => {
 
                           {/* Availability */}
                           <div className="mb-3">
-                            <span className="text-xs text-muted-foreground">В наявності</span>
+                            <span className="text-muted-foreground" style={{ fontSize: '0.85rem' }}>В наявності</span>
                           </div>
 
                           {/* Quantity and price row */}
