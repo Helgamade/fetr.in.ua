@@ -141,7 +141,7 @@ export const CartDrawer: React.FC = () => {
                       <div className={cn(
                         "flex gap-4 bg-card p-3",
                         isFirst && !isLast && "rounded-t-lg",
-                        !isFirst && !isLast && "border-t border-border",
+                        !isFirst && "border-t border-border",
                         isFirst && isLast && "rounded-lg"
                       )}>
                         {/* Image */}
