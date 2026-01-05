@@ -156,7 +156,7 @@ export const CartDrawer: React.FC = () => {
                           </div>
 
                           {/* Name */}
-                          <div className="mb-1 pr-8">
+                          <div className="mb-1">
                             <h4 className="font-medium text-sm leading-tight">{product.name}</h4>
                           </div>
 
@@ -195,7 +195,7 @@ export const CartDrawer: React.FC = () => {
                             </div>
                             
                             {/* Price - aligned to right, stacked, same column as delete button */}
-                            <div className="flex flex-col items-end pr-8">
+                            <div className="flex flex-col items-end">
                               {hasDiscount ? (
                                 <>
                                   <span className="text-base font-bold text-destructive">
@@ -225,32 +225,27 @@ export const CartDrawer: React.FC = () => {
               {/* Totals and checkout button - right after items */}
               <div className="space-y-4">
                 {/* Totals */}
-                <div className="flex items-center justify-between w-full">
-                  {hasFreeDelivery ? (
-                    <div className="flex items-center justify-between w-full gap-2">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="text-muted-foreground">Доставка:</span>
-                          <span className="font-medium">Безкоштовно</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-base font-bold text-foreground">До оплати з доставкою:</span>
-                        </div>
-                      </div>
+                {hasFreeDelivery ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-sm text-muted-foreground">Доставка:</span>
+                      <span className="text-sm font-medium">Безкоштовно</span>
+                    </div>
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-base font-bold text-foreground">До оплати з доставкою:</span>
                       <span className="text-base font-bold text-primary">{finalTotal} ₴</span>
                     </div>
-                  ) : (
-                    <div className="flex items-center justify-between w-full gap-2">
-                      <span className="text-base font-bold text-foreground">До оплати без доставки:</span>
-                      <span className="text-base font-bold text-primary">{finalTotal} ₴</span>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-base font-bold text-foreground">До оплати без доставки:</span>
+                    <span className="text-base font-bold text-primary">{finalTotal} ₴</span>
+                  </div>
+                )}
 
                 {/* Checkout button */}
-                <Button variant="cta" size="xl" className="w-full" onClick={handleCheckout}>
+                <Button size="lg" className="w-full rounded-xl" onClick={handleCheckout}>
                   Оформити замовлення
-                  <ArrowRight className="w-5 h-5" />
                 </Button>
               </div>
             </div>
