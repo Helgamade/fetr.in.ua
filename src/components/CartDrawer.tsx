@@ -71,7 +71,7 @@ export const CartDrawer: React.FC = () => {
 
         {/* Free delivery progress */}
         {items.length > 0 && (
-          <div className="p-4 bg-sage/50">
+          <div className="p-4 bg-sage/50 min-h-[56px] flex flex-col justify-center">
             {(() => {
               const freeDeliveryAmount = amountToFreeDelivery();
               const freeDeliveryProgress = Math.min(100, ((FREE_DELIVERY_THRESHOLD - freeDeliveryAmount) / FREE_DELIVERY_THRESHOLD) * 100);
@@ -131,17 +131,17 @@ export const CartDrawer: React.FC = () => {
                   return (
                     <li key={item.productId} className={index > 0 ? "border-t border-border pt-4 mt-4" : ""}>
                       <div className="relative">
-                        {/* Delete button - top left */}
+                        {/* Delete button - top right */}
                         <button
                           type="button"
                           onClick={() => removeFromCart(item.productId)}
-                          className="absolute left-0 top-0 h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+                          className="absolute right-0 top-0 h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>
 
                         {/* Product content */}
-                        <div className="flex gap-4 pl-8">
+                        <div className="flex gap-4 pr-8">
                           {/* Image */}
                           <div className="flex-shrink-0">
                             <div className="w-20 h-20 rounded-lg overflow-hidden">
@@ -226,22 +226,22 @@ export const CartDrawer: React.FC = () => {
               {/* Totals and checkout button - right after items */}
               <div className="space-y-4">
                 {/* Totals */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between w-full">
                   {hasFreeDelivery ? (
-                    <>
-                      <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 text-sm">
                           <span className="text-muted-foreground">Доставка:</span>
                           <span className="font-medium">Безкоштовно</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-base font-bold text-foreground">До оплати з доставкою:</span>
-                          <span className="text-base font-bold text-primary">{finalTotal} ₴</span>
                         </div>
                       </div>
-                    </>
+                      <span className="text-base font-bold text-primary">{finalTotal} ₴</span>
+                    </div>
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between w-full gap-2">
                       <span className="text-base font-bold text-foreground">До оплати без доставки:</span>
                       <span className="text-base font-bold text-primary">{finalTotal} ₴</span>
                     </div>
