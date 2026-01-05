@@ -99,9 +99,9 @@ export const CartDrawer: React.FC = () => {
         )}
 
         {/* Cart items */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="flex flex-col items-center justify-center h-full text-center p-4">
               <ShoppingBag className="w-16 h-16 text-muted-foreground/30 mb-4" />
               <h3 className="font-heading font-bold text-lg mb-2">Кошик порожній</h3>
               <p className="text-muted-foreground mb-4">Додайте товари для оформлення замовлення</p>
@@ -110,148 +110,153 @@ export const CartDrawer: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
-              {items.map((item) => {
-                const product = products.find(p => p.code === item.productId);
-                if (!product) return null;
+            <div className="p-4">
+              {/* Items list */}
+              <ul className="space-y-0">
+                {items.map((item, index) => {
+                  const product = products.find(p => p.code === item.productId);
+                  if (!product) return null;
 
-                const currentPrice = product.salePrice || product.basePrice;
-                const hasDiscount = !!product.salePrice;
-                const optionsPrice = item.selectedOptions.reduce((sum, optId) => {
-                  const option = product.options.find(o => o.code === optId);
-                  return sum + (option?.price || 0);
-                }, 0);
-                
-                // Price per unit (product + options)
-                const unitPrice = currentPrice + optionsPrice;
-                const unitBasePrice = product.basePrice + optionsPrice;
-                const itemTotal = unitPrice * item.quantity;
+                  const currentPrice = product.salePrice || product.basePrice;
+                  const hasDiscount = !!product.salePrice;
+                  const optionsPrice = item.selectedOptions.reduce((sum, optId) => {
+                    const option = product.options.find(o => o.code === optId);
+                    return sum + (option?.price || 0);
+                  }, 0);
+                  
+                  // Price per unit (product + options)
+                  const unitPrice = currentPrice + optionsPrice;
+                  const unitBasePrice = product.basePrice + optionsPrice;
 
-                return (
-                  <div key={item.productId} className="relative p-4 rounded-xl bg-muted/50">
-                    {/* Delete button - top right */}
-                    <button
-                      onClick={() => removeFromCart(item.productId)}
-                      className="absolute top-2 right-2 h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors rounded"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                  return (
+                    <li key={item.productId} className={index > 0 ? "border-t border-border pt-4 mt-4" : ""}>
+                      <div className="relative">
+                        {/* Delete button - top left */}
+                        <button
+                          type="button"
+                          onClick={() => removeFromCart(item.productId)}
+                          className="absolute left-0 top-0 h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
 
-                    <div className="flex gap-4 pr-8">
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-heading font-semibold pr-6 mb-1">{product.name}</h4>
-                        
-                        {/* Availability */}
-                        <p className="text-xs text-muted-foreground mb-2">В наявності</p>
-                        
-                        {/* Selected options */}
-                        {item.selectedOptions.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-3">
-                            {item.selectedOptions.map(optId => {
-                              const option = product.options.find(o => o.code === optId);
-                              return option ? (
-                                <span key={optId} className="text-xs px-2 py-0.5 bg-primary/10 rounded-full">
-                                  {option.name}
-                                </span>
-                              ) : null;
-                            })}
+                        {/* Product content */}
+                        <div className="flex gap-4 pl-8">
+                          {/* Image */}
+                          <div className="flex-shrink-0">
+                            <div className="w-20 h-20 rounded-lg overflow-hidden">
+                              <img
+                                src={product.images[0]}
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
                           </div>
-                        )}
 
-                        {/* Quantity controls and price */}
-                        <div className="flex items-center justify-between mt-3">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon-sm"
-                              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                              disabled={item.quantity <= 1}
-                              className={cn(
-                                "h-8 w-8",
-                                item.quantity <= 1 && "opacity-50 cursor-not-allowed"
-                              )}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <input
-                              type="number"
-                              value={item.quantity}
-                              readOnly
-                              className="w-12 h-8 text-center border border-border rounded-lg font-medium text-sm"
-                            />
-                            <Button
-                              variant="outline"
-                              size="icon-sm"
-                              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                              className="h-8 w-8"
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
-                          </div>
-                          
-                          {/* Price - aligned to right, stacked */}
-                          <div className="flex flex-col items-end">
-                            {hasDiscount ? (
-                              <>
-                                <span className="text-lg font-bold text-destructive">
-                                  {unitPrice} ₴
+                          {/* Product info */}
+                          <div className="flex-1 min-w-0">
+                            {/* Name */}
+                            <div className="mb-1">
+                              <h4 className="font-medium text-sm leading-tight">{product.name}</h4>
+                            </div>
+
+                            {/* Availability */}
+                            <div className="mb-3">
+                              <span className="text-xs text-muted-foreground">В наявності</span>
+                            </div>
+
+                            {/* Quantity and price row */}
+                            <div className="flex items-center justify-between gap-4">
+                              {/* Quantity controls */}
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                                  disabled={item.quantity <= 1}
+                                  className={cn(
+                                    "h-8 w-8 flex items-center justify-center rounded-lg border border-border transition-colors text-sm font-medium",
+                                    item.quantity <= 1 
+                                      ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground" 
+                                      : "hover:bg-muted hover:border-primary text-foreground"
+                                  )}
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="w-8 text-center text-sm font-medium">
+                                  {item.quantity}
                                 </span>
-                                <span className="text-sm text-muted-foreground line-through">
-                                  {unitBasePrice} ₴
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-lg font-bold text-foreground">
-                                {unitPrice} ₴
-                              </span>
-                            )}
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                                  className="h-8 w-8 flex items-center justify-center rounded-lg border border-border hover:bg-muted hover:border-primary transition-colors text-foreground text-sm font-medium"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                              
+                              {/* Price - aligned to right, stacked */}
+                              <div className="flex flex-col items-end">
+                                {hasDiscount ? (
+                                  <>
+                                    <span className="text-base font-bold text-destructive">
+                                      {unitPrice} ₴
+                                    </span>
+                                    <span className="text-sm text-muted-foreground line-through">
+                                      {unitBasePrice} ₴
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="text-base font-bold text-foreground">
+                                    {unitPrice} ₴
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* Separator */}
+              <hr className="my-4 border-border" />
+
+              {/* Totals and checkout button - right after items */}
+              <div className="space-y-4">
+                {/* Totals */}
+                <div className="flex items-center justify-between">
+                  {hasFreeDelivery ? (
+                    <>
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Доставка:</span>
+                          <span className="font-medium">Безкоштовно</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-base font-bold text-foreground">До оплати з доставкою:</span>
+                          <span className="text-base font-bold text-primary">{finalTotal} ₴</span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-bold text-foreground">До оплати без доставки:</span>
+                      <span className="text-base font-bold text-primary">{finalTotal} ₴</span>
                     </div>
-                  </div>
-                );
-              })}
+                  )}
+                </div>
+
+                {/* Checkout button */}
+                <Button variant="cta" size="xl" className="w-full" onClick={handleCheckout}>
+                  Оформити замовлення
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        {items.length > 0 && (
-          <div className="border-t border-border p-4 space-y-4">
-            {/* Totals */}
-            <div className="space-y-2">
-              {hasFreeDelivery ? (
-                <>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Доставка:</span>
-                    <span className="font-medium">Безкоштовно</span>
-                  </div>
-                  <div className="flex justify-between font-heading font-bold text-lg pt-2 border-t border-border">
-                    <span>До оплати з доставкою:</span>
-                    <span className="text-primary">{finalTotal} ₴</span>
-                  </div>
-                </>
-              ) : (
-                <div className="flex justify-between font-heading font-bold text-lg">
-                  <span>До оплати без доставки:</span>
-                  <span className="text-primary">{finalTotal} ₴</span>
-                </div>
-              )}
-            </div>
-
-            {/* Checkout button */}
-            <Button variant="cta" size="xl" className="w-full" onClick={handleCheckout}>
-              Оформити замовлення
-              <ArrowRight className="w-5 h-5" />
-            </Button>
-          </div>
-        )}
       </div>
     </>
   );
