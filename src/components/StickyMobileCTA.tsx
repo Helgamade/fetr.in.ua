@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 export const StickyMobileCTA: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const { openCart, getItemCount, getTotal } = useCart();
+  const { openCart, getItemCount, getSubtotal, getDiscount } = useCart();
   const itemCount = getItemCount();
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export const StickyMobileCTA: React.FC = () => {
               </Button>
               <Button variant="cta" className="flex-1" onClick={openCart}>
                 <ShoppingBag className="w-4 h-4" />
-                Кошик ({getTotal()} ₴)
+                Кошик ({getSubtotal() - getDiscount()} ₴)
               </Button>
             </>
           ) : (
