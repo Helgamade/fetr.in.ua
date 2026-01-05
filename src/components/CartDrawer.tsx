@@ -113,7 +113,7 @@ export const CartDrawer: React.FC = () => {
             </div>
           ) : (
             <div className="p-1 bg-muted/50">
-              <div className="p-3">
+              <div className="p-3 space-y-3">
                 {/* Items list */}
                 <ul className="space-y-0">
                 {items.map((item, index) => {
@@ -134,7 +134,7 @@ export const CartDrawer: React.FC = () => {
                   const itemTotalBasePrice = unitBasePrice * item.quantity;
 
                   return (
-                    <li key={item.productId} className={cn("py-4", index > 0 && "border-t border-border")}>
+                    <li key={item.productId}>
                       <div className="flex gap-4 bg-card rounded-lg p-3">
                         {/* Image */}
                         <div className="flex-shrink-0">
@@ -224,8 +224,8 @@ export const CartDrawer: React.FC = () => {
                 })}
               </ul>
 
-              {/* Totals and checkout button - separate block with border */}
-              <div className="mt-4 p-4 rounded-xl border border-border bg-muted/30 space-y-4">
+              {/* Totals and checkout button */}
+              <div className="mt-4 space-y-4">
                 {/* Totals */}
                 {hasFreeDelivery ? (
                   <div className="space-y-2">
