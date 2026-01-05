@@ -26,7 +26,6 @@ export function Settings() {
 
   const deliverySettings = {
     freeDeliveryThreshold: settings.free_delivery_threshold || 1500,
-    deliveryCost: settings.delivery_cost || 70,
     novaPoshtaEnabled: settings.nova_poshta_enabled ?? true,
     ukrposhtaEnabled: settings.ukrposhta_enabled ?? true,
     pickupEnabled: settings.pickup_enabled ?? true,
@@ -63,7 +62,6 @@ export function Settings() {
       store_working_hours_weekdays: localStoreSettings.workingHoursWeekdays,
       store_working_hours_weekend: localStoreSettings.workingHoursWeekend,
       free_delivery_threshold: localDeliverySettings.freeDeliveryThreshold,
-      delivery_cost: localDeliverySettings.deliveryCost,
       nova_poshta_enabled: localDeliverySettings.novaPoshtaEnabled,
       ukrposhta_enabled: localDeliverySettings.ukrposhtaEnabled,
       pickup_enabled: localDeliverySettings.pickupEnabled,
@@ -185,31 +183,17 @@ export function Settings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="freeDeliveryThreshold">Безкоштовна доставка від (₴)</Label>
-              <Input
-                id="freeDeliveryThreshold"
-                type="number"
-                value={localDeliverySettings.freeDeliveryThreshold}
-                onChange={(e) => setLocalDeliverySettings({ 
-                  ...localDeliverySettings, 
-                  freeDeliveryThreshold: parseInt(e.target.value) || 0 
-                })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="deliveryCost">Вартість доставки (₴)</Label>
-              <Input
-                id="deliveryCost"
-                type="number"
-                value={localDeliverySettings.deliveryCost}
-                onChange={(e) => setLocalDeliverySettings({ 
-                  ...localDeliverySettings, 
-                  deliveryCost: parseInt(e.target.value) || 0 
-                })}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="freeDeliveryThreshold">Безкоштовна доставка від (₴)</Label>
+            <Input
+              id="freeDeliveryThreshold"
+              type="number"
+              value={localDeliverySettings.freeDeliveryThreshold}
+              onChange={(e) => setLocalDeliverySettings({ 
+                ...localDeliverySettings, 
+                freeDeliveryThreshold: parseInt(e.target.value) || 0 
+              })}
+            />
           </div>
 
           <Separator />

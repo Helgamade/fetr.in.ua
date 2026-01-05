@@ -21,8 +21,6 @@ export const CartDrawer: React.FC = () => {
     updateQuantity,
     getSubtotal,
     getDiscount,
-    getDeliveryCost,
-    getTotal,
     amountToFreeDelivery,
   } = useCart();
 
@@ -216,13 +214,9 @@ export const CartDrawer: React.FC = () => {
                   <span>-{getDiscount()} ₴</span>
                 </div>
               )}
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Доставка</span>
-                <span>{getDeliveryCost() === 0 ? 'Безкоштовно' : `${getDeliveryCost()} ₴`}</span>
-              </div>
               <div className="flex justify-between font-heading font-bold text-lg pt-2 border-t border-border">
                 <span>Разом</span>
-                <span className="text-primary">{getTotal()} ₴</span>
+                <span className="text-primary">{getSubtotal() - getDiscount()} ₴</span>
               </div>
             </div>
 
