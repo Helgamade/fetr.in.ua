@@ -130,87 +130,86 @@ export const CartDrawer: React.FC = () => {
 
                   return (
                     <li key={item.productId} className={index > 0 ? "border-t border-border pt-4 mt-4" : ""}>
-                      <div className="relative">
-                        {/* Delete button - top right */}
-                        <button
-                          type="button"
-                          onClick={() => removeFromCart(item.productId)}
-                          className="absolute right-0 top-0 h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+                      <div className="flex gap-4">
+                        {/* Image */}
+                        <div className="flex-shrink-0">
+                          <div className="w-20 h-20 rounded-lg overflow-hidden">
+                            <img
+                              src={product.images[0]}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
 
-                        {/* Product content */}
-                        <div className="flex gap-4 pr-8">
-                          {/* Image */}
-                          <div className="flex-shrink-0">
-                            <div className="w-20 h-20 rounded-lg overflow-hidden">
-                              <img
-                                src={product.images[0]}
-                                alt={product.name}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
+                        {/* Product info and controls */}
+                        <div className="flex-1 min-w-0 relative">
+                          {/* Delete button - absolute top right */}
+                          <div className="absolute top-0 right-0 z-[5]">
+                            <button
+                              type="button"
+                              onClick={() => removeFromCart(item.productId)}
+                              className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
                           </div>
 
-                          {/* Product info */}
-                          <div className="flex-1 min-w-0">
-                            {/* Name */}
-                            <div className="mb-1">
-                              <h4 className="font-medium text-sm leading-tight">{product.name}</h4>
-                            </div>
+                          {/* Name */}
+                          <div className="mb-1 pr-8">
+                            <h4 className="font-medium text-sm leading-tight">{product.name}</h4>
+                          </div>
 
-                            {/* Availability */}
-                            <div className="mb-3">
-                              <span className="text-xs text-muted-foreground">В наявності</span>
-                            </div>
+                          {/* Availability */}
+                          <div className="mb-3">
+                            <span className="text-xs text-muted-foreground">В наявності</span>
+                          </div>
 
-                            {/* Quantity and price row */}
-                            <div className="flex items-center justify-between gap-4">
-                              {/* Quantity controls */}
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                                  disabled={item.quantity <= 1}
-                                  className={cn(
-                                    "h-8 w-8 flex items-center justify-center rounded-lg border border-border transition-colors text-sm font-medium",
-                                    item.quantity <= 1 
-                                      ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground" 
-                                      : "hover:bg-muted hover:border-primary text-foreground"
-                                  )}
-                                >
-                                  <Minus className="w-3 h-3" />
-                                </button>
-                                <span className="w-8 text-center text-sm font-medium">
-                                  {item.quantity}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                                  className="h-8 w-8 flex items-center justify-center rounded-lg border border-border hover:bg-muted hover:border-primary transition-colors text-foreground text-sm font-medium"
-                                >
-                                  <Plus className="w-3 h-3" />
-                                </button>
-                              </div>
-                              
-                              {/* Price - aligned to right, stacked */}
-                              <div className="flex flex-col items-end">
-                                {hasDiscount ? (
-                                  <>
-                                    <span className="text-base font-bold text-destructive">
-                                      {unitPrice} ₴
-                                    </span>
-                                    <span className="text-sm text-muted-foreground line-through">
-                                      {unitBasePrice} ₴
-                                    </span>
-                                  </>
-                                ) : (
-                                  <span className="text-base font-bold text-foreground">
+                          {/* Quantity and price row */}
+                          <div className="flex items-center justify-between gap-4">
+                            {/* Quantity controls */}
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                                disabled={item.quantity <= 1}
+                                className={cn(
+                                  "h-8 w-8 flex items-center justify-center rounded-lg border border-border transition-colors text-sm font-medium",
+                                  item.quantity <= 1 
+                                    ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground" 
+                                    : "hover:bg-muted hover:border-primary text-foreground"
+                                )}
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className="w-8 text-center text-sm font-medium">
+                                {item.quantity}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                                className="h-8 w-8 flex items-center justify-center rounded-lg border border-border hover:bg-muted hover:border-primary transition-colors text-foreground text-sm font-medium"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+                            
+                            {/* Price - aligned to right, stacked, same column as delete button */}
+                            <div className="flex flex-col items-end pr-8">
+                              {hasDiscount ? (
+                                <>
+                                  <span className="text-base font-bold text-destructive">
                                     {unitPrice} ₴
                                   </span>
-                                )}
-                              </div>
+                                  <span className="text-sm text-muted-foreground line-through">
+                                    {unitBasePrice} ₴
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-base font-bold text-foreground">
+                                  {unitPrice} ₴
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
