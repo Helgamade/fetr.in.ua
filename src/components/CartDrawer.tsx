@@ -3,7 +3,7 @@ import { useCart } from '@/context/CartContext';
 import { useProducts } from '@/hooks/useProducts';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
-import { X, Plus, Minus, Trash2, ShoppingBag, Truck, Clock, ArrowRight } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -21,36 +21,22 @@ export const CartDrawer: React.FC = () => {
     updateQuantity,
     getSubtotal,
     getDiscount,
-    amountToFreeDelivery,
   } = useCart();
-
-  const getDeliveryMessage = () => {
-    const now = new Date();
-    const day = now.getDay();
-    const hour = now.getHours();
-    
-    // Weekend
-    if (day === 0 || day === 6) {
-      return { text: 'Найближча відправка — у понеділок', highlight: false };
-    }
-    
-    // Weekday before 16:00
-    if (hour < 16) {
-      return { text: 'Оплатіть протягом 15 хв — відправимо сьогодні!', highlight: true };
-    }
-    
-    // Weekday after 16:00
-    return { text: 'Відправимо завтра о 17:00', highlight: false };
-  };
-
-  const deliveryMessage = getDeliveryMessage();
-  const freeDeliveryAmount = amountToFreeDelivery();
-  const freeDeliveryProgress = Math.min(100, ((FREE_DELIVERY_THRESHOLD - freeDeliveryAmount) / FREE_DELIVERY_THRESHOLD) * 100);
 
   const handleCheckout = () => {
     closeCart();
     navigate('/checkout');
   };
+
+  // Calculate final total (with discounts applied, but without delivery)
+  const getFinalTotal = () => {
+    const subtotal = getSubtotal();
+    const discount = getDiscount();
+    return subtotal - discount;
+  };
+
+  const finalTotal = getFinalTotal();
+  const hasFreeDelivery = finalTotal >= FREE_DELIVERY_THRESHOLD;
 
   return (
     <>
@@ -82,30 +68,6 @@ export const CartDrawer: React.FC = () => {
           </Button>
         </div>
 
-        {/* Free delivery progress */}
-        {items.length > 0 && (
-          <div className="p-4 bg-sage/50">
-            {freeDeliveryAmount > 0 ? (
-              <>
-                <p className="text-sm mb-2">
-                  До безкоштовної доставки: <span className="font-bold text-primary">{freeDeliveryAmount} ₴</span>
-                </p>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-500 rounded-full"
-                    style={{ width: `${freeDeliveryProgress}%` }}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center gap-2 text-success">
-                <Truck className="w-5 h-5" />
-                <span className="font-medium">Безкоштовна доставка!</span>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Cart items */}
         <div className="flex-1 overflow-y-auto p-4">
           {items.length === 0 ? (
@@ -123,66 +85,105 @@ export const CartDrawer: React.FC = () => {
                 const product = products.find(p => p.code === item.productId);
                 if (!product) return null;
 
-                const price = product.salePrice || product.basePrice;
+                const currentPrice = product.salePrice || product.basePrice;
+                const hasDiscount = !!product.salePrice;
                 const optionsPrice = item.selectedOptions.reduce((sum, optId) => {
                   const option = product.options.find(o => o.code === optId);
                   return sum + (option?.price || 0);
                 }, 0);
-                const itemTotal = (price + optionsPrice) * item.quantity;
+                
+                // Price per unit (product + options)
+                const unitPrice = currentPrice + optionsPrice;
+                const unitBasePrice = product.basePrice + optionsPrice;
+                const itemTotal = unitPrice * item.quantity;
 
                 return (
-                  <div key={item.productId} className="flex gap-4 p-4 rounded-xl bg-muted/50">
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-heading font-semibold truncate">{product.name}</h4>
-                      
-                      {/* Selected options */}
-                      {item.selectedOptions.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {item.selectedOptions.map(optId => {
-                            const option = product.options.find(o => o.code === optId);
-                            return option ? (
-                              <span key={optId} className="text-xs px-2 py-0.5 bg-primary/10 rounded-full">
-                                {option.name}
-                              </span>
-                            ) : null;
-                          })}
-                        </div>
-                      )}
+                  <div key={item.productId} className="relative p-4 rounded-xl bg-muted/50">
+                    {/* Delete button - top right */}
+                    <button
+                      onClick={() => removeFromCart(item.productId)}
+                      className="absolute top-2 right-2 h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors rounded"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
 
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon-sm"
-                            onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
-                          <span className="font-medium w-6 text-center">{item.quantity}</span>
-                          <Button
-                            variant="outline"
-                            size="icon-sm"
-                            onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
+                    <div className="flex gap-4 pr-8">
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-heading font-semibold pr-6 mb-1">{product.name}</h4>
+                        
+                        {/* Availability */}
+                        <p className="text-xs text-muted-foreground mb-2">В наявності</p>
+                        
+                        {/* Selected options */}
+                        {item.selectedOptions.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {item.selectedOptions.map(optId => {
+                              const option = product.options.find(o => o.code === optId);
+                              return option ? (
+                                <span key={optId} className="text-xs px-2 py-0.5 bg-primary/10 rounded-full">
+                                  {option.name}
+                                </span>
+                              ) : null;
+                            })}
+                          </div>
+                        )}
+
+                        {/* Quantity controls and price */}
+                        <div className="flex items-center justify-between mt-3">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon-sm"
+                              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                              disabled={item.quantity <= 1}
+                              className={cn(
+                                "h-8 w-8",
+                                item.quantity <= 1 && "opacity-50 cursor-not-allowed"
+                              )}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <input
+                              type="number"
+                              value={item.quantity}
+                              readOnly
+                              className="w-12 h-8 text-center border border-border rounded-lg font-medium text-sm"
+                            />
+                            <Button
+                              variant="outline"
+                              size="icon-sm"
+                              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                              className="h-8 w-8"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          
+                          {/* Price - aligned to right, stacked */}
+                          <div className="flex flex-col items-end">
+                            {hasDiscount ? (
+                              <>
+                                <span className="text-lg font-bold text-destructive">
+                                  {unitPrice} ₴
+                                </span>
+                                <span className="text-sm text-muted-foreground line-through">
+                                  {unitBasePrice} ₴
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-lg font-bold text-foreground">
+                                {unitPrice} ₴
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <span className="font-bold text-primary">{itemTotal} ₴</span>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => removeFromCart(item.productId)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
                   </div>
                 );
               })}
@@ -193,31 +194,25 @@ export const CartDrawer: React.FC = () => {
         {/* Footer */}
         {items.length > 0 && (
           <div className="border-t border-border p-4 space-y-4">
-            {/* Delivery info */}
-            <div className={cn(
-              'flex items-center gap-2 p-3 rounded-lg text-sm',
-              deliveryMessage.highlight ? 'bg-success/10 text-success' : 'bg-muted'
-            )}>
-              <Clock className="w-4 h-4 flex-shrink-0" />
-              <span>{deliveryMessage.text}</span>
-            </div>
-
             {/* Totals */}
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Підсумок</span>
-                <span>{getSubtotal()} ₴</span>
-              </div>
-              {getDiscount() > 0 && (
-                <div className="flex justify-between text-sm text-success">
-                  <span>Знижка</span>
-                  <span>-{getDiscount()} ₴</span>
+              {hasFreeDelivery ? (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Доставка:</span>
+                    <span className="font-medium">Безкоштовно</span>
+                  </div>
+                  <div className="flex justify-between font-heading font-bold text-lg pt-2 border-t border-border">
+                    <span>До оплати з доставкою:</span>
+                    <span className="text-primary">{finalTotal} ₴</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between font-heading font-bold text-lg">
+                  <span>До оплати без доставки:</span>
+                  <span className="text-primary">{finalTotal} ₴</span>
                 </div>
               )}
-              <div className="flex justify-between font-heading font-bold text-lg pt-2 border-t border-border">
-                <span>Разом</span>
-                <span className="text-primary">{getSubtotal() - getDiscount()} ₴</span>
-              </div>
             </div>
 
             {/* Checkout button */}
