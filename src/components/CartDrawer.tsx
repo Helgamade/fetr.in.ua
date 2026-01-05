@@ -125,9 +125,11 @@ export const CartDrawer: React.FC = () => {
                     return sum + (option?.price || 0);
                   }, 0);
                   
-                  // Price per unit (product + options) - показываем цену за единицу
+                  // Total price (product + options) * quantity - показываем общую цену
                   const unitPrice = currentPrice + optionsPrice;
                   const unitBasePrice = product.basePrice + optionsPrice;
+                  const itemTotalPrice = unitPrice * item.quantity;
+                  const itemTotalBasePrice = unitBasePrice * item.quantity;
 
                   return (
                     <li key={item.productId} className={index > 0 ? "border-t border-border pt-4 mt-4" : ""}>
@@ -200,15 +202,15 @@ export const CartDrawer: React.FC = () => {
                               {hasDiscount ? (
                                 <>
                                   <span className="text-sm text-muted-foreground line-through">
-                                    {unitBasePrice} ₴
+                                    {itemTotalBasePrice} ₴
                                   </span>
                                   <span className="text-base font-bold text-destructive">
-                                    {unitPrice} ₴
+                                    {itemTotalPrice} ₴
                                   </span>
                                 </>
                               ) : (
                                 <span className="text-base font-bold text-foreground">
-                                  {unitPrice} ₴
+                                  {itemTotalPrice} ₴
                                 </span>
                               )}
                             </div>
