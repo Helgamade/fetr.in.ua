@@ -3,7 +3,7 @@ import { useCart } from '@/context/CartContext';
 import { useProducts } from '@/hooks/useProducts';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
-import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ShoppingBag, Truck, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +21,7 @@ export const CartDrawer: React.FC = () => {
     updateQuantity,
     getSubtotal,
     getDiscount,
+    amountToFreeDelivery,
   } = useCart();
 
   const handleCheckout = () => {
@@ -67,6 +68,35 @@ export const CartDrawer: React.FC = () => {
             <X className="w-5 h-5" />
           </Button>
         </div>
+
+        {/* Free delivery progress */}
+        {items.length > 0 && (
+          <div className="p-4 bg-sage/50">
+            {(() => {
+              const freeDeliveryAmount = amountToFreeDelivery();
+              const freeDeliveryProgress = Math.min(100, ((FREE_DELIVERY_THRESHOLD - freeDeliveryAmount) / FREE_DELIVERY_THRESHOLD) * 100);
+              
+              return freeDeliveryAmount > 0 ? (
+                <>
+                  <p className="text-sm mb-2">
+                    До безкоштовної доставки: <span className="font-bold text-primary">{freeDeliveryAmount} ₴</span>
+                  </p>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-500 rounded-full"
+                      style={{ width: `${freeDeliveryProgress}%` }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 text-success">
+                  <Truck className="w-5 h-5" />
+                  <span className="font-medium">Безкоштовна доставка!</span>
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
         {/* Cart items */}
         <div className="flex-1 overflow-y-auto p-4">
