@@ -5,9 +5,9 @@ import { useSettings } from '@/hooks/useSettings';
 
 interface CartContextType extends CartState {
   addToCart: (productId: string, selectedOptions: string[]) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
-  updateOptions: (productId: string, selectedOptions: string[]) => void;
+  removeFromCart: (itemId: string) => void;
+  updateQuantity: (itemId: string, quantity: number) => void;
+  updateOptions: (itemId: string, selectedOptions: string[]) => void;
   clearCart: () => void;
   toggleCart: () => void;
   openCart: () => void;
@@ -29,9 +29,37 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const FREE_DELIVERY_THRESHOLD = parseInt(settings.free_delivery_threshold) || 1500;
   const DELIVERY_COST = parseInt(settings.delivery_cost) || 70;
 
+  // Функция для генерации уникального ID
+  const generateItemId = () => {
+    return `cart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  // Функция для миграции старых данных (без id) в новый формат
+  const migrateCartItems = (items: any[]): CartItem[] => {
+    return items.map(item => {
+      // Если у элемента уже есть id, возвращаем как есть
+      if (item.id) {
+        return item;
+      }
+      // Если нет id, генерируем новый
+      return {
+        ...item,
+        id: generateItemId()
+      };
+    });
+  };
+
   const [items, setItems] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('fetr-cart');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    
+    try {
+      const parsed = JSON.parse(saved);
+      // Миграция старых данных
+      return migrateCartItems(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      return [];
+    }
   });
   const [isOpen, setIsOpen] = useState(false);
 
@@ -41,15 +69,34 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = useCallback((productId: string, selectedOptions: string[]) => {
     setItems(prev => {
-      const existing = prev.find(item => item.productId === productId);
+      // Сортируем опции для корректного сравнения
+      const sortedOptions = [...selectedOptions].sort();
+      
+      // Ищем товар с таким же productId И такими же опциями
+      const existing = prev.find(item => {
+        if (item.productId !== productId) return false;
+        const itemSortedOptions = [...item.selectedOptions].sort();
+        return JSON.stringify(itemSortedOptions) === JSON.stringify(sortedOptions);
+      });
+      
       if (existing) {
-        return prev.map(item =>
-          item.productId === productId
-            ? { ...item, quantity: item.quantity + 1, selectedOptions }
-            : item
-        );
+        // Если нашли - увеличиваем количество
+        return prev.map(item => {
+          const itemSortedOptions = [...item.selectedOptions].sort();
+          if (item.id === existing.id) {
+            return { ...item, quantity: item.quantity + 1 };
+          }
+          return item;
+        });
       }
-      return [...prev, { productId, quantity: 1, selectedOptions }];
+      
+      // Если не нашли - добавляем как новую позицию с уникальным id
+      return [...prev, { 
+        id: generateItemId(),
+        productId, 
+        quantity: 1, 
+        selectedOptions 
+      }];
     });
     
     // Открываем корзину сразу без всплывающего сообщения
@@ -61,26 +108,26 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, []);
 
-  const removeFromCart = useCallback((productId: string) => {
-    setItems(prev => prev.filter(item => item.productId !== productId));
+  const removeFromCart = useCallback((itemId: string) => {
+    setItems(prev => prev.filter(item => item.id !== itemId));
   }, []);
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
+  const updateQuantity = useCallback((itemId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(itemId);
       return;
     }
     setItems(prev =>
       prev.map(item =>
-        item.productId === productId ? { ...item, quantity } : item
+        item.id === itemId ? { ...item, quantity } : item
       )
     );
   }, [removeFromCart]);
 
-  const updateOptions = useCallback((productId: string, selectedOptions: string[]) => {
+  const updateOptions = useCallback((itemId: string, selectedOptions: string[]) => {
     setItems(prev =>
       prev.map(item =>
-        item.productId === productId ? { ...item, selectedOptions } : item
+        item.id === itemId ? { ...item, selectedOptions } : item
       )
     );
   }, []);

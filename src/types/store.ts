@@ -35,6 +35,7 @@ export interface Product {
 }
 
 export interface CartItem {
+  id: string; // Уникальный идентификатор позиции в корзине
   productId: string;
   quantity: number;
   selectedOptions: string[];

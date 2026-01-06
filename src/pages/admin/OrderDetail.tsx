@@ -194,8 +194,11 @@ export function OrderDetail() {
                 // Итоговая цена товара: ((Цена товара - Скидка) + Сумма опций) * Количество
                 const totalPrice = (productPrice + optionsPrice) * item.quantity;
                 
+                // Создаем уникальный ключ на основе productId + опций + индекса
+                const itemKey = `${item.productId}_${index}_${JSON.stringify([...item.selectedOptions].sort())}`;
+                
                 return (
-                  <div key={item.productId} className="flex gap-4 pb-4 border-b last:border-0 last:pb-0">
+                  <div key={itemKey} className="flex gap-4 pb-4 border-b last:border-0 last:pb-0">
                     {/* Изображение */}
                     <div className="flex-shrink-0">
                       {product?.images && product.images.length > 0 ? (

@@ -136,7 +136,7 @@ export const CartDrawer: React.FC = () => {
                   const isFirst = index === 0;
 
                   return (
-                    <li key={item.productId}>
+                    <li key={item.id}>
                       <div className={cn(
                         "flex gap-4 bg-card p-3",
                         isFirst && "rounded-t-lg",
@@ -159,7 +159,7 @@ export const CartDrawer: React.FC = () => {
                           <div className="absolute top-0 right-0 z-[5]">
                             <button
                               type="button"
-                              onClick={() => removeFromCart(item.productId)}
+                              onClick={() => removeFromCart(item.id)}
                               className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
                             >
                               <Trash2 className="w-5 h-5" />
@@ -204,7 +204,7 @@ export const CartDrawer: React.FC = () => {
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
-                                onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                 disabled={item.quantity <= 1}
                                 className={cn(
                                   "h-8 w-8 flex items-center justify-center rounded-xl border border-border transition-colors text-sm font-medium",
@@ -220,7 +220,7 @@ export const CartDrawer: React.FC = () => {
                               </span>
                               <button
                                 type="button"
-                                onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                 className="h-8 w-8 flex items-center justify-center rounded-xl border border-border hover:bg-muted hover:border-primary transition-colors text-foreground text-sm font-medium"
                               >
                                 <Plus className="w-3 h-3" />
