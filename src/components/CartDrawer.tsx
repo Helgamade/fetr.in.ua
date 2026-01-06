@@ -172,15 +172,19 @@ export const CartDrawer: React.FC = () => {
                           </div>
 
                           {/* Selected options */}
-                          <div className="mb-3 space-y-1">
+                          <div className="mb-3 flex flex-wrap gap-2">
                             {item.selectedOptions.length > 0 ? (
                               item.selectedOptions.map((optId) => {
                                 const option = product.options.find(o => o.code === optId);
                                 if (!option) return null;
                                 return (
-                                  <div key={optId} className="text-muted-foreground" style={{ fontSize: '0.85rem' }}>
+                                  <span 
+                                    key={optId} 
+                                    className="inline-flex items-center px-3 py-1 rounded-full border border-border text-muted-foreground" 
+                                    style={{ fontSize: '0.85rem' }}
+                                  >
                                     {option.name} (+{option.price}₴)
-                                  </div>
+                                  </span>
                                 );
                               })
                             ) : (
