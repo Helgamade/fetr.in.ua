@@ -171,9 +171,21 @@ export const CartDrawer: React.FC = () => {
                             <h4 className="font-medium text-sm leading-tight">{product.name}</h4>
                           </div>
 
-                          {/* Availability */}
-                          <div className="mb-3">
-                            <span className="text-muted-foreground" style={{ fontSize: '0.85rem' }}>В наявності</span>
+                          {/* Selected options */}
+                          <div className="mb-3 space-y-1">
+                            {item.selectedOptions.length > 0 ? (
+                              item.selectedOptions.map((optId) => {
+                                const option = product.options.find(o => o.code === optId);
+                                if (!option) return null;
+                                return (
+                                  <div key={optId} className="text-muted-foreground" style={{ fontSize: '0.85rem' }}>
+                                    {option.name} (+{option.price}₴)
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <span className="text-muted-foreground" style={{ fontSize: '0.85rem' }}>В наявності</span>
+                            )}
                           </div>
 
                           {/* Quantity and price row */}
