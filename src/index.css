@@ -159,6 +159,10 @@
     @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
   }
   
+  .max-w-7xl {
+    max-width: 80rem;
+  }
+  
   .glass-card {
     @apply bg-card/80 backdrop-blur-md border border-border/50 rounded-2xl;
     box-shadow: var(--shadow-md);

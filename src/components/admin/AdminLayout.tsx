@@ -122,8 +122,10 @@ export function AdminLayout() {
           </div>
         </header>
         
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:p-6">
-          <Outlet />
+        <main className="flex flex-1 flex-col gap-4 md:p-8">
+          <div className="container max-w-7xl mx-auto space-y-6">
+            <Outlet />
+          </div>
         </main>
       </SidebarInset>
     </SidebarProvider>
