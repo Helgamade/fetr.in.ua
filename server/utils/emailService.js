@@ -58,22 +58,45 @@ async function initTransporter() {
     return null;
   }
   
-  transporter = nodemailer.createTransport({
+  // Определяем secure на основе порта и настройки
+  // Порт 465 требует secure: true (SSL)
+  // Порт 587 требует secure: false, но requireTLS: true (STARTTLS)
+  const isSecure = settings.port === 465 || (settings.secure && settings.port !== 587);
+  
+  const transporterConfig = {
     host: settings.host,
     port: settings.port,
-    secure: settings.secure,
+    secure: isSecure,
     auth: settings.auth.user ? {
       user: settings.auth.user,
       pass: settings.auth.pass
     } : undefined
-  });
+  };
+  
+  // Для порта 587 добавляем requireTLS если secure включен
+  if (settings.port === 587 && settings.secure) {
+    transporterConfig.requireTLS = true;
+    transporterConfig.secure = false; // Для 587 всегда false
+  }
+  
+  // Дополнительные опции для надежности
+  transporterConfig.tls = {
+    rejectUnauthorized: false // Принимаем самоподписанные сертификаты
+  };
+  
+  transporter = nodemailer.createTransport(transporterConfig);
   
   // Проверяем подключение
   try {
     await transporter.verify();
-    console.log('[Email Service] SMTP підключення успішне');
+    console.log('[Email Service] SMTP підключення успішне', {
+      host: settings.host,
+      port: settings.port,
+      secure: isSecure
+    });
   } catch (error) {
     console.error('[Email Service] Помилка підключення SMTP:', error.message);
+    console.error('[Email Service] Деталі помилки:', error);
     transporter = null;
   }
   
