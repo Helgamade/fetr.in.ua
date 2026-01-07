@@ -2077,7 +2077,7 @@ const Checkout = () => {
                   </p>
                   
                   {/* Rules and Recipient in block */}
-                  <div className="bg-card/50 rounded-2xl p-4 shadow-soft space-y-3">
+                  <div className="space-y-3">
                     {/* Rules Section */}
                     <div className="space-y-2">
                       <div 
