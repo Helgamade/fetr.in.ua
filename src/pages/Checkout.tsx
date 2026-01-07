@@ -969,8 +969,74 @@ const Checkout = () => {
               </div>
               
               {/* Horizontal scrollable products */}
-              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
-                <ul className="flex gap-4" style={{ width: 'max-content' }}>
+              {cartItemsWithProducts.length > 1 ? (
+                <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 pr-8">
+                  <ul className="flex gap-4" style={{ width: 'max-content' }}>
+                    {cartItemsWithProducts.map((item, index) => {
+                      const product = item.product!;
+                      const productOptions = item.selectedOptions.map(optId => 
+                        product.options.find(o => o.code === optId)
+                      ).filter(Boolean);
+                      const optionsTotal = productOptions.reduce((sum, opt) => sum + (opt?.price || 0), 0);
+                      const currentPrice = product.salePrice || product.basePrice;
+                      const basePrice = product.basePrice;
+                      const hasDiscount = product.salePrice && product.salePrice < basePrice;
+                      const unitPrice = currentPrice + optionsTotal;
+                      
+                      return (
+                        <li key={item.id || `${item.productId}_${index}`} style={{ flexBasis: '265px', flexShrink: 0 }}>
+                          <div className="bg-background rounded-xl p-3 border border-border">
+                            <div className="flex gap-3">
+                              {/* Image */}
+                              <div className="flex-shrink-0">
+                                <div className="w-[88px] h-[90px] rounded-lg overflow-hidden">
+                                  <img
+                                    src={product.images[0]}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                  />
+                                </div>
+                              </div>
+                              
+                              {/* Product info */}
+                              <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                <div>
+                                  <div className="font-medium text-sm mb-1 line-clamp-2" style={{ fontSize: '0.875rem' }}>
+                                    {product.name}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mb-1">
+                                    {item.quantity} шт.
+                                  </div>
+                                </div>
+                                
+                                {/* Price */}
+                                <div className="mt-auto">
+                                  {hasDiscount ? (
+                                    <div>
+                                      <div className="text-sm font-semibold text-destructive" style={{ fontSize: '0.875rem' }}>
+                                        {unitPrice} ₴/шт.
+                                      </div>
+                                      <div className="text-xs text-muted-foreground line-through" style={{ fontSize: '0.75rem' }}>
+                                        {basePrice + optionsTotal} ₴/шт.
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="text-sm font-semibold" style={{ fontSize: '0.875rem' }}>
+                                      {unitPrice} ₴/шт.
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : cartItemsWithProducts.length === 1 ? (
+                <div>
                   {cartItemsWithProducts.map((item, index) => {
                     const product = item.product!;
                     const productOptions = item.selectedOptions.map(optId => 
@@ -983,57 +1049,55 @@ const Checkout = () => {
                     const unitPrice = currentPrice + optionsTotal;
                     
                     return (
-                      <li key={item.id || `${item.productId}_${index}`} style={{ flexBasis: '265px', flexShrink: 0 }}>
-                        <div className="bg-background rounded-xl p-3 border border-border">
-                          <div className="flex gap-3">
-                            {/* Image */}
-                            <div className="flex-shrink-0">
-                              <div className="w-[88px] h-[90px] rounded-lg overflow-hidden">
-                                <img
-                                  src={product.images[0]}
-                                  alt={product.name}
-                                  className="w-full h-full object-cover"
-                                  loading="lazy"
-                                />
+                      <div key={item.id || `${item.productId}_${index}`} className="bg-background rounded-xl p-3 border border-border">
+                        <div className="flex gap-3">
+                          {/* Image */}
+                          <div className="flex-shrink-0">
+                            <div className="w-[88px] h-[90px] rounded-lg overflow-hidden">
+                              <img
+                                src={product.images[0]}
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Product info */}
+                          <div className="flex-1 min-w-0 flex flex-col justify-between">
+                            <div>
+                              <div className="font-medium text-sm mb-1 line-clamp-2" style={{ fontSize: '0.875rem' }}>
+                                {product.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground mb-1">
+                                {item.quantity} шт.
                               </div>
                             </div>
                             
-                            {/* Product info */}
-                            <div className="flex-1 min-w-0 flex flex-col justify-between">
-                              <div>
-                                <div className="font-medium text-sm mb-1 line-clamp-2" style={{ fontSize: '0.875rem' }}>
-                                  {product.name}
-                                </div>
-                                <div className="text-xs text-muted-foreground mb-1">
-                                  {item.quantity} шт.
-                                </div>
-                              </div>
-                              
-                              {/* Price */}
-                              <div className="mt-auto">
-                                {hasDiscount ? (
-                                  <div>
-                                    <div className="text-sm font-semibold text-destructive" style={{ fontSize: '0.875rem' }}>
-                                      {unitPrice} ₴/шт.
-                                    </div>
-                                    <div className="text-xs text-muted-foreground line-through" style={{ fontSize: '0.75rem' }}>
-                                      {basePrice + optionsTotal} ₴/шт.
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="text-sm font-semibold" style={{ fontSize: '0.875rem' }}>
+                            {/* Price */}
+                            <div className="mt-auto">
+                              {hasDiscount ? (
+                                <div>
+                                  <div className="text-sm font-semibold text-destructive" style={{ fontSize: '0.875rem' }}>
                                     {unitPrice} ₴/шт.
                                   </div>
-                                )}
-                              </div>
+                                  <div className="text-xs text-muted-foreground line-through" style={{ fontSize: '0.75rem' }}>
+                                    {basePrice + optionsTotal} ₴/шт.
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-sm font-semibold" style={{ fontSize: '0.875rem' }}>
+                                  {unitPrice} ₴/шт.
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
-                      </li>
+                      </div>
                     );
                   })}
-                </ul>
-              </div>
+                </div>
+              ) : null}
             </div>
           </div>
 
