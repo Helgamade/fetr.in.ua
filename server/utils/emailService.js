@@ -59,9 +59,22 @@ async function initTransporter() {
   }
   
   // Определяем secure на основе порта и настройки
-  // Порт 465 требует secure: true (SSL)
-  // Порт 587 требует secure: false, но requireTLS: true (STARTTLS)
-  const isSecure = settings.port === 465 || (settings.secure && settings.port !== 587);
+  // Порт 465 всегда требует secure: true (SSL)
+  // Порт 587 требует secure: false, но requireTLS: true если включен SSL/TLS
+  let isSecure = false;
+  let requireTLS = false;
+  
+  if (settings.port === 465) {
+    // Порт 465 всегда использует SSL
+    isSecure = true;
+  } else if (settings.port === 587) {
+    // Порт 587 использует STARTTLS
+    isSecure = false;
+    requireTLS = settings.secure; // Используем настройку из БД
+  } else {
+    // Для других портов используем настройку из БД
+    isSecure = settings.secure;
+  }
   
   const transporterConfig = {
     host: settings.host,
@@ -73,10 +86,9 @@ async function initTransporter() {
     } : undefined
   };
   
-  // Для порта 587 добавляем requireTLS если secure включен
-  if (settings.port === 587 && settings.secure) {
-    transporterConfig.requireTLS = true;
-    transporterConfig.secure = false; // Для 587 всегда false
+  // Для порта 587 добавляем requireTLS если включен
+  if (settings.port === 587) {
+    transporterConfig.requireTLS = requireTLS;
   }
   
   // Дополнительные опции для надежности
@@ -84,16 +96,20 @@ async function initTransporter() {
     rejectUnauthorized: false // Принимаем самоподписанные сертификаты
   };
   
+  console.log('[Email Service] Налаштування SMTP:', {
+    host: settings.host,
+    port: settings.port,
+    secure: isSecure,
+    requireTLS: requireTLS,
+    smtp_secure_setting: settings.secure
+  });
+  
   transporter = nodemailer.createTransport(transporterConfig);
   
   // Проверяем подключение
   try {
     await transporter.verify();
-    console.log('[Email Service] SMTP підключення успішне', {
-      host: settings.host,
-      port: settings.port,
-      secure: isSecure
-    });
+    console.log('[Email Service] SMTP підключення успішне');
   } catch (error) {
     console.error('[Email Service] Помилка підключення SMTP:', error.message);
     console.error('[Email Service] Деталі помилки:', error);

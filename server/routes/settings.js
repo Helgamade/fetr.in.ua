@@ -166,6 +166,18 @@ router.put('/:key', async (req, res, next) => {
       ON DUPLICATE KEY UPDATE value = VALUES(value), type = VALUES(type)
     `, [key, stringValue, type]);
 
+    // Перезагружаем SMTP транспортер, если изменилась SMTP настройка
+    const smtpKeys = ['smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_password', 'smtp_from_email', 'smtp_from_name'];
+    if (smtpKeys.includes(key)) {
+      try {
+        const { reloadTransporter } = await import('../utils/emailService.js');
+        await reloadTransporter();
+        console.log('[Settings] SMTP транспортер перезавантажено після зміни', key);
+      } catch (error) {
+        console.error('[Settings] Помилка перезавантаження SMTP транспортера:', error);
+      }
+    }
+
     res.json({ key, value, message: 'Setting updated' });
   } catch (error) {
     next(error);
