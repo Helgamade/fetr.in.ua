@@ -970,8 +970,16 @@ const Checkout = () => {
               
               {/* Horizontal scrollable products */}
               {cartItemsWithProducts.length > 1 ? (
-                <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 pr-8">
-                  <ul className="flex gap-4" style={{ width: 'max-content' }}>
+                <div 
+                  className="overflow-x-auto scrollbar-hide -mx-4" 
+                  style={{ 
+                    paddingLeft: '1rem', 
+                    paddingRight: '2rem',
+                    WebkitOverflowScrolling: 'touch',
+                    overflowScrolling: 'touch'
+                  }}
+                >
+                  <ul className="flex gap-4" style={{ width: 'max-content', minWidth: '100%' }}>
                     {cartItemsWithProducts.map((item, index) => {
                       const product = item.product!;
                       const productOptions = item.selectedOptions.map(optId => 
