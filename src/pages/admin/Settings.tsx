@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSettings, useUpdateSettings } from '@/hooks/useSettings';
 import { settingsAPI } from '@/lib/api';
 
@@ -156,8 +157,40 @@ export function Settings() {
 
   return (
     <div className="space-y-6">
-      {/* Hero Background Image */}
-      <Card>
+      <div>
+        <h1 className="text-3xl font-bold">Налаштування</h1>
+        <p className="text-muted-foreground mt-2">
+          Керування налаштуваннями магазину
+        </p>
+      </div>
+
+      <Tabs defaultValue="store" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="store">
+            <Store className="h-4 w-4 mr-2" />
+            Налаштування магазину
+          </TabsTrigger>
+          <TabsTrigger value="background">
+            <ImageIcon className="h-4 w-4 mr-2" />
+            Фонове зображення
+          </TabsTrigger>
+          <TabsTrigger value="delivery">
+            <Truck className="h-4 w-4 mr-2" />
+            Доставка
+          </TabsTrigger>
+          <TabsTrigger value="payment">
+            <CreditCard className="h-4 w-4 mr-2" />
+            Оплата
+          </TabsTrigger>
+          <TabsTrigger value="email">
+            <Mail className="h-4 w-4 mr-2" />
+            Налаштування Email
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Налаштування магазину */}
+        <TabsContent value="store" className="space-y-6 mt-6">
+          <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ImageIcon className="h-5 w-5" />
@@ -292,9 +325,11 @@ export function Settings() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
 
-      {/* Delivery settings */}
-      <Card>
+        {/* Фонове зображення */}
+        <TabsContent value="background" className="space-y-6 mt-6">
+          <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Truck className="h-5 w-5" />
@@ -366,9 +401,11 @@ export function Settings() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
 
-      {/* SMTP Settings */}
-      <Card>
+        {/* Доставка */}
+        <TabsContent value="delivery" className="space-y-6 mt-6">
+          <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
@@ -454,9 +491,68 @@ export function Settings() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
 
-      {/* Notification settings */}
-      <Card>
+        {/* Оплата */}
+        <TabsContent value="payment" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Налаштування оплати
+              </CardTitle>
+              <CardDescription>
+                Налаштування способів оплати та платіжних систем
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <h4 className="font-medium">Способи оплати</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>WayForPay</Label>
+                      <p className="text-sm text-muted-foreground">Онлайн оплата через WayForPay</p>
+                    </div>
+                    <Switch
+                      checked={true}
+                      disabled
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Накладений платіж</Label>
+                      <p className="text-sm text-muted-foreground">Оплата при отриманні</p>
+                    </div>
+                    <Switch
+                      checked={true}
+                      disabled
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Переказ на карту ФОП</Label>
+                      <p className="text-sm text-muted-foreground">Переказ на банківську картку</p>
+                    </div>
+                    <Switch
+                      checked={true}
+                      disabled
+                    />
+                  </div>
+                </div>
+              </div>
+              <Separator />
+              <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+                <strong>Примітка:</strong> Всі способи оплати активні за замовчуванням. 
+                Відключення способів оплати доступне через налаштування системи.
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Налаштування Email */}
+        <TabsContent value="email" className="space-y-6 mt-6">
+          <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
@@ -542,6 +638,96 @@ export function Settings() {
           </div>
         </CardContent>
       </Card>
+
+          {/* Notification settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Сповіщення
+              </CardTitle>
+              <CardDescription>
+                Налаштування сповіщень про замовлення
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <h4 className="font-medium">Канали сповіщень</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Email сповіщення</Label>
+                    <Switch
+                      checked={localNotificationSettings.emailNotifications}
+                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                        ...localNotificationSettings, 
+                        emailNotifications: checked 
+                      })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>SMS сповіщення</Label>
+                    <Switch
+                      checked={localNotificationSettings.smsNotifications}
+                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                        ...localNotificationSettings, 
+                        smsNotifications: checked 
+                      })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Telegram сповіщення</Label>
+                    <Switch
+                      checked={localNotificationSettings.telegramNotifications}
+                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                        ...localNotificationSettings, 
+                        telegramNotifications: checked 
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h4 className="font-medium">Типи сповіщень</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Нове замовлення</Label>
+                    <Switch
+                      checked={localNotificationSettings.notifyOnNewOrder}
+                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                        ...localNotificationSettings, 
+                        notifyOnNewOrder: checked 
+                      })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Оплата отримана</Label>
+                    <Switch
+                      checked={localNotificationSettings.notifyOnPayment}
+                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                        ...localNotificationSettings, 
+                        notifyOnPayment: checked 
+                      })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Замовлення доставлено</Label>
+                    <Switch
+                      checked={localNotificationSettings.notifyOnDelivery}
+                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                        ...localNotificationSettings, 
+                        notifyOnDelivery: checked 
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Save button */}
       <div className="flex justify-end">
