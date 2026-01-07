@@ -484,12 +484,15 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
       
       console.log('[Create Order] Generated order number:', orderNumber);
       
-      // Обновляем заказ с order_number (tracking_token остается NULL, заполняется админом позже)
+      // Генерируем tracking_token (10-значный цифровой код для безопасной ссылки отслеживания)
+      const trackingToken = String(Math.floor(1000000000 + Math.random() * 9000000000));
+      
+      // Обновляем заказ с order_number и tracking_token
       await connection.execute(`
         UPDATE orders 
-        SET order_number = ?
+        SET order_number = ?, tracking_token = ?
         WHERE id = ?
-      `, [String(orderNumber), orderIdInt]);
+      `, [String(orderNumber), trackingToken, orderIdInt]);
 
       // Insert items
       for (const item of items) {
