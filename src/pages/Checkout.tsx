@@ -956,16 +956,16 @@ const Checkout = () => {
         <div className="container mx-auto px-4 pb-8" style={{ paddingTop: '22px' }}>
           {/* Order Items Block - Mobile only */}
           <div className="mb-6 lg:hidden">
-            <div className="bg-card rounded-2xl p-4 shadow-soft">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="bg-card rounded-2xl shadow-soft overflow-hidden">
+              <div className="flex items-center gap-2 mb-4 p-4 pb-0">
                 <h2 className="text-base font-semibold">Замовлення</h2>
                 <span className="text-sm text-muted-foreground">{items.length} товара</span>
               </div>
               
               {/* Horizontal scrollable products */}
               {cartItemsWithProducts.length > 1 ? (
-                <div className="overflow-x-auto scrollbar-hide" style={{ paddingLeft: '12px', paddingRight: '2rem', WebkitOverflowScrolling: 'touch', marginLeft: '-1rem', marginRight: '-1rem' }}>
-                  <ul className="flex gap-4" style={{ width: 'max-content', paddingRight: '1rem' }}>
+                <div className="overflow-x-auto scrollbar-hide" style={{ paddingLeft: '1rem', paddingRight: '1rem', paddingBottom: '1rem', WebkitOverflowScrolling: 'touch' }}>
+                  <ul className="flex gap-4" style={{ width: 'max-content' }}>
                     {cartItemsWithProducts.map((item, index) => {
                       const product = item.product!;
                       const productOptions = item.selectedOptions.map(optId => 
@@ -1043,7 +1043,7 @@ const Checkout = () => {
                   </ul>
                 </div>
               ) : cartItemsWithProducts.length === 1 ? (
-                <div>
+                <div className="p-4 pt-0">
                   {cartItemsWithProducts.map((item, index) => {
                     const product = item.product!;
                     const productOptions = item.selectedOptions.map(optId => 
