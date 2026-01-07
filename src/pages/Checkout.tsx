@@ -146,6 +146,10 @@ const Checkout = () => {
   const [promoCodeError, setPromoCodeError] = useState("");
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   
+  // Rules and recipient sections state
+  const [rulesExpanded, setRulesExpanded] = useState(false);
+  const [recipientExpanded, setRecipientExpanded] = useState(false);
+  
   // Refs для скролла к блокам
   const contactInfoRef = useRef<HTMLDivElement>(null);
   const deliveryRef = useRef<HTMLDivElement>(null);
@@ -2063,6 +2067,60 @@ const Checkout = () => {
                     )}
                   </div>
                 )}
+                </div>
+
+                {/* Rules and Recipient Section */}
+                <div className="bg-card/50 rounded-2xl p-4 shadow-soft space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Натискаючи кнопку «Оформити замовлення», я погоджуюсь з правилами та умовами нижче
+                  </p>
+                  
+                  {/* Rules Section */}
+                  <div className="space-y-2">
+                    <div 
+                      className="flex items-center justify-between cursor-pointer"
+                      onClick={() => setRulesExpanded(!rulesExpanded)}
+                    >
+                      <span className="text-sm font-medium">Правила та умови</span>
+                      {rulesExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    {rulesExpanded && (
+                      <div className="pt-2 space-y-2 text-sm text-muted-foreground">
+                        <p>Оформлюючи/оплачуючи замовлення, користувач підтверджує, що надає:</p>
+                        <ul className="list-disc list-inside space-y-1 pl-2">
+                          <li>
+                            Згоду з <a href="/privacy-policy" target="_blank" className="text-primary hover:underline">Політикою конфіденційності</a> та <a href="/terms-of-use" target="_blank" className="text-primary hover:underline">Угодою користувача</a>.
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recipient Section */}
+                  <div className="space-y-2">
+                    <div 
+                      className="flex items-center justify-between cursor-pointer"
+                      onClick={() => setRecipientExpanded(!recipientExpanded)}
+                    >
+                      <span className="text-sm font-medium">*Отримувач коштів</span>
+                      {recipientExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    {recipientExpanded && (
+                      <div className="pt-2 text-sm text-muted-foreground">
+                        <p>
+                          за замовлення: ФОП Пітальов Олександр Миколайович, 3078718311, UA383052990000026008046715224
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
