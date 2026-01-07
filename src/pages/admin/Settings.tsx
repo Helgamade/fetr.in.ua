@@ -554,6 +554,157 @@ export function Settings() {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Налаштування DNS для безпеки пошти (SPF, DKIM, DMARC)
+              </CardTitle>
+              <CardDescription>
+                Інструкції з налаштування DNS записів для покращення доставки та безпеки email
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Важливо!</h4>
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    Ці DNS записи потрібно додати в панелі управління вашим хостингом (ukraine.com.ua) або у вашого DNS провайдера. 
+                    Зміни можуть набути чинності протягом 24-48 годин.
+                  </p>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">1</span>
+                      SPF (Sender Policy Framework)
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      SPF дозволяє вказати, які сервери мають право відправляти листи від імені вашого домену.
+                    </p>
+                    <div className="bg-muted rounded-lg p-4 font-mono text-sm space-y-2">
+                      <div>
+                        <span className="text-muted-foreground">Тип:</span> <span className="font-semibold">TXT</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Ім'я (субдомен):</span> <span className="font-semibold">@</span> або залишити порожнім
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Значення:</span>
+                        <div className="mt-1 bg-background p-2 rounded border">
+                          <code className="text-primary">v=spf1 include:_spf.ukraine.com.ua ~all</code>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Ця запис дозволяє відправку листів з серверів хостингу Ukraine.com.ua та позначає листи від інших серверів як підозрілі.
+                    </p>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">2</span>
+                      DKIM (DomainKeys Identified Mail)
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      DKIM додає цифровий підпис до ваших листів, підтверджуючи їх справжність та цілісність.
+                    </p>
+                    <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-3">
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                        <strong>Крок 1:</strong> Увійдіть в панель управління хостингом ukraine.com.ua та перейдіть в розділ управління поштовими доменами.
+                      </p>
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-2">
+                        <strong>Крок 2:</strong> Увімкніть DKIM для вашого домену <code className="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">fetr.in.ua</code>. 
+                        Після активації система автоматично додасть DKIM запис в DNS.
+                      </p>
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-2">
+                        <strong>Селектор DKIM:</strong> <code className="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">hosting</code>
+                      </p>
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-2">
+                        <strong>Запис буде додана для:</strong> <code className="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">hosting._domainkey.fetr.in.ua</code>
+                      </p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Якщо домен обслуговується на NS серверах хостингу, DKIM запис додається автоматично. 
+                      Для доменів на сторонніх NS потрібно додати запис вручну.
+                    </p>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">3</span>
+                      DMARC (Domain-based Message Authentication, Reporting, and Conformance)
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      DMARC визначає, як вчиняти з листами, які не пройшли перевірки SPF і DKIM, а також дозволяє отримувати звіти.
+                    </p>
+                    <div className="bg-muted rounded-lg p-4 font-mono text-sm space-y-2">
+                      <div>
+                        <span className="text-muted-foreground">Тип:</span> <span className="font-semibold">TXT</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Ім'я (субдомен):</span> <span className="font-semibold">_dmarc</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Значення:</span>
+                        <div className="mt-1 bg-background p-2 rounded border">
+                          <code className="text-primary">v=DMARC1; p=none; rua=mailto:{settings.store_email || 'admin@fetr.in.ua'}</code>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-2 text-xs text-muted-foreground">
+                      <p><strong>Параметри:</strong></p>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        <li><code>v=DMARC1</code> — версія протоколу DMARC</li>
+                        <li><code>p=none</code> — політика: листи не відхиляються, тільки збираються звіти (рекомендовано для початку)</li>
+                        <li><code>rua=mailto:...</code> — адреса для отримання агрегованих звітів про перевірки DMARC</li>
+                      </ul>
+                      <p className="mt-2">
+                        <strong>Рекомендації:</strong> Почніть з політики <code>p=none</code> для моніторингу. 
+                        Після аналізу звітів можна змінити на <code>p=quarantine</code> (поміщення в спам) або <code>p=reject</code> (відхилення).
+                      </p>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="bg-muted rounded-lg p-4">
+                    <h4 className="font-semibold mb-2">Корисні посилання:</h4>
+                    <ul className="space-y-1 text-sm">
+                      <li>
+                        <a href="https://www.ukraine.com.ua/ru/wiki/mail/security/spf/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          📖 Документація по SPF
+                        </a>
+                      </li>
+                      <li>
+                        <a href="https://www.ukraine.com.ua/ru/wiki/mail/security/dkim/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          📖 Документація по DKIM
+                        </a>
+                      </li>
+                      <li>
+                        <a href="https://www.ukraine.com.ua/ru/wiki/mail/security/dmarc/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          📖 Документація по DMARC
+                        </a>
+                      </li>
+                      <li>
+                        <a href="https://mxtoolbox.com/spf.aspx" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          🔍 Перевірка SPF записів (MxToolbox)
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Сповіщення */}
