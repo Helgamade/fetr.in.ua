@@ -103,18 +103,19 @@ app.use('/api/nova-poshta', novaPoshtaRoutes);
 app.use('/api/ukrposhta', ukrposhtaRoutes);
 app.use('/api/wayforpay', wayforpayRoutes);
 app.use('/api/promo', promoRoutes);
+// Публичные GET запросы для team и instagram (для отображения на главной странице)
+app.use('/api/team', teamRoutes);
+app.use('/api/instagram', instagramRoutes);
 
 // Protected routes (требуют авторизации)
 app.use('/api/orders', apiRateLimiter, ordersRoutes);
 
 // Admin routes (требуют роль admin)
 app.use('/api/users', authenticate, authorize('admin'), usersRoutes);
-app.use('/api/team', authenticate, authorize('admin'), teamRoutes);
 app.use('/api/gallery', authenticate, authorize('admin'), galleryRoutes);
 app.use('/api/galleries', authenticate, authorize('admin'), galleriesRoutes);
 app.use('/api/comparison', authenticate, authorize('admin'), comparisonRoutes);
 app.use('/api/options', authenticate, authorize('admin'), optionsRoutes);
-app.use('/api/instagram', authenticate, authorize('admin'), instagramRoutes);
 app.use('/api/email-templates', authenticate, authorize('admin'), emailTemplatesRoutes);
 
 // Serve uploaded files

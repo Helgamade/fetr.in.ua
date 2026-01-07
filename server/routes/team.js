@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import pool from '../db.js';
+import { authenticate, authorize } from '../middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -47,8 +48,8 @@ const upload = multer({
   }
 });
 
-// Upload image for team member
-router.post('/upload-image', upload.single('image'), (req, res, next) => {
+// Upload image for team member (требует авторизацию admin)
+router.post('/upload-image', authenticate, authorize('admin'), upload.single('image'), (req, res, next) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
@@ -93,8 +94,8 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-// Create team member
-router.post('/', async (req, res, next) => {
+// Create team member (требует авторизацию admin)
+router.post('/', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { name, role, photo, description, sort_order, is_active } = req.body;
 
@@ -109,8 +110,8 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// Update team member
-router.put('/:id', async (req, res, next) => {
+// Update team member (требует авторизацию admin)
+router.put('/:id', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, role, photo, description, sort_order, is_active } = req.body;
@@ -127,8 +128,8 @@ router.put('/:id', async (req, res, next) => {
   }
 });
 
-// Delete team member
-router.delete('/:id', async (req, res, next) => {
+// Delete team member (требует авторизацию admin)
+router.delete('/:id', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { id } = req.params;
     

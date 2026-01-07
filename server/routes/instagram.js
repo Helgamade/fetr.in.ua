@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import pool from '../db.js';
+import { authenticate, authorize } from '../middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -47,8 +48,8 @@ const upload = multer({
   }
 });
 
-// Upload image for Instagram post
-router.post('/upload-image', upload.single('image'), (req, res, next) => {
+// Upload image for Instagram post (требует авторизацию admin)
+router.post('/upload-image', authenticate, authorize('admin'), upload.single('image'), (req, res, next) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
@@ -94,8 +95,8 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-// Create Instagram post
-router.post('/', async (req, res, next) => {
+// Create Instagram post (требует авторизацию admin)
+router.post('/', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { image_url, instagram_url, likes_count, comments_count, sort_order, is_active } = req.body;
 
@@ -121,8 +122,8 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// Update Instagram post
-router.put('/:id', async (req, res, next) => {
+// Update Instagram post (требует авторизацию admin)
+router.put('/:id', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { id } = req.params;
     const { image_url, instagram_url, likes_count, comments_count, sort_order, is_active } = req.body;
@@ -161,8 +162,8 @@ router.put('/:id', async (req, res, next) => {
   }
 });
 
-// Delete Instagram post
-router.delete('/:id', async (req, res, next) => {
+// Delete Instagram post (требует авторизацию admin)
+router.delete('/:id', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { id } = req.params;
 
