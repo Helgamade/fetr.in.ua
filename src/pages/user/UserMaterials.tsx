@@ -48,7 +48,7 @@ export default function UserMaterials() {
     <div className="min-h-screen bg-muted/30">
       <div className="container max-w-4xl mx-auto space-y-6 p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Мої матеріали</h1>
+          <h1 className="text-2xl font-semibold">Мої матеріали</h1>
           <Button variant="outline" onClick={() => navigate('/user/profile')}>
             Назад до профілю
           </Button>

@@ -158,7 +158,7 @@ export default function UserOrderDetail() {
           </Button>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">Замовлення {order.id}</h1>
+              <h1 className="text-2xl font-semibold">Замовлення {order.id}</h1>
             </div>
             <div className="flex items-center gap-4 mt-2">
               <Badge className={statusColors[order.status]}>
