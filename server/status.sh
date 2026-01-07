@@ -1,7 +1,8 @@
 #!/bin/bash
 # Скрипт для проверки статуса API сервера
 
-PID=$(pgrep -f "node.*server/index.js")
+# Используем ps для более точной проверки (исключаем grep через [n]ode)
+PID=$(ps aux | grep "[n]ode.*server/index.js" | awk '{print $2}' | head -1)
 
 if [ -z "$PID" ]; then
     echo "❌ Server is NOT running"

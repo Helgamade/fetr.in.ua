@@ -9,8 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node server/index.js",
-    "server": "node server/index.js",
+    "start": "node --max-old-space-size=512 server/index.js",
+    "server": "node --max-old-space-size=512 server/index.js",
     "server:dev": "node --watch server/index.js",
     "load-nova-poshta": "node server/scripts/load-nova-poshta-data.js"
   },

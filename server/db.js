@@ -15,8 +15,8 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'idesig02_fetrinua',
   port: process.env.DB_PORT || 3306,
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+  connectionLimit: 5, // Уменьшено для shared hosting (было 10)
+  queueLimit: 50, // Ограничение очереди для предотвращения накопления в памяти (было 0 = неограничено)
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
 });

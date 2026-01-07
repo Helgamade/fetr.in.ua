@@ -26,9 +26,10 @@ import authRoutes from './routes/auth.js';
 import adminAuthRoutes from './routes/admin-auth.js';
 
 import { configurePassport, passport } from './utils/oauth.js';
-import { apiRateLimiter } from './middleware/rateLimit.js';
+import { apiRateLimiter, startCleanupInterval } from './middleware/rateLimit.js';
 import { authenticate, authorize } from './middleware/auth.js';
 import { adminGuard, validateAdminSession } from './middleware/adminGuard.js';
+import { startSanitizeCleanup } from './utils/sanitize.js';
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -150,5 +151,10 @@ app.use((req, res) => {
 
 app.listen(PORT, HOST, () => {
   console.log(`Server running on ${HOST}:${PORT}`);
+  
+  // Запускаем фоновые задачи после успешного старта сервера
+  // Это экономит память при инициализации
+  startCleanupInterval();
+  startSanitizeCleanup();
 });
 

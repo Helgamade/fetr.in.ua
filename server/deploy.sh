@@ -78,11 +78,13 @@ echo "✓ Deployment verification passed"
 
 # 5. Перезапуск сервера
 echo "Restarting server..."
-cd server
-pkill -f "node.*index.js" || true
+# Останавливаем все процессы node, связанные с server/index.js
+pkill -f "node.*server/index.js" || true
+sleep 2
+# Запускаем с ограничением памяти (512MB) для предотвращения OOM killer
+# Важно: запускаем из корня проекта
+nohup node --max-old-space-size=512 server/index.js > server/api.log 2>&1 &
 sleep 1
-nohup node index.js > /dev/null 2>&1 &
-cd ..
 
 echo "=== DEPLOYMENT COMPLETE ==="
 echo ""

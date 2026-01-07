@@ -107,16 +107,22 @@ export function checkRateLimit(ip, maxRequests = 5, windowMs = 60000) {
   return true;
 }
 
-// Cleanup old rate limit entries periodically
-setInterval(() => {
-  const now = Date.now();
-  const windowMs = 60000; // 1 minute
+// Cleanup old rate limit entries periodically (отложенный запуск)
+let sanitizeCleanupInterval = null;
+
+export function startSanitizeCleanup() {
+  if (sanitizeCleanupInterval) return; // Уже запущен
   
-  for (const [key, record] of rateLimitStore.entries()) {
-    if (now - record.firstRequest > windowMs * 2) {
-      rateLimitStore.delete(key);
+  sanitizeCleanupInterval = setInterval(() => {
+    const now = Date.now();
+    const windowMs = 60000; // 1 minute
+    
+    for (const [key, record] of rateLimitStore.entries()) {
+      if (now - record.firstRequest > windowMs * 2) {
+        rateLimitStore.delete(key);
+      }
     }
-  }
-}, 60000); // Clean up every minute
+  }, 5 * 60000); // Clean up every 5 minutes (было каждую минуту) для экономии ресурсов
+}
 
 

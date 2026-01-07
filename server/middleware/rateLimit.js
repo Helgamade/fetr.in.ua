@@ -219,6 +219,18 @@ export async function cleanupOldAttempts() {
   }
 }
 
-// Запускаем очистку каждые 24 часа
-setInterval(cleanupOldAttempts, 24 * 60 * 60 * 1000);
+// Запускаем очистку каждые 24 часа (отложенный запуск после старта сервера)
+// Это предотвращает запуск при загрузке модуля и экономит память при старте
+let cleanupInterval = null;
+
+export function startCleanupInterval() {
+  if (cleanupInterval) return; // Уже запущен
+  
+  // Первая очистка через 1 час после старта
+  setTimeout(() => {
+    cleanupOldAttempts();
+    // Затем каждые 24 часа
+    cleanupInterval = setInterval(cleanupOldAttempts, 24 * 60 * 60 * 1000);
+  }, 60 * 60 * 1000); // 1 час
+}
 

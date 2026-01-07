@@ -194,7 +194,7 @@ export function Settings() {
 
         {/* Налаштування магазину */}
         <TabsContent value="store" className="space-y-6 mt-6">
-          <Card>
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Store className="h-5 w-5" />
@@ -335,78 +335,78 @@ export function Settings() {
 
         {/* Доставка */}
         <TabsContent value="delivery" className="space-y-6 mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Truck className="h-5 w-5" />
-                Налаштування доставки
-              </CardTitle>
-              <CardDescription>
-                Способи доставки та вартість
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="freeDeliveryThreshold">Безкоштовна доставка від (₴)</Label>
-                <Input
-                  id="freeDeliveryThreshold"
-                  type="number"
-                  value={localDeliverySettings.freeDeliveryThreshold}
-                  onChange={(e) => setLocalDeliverySettings({ 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Truck className="h-5 w-5" />
+            Налаштування доставки
+          </CardTitle>
+          <CardDescription>
+            Способи доставки та вартість
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="freeDeliveryThreshold">Безкоштовна доставка від (₴)</Label>
+              <Input
+                id="freeDeliveryThreshold"
+                type="number"
+                value={localDeliverySettings.freeDeliveryThreshold}
+                onChange={(e) => setLocalDeliverySettings({ 
+                  ...localDeliverySettings, 
+                  freeDeliveryThreshold: parseInt(e.target.value) || 0 
+                })}
+              />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <h4 className="font-medium">Способи доставки</h4>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Нова Пошта</Label>
+                  <p className="text-sm text-muted-foreground">Доставка у відділення або поштомат</p>
+                </div>
+                <Switch
+                  checked={localDeliverySettings.novaPoshtaEnabled}
+                  onCheckedChange={(checked) => setLocalDeliverySettings({ 
                     ...localDeliverySettings, 
-                    freeDeliveryThreshold: parseInt(e.target.value) || 0 
+                    novaPoshtaEnabled: checked 
                   })}
                 />
               </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h4 className="font-medium">Способи доставки</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Нова Пошта</Label>
-                      <p className="text-sm text-muted-foreground">Доставка у відділення або поштомат</p>
-                    </div>
-                    <Switch
-                      checked={localDeliverySettings.novaPoshtaEnabled}
-                      onCheckedChange={(checked) => setLocalDeliverySettings({ 
-                        ...localDeliverySettings, 
-                        novaPoshtaEnabled: checked 
-                      })}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Укрпошта</Label>
-                      <p className="text-sm text-muted-foreground">Доставка Укрпоштою</p>
-                    </div>
-                    <Switch
-                      checked={localDeliverySettings.ukrposhtaEnabled}
-                      onCheckedChange={(checked) => setLocalDeliverySettings({ 
-                        ...localDeliverySettings, 
-                        ukrposhtaEnabled: checked 
-                      })}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Самовивіз</Label>
-                      <p className="text-sm text-muted-foreground">Забрати з магазину</p>
-                    </div>
-                    <Switch
-                      checked={localDeliverySettings.pickupEnabled}
-                      onCheckedChange={(checked) => setLocalDeliverySettings({ 
-                        ...localDeliverySettings, 
-                        pickupEnabled: checked 
-                      })}
-                    />
-                  </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Укрпошта</Label>
+                  <p className="text-sm text-muted-foreground">Доставка Укрпоштою</p>
                 </div>
+                <Switch
+                  checked={localDeliverySettings.ukrposhtaEnabled}
+                  onCheckedChange={(checked) => setLocalDeliverySettings({ 
+                    ...localDeliverySettings, 
+                    ukrposhtaEnabled: checked 
+                  })}
+                />
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Самовивіз</Label>
+                  <p className="text-sm text-muted-foreground">Забрати з магазину</p>
+                </div>
+                <Switch
+                  checked={localDeliverySettings.pickupEnabled}
+                  onCheckedChange={(checked) => setLocalDeliverySettings({ 
+                    ...localDeliverySettings, 
+                    pickupEnabled: checked 
+                  })}
+                />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
         </TabsContent>
 
         {/* Оплата */}
@@ -709,92 +709,92 @@ export function Settings() {
 
         {/* Сповіщення */}
         <TabsContent value="notifications" className="space-y-6 mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Сповіщення
-              </CardTitle>
-              <CardDescription>
-                Налаштування сповіщень про замовлення
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <h4 className="font-medium">Канали сповіщень</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label>Email сповіщення</Label>
-                    <Switch
-                      checked={localNotificationSettings.emailNotifications}
-                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
-                        ...localNotificationSettings, 
-                        emailNotifications: checked 
-                      })}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label>SMS сповіщення</Label>
-                    <Switch
-                      checked={localNotificationSettings.smsNotifications}
-                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
-                        ...localNotificationSettings, 
-                        smsNotifications: checked 
-                      })}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label>Telegram сповіщення</Label>
-                    <Switch
-                      checked={localNotificationSettings.telegramNotifications}
-                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
-                        ...localNotificationSettings, 
-                        telegramNotifications: checked 
-                      })}
-                    />
-                  </div>
-                </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            Сповіщення
+          </CardTitle>
+          <CardDescription>
+            Налаштування сповіщень про замовлення
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <h4 className="font-medium">Канали сповіщень</h4>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Email сповіщення</Label>
+                <Switch
+                  checked={localNotificationSettings.emailNotifications}
+                  onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                    ...localNotificationSettings, 
+                    emailNotifications: checked 
+                  })}
+                />
               </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h4 className="font-medium">Типи сповіщень</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label>Нове замовлення</Label>
-                    <Switch
-                      checked={localNotificationSettings.notifyOnNewOrder}
-                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
-                        ...localNotificationSettings, 
-                        notifyOnNewOrder: checked 
-                      })}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label>Оплата отримана</Label>
-                    <Switch
-                      checked={localNotificationSettings.notifyOnPayment}
-                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
-                        ...localNotificationSettings, 
-                        notifyOnPayment: checked 
-                      })}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label>Замовлення доставлено</Label>
-                    <Switch
-                      checked={localNotificationSettings.notifyOnDelivery}
-                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
-                        ...localNotificationSettings, 
-                        notifyOnDelivery: checked 
-                      })}
-                    />
-                  </div>
-                </div>
+              <div className="flex items-center justify-between">
+                <Label>SMS сповіщення</Label>
+                <Switch
+                  checked={localNotificationSettings.smsNotifications}
+                  onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                    ...localNotificationSettings, 
+                    smsNotifications: checked 
+                  })}
+                />
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex items-center justify-between">
+                <Label>Telegram сповіщення</Label>
+                <Switch
+                  checked={localNotificationSettings.telegramNotifications}
+                  onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                    ...localNotificationSettings, 
+                    telegramNotifications: checked 
+                  })}
+                />
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <h4 className="font-medium">Типи сповіщень</h4>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Нове замовлення</Label>
+                <Switch
+                  checked={localNotificationSettings.notifyOnNewOrder}
+                  onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                    ...localNotificationSettings, 
+                    notifyOnNewOrder: checked 
+                  })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Оплата отримана</Label>
+                <Switch
+                  checked={localNotificationSettings.notifyOnPayment}
+                  onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                    ...localNotificationSettings, 
+                    notifyOnPayment: checked 
+                  })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Замовлення доставлено</Label>
+                <Switch
+                  checked={localNotificationSettings.notifyOnDelivery}
+                  onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                    ...localNotificationSettings, 
+                    notifyOnDelivery: checked 
+                  })}
+                />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
         </TabsContent>
       </Tabs>
 
