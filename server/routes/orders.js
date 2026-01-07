@@ -725,7 +725,7 @@ router.patch('/:id/status', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { customer, delivery, payment, status, subtotal, discount, deliveryCost, total } = req.body;
+    const { customer, delivery, payment, status, subtotal, discount, deliveryCost, total, trackingToken } = req.body;
 
     // Helper function to convert undefined/empty to null
     const toNull = (val) => (val === undefined || val === null || val === '') ? null : val;
@@ -737,13 +737,13 @@ router.put('/:id', async (req, res, next) => {
         delivery_method = ?, delivery_city = ?, delivery_warehouse = ?,
         delivery_post_index = ?, delivery_address = ?,
         payment_method = ?, status = ?, subtotal = ?, discount = ?,
-        delivery_cost = ?, total = ?, updated_at = CURRENT_TIMESTAMP
+        delivery_cost = ?, total = ?, tracking_token = ?, updated_at = CURRENT_TIMESTAMP
       WHERE order_number = ?
     `, [
       customer.name, customer.phone,
       delivery.method, toNull(delivery.city), toNull(delivery.warehouse),
       toNull(delivery.postIndex), toNull(delivery.address),
-      payment.method, status, subtotal, discount, deliveryCost, total, id
+      payment.method, status, subtotal, discount, deliveryCost, total, toNull(trackingToken), id
     ]);
 
     res.json({ id, message: 'Order updated' });

@@ -306,9 +306,10 @@ export default function UserOrderDetail() {
                   {order.delivery.postIndex && (
                     <div className="text-sm">Індекс: {order.delivery.postIndex}</div>
                   )}
-                  {order.trackingToken && (
+                  {/* ТТН показываем только для Нова Пошта и Укрпошта */}
+                  {order.trackingToken && (order.delivery.method === 'nova_poshta' || order.delivery.method === 'ukrposhta') && (
                     <div className="text-sm font-medium text-primary mt-2">
-                      Номер ЕН: {order.trackingToken}
+                      ТТН: {order.trackingToken}
                     </div>
                   )}
                 </div>

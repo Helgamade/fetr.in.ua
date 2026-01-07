@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -19,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Order, OrderStatus } from '@/types/store';
-import { useUpdateOrderStatus } from '@/hooks/useOrders';
+import { useUpdateOrderStatus, useUpdateOrder } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { ordersAPI } from '@/lib/api';
 
@@ -73,13 +74,18 @@ export function OrderDetail() {
   const navigate = useNavigate();
   const { data: products = [] } = useProducts();
   const updateStatus = useUpdateOrderStatus();
+  const updateOrder = useUpdateOrder();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [trackingToken, setTrackingToken] = useState('');
 
   useEffect(() => {
     if (id) {
       ordersAPI.getOrder(id)
-        .then(setOrder)
+        .then((orderData) => {
+          setOrder(orderData);
+          setTrackingToken(orderData.trackingToken || '');
+        })
         .catch(console.error)
         .finally(() => setIsLoading(false));
     }
@@ -92,6 +98,24 @@ export function OrderDetail() {
       {
         onSuccess: () => {
           setOrder(prev => prev ? { ...prev, status: newStatus, updatedAt: new Date() } : null);
+        },
+      }
+    );
+  };
+
+  const handleTrackingTokenSave = () => {
+    if (!order) return;
+    updateOrder.mutate(
+      {
+        id: order.id,
+        data: {
+          ...order,
+          trackingToken: trackingToken || undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          setOrder(prev => prev ? { ...prev, trackingToken: trackingToken || undefined } : null);
         },
       }
     );
@@ -338,19 +362,48 @@ export function OrderDetail() {
               <MapPin className="h-5 w-5" />
               Доставка
             </h2>
-            <div className="space-y-2">
-              <div className="font-medium">{deliveryLabels[order.delivery.method]}</div>
-              {order.delivery.city && (
-                <div className="text-sm">м. {order.delivery.city}</div>
-              )}
-              {order.delivery.warehouse && (
-                <div className="text-sm">{order.delivery.warehouse}</div>
-              )}
-              {order.delivery.address && (
-                <div className="text-sm">{order.delivery.address}</div>
-              )}
-              {order.delivery.postIndex && (
-                <div className="text-sm">Індекс: {order.delivery.postIndex}</div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="font-medium">{deliveryLabels[order.delivery.method]}</div>
+                {order.delivery.city && (
+                  <div className="text-sm">м. {order.delivery.city}</div>
+                )}
+                {order.delivery.warehouse && (
+                  <div className="text-sm">{order.delivery.warehouse}</div>
+                )}
+                {order.delivery.address && (
+                  <div className="text-sm">{order.delivery.address}</div>
+                )}
+                {order.delivery.postIndex && (
+                  <div className="text-sm">Індекс: {order.delivery.postIndex}</div>
+                )}
+              </div>
+              
+              {/* ТТН поле - только для Нова Пошта и Укрпошта */}
+              {(order.delivery.method === 'nova_poshta' || order.delivery.method === 'ukrposhta') && (
+                <div className="pt-4 border-t">
+                  <label className="text-sm font-medium mb-2 block">ТТН (Трекінг-номер)</label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={trackingToken}
+                      onChange={(e) => setTrackingToken(e.target.value)}
+                      placeholder="Введіть номер ТТН"
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={handleTrackingTokenSave}
+                      variant="outline"
+                      size="default"
+                    >
+                      Зберегти
+                    </Button>
+                  </div>
+                  {order.trackingToken && (
+                    <div className="text-xs text-muted-foreground mt-2">
+                      Поточний ТТН: {order.trackingToken}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
