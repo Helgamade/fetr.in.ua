@@ -8,11 +8,15 @@ import {
   Package,
   Calendar,
   CheckCircle2,
-  Circle
+  Circle,
+  Copy,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import { Order, OrderStatus } from '@/types/store';
 import { ordersAPI } from '@/lib/api';
 import { useProducts } from '@/hooks/useProducts';
@@ -85,8 +89,10 @@ export default function UserOrderDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: products = [] } = useProducts();
+  const { toast } = useToast();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   // Получаем историю заказа
   const { data: orderHistory = [] } = useQuery({
@@ -116,6 +122,26 @@ export default function UserOrderDetail() {
 
   const getProductName = (productId: string) => {
     return products.find(p => p.code === productId)?.name || productId;
+  };
+
+  const handleCopyTTN = async () => {
+    if (!order?.trackingToken) return;
+    
+    try {
+      await navigator.clipboard.writeText(order.trackingToken);
+      setCopied(true);
+      toast({
+        title: 'Скопійовано',
+        description: 'ТТН скопійовано в буфер обміну',
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast({
+        title: 'Помилка',
+        description: 'Не вдалося скопіювати ТТН',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (isLoading) {
@@ -308,8 +334,27 @@ export default function UserOrderDetail() {
                   )}
                   {/* ТТН показываем только для Нова Пошта и Укрпошта */}
                   {order.trackingToken && (order.delivery.method === 'nova_poshta' || order.delivery.method === 'ukrposhta') && (
-                    <div className="text-sm font-medium text-primary mt-2">
-                      ТТН: {order.trackingToken}
+                    <div className="mt-4 pt-4 border-t">
+                      <label className="text-sm font-medium mb-2 block">ТТН</label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={order.trackingToken}
+                          readOnly
+                          className="flex-1 font-mono"
+                        />
+                        <Button
+                          onClick={handleCopyTTN}
+                          variant="outline"
+                          size="icon"
+                          className="flex-shrink-0"
+                        >
+                          {copied ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
