@@ -5,12 +5,21 @@ import { Product, Order, ProductOption } from '@/types/store';
 // Hardcoded to /api to avoid any environment variable issues
 const API_BASE_URL = '/api';
 
+// Получение токена из localStorage
+function getAccessToken(): string | null {
+  return localStorage.getItem('accessToken');
+}
+
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const token = getAccessToken();
+  
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...options?.headers,
     },
+    credentials: 'include', // Для поддержки cookies
     ...options,
   });
 
@@ -479,6 +488,92 @@ export const promoAPI = {
   validate: (code: string, items: Array<{ productId: string }>) => fetchAPI<PromoCodeResponse>('/promo/validate', {
     method: 'POST',
     body: JSON.stringify({ code, items }),
+  }),
+};
+
+// Auth API
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  avatar?: string;
+  role: 'admin' | 'user';
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+}
+
+export interface Session {
+  id: number;
+  ip_address: string;
+  user_agent: string;
+  last_activity: string;
+  expires_at: string;
+  created_at: string;
+}
+
+export const authAPI = {
+  // Инициация Google OAuth
+  googleLogin: () => {
+    window.location.href = `${API_BASE_URL}/auth/google`;
+  },
+  
+  // Обновление токена
+  refresh: (refreshToken: string) => fetchAPI<AuthResponse>('/auth/refresh', {
+    method: 'POST',
+    body: JSON.stringify({ refreshToken }),
+  }),
+  
+  // Выход
+  logout: () => fetchAPI<{ message: string }>('/auth/logout', {
+    method: 'POST',
+  }),
+  
+  // Получение текущего пользователя
+  me: () => fetchAPI<User>('/auth/me'),
+  
+  // Получение списка сессий
+  getSessions: () => fetchAPI<Session[]>('/auth/sessions'),
+  
+  // Удаление сессии
+  deleteSession: (sessionId: number) => fetchAPI<{ message: string }>(`/auth/sessions/${sessionId}`, {
+    method: 'DELETE',
+  }),
+  
+  // Привязка заказов к пользователю
+  linkOrders: () => fetchAPI<{ message: string; linkedOrders: number }>('/auth/link-orders', {
+    method: 'POST',
+  }),
+};
+
+// Admin Auth API
+export const adminAuthAPI = {
+  // Вход для админа (email/password)
+  login: (email: string, password: string) => fetchAPI<AuthResponse>('/admin-auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  }),
+  
+  // Проверка прав админа
+  verify: () => fetchAPI<{ valid: boolean; user: User }>('/admin-auth/verify'),
+  
+  // Логи действий админов
+  getLogs: (params?: { limit?: number; offset?: number; userId?: number; action?: string }) => 
+    fetchAPI<any>('/admin-auth/logs?' + new URLSearchParams(params as any).toString()),
+  
+  // Попытки входа
+  getLoginAttempts: (params?: { limit?: number; offset?: number; email?: string; ip?: string }) =>
+    fetchAPI<any[]>('/admin-auth/login-attempts?' + new URLSearchParams(params as any).toString()),
+  
+  // Заблокированные IP
+  getBlockedIps: () => fetchAPI<any[]>('/admin-auth/blocked-ips'),
+  
+  // Разблокировка IP
+  unblockIp: (ip: string) => fetchAPI<{ message: string }>(`/admin-auth/blocked-ips/${ip}`, {
+    method: 'DELETE',
   }),
 };
 

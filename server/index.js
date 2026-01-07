@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import productsRoutes from './routes/products.js';
 import ordersRoutes from './routes/orders.js';
 import settingsRoutes from './routes/settings.js';
@@ -20,6 +22,13 @@ import ukrposhtaRoutes from './routes/ukrposhta.js';
 import wayforpayRoutes from './routes/wayforpay.js';
 import promoRoutes from './routes/promo.js';
 import emailTemplatesRoutes from './routes/email-templates.js';
+import authRoutes from './routes/auth.js';
+import adminAuthRoutes from './routes/admin-auth.js';
+
+import { configurePassport, passport } from './utils/oauth.js';
+import { apiRateLimiter } from './middleware/rateLimit.js';
+import { authenticate, authorize } from './middleware/auth.js';
+import { adminGuard, validateAdminSession } from './middleware/adminGuard.js';
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -41,13 +50,24 @@ const HOST = (HOST_RAW
   .split(':')[0]
   .trim()) || '0.0.0.0';
 
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Отключаем для development, включить для production
+  crossOriginEmbedderPolicy: false,
+}));
+
 // Middleware
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:8080',
   credentials: true,
 }));
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Passport configuration
+configurePassport();
+app.use(passport.initialize());
 
 // Специальный middleware для WayForPay callback - обрабатывает raw body
 app.use('/api/wayforpay/callback', express.text({ type: '*/*' }), (req, res, next) => {
@@ -69,26 +89,32 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Routes
+// Public routes (не требуют авторизации)
+app.use('/api/auth', authRoutes);
+app.use('/api/admin-auth', adminAuthRoutes);
 app.use('/api/products', productsRoutes);
-app.use('/api/orders', ordersRoutes);
 app.use('/api/settings', settingsRoutes);
-app.use('/api/users', usersRoutes);
 app.use('/api/pages', pagesRoutes);
 app.use('/api/faqs', faqsRoutes);
 app.use('/api/reviews', reviewsRoutes);
-app.use('/api/team', teamRoutes);
-app.use('/api/gallery', galleryRoutes);
-app.use('/api/galleries', galleriesRoutes);
-app.use('/api/comparison', comparisonRoutes);
-app.use('/api/options', optionsRoutes);
-app.use('/api/instagram', instagramRoutes);
 app.use('/api/texts', textsRoutes);
 app.use('/api/nova-poshta', novaPoshtaRoutes);
 app.use('/api/ukrposhta', ukrposhtaRoutes);
 app.use('/api/wayforpay', wayforpayRoutes);
 app.use('/api/promo', promoRoutes);
-app.use('/api/email-templates', emailTemplatesRoutes);
+
+// Protected routes (требуют авторизации)
+app.use('/api/orders', apiRateLimiter, ordersRoutes);
+
+// Admin routes (требуют роль admin)
+app.use('/api/users', authenticate, authorize('admin'), usersRoutes);
+app.use('/api/team', authenticate, authorize('admin'), teamRoutes);
+app.use('/api/gallery', authenticate, authorize('admin'), galleryRoutes);
+app.use('/api/galleries', authenticate, authorize('admin'), galleriesRoutes);
+app.use('/api/comparison', authenticate, authorize('admin'), comparisonRoutes);
+app.use('/api/options', authenticate, authorize('admin'), optionsRoutes);
+app.use('/api/instagram', authenticate, authorize('admin'), instagramRoutes);
+app.use('/api/email-templates', authenticate, authorize('admin'), emailTemplatesRoutes);
 
 // Serve uploaded files
 const UPLOADS_DIR = join(__dirname, '..', 'uploads');

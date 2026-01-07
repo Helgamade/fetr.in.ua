@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../db.js';
 import { generateTrackingToken, getOrderNumber } from '../utils/orderUtils.js';
+import { optionalAuthenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -346,7 +347,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // Create order
-router.post('/', async (req, res, next) => {
+router.post('/', optionalAuthenticate, async (req, res, next) => {
   try {
     const {
       customer, delivery, payment, items, subtotal, discount, deliveryCost, total, promoCode
@@ -356,6 +357,9 @@ router.post('/', async (req, res, next) => {
     if (!customer?.name || !customer?.phone || !delivery?.method || !payment?.method || !items || items.length === 0) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
+
+    // Получаем user_id если пользователь авторизован
+    const userId = req.user ? req.user.id : null;
 
     const connection = await pool.getConnection();
     await connection.beginTransaction();
@@ -377,14 +381,16 @@ router.post('/', async (req, res, next) => {
       // Insert order БЕЗ order_number (используем AUTO_INCREMENT id)
       const recipient = req.body.recipient || null;
       const [orderResult] = await connection.execute(`
-        INSERT INTO orders (customer_name, customer_phone,
+        INSERT INTO orders (user_id, customer_name, customer_phone, customer_email,
           recipient_name, recipient_phone, recipient_first_name, recipient_last_name,
           delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
           payment_method, subtotal, discount, delivery_cost, total, status, comment, promo_code)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
+        userId, // Привязываем заказ к пользователю если он авторизован
         customer.name || null, 
         customer.phone || null,
+        req.user ? req.user.email : null, // Сохраняем email если пользователь авторизован
         recipient ? (recipient.name || null) : null,
         recipient ? (recipient.phone || null) : null,
         recipient ? (recipient.firstName || null) : null,
