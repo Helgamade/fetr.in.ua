@@ -11,6 +11,13 @@ const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || 'http://localhost
  * Настройка Passport для Google OAuth
  */
 export function configurePassport() {
+  // Проверяем наличие необходимых переменных окружения
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    console.warn('[OAuth] Google OAuth credentials not configured. Google authentication will not be available.');
+    console.warn('[OAuth] Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in server/.env file.');
+    return; // Пропускаем настройку если переменные не заданы
+  }
+
   // Стратегия Google OAuth
   passport.use(
     new GoogleStrategy(
