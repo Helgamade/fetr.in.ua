@@ -16,9 +16,16 @@ import { ExitIntentPopup } from "@/components/ExitIntentPopup";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useTexts } from "@/hooks/useTexts";
 
 const Index = () => {
   const { t } = useTranslation('index');
+  const { data: texts = [] } = useTexts();
+  
+  // Получаем тексты баннера
+  const bannerText1 = texts.find(t => t.key === 'banner.text1')?.value || '🎁 Безкоштовна доставка від 1500 грн';
+  const bannerText2 = texts.find(t => t.key === 'banner.text2')?.value || '🚀 Відправка щодня до 17:00';
+  const bannerText3 = texts.find(t => t.key === 'banner.text3')?.value || '💝 Подарунок до кожного замовлення';
   return (
     <>
         <Helmet>
@@ -36,10 +43,18 @@ const Index = () => {
             
             {/* CTA Banner */}
             <section className="bg-gradient-to-r from-primary to-primary/80 py-4">
-              <div className="container mx-auto px-4 text-center">
-                <p className="text-primary-foreground font-medium">
-                  {t('banner.text')}
-                </p>
+              <div className="container mx-auto px-4">
+                <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-center">
+                  <p className="text-primary-foreground font-medium">
+                    {bannerText1}
+                  </p>
+                  <p className="text-primary-foreground font-medium">
+                    {bannerText2}
+                  </p>
+                  <p className="text-primary-foreground font-medium">
+                    {bannerText3}
+                  </p>
+                </div>
               </div>
             </section>
             
