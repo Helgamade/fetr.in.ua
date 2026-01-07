@@ -2066,17 +2066,6 @@ const Checkout = () => {
                   )}
                 </div>
 
-                {/* Submit Button (Mobile) */}
-                <div className="lg:hidden">
-                  <Button 
-                    type="submit" 
-                    size="lg" 
-                    className="w-full rounded-xl text-lg"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Обробка..." : "Оформити замовлення"}
-                  </Button>
-                </div>
               </form>
             </div>
 
@@ -2086,38 +2075,6 @@ const Checkout = () => {
                 {/* Order Block */}
                 <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
                   <h2 className="text-lg font-bold">Ваше замовлення</h2>
-                  
-                  <div className="space-y-3 max-h-[300px] overflow-auto">
-                    {cartItemsWithProducts.map((item) => {
-                      const product = item.product!;
-                      const productOptions = item.selectedOptions.map(optId => 
-                        product.options.find(o => o.code === optId)
-                      ).filter(Boolean);
-                      const optionsTotal = productOptions.reduce((sum, opt) => sum + (opt?.price || 0), 0);
-                      
-                      return (
-                        <div key={item.productId + JSON.stringify(item.selectedOptions)} className="flex gap-3">
-                          <img 
-                            src={product.images[0]} 
-                            alt={product.name}
-                            className="w-16 h-16 object-cover rounded-lg"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-sm truncate">{product.name}</div>
-                            <div className="text-xs text-muted-foreground">Кількість: {item.quantity}</div>
-                            {productOptions.length > 0 && (
-                              <div className="text-xs text-muted-foreground">
-                                + {productOptions.length} опц.
-                              </div>
-                            )}
-                          </div>
-                          <div className="font-medium text-sm">
-                            {((product.salePrice || product.basePrice) * item.quantity) + optionsTotal} грн
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
 
                   <div className="border-t pt-4 space-y-2">
                     <div className="flex justify-between text-sm">
@@ -2158,8 +2115,8 @@ const Checkout = () => {
                     </div>
                   </div>
 
-                  {/* Submit Button (Desktop) */}
-                  <div className="hidden lg:block pt-4">
+                  {/* Submit Button */}
+                  <div className="pt-4">
                     <Button 
                       type="submit" 
                       size="lg" 
