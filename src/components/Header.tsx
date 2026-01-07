@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Menu, X, Phone, Instagram, User, LogOut, Package, FileText, LayoutDashboard } from 'lucide-react';
+import { ShoppingBag, Menu, X, Phone, User, LogOut, Package, FileText, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -8,14 +8,6 @@ import { authAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePublicSettings } from '@/hooks/usePublicSettings';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export const Header: React.FC = () => {
@@ -27,6 +19,7 @@ export const Header: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { getItemCount, openCart } = useCart();
   const itemCount = getItemCount();
   
@@ -41,6 +34,7 @@ export const Header: React.FC = () => {
     await logout();
     navigate('/');
     setIsMobileMenuOpen(false);
+    setIsUserMenuOpen(false);
   };
   
   const getUserInitials = () => {
@@ -54,7 +48,6 @@ export const Header: React.FC = () => {
   };
 
   const navLinks = [
-    { href: '#hero', label: t('home') },
     { href: '#products', label: t('products') },
     { href: '#comparison', label: t('comparison') },
     { href: '#gallery', label: t('gallery') },
@@ -141,77 +134,23 @@ export const Header: React.FC = () => {
               <span className="hidden md:inline">{storePhone}</span>
             </a>
 
-            <a
-              href="https://instagram.com/helgamade_ua"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                'hidden sm:flex items-center justify-center w-10 h-10 rounded-lg transition-colors',
-                'hover:bg-primary/10',
-                isScrolled ? 'text-foreground' : 'text-foreground'
-              )}
-            >
-              <Instagram className="w-5 h-5" />
-            </a>
-
             {/* Auth Button / User Menu */}
             {isAuthenticated && user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="relative h-10 w-10 rounded-full"
-                  >
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.name}</p>
-                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  
-                  {/* User menu items */}
-                  <DropdownMenuItem onClick={() => { navigate('/user/profile'); setIsMobileMenuOpen(false); }}>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Мій профіль</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { navigate('/user/orders'); setIsMobileMenuOpen(false); }}>
-                    <Package className="mr-2 h-4 w-4" />
-                    <span>Мої замовлення</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { navigate('/user/materials'); setIsMobileMenuOpen(false); }}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    <span>Мої матеріали</span>
-                  </DropdownMenuItem>
-                  
-                  {/* Admin menu items */}
-                  {user.role === 'admin' && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => { navigate('/admin'); setIsMobileMenuOpen(false); }}>
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        <span>Адмін панель</span>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Вийти</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative h-10 w-10 rounded-full"
+                  onClick={() => setIsUserMenuOpen(true)}
+                >
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </>
             ) : (
               <Button
                 variant="outline"
@@ -258,6 +197,90 @@ export const Header: React.FC = () => {
         )}
         onClick={() => setIsMobileMenuOpen(false)}
       />
+
+      {/* User Menu Overlay */}
+      <div
+        className={cn(
+          'fixed inset-0 bg-foreground/50 backdrop-blur-sm z-50 transition-opacity duration-300',
+          isUserMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+        onClick={() => setIsUserMenuOpen(false)}
+      />
+
+      {/* User Menu (Desktop & Mobile) */}
+      {isAuthenticated && user && (
+        <div
+          className={cn(
+            'fixed top-0 right-0 bottom-0 w-[280px] bg-card z-50 transition-transform duration-300 shadow-large',
+            isUserMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          )}
+        >
+          <div className="flex items-center justify-between p-4 border-b border-border">
+            <span className="font-heading font-bold text-lg">Мій профіль</span>
+            <Button variant="ghost" size="icon" onClick={() => setIsUserMenuOpen(false)}>
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+
+          <div className="p-4 border-b border-border">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {getUserInitials()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{user.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              </div>
+            </div>
+          </div>
+
+          <nav className="p-4 flex flex-col gap-1">
+            <button
+              onClick={() => { navigate('/user/profile'); setIsUserMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors text-left"
+            >
+              <User className="w-5 h-5 text-primary" />
+              <span className="font-medium">Мій профіль</span>
+            </button>
+            <button
+              onClick={() => { navigate('/user/orders'); setIsUserMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors text-left"
+            >
+              <Package className="w-5 h-5 text-primary" />
+              <span className="font-medium">Мої замовлення</span>
+            </button>
+            <button
+              onClick={() => { navigate('/user/materials'); setIsUserMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors text-left"
+            >
+              <FileText className="w-5 h-5 text-primary" />
+              <span className="font-medium">Мої матеріали</span>
+            </button>
+            {user.role === 'admin' && (
+              <button
+                onClick={() => { navigate('/admin'); setIsUserMenuOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors text-left"
+              >
+                <LayoutDashboard className="w-5 h-5 text-primary" />
+                <span className="font-medium">Адмін панель</span>
+              </button>
+            )}
+          </nav>
+
+          <div className="p-4 border-t border-border mt-auto">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-destructive/10 text-destructive transition-colors text-left"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="font-medium">Вийти</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Menu */}
       <div
@@ -358,15 +381,6 @@ export const Header: React.FC = () => {
             >
               <Phone className="w-5 h-5 text-primary" />
               <span className="font-medium">{storePhone}</span>
-            </a>
-            <a
-              href="https://instagram.com/helgamade_ua"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors"
-            >
-              <Instagram className="w-5 h-5 text-primary" />
-              <span className="font-medium">@helgamade_ua</span>
             </a>
           </div>
         </div>
