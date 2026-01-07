@@ -2074,9 +2074,7 @@ const Checkout = () => {
               <div className="sticky top-24 space-y-4">
                 {/* Order Block */}
                 <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
-                  <h2 className="text-lg font-bold">Ваше замовлення</h2>
-
-                  <div className="border-t pt-4 space-y-2">
+                  <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Вартість замовлення:</span>
                       <span>{getSubtotal()} ₴</span>
