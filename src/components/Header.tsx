@@ -140,11 +140,11 @@ export const Header: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative h-10 w-10 rounded-full"
+                  className="relative rounded-full p-0 overflow-hidden"
                   onClick={() => setIsUserMenuOpen(true)}
                 >
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarImage src={user.avatar} alt={user.name} className="object-cover" />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {getUserInitials()}
                     </AvatarFallback>
