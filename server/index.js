@@ -24,6 +24,7 @@ import promoRoutes from './routes/promo.js';
 import emailTemplatesRoutes from './routes/email-templates.js';
 import authRoutes from './routes/auth.js';
 import adminAuthRoutes from './routes/admin-auth.js';
+import analyticsRoutes from './routes/analytics.js';
 
 import { configurePassport, passport } from './utils/oauth.js';
 import { apiRateLimiter, startCleanupInterval } from './middleware/rateLimit.js';
@@ -106,6 +107,7 @@ app.use('/api/promo', promoRoutes);
 // Публичные GET запросы для team и instagram (для отображения на главной странице)
 app.use('/api/team', teamRoutes);
 app.use('/api/instagram', instagramRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Protected routes (требуют авторизации)
 app.use('/api/orders', apiRateLimiter, ordersRoutes);

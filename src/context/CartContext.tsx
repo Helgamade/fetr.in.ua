@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { CartItem, CartState } from '@/types/store';
 import { useProducts } from '@/hooks/useProducts';
 import { useSettings } from '@/hooks/useSettings';
+import { trackEvent, trackFunnel } from '@/lib/analytics';
 
 interface CartContextType extends CartState {
   addToCart: (productId: string, selectedOptions: string[]) => void;
@@ -68,6 +69,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [items]);
 
   const addToCart = useCallback((productId: string, selectedOptions: string[]) => {
+    // Отслеживаем добавление в корзину
+    trackEvent({
+      eventType: 'add_to_cart',
+      eventCategory: 'ecommerce',
+      productId: parseInt(productId),
+      eventData: { options: selectedOptions },
+    });
+    
+    trackFunnel({ stage: 'added_to_cart' });
+    
     setItems(prev => {
       // Сортируем опции для корректного сравнения
       const sortedOptions = [...selectedOptions].sort();
@@ -109,8 +120,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const removeFromCart = useCallback((itemId: string) => {
+    const item = items.find(i => i.id === itemId);
+    if (item) {
+      trackEvent({
+        eventType: 'remove_from_cart',
+        eventCategory: 'ecommerce',
+        productId: parseInt(item.productId),
+      });
+    }
     setItems(prev => prev.filter(item => item.id !== itemId));
-  }, []);
+  }, [items]);
 
   const updateQuantity = useCallback((itemId: string, quantity: number) => {
     if (quantity <= 0) {

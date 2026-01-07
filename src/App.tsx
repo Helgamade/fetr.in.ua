@@ -31,7 +31,9 @@ import { Texts } from "./pages/admin/Texts";
 import { Pages } from "./pages/admin/Pages";
 import { PageDetail } from "./pages/admin/PageDetail";
 import { EmailTemplates } from "./pages/admin/EmailTemplates";
+import { Analytics } from "./pages/admin/Analytics";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { AnalyticsInit } from "./components/AnalyticsInit";
 import Profile from "./pages/user/Profile";
 import UserOrders from "./pages/user/UserOrders";
 import UserOrderDetail from "./pages/user/UserOrderDetail";
@@ -49,6 +51,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
+                <AnalyticsInit />
                 <Routes>
                   {/* Public routes */}
                   <Route path="/" element={<Index />} />
@@ -99,6 +102,7 @@ const App = () => (
                     <Route path="pages" element={<Pages />} />
                     <Route path="pages/:id" element={<PageDetail />} />
                     <Route path="email-templates" element={<EmailTemplates />} />
+                    <Route path="analytics" element={<Analytics />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="comparison" element={<Comparison />} />
                   </Route>

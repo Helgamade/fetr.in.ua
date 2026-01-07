@@ -9,6 +9,7 @@ import { CountdownTimer } from '@/components/CountdownTimer';
 import { OptionIcon } from '@/components/OptionIcon';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
+import { trackEvent, trackFunnel } from '@/lib/analytics';
 
 interface ProductModalProps {
   product: Product | null;
@@ -28,13 +29,27 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
       document.body.style.overflow = 'hidden';
       setCurrentImageIndex(0);
       setSelectedOptions([]);
+      
+      // Отслеживаем просмотр товара
+      if (product) {
+        trackEvent({
+          eventType: 'product_view',
+          eventCategory: 'ecommerce',
+          productId: product.id,
+          eventData: {
+            name: product.name,
+            price: product.salePrice || product.basePrice,
+          },
+        });
+        trackFunnel({ stage: 'viewed_product' });
+      }
     } else {
       document.body.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isOpen]);
+  }, [isOpen, product]);
 
   if (!product || !isOpen) return null;
 

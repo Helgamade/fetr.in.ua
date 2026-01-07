@@ -17,6 +17,7 @@ import { UkrPoshtaDelivery } from "@/components/UkrPoshtaDelivery";
 import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from "@/components/DeliveryLogos";
 import { CODPaymentLogo, WayForPayLogo, FOPPaymentLogo } from "@/components/PaymentLogos";
 import type { NovaPoshtaCity, NovaPoshtaWarehouse, UkrposhtaCity, UkrposhtaBranch } from "@/lib/api";
+import { trackEvent, trackFunnel } from "@/lib/analytics";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -25,9 +26,16 @@ const Checkout = () => {
   const { data: storeSettings = {} } = usePublicSettings();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Scroll to top on mount
+  // Scroll to top on mount and track checkout start
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    
+    // Отслеживаем начало оформления заказа
+    trackFunnel({ 
+      stage: 'started_checkout',
+      cartProducts: items,
+      cartTotal: getTotal()
+    });
   }, []);
 
   // Load data from localStorage on mount
@@ -599,7 +607,19 @@ const Checkout = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [name]: value };
+      
+      // Отслеживаем заполнение ключевых полей
+      if (name === 'firstName' && value && !prev.firstName) {
+        trackFunnel({ stage: 'filled_name' });
+      }
+      if (name === 'phone' && value && !prev.phone) {
+        trackFunnel({ stage: 'filled_phone' });
+      }
+      
+      return newData;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -671,6 +691,14 @@ const Checkout = () => {
       return;
     }
 
+    // Отслеживаем клик на кнопку "Оформить заказ"
+    trackFunnel({ stage: 'clicked_submit' });
+    trackEvent({
+      eventType: 'checkout_submit',
+      eventCategory: 'ecommerce',
+      eventValue: getTotal(),
+    });
+    
     setIsSubmitting(true);
     
     try {
@@ -752,6 +780,19 @@ const Checkout = () => {
 
       // Submit order to API
       const order = await ordersAPI.create(orderData);
+      
+      // Отслеживаем завершение заказа
+      trackFunnel({ 
+        stage: 'completed_order',
+        orderId: order.orderId,
+        cartTotal: finalTotal
+      });
+      trackEvent({
+        eventType: 'order_completed',
+        eventCategory: 'ecommerce',
+        orderId: order.orderId,
+        eventValue: finalTotal,
+      });
       
       // Clear localStorage after successful order
       localStorage.removeItem('checkoutFormData');
@@ -1428,6 +1469,11 @@ const Checkout = () => {
                   <RadioGroup
                     value={formData.deliveryMethod}
                     onValueChange={(value) => {
+                      // Отслеживаем выбор доставки
+                      if (value && !formData.deliveryMethod) {
+                        trackFunnel({ stage: 'selected_delivery' });
+                      }
+                      
                       setFormData(prev => {
                         // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
                         if (prev.deliveryMethod === value && value === "nova_poshta" && prev.novaPoshtaExpanded === false) {
@@ -1435,6 +1481,7 @@ const Checkout = () => {
                         }
                         // Если выбираем самовывоз, сразу помечаем как завершенный и сворачиваем
                         if (value === "pickup") {
+                          trackFunnel({ stage: 'filled_delivery' });
                           return { 
                             ...prev, 
                             deliveryMethod: value, 
@@ -1918,6 +1965,11 @@ const Checkout = () => {
                     <RadioGroup
                       value={formData.paymentMethod}
                       onValueChange={(value) => {
+                        // Отслеживаем выбор оплаты
+                        if (value && !formData.paymentMethod) {
+                          trackFunnel({ stage: 'selected_payment' });
+                        }
+                        
                         setFormData(prev => ({ 
                           ...prev, 
                           paymentMethod: value,

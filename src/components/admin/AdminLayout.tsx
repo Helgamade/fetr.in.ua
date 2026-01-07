@@ -13,7 +13,8 @@ import {
   Instagram,
   FileText,
   HelpCircle,
-  Mail
+  Mail,
+  BarChart3
 } from 'lucide-react';
 import {
   Sidebar,
@@ -35,6 +36,7 @@ import { usePublicSettings } from '@/hooks/usePublicSettings';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Дашборд', path: '/admin' },
+  { icon: BarChart3, label: 'Аналітика', path: '/admin/analytics' },
   { icon: ShoppingCart, label: 'Замовлення', path: '/admin/orders' },
   { icon: Package, label: 'Товари', path: '/admin/products' },
   { icon: GripVertical, label: 'Опції', path: '/admin/options' },
