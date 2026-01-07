@@ -145,8 +145,8 @@ export default function UserOrderDetail() {
     : generateDefaultHistory(order);
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4 md:p-8">
-      <div className="container max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-muted/30">
+      <div className="container max-w-7xl mx-auto space-y-6 p-4">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button
