@@ -1905,7 +1905,7 @@ const Checkout = () => {
                     className="w-full rounded-xl text-lg"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Обробка..." : `Оформити замовлення • ${orderTotal.toFixed(2)} ₴`}
+                    {isSubmitting ? "Обробка..." : "Оформити замовлення"}
                   </Button>
                 </div>
               </form>
@@ -2005,9 +2005,7 @@ const Checkout = () => {
                   {/* Trust badges */}
                   <div className="flex flex-wrap gap-2 pt-4 border-t justify-center text-muted-foreground" style={{ fontSize: '0.85rem' }}>
                     <span>🔒 Безпечна оплата</span>
-                    <span>•</span>
                     <span>📦 Швидка доставка</span>
-                    <span>•</span>
                     <span>↩️ 14 днів повернення</span>
                   </div>
                 </div>
