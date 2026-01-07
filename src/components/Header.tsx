@@ -237,29 +237,8 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          <nav className="p-4 flex flex-col gap-1">
-            <button
-              onClick={() => { navigate('/user/profile'); setIsUserMenuOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors text-left"
-            >
-              <User className="w-5 h-5 text-primary" />
-              <span className="font-medium">Мій профіль</span>
-            </button>
-            <button
-              onClick={() => { navigate('/user/orders'); setIsUserMenuOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors text-left"
-            >
-              <Package className="w-5 h-5 text-primary" />
-              <span className="font-medium">Мої замовлення</span>
-            </button>
-            <button
-              onClick={() => { navigate('/user/materials'); setIsUserMenuOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors text-left"
-            >
-              <FileText className="w-5 h-5 text-primary" />
-              <span className="font-medium">Мої матеріали</span>
-            </button>
-            {user.role === 'admin' && (
+          {user.role === 'admin' && (
+            <nav className="p-4 flex flex-col gap-1">
               <button
                 onClick={() => { navigate('/admin'); setIsUserMenuOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors text-left"
@@ -267,18 +246,8 @@ export const Header: React.FC = () => {
                 <LayoutDashboard className="w-5 h-5 text-primary" />
                 <span className="font-medium">Адмін панель</span>
               </button>
-            )}
-          </nav>
-
-          <div className="p-4 border-t border-border mt-auto">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-destructive/10 text-destructive transition-colors text-left"
-            >
-              <LogOut className="w-5 h-5" />
-              <span className="font-medium">Вийти</span>
-            </button>
-          </div>
+            </nav>
+          )}
         </div>
       )}
 
@@ -312,41 +281,6 @@ export const Header: React.FC = () => {
           {/* Auth section in mobile menu */}
           {isAuthenticated && user ? (
             <>
-              <div className="px-4 py-2 border-b border-border mb-2">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      {getUserInitials()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{user.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => { navigate('/user/profile'); setIsMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors text-left"
-              >
-                <User className="w-5 h-5 text-primary" />
-                <span className="font-medium">Мій профіль</span>
-              </button>
-              <button
-                onClick={() => { navigate('/user/orders'); setIsMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors text-left"
-              >
-                <Package className="w-5 h-5 text-primary" />
-                <span className="font-medium">Мої замовлення</span>
-              </button>
-              <button
-                onClick={() => { navigate('/user/materials'); setIsMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors text-left"
-              >
-                <FileText className="w-5 h-5 text-primary" />
-                <span className="font-medium">Мої матеріали</span>
-              </button>
               {user.role === 'admin' && (
                 <button
                   onClick={() => { navigate('/admin'); setIsMobileMenuOpen(false); }}
@@ -356,13 +290,6 @@ export const Header: React.FC = () => {
                   <span className="font-medium">Адмін панель</span>
                 </button>
               )}
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-destructive/10 text-destructive transition-colors text-left"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Вийти</span>
-              </button>
             </>
           ) : (
             <button

@@ -94,18 +94,18 @@ export default function Profile() {
 
             <Separator />
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Button
                 variant="outline"
                 onClick={() => navigate('/user/orders')}
-                className="flex-1"
+                className="flex-1 min-w-0"
               >
                 Мої замовлення
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate('/user/materials')}
-                className="flex-1"
+                className="flex-1 min-w-0"
               >
                 Мої матеріали
               </Button>

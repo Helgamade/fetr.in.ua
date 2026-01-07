@@ -14,13 +14,9 @@ export default function Login() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Если уже авторизован, перенаправляем
+    // Если уже авторизован, перенаправляем на главную
     if (isAuthenticated && user) {
-      if (user.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/');
-      }
+      navigate('/');
     }
 
     // Проверяем наличие ошибки в URL
