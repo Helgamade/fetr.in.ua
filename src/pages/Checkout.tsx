@@ -1017,6 +1017,9 @@ const Checkout = () => {
                                   </div>
                                   <div className="text-xs text-muted-foreground mb-1">
                                     {item.quantity} шт.
+                                    {productOptions.length > 0 && (
+                                      <span> + {productOptions.length} {productOptions.length === 1 ? 'опція' : 'опції'}</span>
+                                    )}
                                   </div>
                                 </div>
                                 
@@ -1081,6 +1084,9 @@ const Checkout = () => {
                               </div>
                               <div className="text-xs text-muted-foreground mb-1">
                                 {item.quantity} шт.
+                                {productOptions.length > 0 && (
+                                  <span> + {productOptions.length} {productOptions.length === 1 ? 'опція' : 'опції'}</span>
+                                )}
                               </div>
                             </div>
                             
