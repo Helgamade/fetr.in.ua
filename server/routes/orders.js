@@ -732,6 +732,21 @@ router.put('/:id', async (req, res, next) => {
       ? null 
       : String(trackingToken).trim() || null;
 
+    // Обрабатываем все поля, чтобы не было undefined
+    const customerName = customer?.name || null;
+    const customerPhone = customer?.phone || null;
+    const deliveryMethod = delivery?.method || null;
+    const deliveryCity = toNull(delivery?.city);
+    const deliveryWarehouse = toNull(delivery?.warehouse);
+    const deliveryPostIndex = toNull(delivery?.postIndex);
+    const deliveryAddress = toNull(delivery?.address);
+    const paymentMethod = payment?.method || null;
+    const orderStatus = status || null;
+    const orderSubtotal = subtotal !== undefined ? Number(subtotal) : null;
+    const orderDiscount = discount !== undefined ? Number(discount) : null;
+    const orderDeliveryCost = deliveryCost !== undefined ? Number(deliveryCost) : null;
+    const orderTotal = total !== undefined ? Number(total) : null;
+
     // id is order_number (VARCHAR), not INT id
     await pool.execute(`
       UPDATE orders SET
@@ -742,10 +757,11 @@ router.put('/:id', async (req, res, next) => {
         delivery_cost = ?, total = ?, tracking_token = ?, updated_at = CURRENT_TIMESTAMP
       WHERE order_number = ?
     `, [
-      customer.name, customer.phone,
-      delivery.method, toNull(delivery.city), toNull(delivery.warehouse),
-      toNull(delivery.postIndex), toNull(delivery.address),
-      payment.method, status, subtotal, discount, deliveryCost, total, trackingTokenValue, id
+      customerName, customerPhone,
+      deliveryMethod, deliveryCity, deliveryWarehouse,
+      deliveryPostIndex, deliveryAddress,
+      paymentMethod, orderStatus, orderSubtotal, orderDiscount,
+      orderDeliveryCost, orderTotal, trackingTokenValue, id
     ]);
 
     res.json({ id, message: 'Order updated' });
