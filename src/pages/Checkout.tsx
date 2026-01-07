@@ -986,7 +986,17 @@ const Checkout = () => {
                       return (
                         <li key={item.id || `${item.productId}_${index}`} style={{ flexBasis: '265px', flexShrink: 0 }}>
                           <div className="bg-background rounded-xl p-3 border border-border">
-                            <div className="flex gap-3">
+                            <div 
+                              className="flex gap-3"
+                              style={{ 
+                                alignContent: 'space-between',
+                                marginLeft: 'calc(4px / 2 * -1)',
+                                marginRight: 'calc(4px / 2 * -1)',
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                minWidth: 0
+                              }}
+                            >
                               {/* Image */}
                               <div className="flex-shrink-0">
                                 <div className="w-[88px] h-[90px] rounded-lg overflow-hidden">
