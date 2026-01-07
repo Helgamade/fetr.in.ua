@@ -35,6 +35,10 @@ router.post('/session', async (req, res, next) => {
 
     const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
+    // Конвертируем undefined в null для SQL
+    const toNull = (val) => (val === undefined ? null : val);
+    const toNullOrNumber = (val) => (val === undefined || val === null ? 0 : Number(val));
+
     // Проверяем существование сессии
     const [existing] = await pool.execute(
       'SELECT id FROM analytics_sessions WHERE session_id = ?',
@@ -51,7 +55,7 @@ router.post('/session', async (req, res, next) => {
           cart_items_count = COALESCE(?, cart_items_count),
           pages_viewed = pages_viewed + 1
         WHERE session_id = ?
-      `, [userId || null, cartItemsCount, sessionId]);
+      `, [toNull(userId), toNullOrNumber(cartItemsCount), sessionId]);
     } else {
       // Создаем новую сессию
       await pool.execute(`
@@ -62,15 +66,16 @@ router.post('/session', async (req, res, next) => {
           screen_resolution, language, ip_address, cart_items_count
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-        sessionId, userId || null, fingerprint,
-        utmSource, utmMedium, utmCampaign, utmTerm, utmContent,
-        referrer, landingPage, deviceType, browser, os,
-        screenResolution, language, ipAddress, cartItemsCount || 0
+        sessionId, toNull(userId), fingerprint,
+        toNull(utmSource), toNull(utmMedium), toNull(utmCampaign), toNull(utmTerm), toNull(utmContent),
+        toNull(referrer), toNull(landingPage), toNull(deviceType), toNull(browser), toNull(os),
+        toNull(screenResolution), toNull(language), toNull(ipAddress), toNullOrNumber(cartItemsCount)
       ]);
     }
 
     res.json({ success: true });
   } catch (error) {
+    console.error('Analytics session error:', error);
     next(error);
   }
 });
@@ -90,14 +95,18 @@ router.post('/page-view', async (req, res, next) => {
       productId
     } = req.body;
 
-    await pool.execute(`
+    // Конвертируем undefined в null для SQL
+    const toNull = (val) => (val === undefined ? null : val);
+
+    const [result] = await pool.execute(`
       INSERT INTO analytics_page_views (
         session_id, page_url, page_title, page_type, product_id
       ) VALUES (?, ?, ?, ?, ?)
-    `, [sessionId, pageUrl, pageTitle, pageType, productId || null]);
+    `, [sessionId, pageUrl, toNull(pageTitle), toNull(pageType), toNull(productId)]);
 
-    res.json({ success: true });
+    res.json({ success: true, id: result.insertId });
   } catch (error) {
+    console.error('Analytics page-view error:', error);
     next(error);
   }
 });
@@ -142,6 +151,10 @@ router.post('/event', async (req, res, next) => {
       eventValue
     } = req.body;
 
+    // Конвертируем undefined в null для SQL
+    const toNull = (val) => (val === undefined ? null : val);
+    const toNullString = (val) => (val === undefined || val === null ? null : JSON.stringify(val));
+
     await pool.execute(`
       INSERT INTO analytics_events (
         session_id, user_id, event_type, event_category, event_label,
@@ -149,18 +162,19 @@ router.post('/event', async (req, res, next) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       sessionId,
-      userId || null,
+      toNull(userId),
       eventType,
-      eventCategory || null,
-      eventLabel || null,
-      eventData ? JSON.stringify(eventData) : null,
-      productId || null,
-      orderId || null,
-      eventValue || null
+      toNull(eventCategory),
+      toNull(eventLabel),
+      toNullString(eventData),
+      toNull(productId),
+      toNull(orderId),
+      toNull(eventValue)
     ]);
 
     res.json({ success: true });
   } catch (error) {
+    console.error('Analytics event error:', error);
     next(error);
   }
 });
@@ -238,6 +252,10 @@ router.post('/funnel', async (req, res, next) => {
       );
     } else {
       // Создаем новую запись
+      // Конвертируем undefined в null для SQL
+      const toNull = (val) => (val === undefined ? null : val);
+      const toNullString = (val) => (val === undefined || val === null ? null : JSON.stringify(val));
+
       await pool.execute(`
         INSERT INTO analytics_funnel (
           session_id, user_id, order_id, ${fieldName},
@@ -245,15 +263,16 @@ router.post('/funnel', async (req, res, next) => {
         ) VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
       `, [
         sessionId,
-        userId || null,
-        orderId || null,
-        cartProducts ? JSON.stringify(cartProducts) : null,
-        cartTotal || null
+        toNull(userId),
+        toNull(orderId),
+        toNullString(cartProducts),
+        toNull(cartTotal)
       ]);
     }
 
     res.json({ success: true });
   } catch (error) {
+    console.error('Analytics funnel error:', error);
     next(error);
   }
 });
