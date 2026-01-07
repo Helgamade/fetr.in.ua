@@ -228,23 +228,23 @@ export default function UserOrderDetail() {
                                   -{discountPercent}%
                                 </div>
                               )}
-                              <div className="font-medium text-sm sm:text-base flex-1 min-w-0">{getProductName(item.productId)}</div>
+                              <div className="font-medium text-base sm:text-lg flex-1 min-w-0">{getProductName(item.productId)}</div>
                             </div>
                             
                             {/* Цена товара и количество */}
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-                              <div className="flex items-center gap-2">
+                              <div className="text-sm sm:text-base text-muted-foreground">
+                                Кількість: <span className="font-semibold text-foreground">{item.quantity} шт.</span>
+                              </div>
+                              <div className="flex items-center gap-2 ml-auto">
                                 {hasDiscount ? (
                                   <>
-                                    <span className="text-base sm:text-lg font-bold">{productPrice} ₴</span>
                                     <span className="text-sm text-muted-foreground line-through">{basePrice} ₴</span>
+                                    <span className="text-base sm:text-lg font-bold">{productPrice} ₴</span>
                                   </>
                                 ) : (
                                   <span className="text-base sm:text-lg font-bold">{basePrice} ₴</span>
                                 )}
-                              </div>
-                              <div className="text-sm sm:text-base text-muted-foreground">
-                                Кількість: <span className="font-semibold text-foreground">{item.quantity} шт.</span>
                               </div>
                             </div>
                             
@@ -264,18 +264,6 @@ export default function UserOrderDetail() {
                                     );
                                   })}
                                 </div>
-                                {optionsPrice > 0 && (
-                                  <div className="text-xs sm:text-sm text-muted-foreground mt-1.5">
-                                    Сума опцій: <span className="font-semibold text-foreground">+{optionsPrice} ₴</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            
-                            {/* Артикул */}
-                            {product?.code && (
-                              <div className="text-xs text-muted-foreground mb-1">
-                                Артикул: {product.code}
                               </div>
                             )}
                             
