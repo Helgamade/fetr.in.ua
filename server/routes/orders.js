@@ -480,6 +480,35 @@ router.post('/', async (req, res, next) => {
             const order = orderData[0];
             const baseUrl = process.env.CORS_ORIGIN || 'https://fetr.in.ua';
             
+            // Маппинг статусов на украинский
+            const statusMap = {
+              'created': 'Новий',
+              'accepted': 'Прийнято',
+              'processing': 'В обробці',
+              'awaiting_payment': 'Очікує оплату',
+              'paid': 'Оплачено',
+              'assembled': 'Зібрано',
+              'packed': 'Запаковано',
+              'shipped': 'Відправлено',
+              'in_transit': 'В дорозі',
+              'arrived': 'Прибуло',
+              'completed': 'Виконано'
+            };
+            
+            // Маппинг способов доставки на украинский
+            const deliveryMethodMap = {
+              'nova_poshta': 'Нова Пошта',
+              'ukrposhta': 'Укрпошта',
+              'pickup': 'Самовивіз'
+            };
+            
+            // Маппинг способов оплаты на украинский
+            const paymentMethodMap = {
+              'wayforpay': 'Онлайн оплата (WayForPay)',
+              'nalojka': 'Накладений платіж',
+              'fopiban': 'Оплата на рахунок ФОП'
+            };
+            
             // Данные для шаблона
             const templateData = {
               orderNumber: orderNumber,
@@ -487,11 +516,11 @@ router.post('/', async (req, res, next) => {
               customerPhone: order.customer_phone,
               customerEmail: order.customer_email || '',
               total: parseFloat(order.total).toFixed(2),
-              status: order.status,
-              deliveryMethod: order.delivery_method,
+              status: statusMap[order.status] || order.status,
+              deliveryMethod: deliveryMethodMap[order.delivery_method] || order.delivery_method,
               deliveryCity: order.delivery_city || '',
               deliveryWarehouse: order.delivery_warehouse || '',
-              paymentMethod: order.payment_method,
+              paymentMethod: paymentMethodMap[order.payment_method] || order.payment_method,
               orderLink: `${baseUrl}/admin/orders/${orderNumber}`,
               trackingLink: `${baseUrl}/order/${trackingToken}`
             };
@@ -553,17 +582,17 @@ router.patch('/:id/status', async (req, res, next) => {
           
           // Статусы на украинском
           const statusMap = {
-            'created': 'Створено',
+            'created': 'Новий',
             'accepted': 'Прийнято',
-            'processing': 'Обробляється',
-            'awaiting_payment': 'Очікує оплати',
+            'processing': 'В обробці',
+            'awaiting_payment': 'Очікує оплату',
             'paid': 'Оплачено',
             'assembled': 'Зібрано',
-            'packed': 'Упаковано',
+            'packed': 'Запаковано',
             'shipped': 'Відправлено',
             'in_transit': 'В дорозі',
             'arrived': 'Прибуло',
-            'completed': 'Завершено'
+            'completed': 'Виконано'
           };
           
           const templateData = {
