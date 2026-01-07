@@ -258,11 +258,11 @@ export default function UserOrderDetail() {
                             </div>
                             
                             {/* Цена товара и количество */}
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                            <div className="flex items-center justify-between gap-2 mb-2">
                               <div className="text-sm sm:text-base text-muted-foreground">
                                 Кількість: <span className="font-semibold text-foreground">{item.quantity} шт.</span>
                               </div>
-                              <div className="flex items-center gap-2 ml-auto">
+                              <div className="flex items-center gap-2">
                                 {hasDiscount ? (
                                   <>
                                     <span className="text-sm text-muted-foreground line-through">{basePrice} ₴</span>
