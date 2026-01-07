@@ -193,72 +193,6 @@ export function Settings() {
           <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ImageIcon className="h-5 w-5" />
-            Фонове зображення Hero секції
-          </CardTitle>
-          <CardDescription>
-            Завантажте фонове зображення для головної секції сайту
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Рекомендовані параметри:</Label>
-            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-              <li>Розмір: 1920×1080px або більше (16:9)</li>
-              <li>Формат: JPG, PNG, WebP</li>
-              <li>Максимальний розмір файлу: 10MB</li>
-              <li>Рекомендовано використовувати WebP для кращої оптимізації</li>
-            </ul>
-          </div>
-          <div className="space-y-2">
-            <Label>Поточне зображення:</Label>
-            {heroImagePreview ? (
-              <div className="relative w-full max-w-2xl">
-                <img 
-                  src={heroImagePreview} 
-                  alt="Hero background preview" 
-                  className="w-full h-auto rounded-lg border border-border"
-                />
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="absolute top-2 right-2"
-                  onClick={() => {
-                    setHeroImagePreview(null);
-                    updateSettings.mutate({ hero_background_image: '' });
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-                Зображення не завантажено
-              </div>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="heroImageUpload">Завантажити нове зображення</Label>
-            <Input
-              id="heroImageUpload"
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-              ref={fileInputRef}
-              onChange={handleHeroImageUpload}
-              disabled={uploadingHeroImage}
-              className="cursor-pointer"
-            />
-            {uploadingHeroImage && (
-              <p className="text-sm text-muted-foreground">Завантаження...</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Store settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
             <Store className="h-5 w-5" />
             Налаштування магазину
           </CardTitle>
@@ -330,167 +264,145 @@ export function Settings() {
         {/* Фонове зображення */}
         <TabsContent value="background" className="space-y-6 mt-6">
           <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Truck className="h-5 w-5" />
-            Налаштування доставки
-          </CardTitle>
-          <CardDescription>
-            Способи доставки та вартість
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="freeDeliveryThreshold">Безкоштовна доставка від (₴)</Label>
-            <Input
-              id="freeDeliveryThreshold"
-              type="number"
-              value={localDeliverySettings.freeDeliveryThreshold}
-              onChange={(e) => setLocalDeliverySettings({ 
-                ...localDeliverySettings, 
-                freeDeliveryThreshold: parseInt(e.target.value) || 0 
-              })}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="space-y-4">
-            <h4 className="font-medium">Способи доставки</h4>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Нова Пошта</Label>
-                  <p className="text-sm text-muted-foreground">Доставка у відділення або поштомат</p>
-                </div>
-                <Switch
-                  checked={localDeliverySettings.novaPoshtaEnabled}
-                  onCheckedChange={(checked) => setLocalDeliverySettings({ 
-                    ...localDeliverySettings, 
-                    novaPoshtaEnabled: checked 
-                  })}
-                />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                Фонове зображення Hero секції
+              </CardTitle>
+              <CardDescription>
+                Завантажте фонове зображення для головної секції сайту
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Рекомендовані параметри:</Label>
+                <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                  <li>Розмір: 1920×1080px або більше (16:9)</li>
+                  <li>Формат: JPG, PNG, WebP</li>
+                  <li>Максимальний розмір файлу: 10MB</li>
+                  <li>Рекомендовано використовувати WebP для кращої оптимізації</li>
+                </ul>
               </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Укрпошта</Label>
-                  <p className="text-sm text-muted-foreground">Доставка Укрпоштою</p>
-                </div>
-                <Switch
-                  checked={localDeliverySettings.ukrposhtaEnabled}
-                  onCheckedChange={(checked) => setLocalDeliverySettings({ 
-                    ...localDeliverySettings, 
-                    ukrposhtaEnabled: checked 
-                  })}
-                />
+              <div className="space-y-2">
+                <Label>Поточне зображення:</Label>
+                {heroImagePreview ? (
+                  <div className="relative w-full max-w-2xl">
+                    <img 
+                      src={heroImagePreview} 
+                      alt="Hero background preview" 
+                      className="w-full h-auto rounded-lg border border-border"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={() => {
+                        setHeroImagePreview(null);
+                        updateSettings.mutate({ hero_background_image: '' });
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
+                    Зображення не завантажено
+                  </div>
+                )}
               </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Самовивіз</Label>
-                  <p className="text-sm text-muted-foreground">Забрати з магазину</p>
-                </div>
-                <Switch
-                  checked={localDeliverySettings.pickupEnabled}
-                  onCheckedChange={(checked) => setLocalDeliverySettings({ 
-                    ...localDeliverySettings, 
-                    pickupEnabled: checked 
-                  })}
+              <div className="space-y-2">
+                <Label htmlFor="heroImageUpload">Завантажити нове зображення</Label>
+                <Input
+                  id="heroImageUpload"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  ref={fileInputRef}
+                  onChange={handleHeroImageUpload}
+                  disabled={uploadingHeroImage}
+                  className="cursor-pointer"
                 />
+                {uploadingHeroImage && (
+                  <p className="text-sm text-muted-foreground">Завантаження...</p>
+                )}
               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Доставка */}
         <TabsContent value="delivery" className="space-y-6 mt-6">
           <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Налаштування SMTP для Email
-          </CardTitle>
-          <CardDescription>
-            Налаштування для відправки email сповіщень
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="smtp_host">SMTP Хост</Label>
-              <Input
-                id="smtp_host"
-                value={settings.smtp_host || ''}
-                onChange={(e) => updateSettings.mutate({ smtp_host: e.target.value })}
-                placeholder="smtp.gmail.com"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="smtp_port">SMTP Порт</Label>
-              <Input
-                id="smtp_port"
-                type="number"
-                value={settings.smtp_port || '587'}
-                onChange={(e) => updateSettings.mutate({ smtp_port: e.target.value })}
-                placeholder="587"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="smtp_user">SMTP Користувач</Label>
-              <Input
-                id="smtp_user"
-                value={settings.smtp_user || ''}
-                onChange={(e) => updateSettings.mutate({ smtp_user: e.target.value })}
-                placeholder="your-email@gmail.com"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="smtp_password">SMTP Пароль</Label>
-              <Input
-                id="smtp_password"
-                type="password"
-                value={settings.smtp_password || ''}
-                onChange={(e) => updateSettings.mutate({ smtp_password: e.target.value })}
-                placeholder="Пароль або App Password"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="smtp_from_email">Email відправника</Label>
-              <Input
-                id="smtp_from_email"
-                type="email"
-                value={settings.smtp_from_email || ''}
-                onChange={(e) => updateSettings.mutate({ smtp_from_email: e.target.value })}
-                placeholder="noreply@fetr.in.ua"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="smtp_from_name">Ім'я відправника</Label>
-              <Input
-                id="smtp_from_name"
-                value={settings.smtp_from_name || 'Fetr.in.ua'}
-                onChange={(e) => updateSettings.mutate({ smtp_from_name: e.target.value })}
-                placeholder="Fetr.in.ua"
-              />
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Використовувати SSL/TLS</Label>
-              <p className="text-sm text-muted-foreground">Увімкнути для портів 465 (SSL) або 587 (TLS)</p>
-            </div>
-            <Switch
-              checked={settings.smtp_secure === 'true'}
-              onCheckedChange={(checked) => updateSettings.mutate({ smtp_secure: checked.toString() })}
-            />
-          </div>
-          <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
-            <strong>Примітка:</strong> Для Gmail використовуйте App Password замість звичайного пароля. 
-            Для інших провайдерів перевірте документацію щодо налаштувань SMTP.
-          </div>
-        </CardContent>
-      </Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Truck className="h-5 w-5" />
+                Налаштування доставки
+              </CardTitle>
+              <CardDescription>
+                Способи доставки та вартість
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="freeDeliveryThreshold">Безкоштовна доставка від (₴)</Label>
+                <Input
+                  id="freeDeliveryThreshold"
+                  type="number"
+                  value={localDeliverySettings.freeDeliveryThreshold}
+                  onChange={(e) => setLocalDeliverySettings({ 
+                    ...localDeliverySettings, 
+                    freeDeliveryThreshold: parseInt(e.target.value) || 0 
+                  })}
+                />
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h4 className="font-medium">Способи доставки</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Нова Пошта</Label>
+                      <p className="text-sm text-muted-foreground">Доставка у відділення або поштомат</p>
+                    </div>
+                    <Switch
+                      checked={localDeliverySettings.novaPoshtaEnabled}
+                      onCheckedChange={(checked) => setLocalDeliverySettings({ 
+                        ...localDeliverySettings, 
+                        novaPoshtaEnabled: checked 
+                      })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Укрпошта</Label>
+                      <p className="text-sm text-muted-foreground">Доставка Укрпоштою</p>
+                    </div>
+                    <Switch
+                      checked={localDeliverySettings.ukrposhtaEnabled}
+                      onCheckedChange={(checked) => setLocalDeliverySettings({ 
+                        ...localDeliverySettings, 
+                        ukrposhtaEnabled: checked 
+                      })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Самовивіз</Label>
+                      <p className="text-sm text-muted-foreground">Забрати з магазину</p>
+                    </div>
+                    <Switch
+                      checked={localDeliverySettings.pickupEnabled}
+                      onCheckedChange={(checked) => setLocalDeliverySettings({ 
+                        ...localDeliverySettings, 
+                        pickupEnabled: checked 
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Оплата */}
@@ -553,15 +465,102 @@ export function Settings() {
         {/* Налаштування Email */}
         <TabsContent value="email" className="space-y-6 mt-6">
           <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Сповіщення
-          </CardTitle>
-          <CardDescription>
-            Налаштування сповіщень про замовлення
-          </CardDescription>
-        </CardHeader>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Налаштування SMTP для Email
+              </CardTitle>
+              <CardDescription>
+                Налаштування для відправки email сповіщень
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="smtp_host">SMTP Хост</Label>
+                  <Input
+                    id="smtp_host"
+                    value={settings.smtp_host || ''}
+                    onChange={(e) => updateSettings.mutate({ smtp_host: e.target.value })}
+                    placeholder="smtp.gmail.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smtp_port">SMTP Порт</Label>
+                  <Input
+                    id="smtp_port"
+                    type="number"
+                    value={settings.smtp_port || '587'}
+                    onChange={(e) => updateSettings.mutate({ smtp_port: e.target.value })}
+                    placeholder="587"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smtp_user">SMTP Користувач</Label>
+                  <Input
+                    id="smtp_user"
+                    value={settings.smtp_user || ''}
+                    onChange={(e) => updateSettings.mutate({ smtp_user: e.target.value })}
+                    placeholder="your-email@gmail.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smtp_password">SMTP Пароль</Label>
+                  <Input
+                    id="smtp_password"
+                    type="password"
+                    value={settings.smtp_password || ''}
+                    onChange={(e) => updateSettings.mutate({ smtp_password: e.target.value })}
+                    placeholder="Пароль або App Password"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smtp_from_email">Email відправника</Label>
+                  <Input
+                    id="smtp_from_email"
+                    type="email"
+                    value={settings.smtp_from_email || ''}
+                    onChange={(e) => updateSettings.mutate({ smtp_from_email: e.target.value })}
+                    placeholder="noreply@fetr.in.ua"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smtp_from_name">Ім'я відправника</Label>
+                  <Input
+                    id="smtp_from_name"
+                    value={settings.smtp_from_name || 'Fetr.in.ua'}
+                    onChange={(e) => updateSettings.mutate({ smtp_from_name: e.target.value })}
+                    placeholder="Fetr.in.ua"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Використовувати SSL/TLS</Label>
+                  <p className="text-sm text-muted-foreground">Увімкнути для портів 465 (SSL) або 587 (TLS)</p>
+                </div>
+                <Switch
+                  checked={settings.smtp_secure === 'true'}
+                  onCheckedChange={(checked) => updateSettings.mutate({ smtp_secure: checked.toString() })}
+                />
+              </div>
+              <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+                <strong>Примітка:</strong> Для Gmail використовуйте App Password замість звичайного пароля. 
+                Для інших провайдерів перевірте документацію щодо налаштувань SMTP.
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Сповіщення
+              </CardTitle>
+              <CardDescription>
+                Налаштування сповіщень про замовлення
+              </CardDescription>
+            </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <h4 className="font-medium">Канали сповіщень</h4>
