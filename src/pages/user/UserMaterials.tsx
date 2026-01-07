@@ -2,13 +2,19 @@ import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Lock, Video, FileText, Download } from 'lucide-react';
+import { Lock, Video, FileText, Download, Mail, Phone, Instagram, MessageCircle, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { usePublicSettings } from '@/hooks/usePublicSettings';
+import { getViberLink, getTelegramLink, getWhatsAppLink } from '@/lib/messengerLinks';
 
 // TODO: Интегрировать с реальными данными из базы user_access
 export default function UserMaterials() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { data: settings = {} } = usePublicSettings();
+  
+  const storeEmail = settings.store_email || 'support@fetr.in.ua';
+  const storePhone = settings.store_phone || '+380501234567';
 
   // Заглушка для демонстрации
   const materials = [
@@ -137,14 +143,69 @@ export default function UserMaterials() {
           <CardHeader>
             <CardTitle className="text-lg">Потрібна допомога?</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <CardContent className="space-y-4 text-sm text-muted-foreground">
             <p>
               Якщо ви не бачите матеріалів, які повинні бути доступні, зв'яжіться з нами:
             </p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Email: support@fetr.in.ua</li>
-              <li>Телефон: +380 XX XXX XX XX</li>
-            </ul>
+            
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                <span>Email:</span>
+                <a href={`mailto:${storeEmail}`} className="text-primary font-medium hover:underline">
+                  {storeEmail}
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                <span>Телефон:</span>
+                <a href={`tel:${storePhone.replace(/\s/g, '')}`} className="text-primary font-medium hover:underline">
+                  {storePhone}
+                </a>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-border">
+              <p className="mb-3">Напишіть нам у Instagram, Telegram, Viber або WhatsApp:</p>
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href="https://instagram.com/helgamade_ua"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-pink-500/10 text-pink-600 hover:bg-pink-500/20 transition-colors"
+                >
+                  <Instagram className="h-4 w-4" />
+                  Instagram
+                </a>
+                <a
+                  href={getTelegramLink(storePhone)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Telegram
+                </a>
+                <a
+                  href={getViberLink(storePhone)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors"
+                >
+                  <Send className="h-4 w-4" />
+                  Viber
+                </a>
+                <a
+                  href={getWhatsAppLink(storePhone)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  WhatsApp
+                </a>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
