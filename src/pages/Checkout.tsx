@@ -948,8 +948,8 @@ const Checkout = () => {
         </header>
 
         <div className="container mx-auto px-4 pb-8" style={{ paddingTop: '22px' }}>
-          {/* Order Items Block - Mobile/All devices */}
-          <div className="mb-6">
+          {/* Order Items Block - Mobile only */}
+          <div className="mb-6 lg:hidden">
             <div className="bg-card rounded-2xl p-4 shadow-soft">
               <div className="flex items-center gap-2 mb-4">
                 <h2 className="text-base font-semibold">Замовлення</h2>
@@ -2046,6 +2046,163 @@ const Checkout = () => {
             {/* Order Summary */}
             <div className="lg:col-span-1" data-order-summary>
               <div className="sticky top-24 space-y-4">
+                {/* Order Items Block - Desktop/Tablet */}
+                <div className="hidden lg:block">
+                  <div className="bg-card rounded-2xl p-4 shadow-soft">
+                    <div className="flex items-center gap-2 mb-4">
+                      <h2 className="text-base font-semibold">Замовлення</h2>
+                      <span className="text-sm text-muted-foreground">{items.length} товара</span>
+                    </div>
+                    
+                    {/* Horizontal scrollable products */}
+                    {cartItemsWithProducts.length > 1 ? (
+                      <div className="overflow-x-auto scrollbar-hide" style={{ paddingLeft: '12px', paddingRight: '2rem', WebkitOverflowScrolling: 'touch', marginLeft: '-1rem', marginRight: '-1rem' }}>
+                        <ul className="flex gap-4" style={{ width: 'max-content', paddingRight: '1rem' }}>
+                          {cartItemsWithProducts.map((item, index) => {
+                            const product = item.product!;
+                            const productOptions = item.selectedOptions.map(optId => 
+                              product.options.find(o => o.code === optId)
+                            ).filter(Boolean);
+                            const optionsTotal = productOptions.reduce((sum, opt) => sum + (opt?.price || 0), 0);
+                            const currentPrice = product.salePrice || product.basePrice;
+                            const basePrice = product.basePrice;
+                            const hasDiscount = product.salePrice && product.salePrice < basePrice;
+                            const unitPrice = currentPrice + optionsTotal;
+                            
+                            return (
+                              <li key={item.id || `${item.productId}_${index}`} style={{ flexBasis: '265px', flexShrink: 0 }}>
+                                <div className="bg-background rounded-xl p-3 border border-border">
+                                  <div 
+                                    className="flex gap-3"
+                                    style={{ 
+                                      alignContent: 'space-between',
+                                      marginLeft: 'calc(4px / 2 * -1)',
+                                      marginRight: 'calc(4px / 2 * -1)',
+                                      display: 'flex',
+                                      flexWrap: 'wrap',
+                                      minWidth: 0
+                                    }}
+                                  >
+                                    {/* Image */}
+                                    <div className="flex-shrink-0">
+                                      <div className="w-[88px] h-[90px] rounded-lg overflow-hidden">
+                                        <img
+                                          src={product.images[0]}
+                                          alt={product.name}
+                                          className="w-full h-full object-cover"
+                                          loading="lazy"
+                                        />
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Product info */}
+                                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                      <div>
+                                        <div className="font-medium text-sm mb-1 line-clamp-2" style={{ fontSize: '0.875rem' }}>
+                                          {product.name}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground mb-1">
+                                          {item.quantity} шт.
+                                          {productOptions.length > 0 && (
+                                            <span> + {productOptions.length} {productOptions.length === 1 ? 'опція' : 'опції'}</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Price */}
+                                      <div className="mt-auto">
+                                        {hasDiscount ? (
+                                          <div>
+                                            <div className="text-sm font-semibold text-destructive" style={{ fontSize: '0.875rem' }}>
+                                              {unitPrice} ₴/шт.
+                                            </div>
+                                            <div className="text-xs text-muted-foreground line-through" style={{ fontSize: '0.75rem' }}>
+                                              {basePrice + optionsTotal} ₴/шт.
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="text-sm font-semibold" style={{ fontSize: '0.875rem' }}>
+                                            {unitPrice} ₴/шт.
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ) : cartItemsWithProducts.length === 1 ? (
+                      <div>
+                        {cartItemsWithProducts.map((item, index) => {
+                          const product = item.product!;
+                          const productOptions = item.selectedOptions.map(optId => 
+                            product.options.find(o => o.code === optId)
+                          ).filter(Boolean);
+                          const optionsTotal = productOptions.reduce((sum, opt) => sum + (opt?.price || 0), 0);
+                          const currentPrice = product.salePrice || product.basePrice;
+                          const basePrice = product.basePrice;
+                          const hasDiscount = product.salePrice && product.salePrice < basePrice;
+                          const unitPrice = currentPrice + optionsTotal;
+                          
+                          return (
+                            <div key={item.id || `${item.productId}_${index}`} className="bg-background rounded-xl p-3 border border-border">
+                              <div className="flex gap-3">
+                                {/* Image */}
+                                <div className="flex-shrink-0">
+                                  <div className="w-[88px] h-[90px] rounded-lg overflow-hidden">
+                                    <img
+                                      src={product.images[0]}
+                                      alt={product.name}
+                                      className="w-full h-full object-cover"
+                                      loading="lazy"
+                                    />
+                                  </div>
+                                </div>
+                                
+                                {/* Product info */}
+                                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                  <div>
+                                    <div className="font-medium text-sm mb-1 line-clamp-2" style={{ fontSize: '0.875rem' }}>
+                                      {product.name}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mb-1">
+                                      {item.quantity} шт.
+                                      {productOptions.length > 0 && (
+                                        <span> + {productOptions.length} {productOptions.length === 1 ? 'опція' : 'опції'}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Price */}
+                                  <div className="mt-auto">
+                                    {hasDiscount ? (
+                                      <div>
+                                        <div className="text-sm font-semibold text-destructive" style={{ fontSize: '0.875rem' }}>
+                                          {unitPrice} ₴/шт.
+                                        </div>
+                                        <div className="text-xs text-muted-foreground line-through" style={{ fontSize: '0.75rem' }}>
+                                          {basePrice + optionsTotal} ₴/шт.
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="text-sm font-semibold" style={{ fontSize: '0.875rem' }}>
+                                        {unitPrice} ₴/шт.
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
                 {/* Order Block */}
                 <div className="bg-card rounded-2xl p-6 shadow-soft space-y-4">
                   <div className="space-y-2">
