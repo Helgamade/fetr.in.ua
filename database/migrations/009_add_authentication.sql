@@ -22,17 +22,16 @@ CREATE TABLE IF NOT EXISTS user_access (
   order_id INT NULL,
   access_type ENUM('video', 'template', 'material', 'course') NOT NULL,
   access_key VARCHAR(255) NOT NULL,
-  product_id VARCHAR(50) NULL,
+  product_code VARCHAR(50) NULL,
   expires_at TIMESTAMP NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
-  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
   INDEX idx_user_id (user_id),
   INDEX idx_access_key (access_key),
-  INDEX idx_product_id (product_id)
+  INDEX idx_product_code (product_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table for user sessions
