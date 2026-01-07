@@ -1,6 +1,6 @@
 import express from 'express';
 import pool from '../db.js';
-import { generateTrackingToken, getOrderNumber } from '../utils/orderUtils.js';
+import { getOrderNumber } from '../utils/orderUtils.js';
 import { optionalAuthenticate } from '../middleware/auth.js';
 import { logAdminAction } from '../middleware/adminGuard.js';
 
@@ -482,17 +482,14 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
       // Генерируем номер заказа (просто число: 305317, 305318, ...)
       const orderNumber = getOrderNumber(orderIdInt);
       
-      // Генерируем цифровой токен отслеживания
-      const trackingToken = generateTrackingToken(orderNumber);
+      console.log('[Create Order] Generated order number:', orderNumber);
       
-      console.log('[Create Order] Generated order number:', orderNumber, 'tracking token:', trackingToken);
-      
-      // Обновляем заказ с order_number и tracking_token
+      // Обновляем заказ с order_number (tracking_token остается NULL, заполняется админом позже)
       await connection.execute(`
         UPDATE orders 
-        SET order_number = ?, tracking_token = ?
+        SET order_number = ?
         WHERE id = ?
-      `, [String(orderNumber), trackingToken, orderIdInt]);
+      `, [String(orderNumber), orderIdInt]);
 
       // Insert items
       for (const item of items) {
@@ -593,7 +590,7 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
               deliveryWarehouse: order.delivery_warehouse || '',
               paymentMethod: paymentMethodMap[order.payment_method] || order.payment_method,
               orderLink: `${baseUrl}/admin/orders/${orderNumber}`,
-              trackingLink: `${baseUrl}/order/${trackingToken}`
+              trackingLink: order.tracking_token ? `${baseUrl}/order/${order.tracking_token}` : ''
             };
             
             // Email админу о новом заказе
@@ -729,6 +726,11 @@ router.put('/:id', async (req, res, next) => {
 
     // Helper function to convert undefined/empty to null
     const toNull = (val) => (val === undefined || val === null || val === '') ? null : val;
+    
+    // Обрабатываем trackingToken отдельно - если не передан или пустая строка, устанавливаем null
+    const trackingTokenValue = trackingToken === undefined || trackingToken === null || trackingToken === '' 
+      ? null 
+      : String(trackingToken).trim() || null;
 
     // id is order_number (VARCHAR), not INT id
     await pool.execute(`
@@ -743,7 +745,7 @@ router.put('/:id', async (req, res, next) => {
       customer.name, customer.phone,
       delivery.method, toNull(delivery.city), toNull(delivery.warehouse),
       toNull(delivery.postIndex), toNull(delivery.address),
-      payment.method, status, subtotal, discount, deliveryCost, total, toNull(trackingToken), id
+      payment.method, status, subtotal, discount, deliveryCost, total, trackingTokenValue, id
     ]);
 
     res.json({ id, message: 'Order updated' });
