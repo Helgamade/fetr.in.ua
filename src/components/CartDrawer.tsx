@@ -189,7 +189,7 @@ export const CartDrawer: React.FC = () => {
                                       paddingRight: '0.6rem'
                                     }}
                                   >
-                                    {option.name} (+{option.price}₴)
+                                    {option.name}
                                   </span>
                                 );
                               })
