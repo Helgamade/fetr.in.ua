@@ -165,7 +165,7 @@ export function Settings() {
       </div>
 
       <Tabs defaultValue="store" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="store">
             <Store className="h-4 w-4 mr-2" />
             Налаштування магазину
@@ -185,6 +185,10 @@ export function Settings() {
           <TabsTrigger value="email">
             <Mail className="h-4 w-4 mr-2" />
             Налаштування Email
+          </TabsTrigger>
+          <TabsTrigger value="notifications">
+            <Bell className="h-4 w-4 mr-2" />
+            Сповіщення
           </TabsTrigger>
         </TabsList>
 
@@ -547,6 +551,96 @@ export function Settings() {
               <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
                 <strong>Примітка:</strong> Для Gmail використовуйте App Password замість звичайного пароля. 
                 Для інших провайдерів перевірте документацію щодо налаштувань SMTP.
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Сповіщення */}
+        <TabsContent value="notifications" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Сповіщення
+              </CardTitle>
+              <CardDescription>
+                Налаштування сповіщень про замовлення
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <h4 className="font-medium">Канали сповіщень</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Email сповіщення</Label>
+                    <Switch
+                      checked={localNotificationSettings.emailNotifications}
+                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                        ...localNotificationSettings, 
+                        emailNotifications: checked 
+                      })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>SMS сповіщення</Label>
+                    <Switch
+                      checked={localNotificationSettings.smsNotifications}
+                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                        ...localNotificationSettings, 
+                        smsNotifications: checked 
+                      })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Telegram сповіщення</Label>
+                    <Switch
+                      checked={localNotificationSettings.telegramNotifications}
+                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                        ...localNotificationSettings, 
+                        telegramNotifications: checked 
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h4 className="font-medium">Типи сповіщень</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Нове замовлення</Label>
+                    <Switch
+                      checked={localNotificationSettings.notifyOnNewOrder}
+                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                        ...localNotificationSettings, 
+                        notifyOnNewOrder: checked 
+                      })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Оплата отримана</Label>
+                    <Switch
+                      checked={localNotificationSettings.notifyOnPayment}
+                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                        ...localNotificationSettings, 
+                        notifyOnPayment: checked 
+                      })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Замовлення доставлено</Label>
+                    <Switch
+                      checked={localNotificationSettings.notifyOnDelivery}
+                      onCheckedChange={(checked) => setLocalNotificationSettings({ 
+                        ...localNotificationSettings, 
+                        notifyOnDelivery: checked 
+                      })}
+                    />
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
