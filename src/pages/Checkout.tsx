@@ -853,8 +853,9 @@ const Checkout = () => {
       
       // Для наложенного платежа - обычный флоу
       clearCart();
-      // Используем trackingToken для безопасной ссылки отслеживания
-      navigate(`/thank-you?track=${order.trackingToken}`);
+      // Используем trackingToken для безопасной ссылки отслеживания, если нет - используем orderId
+      const redirectParam = order.trackingToken ? `track=${order.trackingToken}` : `orderId=${order.orderId}`;
+      navigate(`/thank-you?${redirectParam}`);
     } catch (error) {
       console.error('Order submission error:', error);
       toast({
