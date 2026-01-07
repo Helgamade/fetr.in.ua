@@ -41,7 +41,7 @@ export default function Profile() {
     .slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4 md:p-8">
+    <div className="min-h-screen bg-muted/30 md:p-8">
       <div className="container max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Мій профіль</h1>
