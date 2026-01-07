@@ -123,6 +123,17 @@ export default function Profile() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <Separator className="my-8" />
+        <footer className="text-center space-y-2 pb-8">
+          <p className="text-sm text-muted-foreground">
+            © 2026 FetrInUA. Всі права захищені
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Зроблено з ❤️ в Україні
+          </p>
+        </footer>
       </div>
     </div>
   );
