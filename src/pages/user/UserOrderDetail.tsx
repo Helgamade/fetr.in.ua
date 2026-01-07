@@ -1,0 +1,404 @@
+import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { 
+  ArrowLeft,
+  Phone,
+  MapPin,
+  CreditCard,
+  Package,
+  Calendar,
+  CheckCircle2,
+  Circle
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Order, OrderStatus } from '@/types/store';
+import { ordersAPI } from '@/lib/api';
+import { useProducts } from '@/hooks/useProducts';
+import { useQuery } from '@tanstack/react-query';
+
+const statusLabels: Record<OrderStatus, string> = {
+  created: 'Новий',
+  accepted: 'Прийнято',
+  processing: 'В обробці',
+  awaiting_payment: 'Очікує оплату',
+  paid: 'Оплачено',
+  assembled: 'Зібрано',
+  packed: 'Запаковано',
+  shipped: 'Відправлено',
+  in_transit: 'В дорозі',
+  arrived: 'Прибуло',
+  completed: 'Виконано',
+};
+
+const statusColors: Record<OrderStatus, string> = {
+  created: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  accepted: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+  processing: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  awaiting_payment: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+  paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  assembled: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+  packed: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+  shipped: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+  in_transit: 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
+  arrived: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+  completed: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+};
+
+const deliveryLabels = {
+  nova_poshta: 'Нова Пошта',
+  ukrposhta: 'Укрпошта',
+  pickup: 'Самовивіз',
+};
+
+// Форматирование даты в формате "09:43, 05.01.2026"
+const formatDate = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${hours}:${minutes}, ${day}.${month}.${year}`;
+};
+
+// Генерация базовой истории заказа (если нет истории из БД)
+const generateDefaultHistory = (order: Order) => {
+  const history: Array<{ date: Date; text: string; completed: boolean; user?: string | null }> = [];
+  
+  const createdAt = typeof order.createdAt === 'string' ? new Date(order.createdAt) : order.createdAt;
+  
+  // Создание заказа
+  history.push({
+    date: createdAt,
+    text: 'Статус изменен: Новый',
+    completed: true,
+  });
+  
+  return history;
+};
+
+export default function UserOrderDetail() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { data: products = [] } = useProducts();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Получаем историю заказа
+  const { data: orderHistory = [] } = useQuery({
+    queryKey: ['order-history', id],
+    queryFn: () => ordersAPI.getHistory(id!),
+    enabled: !!id,
+  });
+
+  useEffect(() => {
+    if (id) {
+      ordersAPI.getOrder(id)
+        .then(setOrder)
+        .catch(console.error)
+        .finally(() => setIsLoading(false));
+    }
+  }, [id]);
+
+  const getProductName = (productId: string) => {
+    return products.find(p => p.code === productId)?.name || productId;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <div className="text-muted-foreground">Завантаження замовлення...</div>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <div className="text-muted-foreground">Замовлення не знайдено</div>
+      </div>
+    );
+  }
+
+  // Используем историю из БД, если есть, иначе генерируем базовую
+  const history = orderHistory.length > 0 
+    ? orderHistory.map(h => ({
+        date: typeof h.date === 'string' ? new Date(h.date) : h.date,
+        text: h.text,
+        completed: h.completed,
+        user: h.user || null,
+      }))
+    : generateDefaultHistory(order);
+
+  return (
+    <div className="min-h-screen bg-muted/30 p-4 md:p-8">
+      <div className="container max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/user/orders')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold">Замовлення {order.id}</h1>
+            </div>
+            <div className="flex items-center gap-4 mt-2">
+              <Badge className={statusColors[order.status]}>
+                {statusLabels[order.status]}
+              </Badge>
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <Calendar className="h-4 w-4" />
+                {formatDate(order.createdAt)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Main content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Items */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Товари в замовленні ({order.items.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {order.items.map((item, index) => {
+                    const product = products.find(p => p.code === item.productId);
+                    const basePrice = product?.basePrice || 0;
+                    const salePrice = product?.salePrice;
+                    const hasDiscount = salePrice && salePrice < basePrice;
+                    const productPrice = salePrice || basePrice;
+                    const discountPercent = hasDiscount ? Math.round(((basePrice - (salePrice || 0)) / basePrice) * 100) : 0;
+                    
+                    // Цена опций
+                    const optionsPrice = item.selectedOptions.reduce((total, optId) => {
+                      const option = product?.options.find(o => o.code === optId);
+                      return total + (option?.price || 0);
+                    }, 0);
+                    
+                    // Итоговая цена товара
+                    const totalPrice = (productPrice + optionsPrice) * item.quantity;
+                    
+                    const itemKey = `${item.productId}_${index}_${JSON.stringify([...item.selectedOptions].sort())}`;
+                    
+                    return (
+                      <div key={itemKey} className="flex gap-4 pb-4 border-b last:border-0 last:pb-0">
+                        {/* Изображение */}
+                        <div className="flex-shrink-0">
+                          {product?.images && product.images.length > 0 ? (
+                            <img
+                              src={product.images[0]}
+                              alt={product.name}
+                              className="w-20 h-20 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-20 h-20 bg-muted rounded flex items-center justify-center">
+                              <Package className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Информация о товаре */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            {hasDiscount && (
+                              <div className="bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">
+                                -{discountPercent}%
+                              </div>
+                            )}
+                            <div className="font-medium text-base flex-1 min-w-0">{getProductName(item.productId)}</div>
+                            
+                            {optionsPrice > 0 && (
+                              <div className="text-base font-bold text-primary whitespace-nowrap ml-8">
+                                +{optionsPrice} ₴
+                              </div>
+                            )}
+                            
+                            <div className="text-base font-medium whitespace-nowrap ml-8">
+                              {item.quantity} шт.
+                            </div>
+                            
+                            <div className="text-lg font-bold whitespace-nowrap ml-8">
+                              {totalPrice.toFixed(0)} ₴
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 mb-2">
+                            {hasDiscount ? (
+                              <>
+                                <span className="text-base font-bold">{productPrice} ₴</span>
+                                <span className="text-sm text-muted-foreground line-through">{basePrice} ₴</span>
+                              </>
+                            ) : (
+                              <span className="text-base font-bold">{basePrice} ₴</span>
+                            )}
+                          </div>
+                          
+                          {product?.code && (
+                            <div className="text-xs text-muted-foreground mb-1">
+                              Артикул: {product.code}
+                            </div>
+                          )}
+                          
+                          {/* Дополнительные опции */}
+                          {item.selectedOptions.length > 0 && (
+                            <div className="mb-2 mt-3">
+                              <div className="text-sm font-semibold text-foreground mb-2">Дополнительные опции:</div>
+                              <div className="space-y-2 max-w-md">
+                                {item.selectedOptions.map((optId) => {
+                                  const option = product?.options.find(o => o.code === optId);
+                                  if (!option) return null;
+                                  return (
+                                    <div key={optId} className="flex items-center justify-between text-sm bg-primary/10 border border-primary/20 rounded-lg px-3 py-2">
+                                      <span className="font-semibold text-foreground">{option.name}</span>
+                                      <span className="font-bold text-primary">+{option.price} ₴</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Delivery */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Доставка
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="font-medium">{deliveryLabels[order.delivery.method]}</div>
+                  {order.delivery.city && (
+                    <div className="text-sm">м. {order.delivery.city}</div>
+                  )}
+                  {order.delivery.warehouse && (
+                    <div className="text-sm">{order.delivery.warehouse}</div>
+                  )}
+                  {order.delivery.address && (
+                    <div className="text-sm">{order.delivery.address}</div>
+                  )}
+                  {order.delivery.postIndex && (
+                    <div className="text-sm">Індекс: {order.delivery.postIndex}</div>
+                  )}
+                  {order.trackingToken && (
+                    <div className="text-sm font-medium text-primary mt-2">
+                      Номер ЕН: {order.trackingToken}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Payment */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Оплата
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm">
+                  {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
+                  {order.payment.method === 'nalojka' && 'Накладений платіж'}
+                  {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Order History Timeline */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Історія замовлення</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="relative">
+                  {history.map((item, index) => (
+                    <div key={index} className="relative pl-8 pb-6 last:pb-0">
+                      {/* Линия */}
+                      {index < history.length - 1 && (
+                        <div className="absolute left-3 top-6 bottom-0 w-0.5 bg-border" />
+                      )}
+                      
+                      {/* Точка */}
+                      <div className="absolute left-0 top-1">
+                        {item.completed ? (
+                          <CheckCircle2 className="h-6 w-6 text-primary fill-primary/20" />
+                        ) : (
+                          <Circle className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </div>
+                      
+                      {/* Контент */}
+                      <div>
+                        <div className="text-sm font-medium text-foreground">
+                          {formatDate(item.date)}
+                          {item.user && (
+                            <span className="text-muted-foreground ml-2">, {item.user}</span>
+                          )}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          {item.text}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Total */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Підсумок</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Товари ({order.items.length})</span>
+                    <span>₴{order.subtotal}</span>
+                  </div>
+                  {order.discount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Знижка</span>
+                      <span>-₴{order.discount}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm">
+                    <span>Доставка</span>
+                    <span>{order.deliveryCost > 0 ? `₴${order.deliveryCost}` : 'Безкоштовно'}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+                    <span>Всього</span>
+                    <span>₴{order.total}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+

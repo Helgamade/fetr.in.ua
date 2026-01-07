@@ -71,6 +71,7 @@ export const ordersAPI = {
   getById: (id: string) => fetchAPI<Order>(`/orders/${id}`),
   getOrder: (id: string) => fetchAPI<Order>(`/orders/${id}`),
   getByTrackingToken: (token: string) => fetchAPI<Order>(`/orders/track/${token}`), // Alias for getById
+  getHistory: (id: string) => fetchAPI<Array<{ date: Date; text: string; user: string | null; completed: boolean }>>(`/orders/${id}/history`),
   create: (data: any) => fetchAPI<any>('/orders', {
     method: 'POST',
     body: JSON.stringify(data),

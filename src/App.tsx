@@ -34,6 +34,7 @@ import { EmailTemplates } from "./pages/admin/EmailTemplates";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Profile from "./pages/user/Profile";
 import UserOrders from "./pages/user/UserOrders";
+import UserOrderDetail from "./pages/user/UserOrderDetail";
 import UserMaterials from "./pages/user/UserMaterials";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,11 @@ const App = () => (
                   <Route path="/user/orders" element={
                     <ProtectedRoute>
                       <UserOrders />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/user/orders/:id" element={
+                    <ProtectedRoute>
+                      <UserOrderDetail />
                     </ProtectedRoute>
                   } />
                   <Route path="/user/materials" element={

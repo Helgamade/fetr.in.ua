@@ -2,6 +2,7 @@ import express from 'express';
 import pool from '../db.js';
 import { generateTrackingToken, getOrderNumber } from '../utils/orderUtils.js';
 import { optionalAuthenticate } from '../middleware/auth.js';
+import { logAdminAction } from '../middleware/adminGuard.js';
 
 const router = express.Router();
 
@@ -219,6 +220,66 @@ router.get('/track/:token', async (req, res, next) => {
     delete order.order_number;
 
     res.json(order);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get order history from admin_logs (должен быть перед /:id)
+router.get('/:id/history', optionalAuthenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    // Получаем историю из admin_logs для этого заказа
+    const [history] = await pool.execute(`
+      SELECT 
+        al.created_at,
+        al.action,
+        al.old_values,
+        al.new_values,
+        u.name as user_name
+      FROM admin_logs al
+      LEFT JOIN users u ON al.user_id = u.id
+      WHERE al.entity_type = 'order' AND al.entity_id = ?
+      ORDER BY al.created_at ASC
+    `, [id]);
+    
+    // Форматируем историю
+    const formattedHistory = history.map((log) => {
+      const oldValues = log.old_values ? JSON.parse(log.old_values) : null;
+      const newValues = log.new_values ? JSON.parse(log.new_values) : null;
+      
+      let text = '';
+      
+      if (log.action === 'ORDER_STATUS_CHANGED' && oldValues?.status && newValues?.status) {
+        const statusMap = {
+          'created': 'Новый',
+          'accepted': 'Принят',
+          'processing': 'В обработке',
+          'awaiting_payment': 'Ожидает оплаты',
+          'paid': 'Оплаченный',
+          'assembled': 'Собран',
+          'packed': 'Упакован',
+          'shipped': 'Отправлен',
+          'in_transit': 'В дороге',
+          'arrived': 'Прибыл',
+          'completed': 'Выполнен'
+        };
+        
+        text = `Статус изменен: с ${statusMap[oldValues.status] || oldValues.status} на ${statusMap[newValues.status] || newValues.status}`;
+      } else {
+        text = log.action;
+      }
+      
+      return {
+        date: new Date(log.created_at),
+        text,
+        user: log.user_name || null,
+        completed: true
+      };
+    });
+    
+    res.json(formattedHistory);
   } catch (error) {
     next(error);
   }
@@ -567,11 +628,31 @@ router.patch('/:id/status', async (req, res, next) => {
     const { id } = req.params;
     const { status, statusComment } = req.body;
 
+    // Получаем старый статус для логирования
+    const [oldOrder] = await pool.execute(`
+      SELECT status FROM orders WHERE order_number = ?
+    `, [id]);
+    
+    const oldStatus = oldOrder.length > 0 ? oldOrder[0].status : null;
+    
     // id is order_number (VARCHAR), not INT id
     await pool.execute(`
       UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE order_number = ?
     `, [status, id]);
+    
+    // Логируем изменение статуса, если есть авторизованный пользователь
+    if (req.user) {
+      await logAdminAction(
+        req.user.id,
+        'ORDER_STATUS_CHANGED',
+        'order',
+        id,
+        { status: oldStatus },
+        { status },
+        req
+      );
+    }
 
     // Отправляем email уведомление клиенту об изменении статуса
     (async () => {
