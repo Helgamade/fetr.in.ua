@@ -371,6 +371,12 @@
   
   .order-items-scroll::-webkit-scrollbar {
     display: none;
+    height: 6px;
+  }
+  
+  /* Reserve space for scrollbar to prevent height change on hover */
+  .order-items-container .order-items-scroll {
+    padding-bottom: 0.75rem;
   }
   
   .order-items-container:hover .order-items-scroll {
