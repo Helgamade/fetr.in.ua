@@ -3,11 +3,16 @@ import { Button } from '@/components/ui/button';
 import { ArrowDown, Star, Users, Truck, HeartHandshake, Sparkles } from 'lucide-react';
 import { useAnalytics } from '@/context/AnalyticsContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePublicSettings } from '@/hooks/usePublicSettings';
 
 export const HeroSection: React.FC = () => {
   const { trackEvent } = useAnalytics();
   const { t } = useTranslation('hero');
+  const { data: publicSettings = {} } = usePublicSettings();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  
+  // Используем изображение из настроек или дефолтное
+  const heroBackgroundImage = publicSettings.hero_background_image || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920';
 
   const stats = [
     { icon: Star, value: t('stat1.value'), label: t('stat1.label') },
@@ -69,7 +74,7 @@ export const HeroSection: React.FC = () => {
       <div 
         className="absolute inset-0 -z-5 opacity-20"
         style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920)',
+          backgroundImage: `url(${heroBackgroundImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           transform: `translate(${mousePosition.x * 0.1}px, ${mousePosition.y * 0.1}px) scale(1.1)`,

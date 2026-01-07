@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Save, Store, Truck, CreditCard, Bell } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Save, Store, Truck, CreditCard, Bell, Upload, Image as ImageIcon, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,11 +9,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { useSettings, useUpdateSettings } from '@/hooks/useSettings';
+import { settingsAPI } from '@/lib/api';
 
 export function Settings() {
   const { toast } = useToast();
   const { data: settings = {}, isLoading } = useSettings();
   const updateSettings = useUpdateSettings();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
+  const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null);
   
   const storeSettings = {
     storeName: settings.store_name || 'FeltMagic',
@@ -50,8 +54,60 @@ export function Settings() {
       setLocalStoreSettings(storeSettings);
       setLocalDeliverySettings(deliverySettings);
       setLocalNotificationSettings(notificationSettings);
+      if (settings.hero_background_image) {
+        setHeroImagePreview(settings.hero_background_image);
+      }
     }
   }, [isLoading, settings]);
+
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Проверка типа файла
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: 'Помилка',
+        description: 'Тільки зображення (jpeg, jpg, png, gif, webp) дозволені!',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Проверка размера файла (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'Помилка',
+        description: 'Розмір файлу не повинен перевищувати 10MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setUploadingHeroImage(true);
+    try {
+      const result = await settingsAPI.uploadHeroBackground(file);
+      setHeroImagePreview(result.url);
+      toast({
+        title: 'Успіх',
+        description: 'Фонове зображення hero секції завантажено',
+      });
+      // Обновляем настройки для отображения нового изображения
+      updateSettings.mutate({ hero_background_image: result.url });
+    } catch (error: any) {
+      toast({
+        title: 'Помилка',
+        description: error.message || 'Не вдалося завантажити зображення',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingHeroImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const handleSave = () => {
     const allSettings = {
@@ -100,6 +156,72 @@ export function Settings() {
 
   return (
     <div className="space-y-6">
+      {/* Hero Background Image */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="h-5 w-5" />
+            Фонове зображення Hero секції
+          </CardTitle>
+          <CardDescription>
+            Завантажте фонове зображення для головної секції сайту
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Рекомендовані параметри:</Label>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+              <li>Розмір: 1920×1080px або більше (16:9)</li>
+              <li>Формат: JPG, PNG, WebP</li>
+              <li>Максимальний розмір файлу: 10MB</li>
+              <li>Рекомендовано використовувати WebP для кращої оптимізації</li>
+            </ul>
+          </div>
+          <div className="space-y-2">
+            <Label>Поточне зображення:</Label>
+            {heroImagePreview ? (
+              <div className="relative w-full max-w-2xl">
+                <img 
+                  src={heroImagePreview} 
+                  alt="Hero background preview" 
+                  className="w-full h-auto rounded-lg border border-border"
+                />
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={() => {
+                    setHeroImagePreview(null);
+                    updateSettings.mutate({ hero_background_image: '' });
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
+                Зображення не завантажено
+              </div>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="heroImageUpload">Завантажити нове зображення</Label>
+            <Input
+              id="heroImageUpload"
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+              ref={fileInputRef}
+              onChange={handleHeroImageUpload}
+              disabled={uploadingHeroImage}
+              className="cursor-pointer"
+            />
+            {uploadingHeroImage && (
+              <p className="text-sm text-muted-foreground">Завантаження...</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Store settings */}
       <Card>
         <CardHeader>

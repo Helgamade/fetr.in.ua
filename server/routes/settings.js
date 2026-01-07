@@ -1,7 +1,52 @@
 import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import pool from '../db.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const router = express.Router();
+
+// Настройка multer для загрузки hero фонового изображения
+const heroUploadsDir = path.join(__dirname, '..', '..', 'uploads', 'hero');
+
+if (!existsSync(heroUploadsDir)) {
+  mkdirSync(heroUploadsDir, { recursive: true });
+}
+
+const heroStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    if (!existsSync(heroUploadsDir)) {
+      mkdirSync(heroUploadsDir, { recursive: true });
+    }
+    cb(null, heroUploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    const filename = `hero-background-${uniqueSuffix}${ext}`;
+    cb(null, filename);
+  }
+});
+
+const heroUpload = multer({
+  storage: heroStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Тільки зображення (jpeg, jpg, png, gif, webp) дозволені!'));
+    }
+  }
+});
 
 // Get public settings (for frontend, no auth required)
 router.get('/public', async (req, res, next) => {
@@ -13,7 +58,8 @@ router.get('/public', async (req, res, next) => {
       'store_address',
       'store_working_hours_weekdays',
       'store_working_hours_weekend',
-      'free_delivery_threshold'
+      'free_delivery_threshold',
+      'hero_background_image'
     ];
     
     const placeholders = publicKeys.map(() => '?').join(',');
@@ -164,6 +210,47 @@ router.put('/', async (req, res, next) => {
     } finally {
       connection.release();
     }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Upload hero background image
+router.post('/upload-hero-background', heroUpload.single('image'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const imageUrl = `/uploads/hero/${req.file.filename}`;
+
+    // Удаляем старое изображение, если оно есть
+    const [oldSettings] = await pool.execute(`
+      SELECT value FROM settings WHERE key_name = 'hero_background_image'
+    `);
+
+    if (oldSettings.length > 0 && oldSettings[0].value) {
+      const oldImagePath = oldSettings[0].value;
+      if (oldImagePath.startsWith('/uploads/hero/')) {
+        const oldFilePath = path.join(heroUploadsDir, path.basename(oldImagePath));
+        if (existsSync(oldFilePath)) {
+          try {
+            unlinkSync(oldFilePath);
+          } catch (err) {
+            console.error('Error deleting old hero image:', err);
+          }
+        }
+      }
+    }
+
+    // Сохраняем новый путь в настройках
+    await pool.execute(`
+      INSERT INTO settings (key_name, value, type)
+      VALUES ('hero_background_image', ?, 'string')
+      ON DUPLICATE KEY UPDATE value = VALUES(value), type = VALUES(type)
+    `, [imageUrl]);
+
+    res.json({ url: imageUrl, message: 'Hero background image uploaded' });
   } catch (error) {
     next(error);
   }

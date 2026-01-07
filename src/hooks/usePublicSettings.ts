@@ -9,6 +9,7 @@ export interface PublicSettings {
   store_working_hours_weekdays?: string;
   store_working_hours_weekend?: string;
   free_delivery_threshold?: string | number;
+  hero_background_image?: string;
 }
 
 export function usePublicSettings() {

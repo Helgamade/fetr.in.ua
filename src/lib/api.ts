@@ -89,6 +89,22 @@ export const settingsAPI = {
     method: 'PUT',
     body: JSON.stringify(settings),
   }),
+  uploadHeroBackground: async (file: File): Promise<{ url: string; message: string }> => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(`${API_BASE_URL}/settings/upload-hero-background`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Network error' }));
+      throw new Error(error.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  },
 };
 
 // Users API
