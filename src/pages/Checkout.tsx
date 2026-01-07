@@ -978,7 +978,7 @@ const Checkout = () => {
                       const unitPrice = currentPrice + optionsTotal;
                       
                       return (
-                        <li key={item.id || `${item.productId}_${index}`} style={{ flexBasis: '265px', flexShrink: 0 }}>
+                        <li key={item.id || `${item.productId}_${index}`} style={{ width: '265px', flexShrink: 0 }}>
                           <div className="bg-background rounded-xl p-3 border border-border">
                             <div 
                               className="flex gap-3"
