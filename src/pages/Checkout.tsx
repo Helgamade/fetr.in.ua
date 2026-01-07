@@ -947,7 +947,7 @@ const Checkout = () => {
           </div>
         </header>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
           {/* Order Items Block - Mobile/All devices */}
           <div className="mb-6">
             <div className="bg-card rounded-2xl p-4 shadow-soft">
@@ -1394,20 +1394,6 @@ const Checkout = () => {
                           </div>
                         )}
                       </div>
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={!isContactInfoValid}
-                        className="w-full rounded-xl border h-10 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
-                        onClick={() => {
-                          if (isContactInfoValid) {
-                            setFormData(prev => ({ ...prev, contactInfoCompleted: true, contactInfoExpanded: false }));
-                          }
-                        }}
-                      >
-                        Продовжити
-                      </Button>
                     </>
                   )}
                 </div>
@@ -1719,20 +1705,6 @@ const Checkout = () => {
                               {storeSettings.store_working_hours_weekend}
                             </div>
                           )}
-                          <Button
-                            type="button"
-                            onClick={() => {
-                              setFormData(prev => ({
-                                ...prev,
-                                deliveryExpanded: false,
-                                pickupCompleted: true
-                              }));
-                            }}
-                            variant="outline"
-                            className="w-full rounded-xl border h-10 mt-4 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
-                          >
-                            Продовжити
-                          </Button>
                         </div>
                       )}
                     </div>
