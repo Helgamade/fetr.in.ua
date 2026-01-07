@@ -19,10 +19,16 @@ interface TimelineStep {
 
 const ThankYou = () => {
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get("order"); // Старый способ (для обратной совместимости)
-  const trackingToken = searchParams.get("track"); // Новый способ (только цифры)
-  const orderRef = searchParams.get("orderRef"); // WayForPay orderReference (номер заказа)
+  const orderIdParam = searchParams.get("order"); // Старый способ (для обратной совместимости)
+  const trackingTokenParam = searchParams.get("track"); // Новый способ (только цифры)
+  const orderRefParam = searchParams.get("orderRef"); // WayForPay orderReference (номер заказа)
   const { data: storeSettings } = usePublicSettings();
+  
+  // searchParams.get() возвращает null, если параметра нет - нормализуем в undefined
+  // Также проверяем, что параметр не равен строке 'undefined' или 'null'
+  const trackingToken = (trackingTokenParam && trackingTokenParam !== 'undefined' && trackingTokenParam !== 'null') ? trackingTokenParam : undefined;
+  const orderId = (orderIdParam && orderIdParam !== 'undefined' && orderIdParam !== 'null') ? orderIdParam : undefined;
+  const orderRef = (orderRefParam && orderRefParam !== 'undefined' && orderRefParam !== 'null') ? orderRefParam : undefined;
   
   // Используем trackingToken если есть, иначе orderId, иначе orderRef (от WayForPay)
   const identifier = trackingToken || orderId || orderRef || "";
@@ -38,9 +44,9 @@ const ThankYou = () => {
         // WayForPay передает orderReference (номер заказа)
         return ordersAPI.getOrder(orderRef);
       }
-      return null;
+      return Promise.reject(new Error('No valid order identifier'));
     },
-    enabled: !!identifier,
+    enabled: !!identifier && identifier !== 'undefined' && identifier !== 'null',
     // Обновляем данные каждые 5 секунд, если оплата не прошла (для WayForPay)
     refetchInterval: (query) => {
       const orderData = query.state.data;
