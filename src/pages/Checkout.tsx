@@ -2070,9 +2070,9 @@ const Checkout = () => {
                 </div>
 
                 {/* Rules and Recipient Section */}
-                <div className="space-y-3">
+                <div className="space-y-3" style={{ fontSize: '0.8rem' }}>
                   {/* Agreement text - без блока */}
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground">
                     Натискаючи кнопку «Оформити замовлення», я погоджуюсь з правилами та умовами нижче
                   </p>
                   
@@ -2084,7 +2084,7 @@ const Checkout = () => {
                         className="flex items-center justify-between cursor-pointer"
                         onClick={() => setRulesExpanded(!rulesExpanded)}
                       >
-                        <span className="text-sm font-medium">Правила та умови</span>
+                        <span className="font-medium">Правила та умови</span>
                         {rulesExpanded ? (
                           <ChevronUp className="w-4 h-4 text-muted-foreground" />
                         ) : (
@@ -2092,7 +2092,7 @@ const Checkout = () => {
                         )}
                       </div>
                       {rulesExpanded && (
-                        <div className="pt-2 space-y-2 text-muted-foreground" style={{ fontSize: '0.85rem' }}>
+                        <div className="pt-2 space-y-2 text-muted-foreground">
                           <p>Оформлюючи/оплачуючи замовлення, користувач підтверджує, що надає:</p>
                           <p>
                             Згоду з <a href="/privacy-policy" target="_blank" className="text-primary hover:underline">Політикою конфіденційності</a> та <a href="/terms-of-use" target="_blank" className="text-primary hover:underline">Угодою користувача</a>.
@@ -2107,7 +2107,7 @@ const Checkout = () => {
                         className="flex items-center justify-between cursor-pointer"
                         onClick={() => setRecipientExpanded(!recipientExpanded)}
                       >
-                        <span className="text-sm font-medium">*Отримувач коштів</span>
+                        <span className="font-medium">*Отримувач коштів</span>
                         {recipientExpanded ? (
                           <ChevronUp className="w-4 h-4 text-muted-foreground" />
                         ) : (
@@ -2115,7 +2115,7 @@ const Checkout = () => {
                         )}
                       </div>
                       {recipientExpanded && (
-                        <div className="pt-2 text-sm text-muted-foreground">
+                        <div className="pt-2 text-muted-foreground">
                           <p>
                             за замовлення: ФОП Пітальов Олександр Миколайович, 3078718311, UA383052990000026008046715224
                           </p>
