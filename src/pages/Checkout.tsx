@@ -2054,7 +2054,7 @@ const Checkout = () => {
               <div className="sticky top-24 space-y-4">
                 {/* Order Items Block - Desktop/Tablet */}
                 <div className="hidden lg:block">
-                  <div className="bg-card rounded-2xl p-4 shadow-soft">
+                  <div className="bg-card rounded-2xl p-4 shadow-soft order-items-container">
                     <div className="flex items-center gap-2 mb-4">
                       <h2 className="text-base font-semibold">Замовлення</h2>
                       <span className="text-sm text-muted-foreground">{items.length} товара</span>
