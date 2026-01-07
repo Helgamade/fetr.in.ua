@@ -609,8 +609,8 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
       
       res.status(201).json({ 
         message: 'Order created successfully', 
-        orderId: orderNumber, // Просто число: 305317
-        trackingToken: trackingToken // Цифровой токен: 1234567890
+        orderId: orderNumber // Просто число: 305317
+        // trackingToken не генерируется при создании, заполняется админом позже
       });
     } catch (error) {
       await connection.rollback();
