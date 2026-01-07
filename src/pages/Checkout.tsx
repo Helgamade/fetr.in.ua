@@ -947,25 +947,13 @@ const Checkout = () => {
           </div>
         </header>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 pb-8" style={{ paddingTop: '22px' }}>
           {/* Order Items Block - Mobile/All devices */}
           <div className="mb-6">
             <div className="bg-card rounded-2xl p-4 shadow-soft">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-semibold">Замовлення</h2>
-                  <span className="text-sm text-muted-foreground">{items.length} товара</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    // Scroll to order summary
-                    document.querySelector('[data-order-summary]')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="text-sm text-primary hover:underline"
-                >
-                  Всі товари
-                </button>
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-base font-semibold">Замовлення</h2>
+                <span className="text-sm text-muted-foreground">{items.length} товара</span>
               </div>
               
               {/* Horizontal scrollable products */}
