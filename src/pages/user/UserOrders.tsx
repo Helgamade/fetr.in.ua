@@ -31,6 +31,10 @@ export default function UserOrders() {
     queryFn: async () => {
       const allOrders = await ordersAPI.getAll();
       // Фильтруем только заказы текущего пользователя
+      // Для админов показываем все заказы, для обычных пользователей - только свои
+      if (user?.role === 'admin') {
+        return allOrders;
+      }
       return allOrders.filter((order: any) => order.user_id === user?.id);
     },
     enabled: !!user,

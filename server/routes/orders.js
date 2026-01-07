@@ -105,6 +105,10 @@ router.get('/', async (req, res, next) => {
       
       // Use order_number as id for frontend compatibility (или просто id если order_number NULL)
       order.id = order.order_number || String(order.id);
+      
+      // Сохраняем user_id (может быть NULL для гостевых заказов)
+      // user_id уже есть в order, просто не удаляем его
+      
       delete order.order_number;
     }
 

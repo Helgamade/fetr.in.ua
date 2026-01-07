@@ -17,6 +17,7 @@ import { Order, OrderStatus } from '@/types/store';
 import { ordersAPI } from '@/lib/api';
 import { useProducts } from '@/hooks/useProducts';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/context/AuthContext';
 
 const statusLabels: Record<OrderStatus, string> = {
   created: 'Новий',
@@ -82,6 +83,7 @@ const generateDefaultHistory = (order: Order) => {
 export default function UserOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: products = [] } = useProducts();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,11 +98,21 @@ export default function UserOrderDetail() {
   useEffect(() => {
     if (id) {
       ordersAPI.getOrder(id)
-        .then(setOrder)
-        .catch(console.error)
+        .then((orderData: any) => {
+          // Проверяем доступ: админы могут видеть все заказы, обычные пользователи - только свои
+          if (user?.role !== 'admin' && orderData.user_id && orderData.user_id !== user?.id) {
+            navigate('/user/orders');
+            return;
+          }
+          setOrder(orderData);
+        })
+        .catch((error) => {
+          console.error('Error loading order:', error);
+          navigate('/user/orders');
+        })
         .finally(() => setIsLoading(false));
     }
-  }, [id]);
+  }, [id, user, navigate]);
 
   const getProductName = (productId: string) => {
     return products.find(p => p.code === productId)?.name || productId;
