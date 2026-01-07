@@ -109,7 +109,14 @@ export function OrderDetail() {
       {
         id: order.id,
         data: {
-          ...order,
+          customer: order.customer,
+          delivery: order.delivery,
+          payment: order.payment,
+          status: order.status,
+          subtotal: order.subtotal,
+          discount: order.discount,
+          deliveryCost: order.deliveryCost,
+          total: order.total,
           trackingToken: trackingToken || undefined,
         },
       },
