@@ -77,14 +77,14 @@ export function OrderDetail() {
   const updateOrder = useUpdateOrder();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [trackingToken, setTrackingToken] = useState('');
+  const [deliveryTtn, setDeliveryTtn] = useState('');
 
   useEffect(() => {
     if (id) {
       ordersAPI.getOrder(id)
         .then((orderData) => {
           setOrder(orderData);
-          setTrackingToken(orderData.trackingToken || '');
+          setDeliveryTtn(orderData.deliveryTtn || '');
         })
         .catch(console.error)
         .finally(() => setIsLoading(false));
@@ -103,7 +103,7 @@ export function OrderDetail() {
     );
   };
 
-  const handleTrackingTokenSave = () => {
+  const handleDeliveryTtnSave = () => {
     if (!order) return;
     updateOrder.mutate(
       {
@@ -117,12 +117,12 @@ export function OrderDetail() {
           discount: order.discount,
           deliveryCost: order.deliveryCost,
           total: order.total,
-          trackingToken: trackingToken || undefined,
+          deliveryTtn: deliveryTtn || undefined,
         },
       },
       {
         onSuccess: () => {
-          setOrder(prev => prev ? { ...prev, trackingToken: trackingToken || undefined } : null);
+          setOrder(prev => prev ? { ...prev, deliveryTtn: deliveryTtn || undefined } : null);
         },
       }
     );
@@ -392,22 +392,22 @@ export function OrderDetail() {
                   <label className="text-sm font-medium mb-2 block">ТТН (Трекінг-номер)</label>
                   <div className="flex gap-2">
                     <Input
-                      value={trackingToken}
-                      onChange={(e) => setTrackingToken(e.target.value)}
+                      value={deliveryTtn}
+                      onChange={(e) => setDeliveryTtn(e.target.value)}
                       placeholder="Введіть номер ТТН"
                       className="flex-1"
                     />
                     <Button
-                      onClick={handleTrackingTokenSave}
+                      onClick={handleDeliveryTtnSave}
                       variant="outline"
                       size="default"
                     >
                       Зберегти
                     </Button>
                   </div>
-                  {order.trackingToken && (
+                  {order.deliveryTtn && (
                     <div className="text-xs text-muted-foreground mt-2">
-                      Поточний ТТН: {order.trackingToken}
+                      Поточний ТТН: {order.deliveryTtn}
                     </div>
                   )}
                 </div>

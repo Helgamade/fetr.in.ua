@@ -125,10 +125,10 @@ export default function UserOrderDetail() {
   };
 
   const handleCopyTTN = async () => {
-    if (!order?.trackingToken) return;
+    if (!order?.deliveryTtn) return;
     
     try {
-      await navigator.clipboard.writeText(order.trackingToken);
+      await navigator.clipboard.writeText(order.deliveryTtn);
       setCopied(true);
       toast({
         title: 'Скопійовано',
@@ -333,12 +333,12 @@ export default function UserOrderDetail() {
                     <div className="text-sm">Індекс: {order.delivery.postIndex}</div>
                   )}
                   {/* ТТН показываем только для Нова Пошта и Укрпошта */}
-                  {order.trackingToken && (order.delivery.method === 'nova_poshta' || order.delivery.method === 'ukrposhta') && (
+                  {order.deliveryTtn && (order.delivery.method === 'nova_poshta' || order.delivery.method === 'ukrposhta') && (
                     <div className="mt-4 pt-4 border-t">
                       <label className="text-sm font-medium mb-2 block">ТТН</label>
                       <div className="flex gap-2">
                         <Input
-                          value={order.trackingToken}
+                          value={order.deliveryTtn}
                           readOnly
                           className="flex-1 font-mono"
                         />

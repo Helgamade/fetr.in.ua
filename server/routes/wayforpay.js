@@ -112,9 +112,9 @@ router.post('/create-payment', async (req, res, next) => {
     console.log('[WayForPay] Tracking token:', trackingToken);
     console.log('[WayForPay] Order number:', order.order_number);
 
-    // Создаем конфиг с returnUrl, включающим trackingToken и orderReference
-    // WayForPay может обрезать параметры, поэтому передаем и trackingToken, и orderReference
-    const returnUrlWithParams = `${WFP_CONFIG.returnUrl}?track=${trackingToken}&orderRef=${order.order_number}`;
+    // Создаем returnUrl с trackingToken для безопасной ссылки отслеживания
+    // trackingToken используется для безопасной ссылки, orderReference не нужен
+    const returnUrlWithParams = `${WFP_CONFIG.returnUrl}?track=${trackingToken}`;
     console.log('[WayForPay] WFP_CONFIG.returnUrl (base):', WFP_CONFIG.returnUrl);
     console.log('[WayForPay] Return URL with params:', returnUrlWithParams);
     console.log('[WayForPay] Tracking token in URL:', trackingToken);

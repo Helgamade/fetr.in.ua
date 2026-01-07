@@ -109,6 +109,18 @@ router.get('/', async (req, res, next) => {
       // Сохраняем user_id (может быть NULL для гостевых заказов)
       // user_id уже есть в order, просто не удаляем его
       
+      // Сохраняем tracking_token для безопасной ссылки отслеживания
+      if (order.tracking_token) {
+        order.trackingToken = String(order.tracking_token);
+      }
+      delete order.tracking_token;
+      
+      // Сохраняем delivery_ttn для номера накладной доставки (Нова Пошта/Укрпошта)
+      if (order.delivery_ttn) {
+        order.deliveryTtn = String(order.delivery_ttn);
+      }
+      delete order.delivery_ttn;
+      
       delete order.order_number;
     }
 
@@ -205,7 +217,7 @@ router.get('/track/:token', async (req, res, next) => {
     delete order.delivery_address;
     delete order.payment_method;
 
-    // Сохраняем tracking_token для админки (для создания ссылки отслеживания)
+    // Сохраняем tracking_token для безопасной ссылки отслеживания
     if (order.tracking_token) {
       order.trackingToken = String(order.tracking_token);
       console.log('[Get Order] tracking_token found:', order.tracking_token, '-> trackingToken:', order.trackingToken);
@@ -213,6 +225,12 @@ router.get('/track/:token', async (req, res, next) => {
       console.log('[Get Order] WARNING: tracking_token is NULL or empty for order id:', order.id);
     }
     delete order.tracking_token;
+    
+    // Сохраняем delivery_ttn для номера накладной доставки (Нова Пошта/Укрпошта)
+    if (order.delivery_ttn) {
+      order.deliveryTtn = String(order.delivery_ttn);
+    }
+    delete order.delivery_ttn;
 
     order.createdAt = new Date(order.created_at);
     order.updatedAt = new Date(order.updated_at);
@@ -387,7 +405,7 @@ router.get('/:id', async (req, res, next) => {
     delete order.delivery_address;
     delete order.payment_method;
 
-    // Сохраняем tracking_token для админки (для создания ссылки отслеживания)
+    // Сохраняем tracking_token для безопасной ссылки отслеживания
     if (order.tracking_token) {
       order.trackingToken = String(order.tracking_token);
       console.log('[Get Order] tracking_token found:', order.tracking_token, '-> trackingToken:', order.trackingToken);
@@ -395,6 +413,12 @@ router.get('/:id', async (req, res, next) => {
       console.log('[Get Order] WARNING: tracking_token is NULL or empty for order id:', order.id);
     }
     delete order.tracking_token;
+    
+    // Сохраняем delivery_ttn для номера накладной доставки (Нова Пошта/Укрпошта)
+    if (order.delivery_ttn) {
+      order.deliveryTtn = String(order.delivery_ttn);
+    }
+    delete order.delivery_ttn;
 
     order.createdAt = new Date(order.created_at);
     order.updatedAt = new Date(order.updated_at);
@@ -725,15 +749,17 @@ router.patch('/:id/status', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { customer, delivery, payment, status, subtotal, discount, deliveryCost, total, trackingToken } = req.body;
+    const { customer, delivery, payment, status, subtotal, discount, deliveryCost, total, deliveryTtn } = req.body;
 
     // Helper function to convert undefined/empty to null
     const toNull = (val) => (val === undefined || val === null || val === '') ? null : val;
     
-    // Обрабатываем trackingToken отдельно - если не передан или пустая строка, устанавливаем null
-    const trackingTokenValue = trackingToken === undefined || trackingToken === null || trackingToken === '' 
+    // Обрабатываем deliveryTtn отдельно - если не передан или пустая строка, устанавливаем null
+    // ВАЖНО: deliveryTtn - это номер накладной доставки (Нова Пошта/Укрпошта)
+    // tracking_token используется ТОЛЬКО для безопасной ссылки отслеживания заказа
+    const deliveryTtnValue = deliveryTtn === undefined || deliveryTtn === null || deliveryTtn === '' 
       ? null 
-      : String(trackingToken).trim() || null;
+      : String(deliveryTtn).trim() || null;
 
     // Обрабатываем все поля, чтобы не было undefined
     const customerName = customer?.name || null;
@@ -757,14 +783,14 @@ router.put('/:id', async (req, res, next) => {
         delivery_method = ?, delivery_city = ?, delivery_warehouse = ?,
         delivery_post_index = ?, delivery_address = ?,
         payment_method = ?, status = ?, subtotal = ?, discount = ?,
-        delivery_cost = ?, total = ?, tracking_token = ?, updated_at = CURRENT_TIMESTAMP
+        delivery_cost = ?, total = ?, delivery_ttn = ?, updated_at = CURRENT_TIMESTAMP
       WHERE order_number = ?
     `, [
       customerName, customerPhone,
       deliveryMethod, deliveryCity, deliveryWarehouse,
       deliveryPostIndex, deliveryAddress,
       paymentMethod, orderStatus, orderSubtotal, orderDiscount,
-      orderDeliveryCost, orderTotal, trackingTokenValue, id
+      orderDeliveryCost, orderTotal, deliveryTtnValue, id
     ]);
 
     res.json({ id, message: 'Order updated' });

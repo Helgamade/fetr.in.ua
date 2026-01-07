@@ -85,7 +85,8 @@ export interface Order {
   total: number;
   status: OrderStatus;
   promoCode?: string;
-  trackingToken?: string; // Токен для отслеживания заказа (для админки)
+  trackingToken?: string; // Токен для безопасной ссылки отслеживания заказа
+  deliveryTtn?: string; // Номер накладной доставки (Нова Пошта/Укрпошта)
   createdAt: Date;
   updatedAt: Date;
 }

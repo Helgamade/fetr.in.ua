@@ -20,29 +20,24 @@ interface TimelineStep {
 const ThankYou = () => {
   const [searchParams] = useSearchParams();
   const orderIdParam = searchParams.get("order"); // Старый способ (для обратной совместимости)
-  const trackingTokenParam = searchParams.get("track"); // Новый способ (только цифры)
-  const orderRefParam = searchParams.get("orderRef"); // WayForPay orderReference (номер заказа)
+  const trackingTokenParam = searchParams.get("track"); // Безопасная ссылка отслеживания (tracking_token)
   const { data: storeSettings } = usePublicSettings();
   
   // searchParams.get() возвращает null, если параметра нет - нормализуем в undefined
   // Также проверяем, что параметр не равен строке 'undefined' или 'null'
   const trackingToken = (trackingTokenParam && trackingTokenParam !== 'undefined' && trackingTokenParam !== 'null') ? trackingTokenParam : undefined;
   const orderId = (orderIdParam && orderIdParam !== 'undefined' && orderIdParam !== 'null') ? orderIdParam : undefined;
-  const orderRef = (orderRefParam && orderRefParam !== 'undefined' && orderRefParam !== 'null') ? orderRefParam : undefined;
   
-  // Используем trackingToken если есть, иначе orderId, иначе orderRef (от WayForPay)
-  const identifier = trackingToken || orderId || orderRef || "";
+  // Используем trackingToken если есть, иначе orderId (для обратной совместимости)
+  const identifier = trackingToken || orderId || "";
   
   const { data: order, isLoading: orderLoading, refetch } = useQuery({
-    queryKey: ['order', identifier, trackingToken ? 'track' : (orderRef ? 'orderRef' : 'id')],
+    queryKey: ['order', identifier, trackingToken ? 'track' : 'id'],
     queryFn: () => {
       if (trackingToken) {
         return ordersAPI.getByTrackingToken(trackingToken);
       } else if (orderId) {
         return ordersAPI.getOrder(orderId);
-      } else if (orderRef) {
-        // WayForPay передает orderReference (номер заказа)
-        return ordersAPI.getOrder(orderRef);
       }
       return Promise.reject(new Error('No valid order identifier'));
     },
@@ -72,16 +67,16 @@ const ThankYou = () => {
     }
   }, [order, trackingToken]);
 
-  // Принудительно обновляем данные при возврате с WayForPay (если есть orderRef)
+  // Принудительно обновляем данные при возврате с WayForPay (если есть trackingToken)
   useEffect(() => {
-    if (orderRef && !orderLoading) {
+    if (trackingToken && !orderLoading) {
       // Небольшая задержка, чтобы дать серверу время обновить статус после callback
       const timer = setTimeout(() => {
         refetch();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [orderRef, orderLoading, refetch]);
+  }, [trackingToken, orderLoading, refetch]);
 
   // Debug: log order data
   useEffect(() => {
