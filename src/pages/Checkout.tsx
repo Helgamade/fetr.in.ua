@@ -964,7 +964,7 @@ const Checkout = () => {
               
               {/* Horizontal scrollable products */}
               {cartItemsWithProducts.length > 1 ? (
-                <div className="overflow-x-auto scrollbar-hide" style={{ paddingLeft: '1rem', paddingRight: '1rem', paddingBottom: '1rem', WebkitOverflowScrolling: 'touch' }}>
+                <div className="overflow-x-auto order-items-scroll" style={{ paddingLeft: '1rem', paddingRight: '1rem', paddingBottom: '1rem', WebkitOverflowScrolling: 'touch' }}>
                   <ul className="flex gap-4" style={{ width: 'max-content' }}>
                     {cartItemsWithProducts.map((item, index) => {
                       const product = item.product!;
@@ -2062,7 +2062,7 @@ const Checkout = () => {
                     
                     {/* Horizontal scrollable products */}
                     {cartItemsWithProducts.length > 1 ? (
-                      <div className="overflow-x-auto scrollbar-hide" style={{ paddingLeft: '12px', paddingRight: '2rem', WebkitOverflowScrolling: 'touch', marginLeft: '-1rem', marginRight: '-1rem' }}>
+                      <div className="overflow-x-auto order-items-scroll" style={{ paddingLeft: '12px', paddingRight: '2rem', WebkitOverflowScrolling: 'touch', marginLeft: '-1rem', marginRight: '-1rem' }}>
                         <ul className="flex gap-4" style={{ width: 'max-content', paddingRight: '1rem' }}>
                           {cartItemsWithProducts.map((item, index) => {
                             const product = item.product!;

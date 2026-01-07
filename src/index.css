@@ -331,6 +331,31 @@
   background: hsl(var(--primary));
 }
 
+/* Custom horizontal scrollbar for order items */
+.order-items-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.order-items-scroll::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+
+.order-items-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+.order-items-scroll::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Firefox */
+.order-items-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) hsl(var(--muted));
+}
+
 /* Custom styles for prose - applied directly without @layer for higher specificity */
 /* Headings spacing */
 .prose h1 {
