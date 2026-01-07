@@ -947,7 +947,7 @@ const Checkout = () => {
           </div>
         </header>
 
-        <div className="container mx-auto px-4" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
+        <div className="container mx-auto px-4 py-8">
           {/* Order Items Block - Mobile/All devices */}
           <div className="mb-6">
             <div className="bg-card rounded-2xl p-4 shadow-soft">
@@ -1394,6 +1394,20 @@ const Checkout = () => {
                           </div>
                         )}
                       </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={!isContactInfoValid}
+                        className="w-full rounded-xl border h-10 hover:border hover:bg-transparent hover:text-primary disabled:hover:text-primary disabled:opacity-50"
+                        onClick={() => {
+                          if (isContactInfoValid) {
+                            setFormData(prev => ({ ...prev, contactInfoCompleted: true, contactInfoExpanded: false }));
+                          }
+                        }}
+                      >
+                        Продовжити
+                      </Button>
                     </>
                   )}
                 </div>
