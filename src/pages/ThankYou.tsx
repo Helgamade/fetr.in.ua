@@ -235,7 +235,7 @@ const ThankYou = () => {
         <div className="container mx-auto px-4 py-8 max-w-2xl">
           {/* Order Info Card */}
           <div className="bg-card rounded-2xl p-6 shadow-elegant -mt-8 relative z-10 mb-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-row justify-between items-center gap-4">
               <div>
                 <div className="text-sm text-muted-foreground">Номер замовлення</div>
                 <div className="text-xl font-bold font-mono">{order?.id || orderId || ''}</div>
