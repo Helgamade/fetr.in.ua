@@ -1,6 +1,5 @@
 import express from 'express';
 import pool from '../db.js';
-import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 
@@ -9,19 +8,15 @@ const router = express.Router();
 // ============================================
 
 // Создать или обновить сессию
-router.post('/session', [
-  body('sessionId').isString().notEmpty(),
-  body('fingerprint').isString().notEmpty(),
-], async (req, res, next) => {
+router.post('/session', async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+    const { sessionId, fingerprint } = req.body;
+    
+    if (!sessionId || !fingerprint) {
+      return res.status(400).json({ error: 'sessionId and fingerprint are required' });
     }
 
     const {
-      sessionId,
-      fingerprint,
       userId,
       utmSource,
       utmMedium,
@@ -81,19 +76,15 @@ router.post('/session', [
 });
 
 // Записать просмотр страницы
-router.post('/page-view', [
-  body('sessionId').isString().notEmpty(),
-  body('pageUrl').isString().notEmpty(),
-], async (req, res, next) => {
+router.post('/page-view', async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+    const { sessionId, pageUrl } = req.body;
+    
+    if (!sessionId || !pageUrl) {
+      return res.status(400).json({ error: 'sessionId and pageUrl are required' });
     }
 
     const {
-      sessionId,
-      pageUrl,
       pageTitle,
       pageType,
       productId
@@ -133,20 +124,16 @@ router.patch('/page-view/:id', async (req, res, next) => {
 });
 
 // Записать событие
-router.post('/event', [
-  body('sessionId').isString().notEmpty(),
-  body('eventType').isString().notEmpty(),
-], async (req, res, next) => {
+router.post('/event', async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+    const { sessionId, eventType } = req.body;
+    
+    if (!sessionId || !eventType) {
+      return res.status(400).json({ error: 'sessionId and eventType are required' });
     }
 
     const {
-      sessionId,
       userId,
-      eventType,
       eventCategory,
       eventLabel,
       eventData,
@@ -179,21 +166,17 @@ router.post('/event', [
 });
 
 // Обновить воронку продаж
-router.post('/funnel', [
-  body('sessionId').isString().notEmpty(),
-  body('stage').isString().notEmpty(),
-], async (req, res, next) => {
+router.post('/funnel', async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+    const { sessionId, stage } = req.body;
+    
+    if (!sessionId || !stage) {
+      return res.status(400).json({ error: 'sessionId and stage are required' });
     }
 
     const {
-      sessionId,
       userId,
       orderId,
-      stage,
       cartProducts,
       cartTotal
     } = req.body;
