@@ -177,7 +177,7 @@ export function OrderDetail() {
           <div className="bg-card rounded-lg border p-6">
             <h2 className="text-lg font-semibold mb-4">Товари в замовленні ({order.items.length})</h2>
             <div className="space-y-4">
-              {order.items.map((item) => {
+              {order.items.map((item, index) => {
                 const product = products.find(p => p.code === item.productId);
                 const basePrice = product?.basePrice || 0;
                 const salePrice = product?.salePrice;
