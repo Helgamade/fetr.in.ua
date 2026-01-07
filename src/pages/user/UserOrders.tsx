@@ -78,7 +78,11 @@ export default function UserOrders() {
               const orderDate = new Date(order.createdAt);
 
               return (
-                <Card key={order.id} className="hover:shadow-md transition-shadow">
+                <Card 
+                  key={order.id} 
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/user/orders/${order.id}`)}
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
@@ -114,16 +118,17 @@ export default function UserOrders() {
                         </div>
                       </div>
 
-                      {order.trackingToken && (
-                        <Button
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => navigate(`/order/${order.trackingToken}`)}
-                        >
-                          Відстежити замовлення
-                          <ChevronRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      )}
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Предотвращаем всплытие события
+                          navigate(`/user/orders/${order.id}`);
+                        }}
+                      >
+                        Деталі замовлення
+                        <ChevronRight className="ml-2 h-4 w-4" />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
