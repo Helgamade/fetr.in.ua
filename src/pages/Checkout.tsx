@@ -869,6 +869,12 @@ const Checkout = () => {
   
   // Стоимость заказа БЕЗ доставки (после всех скидок)
   const orderTotal = getSubtotal() - getTotalDiscount();
+
+  // Format number with thousands separator (no decimals)
+  const formatPrice = (value: number): string => {
+    const rounded = Math.round(value);
+    return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  };
   // Порог бесплатной доставки из настроек админ-панели
   const FREE_DELIVERY_THRESHOLD = typeof storeSettings.free_delivery_threshold === 'number' 
     ? storeSettings.free_delivery_threshold 
@@ -2208,12 +2214,12 @@ const Checkout = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Вартість замовлення:</span>
-                      <span>{getSubtotal()} ₴</span>
+                      <span>{formatPrice(getSubtotal())} ₴</span>
                     </div>
                     {(getDiscount() > 0 || getPromoDiscount() > 0) && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Знижка:</span>
-                        <span className="text-red-600">-{getTotalDiscount().toFixed(2)} ₴</span>
+                        <span className="text-red-600">-{formatPrice(getTotalDiscount())} ₴</span>
                       </div>
                     )}
                     {formData.deliveryMethod && deliveryInfo && (
@@ -2239,7 +2245,7 @@ const Checkout = () => {
                     <div className="flex justify-between text-lg font-bold pt-2 border-t">
                       <span>{orderTotal >= FREE_DELIVERY_THRESHOLD ? "До оплати з доставкою:" : "До оплати без доставки:"}</span>
                       <span className="text-primary">
-                        {orderTotal.toFixed(2)} ₴
+                        {formatPrice(orderTotal)} ₴
                       </span>
                     </div>
                   </div>
