@@ -202,82 +202,91 @@ export default function UserOrderDetail() {
                     const itemKey = `${item.productId}_${index}_${JSON.stringify([...item.selectedOptions].sort())}`;
                     
                     return (
-                      <div key={itemKey} className="flex gap-4 pb-4 border-b last:border-0 last:pb-0">
-                        {/* Изображение */}
-                        <div className="flex-shrink-0">
-                          {product?.images && product.images.length > 0 ? (
-                            <img
-                              src={product.images[0]}
-                              alt={product.name}
-                              className="w-20 h-20 object-cover rounded"
-                            />
-                          ) : (
-                            <div className="w-20 h-20 bg-muted rounded flex items-center justify-center">
-                              <Package className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Информация о товаре */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            {hasDiscount && (
-                              <div className="bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">
-                                -{discountPercent}%
-                              </div>
-                            )}
-                            <div className="font-medium text-base flex-1 min-w-0">{getProductName(item.productId)}</div>
-                            
-                            {optionsPrice > 0 && (
-                              <div className="text-base font-bold text-primary whitespace-nowrap ml-8">
-                                +{optionsPrice} ₴
-                              </div>
-                            )}
-                            
-                            <div className="text-base font-medium whitespace-nowrap ml-8">
-                              {item.quantity} шт.
-                            </div>
-                            
-                            <div className="text-lg font-bold whitespace-nowrap ml-8">
-                              {totalPrice.toFixed(0)} ₴
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2 mb-2">
-                            {hasDiscount ? (
-                              <>
-                                <span className="text-base font-bold">{productPrice} ₴</span>
-                                <span className="text-sm text-muted-foreground line-through">{basePrice} ₴</span>
-                              </>
+                      <div key={itemKey} className="pb-4 border-b last:border-0 last:pb-0">
+                        <div className="flex gap-3 sm:gap-4">
+                          {/* Изображение */}
+                          <div className="flex-shrink-0">
+                            {product?.images && product.images.length > 0 ? (
+                              <img
+                                src={product.images[0]}
+                                alt={product.name}
+                                className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded"
+                              />
                             ) : (
-                              <span className="text-base font-bold">{basePrice} ₴</span>
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-muted rounded flex items-center justify-center">
+                                <Package className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
+                              </div>
                             )}
                           </div>
                           
-                          {product?.code && (
-                            <div className="text-xs text-muted-foreground mb-1">
-                              Артикул: {product.code}
+                          {/* Информация о товаре */}
+                          <div className="flex-1 min-w-0">
+                            {/* Название и бейдж скидки */}
+                            <div className="flex items-start gap-2 mb-2">
+                              {hasDiscount && (
+                                <div className="bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">
+                                  -{discountPercent}%
+                                </div>
+                              )}
+                              <div className="font-medium text-sm sm:text-base flex-1 min-w-0">{getProductName(item.productId)}</div>
                             </div>
-                          )}
-                          
-                          {/* Дополнительные опции */}
-                          {item.selectedOptions.length > 0 && (
-                            <div className="mb-2 mt-3">
-                              <div className="text-sm font-semibold text-foreground mb-2">Дополнительные опции:</div>
-                              <div className="space-y-2 max-w-md">
-                                {item.selectedOptions.map((optId) => {
-                                  const option = product?.options.find(o => o.code === optId);
-                                  if (!option) return null;
-                                  return (
-                                    <div key={optId} className="flex items-center justify-between text-sm bg-primary/10 border border-primary/20 rounded-lg px-3 py-2">
-                                      <span className="font-semibold text-foreground">{option.name}</span>
-                                      <span className="font-bold text-primary">+{option.price} ₴</span>
-                                    </div>
-                                  );
-                                })}
+                            
+                            {/* Цена товара и количество */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                              <div className="flex items-center gap-2">
+                                {hasDiscount ? (
+                                  <>
+                                    <span className="text-base sm:text-lg font-bold">{productPrice} ₴</span>
+                                    <span className="text-sm text-muted-foreground line-through">{basePrice} ₴</span>
+                                  </>
+                                ) : (
+                                  <span className="text-base sm:text-lg font-bold">{basePrice} ₴</span>
+                                )}
+                              </div>
+                              <div className="text-sm sm:text-base text-muted-foreground">
+                                Кількість: <span className="font-semibold text-foreground">{item.quantity} шт.</span>
                               </div>
                             </div>
-                          )}
+                            
+                            {/* Дополнительные опции */}
+                            {item.selectedOptions.length > 0 && (
+                              <div className="mb-2 mt-2">
+                                <div className="text-xs sm:text-sm font-semibold text-foreground mb-2">Додаткові опції:</div>
+                                <div className="space-y-1.5">
+                                  {item.selectedOptions.map((optId) => {
+                                    const option = product?.options.find(o => o.code === optId);
+                                    if (!option) return null;
+                                    return (
+                                      <div key={optId} className="flex items-center justify-between text-xs sm:text-sm bg-primary/10 border border-primary/20 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
+                                        <span className="font-medium text-foreground">{option.name}</span>
+                                        <span className="font-bold text-primary">+{option.price} ₴</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                {optionsPrice > 0 && (
+                                  <div className="text-xs sm:text-sm text-muted-foreground mt-1.5">
+                                    Сума опцій: <span className="font-semibold text-foreground">+{optionsPrice} ₴</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* Артикул */}
+                            {product?.code && (
+                              <div className="text-xs text-muted-foreground mb-1">
+                                Артикул: {product.code}
+                              </div>
+                            )}
+                            
+                            {/* Итоговая цена товара */}
+                            <div className="mt-3 pt-3 border-t border-border">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm sm:text-base font-medium">Сума за товар:</span>
+                                <span className="text-lg sm:text-xl font-bold text-primary">{totalPrice.toFixed(0)} ₴</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );

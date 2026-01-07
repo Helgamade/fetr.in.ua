@@ -28,7 +28,7 @@ export default function AuthCallback() {
 
           // Перенаправляем на главную или админку в зависимости от роли
           if (user.role === 'admin') {
-            navigate('/admin');
+            navigate('/');
           } else {
             navigate('/');
           }

@@ -308,7 +308,7 @@ export const Header: React.FC = () => {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-border mt-auto space-y-2">
+        <div className="p-4 border-t border-border mt-auto">
           {/* Auth section in mobile menu */}
           {!isAuthenticated && (
             <button
@@ -320,7 +320,7 @@ export const Header: React.FC = () => {
             </button>
           )}
           
-          <div className="pt-2 border-t border-border">
+          <div className="pt-4">
             <a
               href={`tel:${storePhone.replace(/\s/g, '')}`}
               className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors"
