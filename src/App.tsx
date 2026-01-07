@@ -27,6 +27,7 @@ import { Instagram } from "./pages/admin/Instagram";
 import { Texts } from "./pages/admin/Texts";
 import { Pages } from "./pages/admin/Pages";
 import { PageDetail } from "./pages/admin/PageDetail";
+import { EmailTemplates } from "./pages/admin/EmailTemplates";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
                   <Route path="texts" element={<Texts />} />
                   <Route path="pages" element={<Pages />} />
                   <Route path="pages/:id" element={<PageDetail />} />
+                  <Route path="email-templates" element={<EmailTemplates />} />
                   <Route path="settings" element={<Settings />} />
                   <Route path="comparison" element={<Comparison />} />
                 </Route>

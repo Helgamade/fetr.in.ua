@@ -447,6 +447,34 @@ export interface PromoCodeResponse {
   message: string;
 }
 
+// Email Templates API
+export interface EmailTemplate {
+  id: number;
+  event_type: string;
+  subject: string;
+  body_html: string;
+  body_text: string | null;
+  is_active: boolean;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const emailTemplatesAPI = {
+  getAll: () => fetchAPI<EmailTemplate[]>('/email-templates'),
+  getByEventType: (eventType: string) => fetchAPI<EmailTemplate>(`/email-templates/${eventType}`),
+  update: (eventType: string, data: { subject: string; body_html: string; body_text?: string | null; is_active?: boolean; description?: string | null }) => 
+    fetchAPI<EmailTemplate>(`/email-templates/${eventType}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  test: (eventType: string, testEmail: string, testData?: Record<string, any>) =>
+    fetchAPI<{ message: string; messageId?: string }>(`/email-templates/${eventType}/test`, {
+      method: 'POST',
+      body: JSON.stringify({ testEmail, testData }),
+    }),
+};
+
 export const promoAPI = {
   validate: (code: string, items: Array<{ productId: string }>) => fetchAPI<PromoCodeResponse>('/promo/validate', {
     method: 'POST',

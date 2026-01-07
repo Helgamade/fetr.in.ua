@@ -180,6 +180,9 @@ router.put('/', async (req, res, next) => {
     await connection.beginTransaction();
 
     try {
+      const smtpKeys = ['smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_password', 'smtp_from_email', 'smtp_from_name'];
+      let smtpChanged = false;
+
       for (const [key, value] of Object.entries(settings)) {
         let stringValue = value;
         let type = 'string';
@@ -200,9 +203,25 @@ router.put('/', async (req, res, next) => {
           VALUES (?, ?, ?)
           ON DUPLICATE KEY UPDATE value = VALUES(value), type = VALUES(type)
         `, [key, stringValue, type]);
+
+        if (smtpKeys.includes(key)) {
+          smtpChanged = true;
+        }
       }
 
       await connection.commit();
+      
+      // Перезагружаем SMTP транспортер, если изменились SMTP настройки
+      if (smtpChanged) {
+        try {
+          const { reloadTransporter } = await import('../utils/emailService.js');
+          await reloadTransporter();
+          console.log('[Settings] SMTP транспортер перезавантажено');
+        } catch (error) {
+          console.error('[Settings] Помилка перезавантаження SMTP транспортера:', error);
+        }
+      }
+      
       res.json({ message: 'Settings updated' });
     } catch (error) {
       await connection.rollback();

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Save, Store, Truck, CreditCard, Bell, Upload, Image as ImageIcon, X } from 'lucide-react';
+import { Save, Store, Truck, CreditCard, Bell, Upload, Image as ImageIcon, X, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -363,6 +363,94 @@ export function Settings() {
                 />
               </div>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* SMTP Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Налаштування SMTP для Email
+          </CardTitle>
+          <CardDescription>
+            Налаштування для відправки email сповіщень
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="smtp_host">SMTP Хост</Label>
+              <Input
+                id="smtp_host"
+                value={settings.smtp_host || ''}
+                onChange={(e) => updateSettings.mutate({ smtp_host: e.target.value })}
+                placeholder="smtp.gmail.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="smtp_port">SMTP Порт</Label>
+              <Input
+                id="smtp_port"
+                type="number"
+                value={settings.smtp_port || '587'}
+                onChange={(e) => updateSettings.mutate({ smtp_port: e.target.value })}
+                placeholder="587"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="smtp_user">SMTP Користувач</Label>
+              <Input
+                id="smtp_user"
+                value={settings.smtp_user || ''}
+                onChange={(e) => updateSettings.mutate({ smtp_user: e.target.value })}
+                placeholder="your-email@gmail.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="smtp_password">SMTP Пароль</Label>
+              <Input
+                id="smtp_password"
+                type="password"
+                value={settings.smtp_password || ''}
+                onChange={(e) => updateSettings.mutate({ smtp_password: e.target.value })}
+                placeholder="Пароль або App Password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="smtp_from_email">Email відправника</Label>
+              <Input
+                id="smtp_from_email"
+                type="email"
+                value={settings.smtp_from_email || ''}
+                onChange={(e) => updateSettings.mutate({ smtp_from_email: e.target.value })}
+                placeholder="noreply@fetr.in.ua"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="smtp_from_name">Ім'я відправника</Label>
+              <Input
+                id="smtp_from_name"
+                value={settings.smtp_from_name || 'Fetr.in.ua'}
+                onChange={(e) => updateSettings.mutate({ smtp_from_name: e.target.value })}
+                placeholder="Fetr.in.ua"
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Використовувати SSL/TLS</Label>
+              <p className="text-sm text-muted-foreground">Увімкнути для портів 465 (SSL) або 587 (TLS)</p>
+            </div>
+            <Switch
+              checked={settings.smtp_secure === 'true'}
+              onCheckedChange={(checked) => updateSettings.mutate({ smtp_secure: checked.toString() })}
+            />
+          </div>
+          <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+            <strong>Примітка:</strong> Для Gmail використовуйте App Password замість звичайного пароля. 
+            Для інших провайдерів перевірте документацію щодо налаштувань SMTP.
           </div>
         </CardContent>
       </Card>

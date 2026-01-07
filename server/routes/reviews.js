@@ -214,7 +214,28 @@ router.post('/', async (req, res, next) => {
       `, [name, text, rating, photo, is_approved, created_at]);
     }
 
-    res.status(201).json({ id: result.insertId, message: 'Review created' });
+    const reviewId = result.insertId;
+    
+    // Отправляем email уведомление админу о новом отзыве (асинхронно)
+    (async () => {
+      try {
+        const { sendEmailToAdmin } = await import('../utils/emailService.js');
+        const baseUrl = process.env.CORS_ORIGIN || 'https://fetr.in.ua';
+        
+        const templateData = {
+          reviewerName: name,
+          rating: rating,
+          reviewText: text,
+          reviewLink: `${baseUrl}/admin/reviews`
+        };
+        
+        await sendEmailToAdmin('review_created_admin', templateData);
+      } catch (emailError) {
+        console.error('[Create Review] Помилка відправки email:', emailError);
+      }
+    })();
+    
+    res.status(201).json({ id: reviewId, message: 'Review created' });
   } catch (error) {
     next(error);
   }
@@ -321,6 +342,35 @@ router.put('/:id', async (req, res, next) => {
       ]);
     }
 
+    // Если отзыв был одобрен, отправляем email (если есть email клиента)
+    // Примечание: в текущей структуре БД нет email для отзывов, 
+    // но можно добавить в будущем или использовать другой способ связи
+    if (is_approved === true) {
+      (async () => {
+        try {
+          // Получаем данные отзыва
+          const [reviewData] = await pool.execute(`
+            SELECT * FROM reviews WHERE id = ?
+          `, [id]);
+          
+          if (reviewData.length > 0) {
+            const review = reviewData[0];
+            const baseUrl = process.env.CORS_ORIGIN || 'https://fetr.in.ua';
+            
+            // Если в будущем добавится email для отзывов, можно будет отправлять
+            // const { sendEmail } = await import('../utils/emailService.js');
+            // if (review.customer_email) {
+            //   await sendEmail('review_approved', review.customer_email, {
+            //     reviewLink: `${baseUrl}/reviews`
+            //   });
+            // }
+          }
+        } catch (emailError) {
+          console.error('[Update Review] Помилка відправки email:', emailError);
+        }
+      })();
+    }
+    
     res.json({ id, message: 'Review updated' });
   } catch (error) {
     next(error);

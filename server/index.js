@@ -19,6 +19,7 @@ import novaPoshtaRoutes from './routes/nova-poshta.js';
 import ukrposhtaRoutes from './routes/ukrposhta.js';
 import wayforpayRoutes from './routes/wayforpay.js';
 import promoRoutes from './routes/promo.js';
+import emailTemplatesRoutes from './routes/email-templates.js';
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -87,6 +88,7 @@ app.use('/api/nova-poshta', novaPoshtaRoutes);
 app.use('/api/ukrposhta', ukrposhtaRoutes);
 app.use('/api/wayforpay', wayforpayRoutes);
 app.use('/api/promo', promoRoutes);
+app.use('/api/email-templates', emailTemplatesRoutes);
 
 // Serve uploaded files
 const UPLOADS_DIR = join(__dirname, '..', 'uploads');

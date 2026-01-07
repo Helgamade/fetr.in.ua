@@ -72,12 +72,13 @@ export const HeroSection: React.FC = () => {
 
       {/* Parallax Image */}
       <div 
-        className="absolute inset-0 -z-5 opacity-20"
+        className="absolute inset-0 -z-5"
         style={{
           backgroundImage: `url(${heroBackgroundImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           transform: `translate(${mousePosition.x * 0.1}px, ${mousePosition.y * 0.1}px) scale(1.1)`,
+          opacity: 0.13,
         }}
       />
 

@@ -465,6 +465,51 @@ router.post('/', async (req, res, next) => {
       }
 
       await connection.commit();
+      
+      // Отправляем email уведомления (асинхронно, не блокируем ответ)
+      (async () => {
+        try {
+          const { sendEmail, sendEmailToAdmin } = await import('../utils/emailService.js');
+          
+          // Получаем данные заказа для шаблона
+          const [orderData] = await pool.execute(`
+            SELECT * FROM orders WHERE id = ?
+          `, [orderIdInt]);
+          
+          if (orderData.length > 0) {
+            const order = orderData[0];
+            const baseUrl = process.env.CORS_ORIGIN || 'https://fetr.in.ua';
+            
+            // Данные для шаблона
+            const templateData = {
+              orderNumber: orderNumber,
+              customerName: order.customer_name,
+              customerPhone: order.customer_phone,
+              customerEmail: order.customer_email || '',
+              total: parseFloat(order.total).toFixed(2),
+              status: order.status,
+              deliveryMethod: order.delivery_method,
+              deliveryCity: order.delivery_city || '',
+              deliveryWarehouse: order.delivery_warehouse || '',
+              paymentMethod: order.payment_method,
+              orderLink: `${baseUrl}/admin/orders/${orderNumber}`,
+              trackingLink: `${baseUrl}/order/${trackingToken}`
+            };
+            
+            // Email админу о новом заказе
+            await sendEmailToAdmin('order_created_admin', templateData);
+            
+            // Email клиенту о принятии заказа (если есть email)
+            if (order.customer_email) {
+              await sendEmail('order_created_customer', order.customer_email, templateData);
+            }
+          }
+        } catch (emailError) {
+          console.error('[Create Order] Помилка відправки email:', emailError);
+          // Не прерываем выполнение, если email не отправился
+        }
+      })();
+      
       res.status(201).json({ 
         message: 'Order created successfully', 
         orderId: orderNumber, // Просто число: 305317
@@ -485,13 +530,70 @@ router.post('/', async (req, res, next) => {
 router.patch('/:id/status', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, statusComment } = req.body;
 
     // id is order_number (VARCHAR), not INT id
     await pool.execute(`
       UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE order_number = ?
     `, [status, id]);
+
+    // Отправляем email уведомление клиенту об изменении статуса
+    (async () => {
+      try {
+        const { sendEmail } = await import('../utils/emailService.js');
+        
+        const [orderData] = await pool.execute(`
+          SELECT * FROM orders WHERE order_number = ?
+        `, [id]);
+        
+        if (orderData.length > 0 && orderData[0].customer_email) {
+          const order = orderData[0];
+          const baseUrl = process.env.CORS_ORIGIN || 'https://fetr.in.ua';
+          
+          // Статусы на украинском
+          const statusMap = {
+            'created': 'Створено',
+            'accepted': 'Прийнято',
+            'processing': 'Обробляється',
+            'awaiting_payment': 'Очікує оплати',
+            'paid': 'Оплачено',
+            'assembled': 'Зібрано',
+            'packed': 'Упаковано',
+            'shipped': 'Відправлено',
+            'in_transit': 'В дорозі',
+            'arrived': 'Прибуло',
+            'completed': 'Завершено'
+          };
+          
+          const templateData = {
+            orderNumber: id,
+            status: statusMap[status] || status,
+            statusComment: statusComment || '',
+            trackingLink: order.tracking_token ? `${baseUrl}/order/${order.tracking_token}` : `${baseUrl}/order/${id}`
+          };
+          
+          await sendEmail('order_status_changed', order.customer_email, templateData);
+          
+          // Если статус изменился на "paid", отправляем отдельные уведомления
+          if (status === 'paid') {
+            const { sendEmailToAdmin } = await import('../utils/emailService.js');
+            const paidData = {
+              orderNumber: id,
+              customerName: order.customer_name,
+              total: parseFloat(order.total).toFixed(2),
+              orderLink: `${baseUrl}/admin/orders/${id}`,
+              trackingLink: order.tracking_token ? `${baseUrl}/order/${order.tracking_token}` : `${baseUrl}/order/${id}`
+            };
+            
+            await sendEmailToAdmin('order_paid_admin', paidData);
+            await sendEmail('order_paid_customer', order.customer_email, paidData);
+          }
+        }
+      } catch (emailError) {
+        console.error('[Update Order Status] Помилка відправки email:', emailError);
+      }
+    })();
 
     res.json({ id, status, message: 'Order status updated' });
   } catch (error) {

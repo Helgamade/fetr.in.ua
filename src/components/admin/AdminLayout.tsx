@@ -12,7 +12,8 @@ import {
   Users,
   Instagram,
   FileText,
-  HelpCircle
+  HelpCircle,
+  Mail
 } from 'lucide-react';
 import {
   Sidebar,
@@ -45,6 +46,7 @@ const menuItems = [
   { icon: FileText, label: 'Тексти сайту', path: '/admin/texts' },
   { icon: FileText, label: 'Сторінки', path: '/admin/pages' },
   { icon: Table2, label: 'Порівняння', path: '/admin/comparison' },
+  { icon: Mail, label: 'Email шаблони', path: '/admin/email-templates' },
   { icon: Settings, label: 'Налаштування', path: '/admin/settings' },
 ];
 
