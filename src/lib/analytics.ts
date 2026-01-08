@@ -191,7 +191,20 @@ class Analytics {
           pageTitle = document.title;
         } else {
           // Иначе используем fallback на основе типа страницы
-          pageTitle = this.getPageTitleByType(pageType);
+          // НО: для админских страниц не используем общий fallback, если есть конкретный путь
+          const fallbackTitle = this.getPageTitleByType(pageType);
+          // Если это админская страница и fallback = "Адмін-панель", проверяем путь
+          if (pageType === 'admin' && fallbackTitle.includes('Адмін-панель')) {
+            const adminPageTitle = this.getAdminPageTitle();
+            if (adminPageTitle) {
+              pageTitle = adminPageTitle;
+            } else {
+              // Только если нет конкретной страницы, используем общий заголовок
+              pageTitle = fallbackTitle;
+            }
+          } else {
+            pageTitle = fallbackTitle;
+          }
         }
       }
 
@@ -434,6 +447,58 @@ class Analytics {
       admin: 'Адмін-панель | FetrInUA',
     };
     return titles[pageType] || 'FetrInUA — Набори для творчості з фетру';
+  }
+
+  /**
+   * Получить конкретный заголовок для админской страницы на основе пути
+   */
+  private getAdminPageTitle(): string | null {
+    const path = window.location.pathname;
+    
+    // Если это главная админка - можно показать "Адмін-панель"
+    if (path === '/admin' || path === '/admin/') {
+      return null; // Используем общий fallback
+    }
+    
+    // Определяем конкретную страницу админки
+    const adminPages: Record<string, string> = {
+      '/admin/dashboard': 'Панель управління | FetrInUA',
+      '/admin/orders': 'Замовлення | FetrInUA',
+      '/admin/products': 'Товари | FetrInUA',
+      '/admin/analytics': 'Аналітика | FetrInUA',
+      '/admin/settings': 'Налаштування | FetrInUA',
+      '/admin/reviews': 'Відгуки | FetrInUA',
+      '/admin/faq': 'FAQ | FetrInUA',
+      '/admin/pages': 'Сторінки | FetrInUA',
+      '/admin/galleries': 'Галереї | FetrInUA',
+      '/admin/comparison': 'Порівняння | FetrInUA',
+      '/admin/options': 'Опції товарів | FetrInUA',
+      '/admin/team': 'Команда | FetrInUA',
+      '/admin/instagram': 'Instagram | FetrInUA',
+      '/admin/texts': 'Тексти | FetrInUA',
+      '/admin/email-templates': 'Шаблони email | FetrInUA',
+    };
+    
+    // Проверяем точное совпадение
+    if (adminPages[path]) {
+      return adminPages[path];
+    }
+    
+    // Проверяем динамические пути (например, /admin/orders/123)
+    if (path.startsWith('/admin/orders/')) {
+      const orderId = path.split('/').pop();
+      return `Замовлення ${orderId} | FetrInUA`;
+    }
+    if (path.startsWith('/admin/products/')) {
+      return 'Редагування товару | FetrInUA';
+    }
+    if (path.startsWith('/admin/pages/')) {
+      return 'Редагування сторінки | FetrInUA';
+    }
+    
+    // Если не нашли конкретную страницу, возвращаем null
+    // чтобы использовать общий fallback только если нет другого заголовка
+    return null;
   }
 
   /**
