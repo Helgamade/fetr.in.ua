@@ -9,3 +9,4 @@ ALTER TABLE orders
 -- Индекс для поиска по ТТН доставки
 CREATE INDEX IF NOT EXISTS idx_delivery_ttn ON orders(delivery_ttn);
 
+

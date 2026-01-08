@@ -108,6 +108,8 @@ app.use('/api/promo', promoRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/instagram', instagramRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/comparison', comparisonRoutes);
+app.use('/api/galleries', galleriesRoutes);
 
 // Protected routes (требуют авторизации)
 app.use('/api/orders', apiRateLimiter, ordersRoutes);
