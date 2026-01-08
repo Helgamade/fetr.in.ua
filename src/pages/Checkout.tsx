@@ -980,6 +980,7 @@ const Checkout = () => {
     <>
       <Helmet>
         <title>Оформлення замовлення | FetrInUA</title>
+        <meta property="og:title" content="Оформлення замовлення | FetrInUA" />
         <meta name="robots" content="noindex" />
       </Helmet>
       

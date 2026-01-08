@@ -300,7 +300,7 @@ class Analytics {
 
       // Получаем текущее количество товаров в корзине для событий корзины
       let cartItemsCount = null;
-      if (event.eventType === 'add_to_cart' || event.eventType === 'remove_from_cart' || event.eventType === 'quick_add_to_cart') {
+      if (event.eventType === 'add_to_cart' || event.eventType === 'remove_from_cart' || event.eventType === 'quick_add_to_cart' || event.eventType === 'update_cart_quantity') {
         // Сначала проверяем, передано ли cartItemsCount в eventData
         if (event.eventData && typeof event.eventData === 'object' && 'cartItemsCount' in event.eventData) {
           cartItemsCount = event.eventData.cartItemsCount;
