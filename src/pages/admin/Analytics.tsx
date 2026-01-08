@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,7 +27,7 @@ export function Analytics() {
   });
 
   // Получаем онлайн пользователей
-  const { data: realtimeData = [], refetch: refetchRealtime } = useQuery({
+  const { data: realtimeDataRaw = [], refetch: refetchRealtime } = useQuery({
     queryKey: ['analytics-realtime'],
     queryFn: async () => {
       const response = await fetch('/api/analytics/realtime');
@@ -36,6 +36,69 @@ export function Analytics() {
     },
     refetchInterval: 10000, // обновляем каждые 10 секунд
   });
+
+  // Функция дедупликации активных пользователей
+  const deduplicateUsers = (sessions: any[]) => {
+    if (!sessions || sessions.length === 0) return [];
+
+    // Сортируем по времени активности (самые свежие первыми)
+    const sorted = [...sessions].sort((a, b) => 
+      new Date(b.last_activity_at).getTime() - new Date(a.last_activity_at).getTime()
+    );
+
+    const seen = new Map<string, any>();
+    const result: any[] = [];
+
+    for (const session of sorted) {
+      const email = session.user_email?.toLowerCase().trim();
+      const ip = session.ip_address?.split(',')[0]?.trim() || null;
+      
+      // 1. Если есть email - проверяем по email (один пользователь)
+      if (email) {
+        const key = `email:${email}`;
+        if (seen.has(key)) {
+          continue; // Пропускаем дубликат по email
+        }
+        seen.set(key, session);
+        result.push(session);
+        continue;
+      }
+
+      // 2. Если нет email, но есть IP - проверяем по IP + дополнительные параметры
+      if (ip) {
+        // Создаем ключ из IP + browser + os + device_type + fingerprint + screen_resolution
+        const fingerprint = session.visitor_fingerprint || null;
+        const browser = session.browser || null;
+        const os = session.os || null;
+        const deviceType = session.device_type || null;
+        const screenResolution = session.screen_resolution || null;
+        
+        // Создаем составной ключ для идентификации
+        const compositeKey = `ip:${ip}|browser:${browser}|os:${os}|device:${deviceType}|fingerprint:${fingerprint}|screen:${screenResolution}`;
+        
+        // Проверяем, есть ли уже пользователь с таким же ключом
+        if (seen.has(compositeKey)) {
+          continue; // Пропускаем дубликат
+        }
+        
+        seen.set(compositeKey, session);
+        result.push(session);
+        continue;
+      }
+
+      // 3. Если нет ни email, ни IP - используем session_id как уникальный идентификатор
+      const sessionKey = `session:${session.session_id}`;
+      if (!seen.has(sessionKey)) {
+        seen.set(sessionKey, session);
+        result.push(session);
+      }
+    }
+
+    return result;
+  };
+
+  // Применяем дедупликацию с мемоизацией
+  const realtimeData = useMemo(() => deduplicateUsers(realtimeDataRaw), [realtimeDataRaw]);
 
   // Получаем общую статистику
   const { data: stats } = useQuery({
