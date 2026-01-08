@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "@/context/CartContext";
-// import { AnalyticsProvider } from "@/context/AnalyticsContext"; // УДАЛЕНО - не используется
+// AnalyticsProvider полностью удален - используем src/lib/analytics.ts
 import { AuthProvider } from "@/context/AuthContext";
 import Index from "./pages/Index";
 import Checkout from "./pages/Checkout";
