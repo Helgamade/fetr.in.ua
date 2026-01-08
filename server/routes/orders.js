@@ -437,6 +437,9 @@ router.get('/:id', async (req, res, next) => {
         totalTimeSpent: analyticsSession.total_time_spent,
         cartItemsCount: analyticsSession.cart_items_count,
       };
+      console.log('[Get Order] Analytics data added to order:', order.analytics);
+    } else {
+      console.log('[Get Order] No analytics session data to add');
     }
 
     delete order.customer_name;

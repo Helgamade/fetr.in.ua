@@ -85,10 +85,14 @@ export function OrderDetail() {
         .then((orderData) => {
           console.log('[OrderDetail] Order data received:', orderData);
           console.log('[OrderDetail] Analytics data:', (orderData as any).analytics);
+          console.log('[OrderDetail] Has analytics:', !!(orderData as any).analytics);
+          console.log('[OrderDetail] Analytics keys:', (orderData as any).analytics ? Object.keys((orderData as any).analytics) : 'none');
           setOrder(orderData);
           setDeliveryTtn(orderData.deliveryTtn || '');
         })
-        .catch(console.error)
+        .catch((error) => {
+          console.error('[OrderDetail] Error loading order:', error);
+        })
         .finally(() => setIsLoading(false));
     }
   }, [id]);
@@ -439,10 +443,17 @@ export function OrderDetail() {
           )}
 
           {/* Analytics Session Data */}
-          {(order as any).analytics && (
-            <div className="bg-card rounded-lg border p-6">
-              <h2 className="text-lg font-semibold mb-4">Аналітика сесії</h2>
-              <div className="space-y-3 text-sm">
+          {(() => {
+            const hasAnalytics = !!(order as any).analytics;
+            console.log('[OrderDetail Render] Has analytics:', hasAnalytics);
+            console.log('[OrderDetail Render] Analytics object:', (order as any).analytics);
+            if (!hasAnalytics) {
+              return null;
+            }
+            return (
+              <div className="bg-card rounded-lg border p-6">
+                <h2 className="text-lg font-semibold mb-4">Аналітика сесії</h2>
+                <div className="space-y-3 text-sm">
                 {/* UTM параметры */}
                 {((order as any).analytics.utmSource || (order as any).analytics.utmMedium || (order as any).analytics.utmCampaign) && (
                   <div className="space-y-1">
