@@ -11,6 +11,17 @@ interface GoogleTagManagerProps {
  */
 export function GoogleTagManager({ gtmId, ga4Id, gadsId }: GoogleTagManagerProps) {
   useEffect(() => {
+    // Подавляем предупреждения о third-party cookies в консоли
+    const originalWarn = console.warn;
+    console.warn = function(...args: any[]) {
+      const message = args[0]?.toString() || '';
+      // Пропускаем предупреждения о third-party cookies
+      if (message.includes('Third-party cookie') || message.includes('third-party cookie')) {
+        return;
+      }
+      originalWarn.apply(console, args);
+    };
+
     // Загружаем Google Tag Manager
     if (gtmId) {
       // GTM script
@@ -52,7 +63,11 @@ export function GoogleTagManager({ gtmId, ga4Id, gadsId }: GoogleTagManagerProps
         gtag('js', new Date());
         gtag('config', '${ga4Id}', {
           page_path: window.location.pathname,
-          send_page_view: false
+          send_page_view: false,
+          cookie_flags: 'SameSite=Lax;Secure',
+          cookie_domain: 'auto',
+          cookie_update: true,
+          cookie_expires: 63072000
         });
       `;
       document.head.appendChild(ga4Config);
@@ -76,7 +91,10 @@ export function GoogleTagManager({ gtmId, ga4Id, gadsId }: GoogleTagManagerProps
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', '${gadsId}');
+        gtag('config', '${gadsId}', {
+          cookie_flags: 'SameSite=Lax;Secure',
+          cookie_domain: 'auto'
+        });
       `;
       document.head.appendChild(gadsConfig);
     }
