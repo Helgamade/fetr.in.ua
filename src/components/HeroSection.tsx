@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowDown, Star, Users, Truck, HeartHandshake, Sparkles } from 'lucide-react';
-import { useAnalytics } from '@/context/AnalyticsContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePublicSettings } from '@/hooks/usePublicSettings';
+import { trackEvent } from '@/lib/analytics';
 
-export const HeroSection: React.FC = () => {
-  const { trackEvent } = useAnalytics();
+export const HeroSection: React.FC = () =>
   const { t } = useTranslation('hero');
   const { data: publicSettings = {} } = usePublicSettings();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -33,7 +32,11 @@ export const HeroSection: React.FC = () => {
   }, []);
 
   const handleCTAClick = () => {
-    trackEvent('cta_click', { location: 'hero', button: 'choose_set' });
+    trackEvent({
+      eventType: 'cta_click',
+      eventCategory: 'engagement',
+      eventLabel: 'hero_choose_set',
+    });
     document.querySelector('#products')?.scrollIntoView({ behavior: 'smooth' });
   };
 
