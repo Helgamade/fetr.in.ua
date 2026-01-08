@@ -296,6 +296,7 @@ class Analytics {
         // Сначала проверяем, передано ли cartItemsCount в eventData
         if (event.eventData && typeof event.eventData === 'object' && 'cartItemsCount' in event.eventData) {
           cartItemsCount = event.eventData.cartItemsCount;
+          console.log('[Analytics trackEvent] cartItemsCount from eventData:', cartItemsCount);
         } else {
           // Если не передано, вычисляем из localStorage
           try {
@@ -305,10 +306,13 @@ class Analytics {
               if (Array.isArray(cartItems)) {
                 // Вычисляем общее количество товаров (сумма quantity всех позиций)
                 cartItemsCount = cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
+                console.log('[Analytics trackEvent] cartItemsCount calculated from localStorage:', cartItemsCount, 'items:', cartItems);
               }
+            } else {
+              console.log('[Analytics trackEvent] No cart data in localStorage');
             }
           } catch (e) {
-            // Игнорируем ошибки парсинга
+            console.error('[Analytics trackEvent] Error parsing cart from localStorage:', e);
           }
         }
       }
