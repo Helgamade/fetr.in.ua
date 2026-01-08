@@ -373,6 +373,9 @@ export function Analytics() {
                             </Badge>
                           )}
                         </div>
+                        <div className="text-xs text-muted-foreground mt-1 font-mono">
+                          Сесія: {session.session_id}
+                        </div>
                       </div>
                       <div className="text-right">
                         {session.cart_items_count > 0 && (

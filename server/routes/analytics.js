@@ -363,7 +363,6 @@ router.get('/realtime', async (req, res, next) => {
         s.pages_viewed,
         s.total_time_spent,
         COALESCE(
-          NULLIF(s.cart_items_count, 0),
           (
             SELECT CAST(JSON_EXTRACT(event_data, '$.cartItemsCount') AS UNSIGNED)
             FROM analytics_events
@@ -373,7 +372,7 @@ router.get('/realtime', async (req, res, next) => {
             ORDER BY created_at DESC, id DESC
             LIMIT 1
           ),
-          s.cart_items_count
+          0
         ) as cart_items_count,
         s.is_online,
         s.last_activity_at,
