@@ -186,13 +186,18 @@ router.post('/event', async (req, res, next) => {
     // Обновляем cart_items_count в analytics_sessions при событиях корзины
     if (eventType === 'add_to_cart' || eventType === 'remove_from_cart' || eventType === 'quick_add_to_cart') {
       const cartItemsCount = req.body.cartItemsCount;
+      console.log('[Analytics Event] Updating cart_items_count:', { eventType, cartItemsCount, sessionId });
       if (cartItemsCount !== undefined && cartItemsCount !== null) {
         await pool.execute(`
           UPDATE analytics_sessions
           SET cart_items_count = ?,
-              last_activity_at = CURRENT_TIMESTAMP
+              last_activity_at = CURRENT_TIMESTAMP,
+              is_online = true
           WHERE session_id = ?
         `, [Number(cartItemsCount), sessionId]);
+        console.log('[Analytics Event] cart_items_count updated successfully');
+      } else {
+        console.log('[Analytics Event] WARNING: cartItemsCount is undefined or null');
       }
     }
 

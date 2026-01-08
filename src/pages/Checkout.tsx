@@ -17,7 +17,7 @@ import { UkrPoshtaDelivery } from "@/components/UkrPoshtaDelivery";
 import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from "@/components/DeliveryLogos";
 import { CODPaymentLogo, WayForPayLogo, FOPPaymentLogo } from "@/components/PaymentLogos";
 import type { NovaPoshtaCity, NovaPoshtaWarehouse, UkrposhtaCity, UkrposhtaBranch } from "@/lib/api";
-import { trackEvent, trackFunnel } from "@/lib/analytics";
+import { trackEvent, trackFunnel, analytics } from "@/lib/analytics";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -36,6 +36,12 @@ const Checkout = () => {
       cartProducts: items,
       cartTotal: getTotal()
     });
+    
+    // Принудительно вызываем trackPageView после небольшой задержки,
+    // чтобы Helmet успел обновить document.title
+    setTimeout(() => {
+      analytics.trackPageView();
+    }, 150);
   }, []);
 
   // Load data from localStorage on mount

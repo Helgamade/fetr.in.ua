@@ -222,9 +222,9 @@ class Analytics {
         }
       }
       
-      // Дополнительная проверка для страниц /user/* и /cart - если заголовок все еще не правильный
+      // Дополнительная проверка для страниц /user/*, /cart и /checkout - если заголовок все еще не правильный
       const currentPath = window.location.pathname;
-      if ((currentPath.startsWith('/user/') || currentPath === '/cart') && (pageTitle === 'Lovable App' || !pageTitle || pageTitle.trim() === '')) {
+      if ((currentPath.startsWith('/user/') || currentPath === '/cart' || currentPath === '/checkout') && (pageTitle === 'Lovable App' || !pageTitle || pageTitle.trim() === '')) {
         const specificTitle = this.getPageTitleByType(pageType);
         if (specificTitle && specificTitle !== 'Lovable App') {
           pageTitle = specificTitle;
