@@ -11,15 +11,31 @@ interface GoogleTagManagerProps {
  */
 export function GoogleTagManager({ gtmId, ga4Id, gadsId }: GoogleTagManagerProps) {
   useEffect(() => {
-    // Подавляем предупреждения о third-party cookies в консоли
+    // Подавляем предупреждения о third-party cookies в консоли (дополнительная защита)
     const originalWarn = console.warn;
+    const originalError = console.error;
+    
     console.warn = function(...args: any[]) {
       const message = args[0]?.toString() || '';
-      // Пропускаем предупреждения о third-party cookies
-      if (message.includes('Third-party cookie') || message.includes('third-party cookie')) {
+      // Пропускаем все варианты предупреждений о third-party cookies
+      if (message.includes('Third-party cookie') || 
+          message.includes('third-party cookie') ||
+          message.includes('cookie is blocked') ||
+          message.includes('cookie.*blocked') ||
+          message.includes('Third-party cookie is blocked')) {
         return;
       }
       originalWarn.apply(console, args);
+    };
+    
+    console.error = function(...args: any[]) {
+      const message = args[0]?.toString() || '';
+      if (message.includes('Third-party cookie') || 
+          message.includes('third-party cookie') ||
+          message.includes('cookie is blocked')) {
+        return;
+      }
+      originalError.apply(console, args);
     };
 
     // Загружаем Google Tag Manager
