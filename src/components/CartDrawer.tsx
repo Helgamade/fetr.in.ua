@@ -49,26 +49,26 @@ export const CartDrawer: React.FC = () => {
 
   // Отслеживаем открытие/закрытие корзины и принудительно меняем title
   useEffect(() => {
+    // Пропускаем первую загрузку (когда компонент монтируется с isOpen = false)
+    if (!isOpen && !wasOpenRef.current) {
+      return; // Не делаем ничего при первой загрузке
+    }
+
     if (isOpen) {
       wasOpenRef.current = true; // Отмечаем, что корзина была открыта
-      console.log('🛒 [CartDrawer] Корзина открыта - начинаем изменение title');
       
       // Сохраняем текущий title перед изменением
       previousTitleRef.current = document.title;
-      console.log('🛒 [CartDrawer] Сохранен предыдущий title:', previousTitleRef.current);
       
       // Сохраняем текущий og:title если есть
       const currentMetaTitle = document.querySelector('meta[property="og:title"]');
       if (currentMetaTitle) {
         previousOgTitleRef.current = currentMetaTitle.getAttribute('content');
-        console.log('🛒 [CartDrawer] Сохранен предыдущий og:title:', previousOgTitleRef.current);
       }
       
       // Принудительно устанавливаем title для корзины
       const newTitle = 'Кошик | FetrInUA';
       document.title = newTitle;
-      console.log('🛒 [CartDrawer] Установлен новый title:', newTitle);
-      console.log('🛒 [CartDrawer] Проверка document.title после установки:', document.title);
       
       // Обновляем og:title тоже
       let metaTitle = document.querySelector('meta[property="og:title"]');
@@ -76,17 +76,15 @@ export const CartDrawer: React.FC = () => {
         metaTitle = document.createElement('meta');
         metaTitle.setAttribute('property', 'og:title');
         document.head.appendChild(metaTitle);
-        console.log('🛒 [CartDrawer] Создан новый meta og:title');
       }
       metaTitle.setAttribute('content', newTitle);
-      console.log('🛒 [CartDrawer] Установлен og:title:', newTitle);
+
+      // ОДИН лог при открытии
+      console.log('🛒 [CartDrawer] Корзина открыта');
 
       // Отправляем событие просмотра страницы "Кошик" в аналитику
       const sessionId = sessionStorage.getItem('analytics_session_id');
-      console.log('🛒 [CartDrawer] SessionId для аналитики:', sessionId ? 'найден' : 'не найден');
-      
       if (sessionId) {
-        console.log('🛒 [CartDrawer] Отправка page-view в аналитику...');
         fetch('/api/analytics/page-view', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -96,41 +94,25 @@ export const CartDrawer: React.FC = () => {
             pageTitle: newTitle,
             pageType: 'cart',
           }),
-        })
-        .then(response => {
-          console.log('🛒 [CartDrawer] Ответ от аналитики:', response.status, response.statusText);
-          return response.json();
-        })
-        .then(data => {
-          console.log('🛒 [CartDrawer] Данные от аналитики:', data);
-        })
-        .catch((error) => {
-          console.error('🛒 [CartDrawer] Ошибка при отправке в аналитику:', error);
+        }).catch(() => {
+          // Игнорируем ошибки
         });
-      } else {
-        console.warn('🛒 [CartDrawer] SessionId не найден, аналитика не отправлена');
       }
     } else {
       // При закрытии корзины возвращаем предыдущий title
-      // НО только если корзина была открыта ранее (не при первой загрузке)
       if (wasOpenRef.current) {
-        console.log('🛒 [CartDrawer] Корзина закрыта - восстанавливаем предыдущий title');
-        console.log('🛒 [CartDrawer] Текущий title:', document.title);
-        console.log('🛒 [CartDrawer] Сохраненный предыдущий title:', previousTitleRef.current);
-        
         if (document.title === 'Кошик | FetrInUA' && previousTitleRef.current && previousTitleRef.current !== 'Кошик | FetrInUA') {
           document.title = previousTitleRef.current;
-          console.log('🛒 [CartDrawer] Восстановлен предыдущий title:', previousTitleRef.current);
           
           // Восстанавливаем og:title если был сохранен
           const metaTitle = document.querySelector('meta[property="og:title"]');
           if (metaTitle && previousOgTitleRef.current) {
             metaTitle.setAttribute('content', previousOgTitleRef.current);
-            console.log('🛒 [CartDrawer] Восстановлен предыдущий og:title:', previousOgTitleRef.current);
           }
-        } else {
-          console.log('🛒 [CartDrawer] Title не был изменен (не был "Кошик | FetrInUA" или нет предыдущего title)');
         }
+        
+        // ОДИН лог при закрытии
+        console.log('🛒 [CartDrawer] Корзина закрыта');
       }
       // Сбрасываем флаг при закрытии
       wasOpenRef.current = false;
