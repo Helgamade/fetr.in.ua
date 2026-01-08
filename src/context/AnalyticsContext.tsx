@@ -28,7 +28,7 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       timestamp: new Date(),
     };
     setEvents(prev => [...prev, newEvent]);
-    console.log('📊 Analytics:', event, data);
+    // console.log('📊 Analytics:', event, data); // ОТКЛЮЧЕНО - используем новую систему
   }, []);
 
   useEffect(() => {
@@ -40,10 +40,10 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => window.removeEventListener('analytics', handleAnalytics as EventListener);
   }, [trackEvent]);
 
-  // Track page views
-  useEffect(() => {
-    trackEvent('page_view', { path: window.location.pathname });
-  }, [trackEvent]);
+  // Track page views - ОТКЛЮЧЕНО, используем новую систему
+  // useEffect(() => {
+  //   trackEvent('page_view', { path: window.location.pathname });
+  // }, [trackEvent]);
 
   const getEventsByType = useCallback((eventType: string) => {
     return events.filter(e => e.event === eventType);
