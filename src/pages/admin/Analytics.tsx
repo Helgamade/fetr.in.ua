@@ -50,11 +50,18 @@ export function Analytics() {
     const result: any[] = [];
 
     for (const session of sorted) {
-      const email = session.user_email?.toLowerCase().trim();
-      const ip = session.ip_address?.split(',')[0]?.trim() || null;
+      // Нормализуем email (убираем пробелы и приводим к нижнему регистру)
+      const email = session.user_email 
+        ? String(session.user_email).toLowerCase().trim() 
+        : null;
       
-      // 1. Если есть email - проверяем по email (один пользователь)
-      if (email) {
+      // Нормализуем IP (берем первый IP из списка, если их несколько)
+      const ip = session.ip_address 
+        ? String(session.ip_address).split(',')[0].trim() 
+        : null;
+      
+      // 1. ПРИОРИТЕТ: Если есть email - проверяем по email (один пользователь = один email)
+      if (email && email.length > 0) {
         const key = `email:${email}`;
         if (seen.has(key)) {
           continue; // Пропускаем дубликат по email
@@ -64,14 +71,14 @@ export function Analytics() {
         continue;
       }
 
-      // 2. Если нет email, но есть IP - проверяем по IP + дополнительные параметры
-      if (ip) {
+      // 2. Если нет email, но есть IP - проверяем по IP + дополнительные параметры устройства
+      if (ip && ip.length > 0) {
         // Создаем ключ из IP + browser + os + device_type + fingerprint + screen_resolution
-        const fingerprint = session.visitor_fingerprint || null;
-        const browser = session.browser || null;
-        const os = session.os || null;
-        const deviceType = session.device_type || null;
-        const screenResolution = session.screen_resolution || null;
+        const fingerprint = session.visitor_fingerprint ? String(session.visitor_fingerprint) : null;
+        const browser = session.browser ? String(session.browser) : null;
+        const os = session.os ? String(session.os) : null;
+        const deviceType = session.device_type ? String(session.device_type) : null;
+        const screenResolution = session.screen_resolution ? String(session.screen_resolution) : null;
         
         // Создаем составной ключ для идентификации
         const compositeKey = `ip:${ip}|browser:${browser}|os:${os}|device:${deviceType}|fingerprint:${fingerprint}|screen:${screenResolution}`;
