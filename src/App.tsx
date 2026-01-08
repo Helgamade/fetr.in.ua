@@ -46,12 +46,12 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <AnalyticsInit />
-                <Routes>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AnalyticsInit />
+              <Routes>
                   {/* Public routes */}
                   <Route path="/" element={<Index />} />
                   <Route path="/checkout" element={<Checkout />} />
@@ -110,10 +110,9 @@ const App = () => (
                   <Route path="/:slug" element={<Page />} />
                   
                   <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </AnalyticsProvider>
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
         </CartProvider>
       </AuthProvider>
     </QueryClientProvider>
