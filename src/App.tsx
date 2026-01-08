@@ -101,13 +101,7 @@ const App = () => (
                     <Route path="pages" element={<Pages />} />
                     <Route path="pages/:id" element={<PageDetail />} />
                     <Route path="email-templates" element={<EmailTemplates />} />
-                    <Route path="analytics" element={<Analytics />}>
-                      <Route index element={<Navigate to="realtime" replace />} />
-                      <Route path="realtime" element={<Analytics />} />
-                      <Route path="overview" element={<Analytics />} />
-                      <Route path="funnel" element={<Analytics />} />
-                      <Route path="settings" element={<Analytics />} />
-                    </Route>
+                    <Route path="analytics/*" element={<Analytics />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="comparison" element={<Comparison />} />
                   </Route>
