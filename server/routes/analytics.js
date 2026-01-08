@@ -184,7 +184,7 @@ router.post('/event', async (req, res, next) => {
     ]);
 
     // Обновляем cart_items_count в analytics_sessions при событиях корзины
-    if (eventType === 'add_to_cart' || eventType === 'remove_from_cart' || eventType === 'quick_add_to_cart') {
+    if (eventType === 'add_to_cart' || eventType === 'remove_from_cart' || eventType === 'quick_add_to_cart' || eventType === 'update_cart_quantity') {
       const cartItemsCount = req.body.cartItemsCount;
       console.log('[Analytics Event] Updating cart_items_count:', { eventType, cartItemsCount, sessionId });
       if (cartItemsCount !== undefined && cartItemsCount !== null) {
@@ -338,9 +338,33 @@ router.get('/realtime', async (req, res, next) => {
     `);
 
     // Получаем онлайн пользователей (ИСКЛЮЧАЕМ тех, кто находится в админке)
+    // ВАЖНО: cart_items_count берем напрямую из analytics_sessions (актуальные данные из БД)
     const [sessions] = await pool.execute(`
       SELECT 
-        s.*,
+        s.session_id,
+        s.user_id,
+        s.visitor_fingerprint,
+        s.utm_source,
+        s.utm_medium,
+        s.utm_campaign,
+        s.utm_term,
+        s.utm_content,
+        s.referrer,
+        s.landing_page,
+        s.device_type,
+        s.browser,
+        s.os,
+        s.screen_resolution,
+        s.language,
+        s.ip_address,
+        s.country,
+        s.city,
+        s.pages_viewed,
+        s.total_time_spent,
+        s.cart_items_count,
+        s.is_online,
+        s.last_activity_at,
+        s.created_at,
         pv.page_url as current_page,
         pv.page_title as current_page_title,
         u.name as user_name,

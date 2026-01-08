@@ -158,12 +158,31 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       removeFromCart(itemId);
       return;
     }
+    
+    const item = items.find(i => i.id === itemId);
+    if (item) {
+      // Вычисляем новое количество товаров после изменения
+      const newCartItemsCount = items.reduce((total, i) => {
+        if (i.id === itemId) {
+          return total + quantity; // Новое количество для изменяемого товара
+        }
+        return total + (i.quantity || 1);
+      }, 0);
+      
+      trackEvent({
+        eventType: 'update_cart_quantity',
+        eventCategory: 'ecommerce',
+        productId: parseInt(item.productId),
+        eventData: { quantity, cartItemsCount: newCartItemsCount },
+      });
+    }
+    
     setItems(prev =>
       prev.map(item =>
         item.id === itemId ? { ...item, quantity } : item
       )
     );
-  }, [removeFromCart]);
+  }, [items, removeFromCart]);
 
   const updateOptions = useCallback((itemId: string, selectedOptions: string[]) => {
     setItems(prev =>
