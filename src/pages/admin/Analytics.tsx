@@ -414,7 +414,7 @@ export function Analytics() {
                   <CardContent>
                     <div className="text-2xl font-bold">{stats.general.total_page_views}</div>
                     <p className="text-xs text-muted-foreground">
-                      {stats.general.avg_pages_per_session?.toFixed(1)} на сесію
+                      {stats.general.avg_pages_per_session ? Number(stats.general.avg_pages_per_session).toFixed(1) : '0.0'} на сесію
                     </p>
                   </CardContent>
                 </Card>
@@ -426,7 +426,7 @@ export function Analytics() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {formatTime(Math.round(stats.general.avg_time_spent || 0))}
+                      {formatTime(Math.round(Number(stats.general.avg_time_spent) || 0))}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       на сесію
@@ -467,7 +467,7 @@ export function Analytics() {
                           <div className="text-right ml-4">
                             <div className="font-medium">{page.views}</div>
                             <div className="text-xs text-muted-foreground">
-                              {formatTime(Math.round(page.avg_time_spent || 0))}
+                              {formatTime(Math.round(Number(page.avg_time_spent) || 0))}
                             </div>
                           </div>
                         </div>
@@ -523,7 +523,7 @@ export function Analytics() {
                           <span className="text-2xl font-bold">{device.sessions}</span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {device.avg_pages?.toFixed(1)} сторінок • {formatTime(Math.round(device.avg_time || 0))}
+                          {device.avg_pages ? Number(device.avg_pages).toFixed(1) : '0.0'} сторінок • {formatTime(Math.round(Number(device.avg_time) || 0))}
                         </div>
                       </div>
                     ))}
@@ -613,8 +613,8 @@ export function Analytics() {
                       'selected_payment', 'clicked_submit', 'completed_order'
                     ][index - 1]] || 0) : total;
                     
-                    const conversionFromPrev = prevCount > 0 ? (count / prevCount * 100).toFixed(1) : '0';
-                    const conversionFromStart = (count / total * 100).toFixed(1);
+                    const conversionFromPrev = prevCount > 0 ? Number((count / prevCount * 100)).toFixed(1) : '0';
+                    const conversionFromStart = Number((count / total * 100)).toFixed(1);
 
                     return (
                       <div key={stage.key} className="relative">
