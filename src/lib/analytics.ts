@@ -179,7 +179,7 @@ class Analytics {
       // Используем requestAnimationFrame + небольшая задержка для страниц с Helmet
       const pagePath = window.location.pathname;
       const isCheckout = pagePath === '/checkout';
-      const delayTime = isCheckout ? 200 : 50; // Для checkout увеличиваем задержку
+      const delayTime = isCheckout ? 300 : 50; // Для checkout увеличиваем задержку до 300ms
       
       await new Promise(resolve => {
         requestAnimationFrame(() => {
@@ -335,11 +335,7 @@ class Analytics {
         cartItemsCount: cartItemsCount !== null ? cartItemsCount : undefined, // Передаем только если есть значение
       };
       
-      console.log('[Analytics trackEvent] Sending event to server:', { 
-        eventType: event.eventType, 
-        cartItemsCount: eventData.cartItemsCount,
-        fullEventData: eventData 
-      });
+      console.log('[Analytics] trackEvent:', event.eventType, '| cartItemsCount:', eventData.cartItemsCount);
 
       await fetch('/api/analytics/event', {
         method: 'POST',
