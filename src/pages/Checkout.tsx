@@ -36,12 +36,6 @@ const Checkout = () => {
       cartProducts: items,
       cartTotal: getTotal()
     });
-    
-    // Принудительно вызываем trackPageView после небольшой задержки,
-    // чтобы Helmet успел обновить document.title
-    setTimeout(() => {
-      analytics.trackPageView();
-    }, 150);
   }, []);
 
   // Load data from localStorage on mount

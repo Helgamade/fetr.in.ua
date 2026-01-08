@@ -177,11 +177,15 @@ class Analytics {
 
       // Ждем немного, чтобы Helmet успел обновить document.title
       // Используем requestAnimationFrame + небольшая задержка для страниц с Helmet
+      const pagePath = window.location.pathname;
+      const isCheckout = pagePath === '/checkout';
+      const delayTime = isCheckout ? 200 : 50; // Для checkout увеличиваем задержку
+      
       await new Promise(resolve => {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             // Дополнительная задержка для страниц /user/* и других, где Helmet может обновляться медленнее
-            setTimeout(resolve, 50);
+            setTimeout(resolve, delayTime);
           });
         });
       });
@@ -330,6 +334,12 @@ class Analytics {
         eventValue: event.eventValue,
         cartItemsCount: cartItemsCount !== null ? cartItemsCount : undefined, // Передаем только если есть значение
       };
+      
+      console.log('[Analytics trackEvent] Sending event to server:', { 
+        eventType: event.eventType, 
+        cartItemsCount: eventData.cartItemsCount,
+        fullEventData: eventData 
+      });
 
       await fetch('/api/analytics/event', {
         method: 'POST',
