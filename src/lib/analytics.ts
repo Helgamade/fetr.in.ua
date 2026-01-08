@@ -164,13 +164,38 @@ class Analytics {
       const pageType = this.getPageType();
       const productId = this.getProductIdFromUrl();
 
+      // Ждем немного, чтобы Helmet успел обновить document.title
+      // Используем requestAnimationFrame для ожидания обновления DOM
+      await new Promise(resolve => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(resolve);
+        });
+      });
+
+      // Получаем заголовок страницы (проверяем после обновления DOM)
+      let pageTitle = document.title;
+      
+      // Если заголовок все еще "Lovable App", пытаемся получить из Helmet
+      if (pageTitle === 'Lovable App' || pageTitle === '') {
+        // Пытаемся получить из meta тега или используем название страницы по типу
+        const metaTitle = document.querySelector('meta[property="og:title"]');
+        if (metaTitle) {
+          pageTitle = metaTitle.getAttribute('content') || pageTitle;
+        }
+        
+        // Если все еще дефолтный заголовок, создаем осмысленный на основе типа страницы
+        if (pageTitle === 'Lovable App' || pageTitle === '') {
+          pageTitle = this.getPageTitleByType(pageType);
+        }
+      }
+
       const response = await fetch('/api/analytics/page-view', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: this.sessionId,
           pageUrl: window.location.pathname,
-          pageTitle: document.title,
+          pageTitle,
           pageType,
           productId,
         }),
@@ -184,7 +209,7 @@ class Analytics {
 
       // Отправляем событие в Google Analytics если подключен
       this.sendToGA4('page_view', {
-        page_title: document.title,
+        page_title: pageTitle,
         page_location: window.location.href,
         page_path: window.location.pathname,
       });
@@ -375,6 +400,23 @@ class Analytics {
   private getProductIdFromUrl(): number | undefined {
     const match = window.location.pathname.match(/\/product\/(\d+)/);
     return match ? parseInt(match[1]) : undefined;
+  }
+
+  /**
+   * Получить заголовок страницы по типу (fallback если Helmet не обновил)
+   */
+  private getPageTitleByType(pageType: string): string {
+    const titles: Record<string, string> = {
+      home: 'FetrInUA — Набори для творчості з фетру | Купити в Україні',
+      product: 'Товар | FetrInUA',
+      category: 'Категорія | FetrInUA',
+      checkout: 'Оформлення замовлення | FetrInUA',
+      cart: 'Кошик | FetrInUA',
+      thank_you: 'Дякуємо за замовлення | FetrInUA',
+      user: 'Особистий кабінет | FetrInUA',
+      admin: 'Адмін-панель | FetrInUA',
+    };
+    return titles[pageType] || 'FetrInUA — Набори для творчості з фетру';
   }
 
   /**
