@@ -27,8 +27,6 @@ export const CartDrawer: React.FC = () => {
   } = useCart();
 
   const handleCheckout = () => {
-    // НЕ восстанавливаем title при переходе на checkout - Helmet сам установит правильный
-    wasOpenRef.current = false; // Сбрасываем флаг, чтобы не срабатывало восстановление title
     closeCart();
     navigate('/checkout');
   };
@@ -43,9 +41,6 @@ export const CartDrawer: React.FC = () => {
   const finalTotal = getFinalTotal();
   const hasFreeDelivery = finalTotal >= FREE_DELIVERY_THRESHOLD;
 
-  // Сохраняем предыдущий title для восстановления при закрытии корзины
-  const previousTitleRef = useRef<string>(document.title);
-  const previousOgTitleRef = useRef<string | null>(null);
   // Отслеживаем, была ли корзина открыта ранее (чтобы не логировать при первой загрузке)
   const wasOpenRef = useRef<boolean>(false);
 
@@ -58,15 +53,6 @@ export const CartDrawer: React.FC = () => {
 
     if (isOpen) {
       wasOpenRef.current = true; // Отмечаем, что корзина была открыта
-      
-      // Сохраняем текущий title перед изменением
-      previousTitleRef.current = document.title;
-      
-      // Сохраняем текущий og:title если есть
-      const currentMetaTitle = document.querySelector('meta[property="og:title"]');
-      if (currentMetaTitle) {
-        previousOgTitleRef.current = currentMetaTitle.getAttribute('content');
-      }
       
       // Принудительно устанавливаем title для корзины
       const newTitle = 'Кошик | FetrInUA';
@@ -101,20 +87,15 @@ export const CartDrawer: React.FC = () => {
         });
       }
     } else {
-      // При закрытии корзины возвращаем предыдущий title
+      // При закрытии корзины НЕ восстанавливаем title вручную
+      // Пусть Helmet текущей страницы сам управляет title
       if (wasOpenRef.current) {
-        if (document.title === 'Кошик | FetrInUA' && previousTitleRef.current && previousTitleRef.current !== 'Кошик | FetrInUA') {
-          document.title = previousTitleRef.current;
-          
-          // Восстанавливаем og:title если был сохранен
-          const metaTitle = document.querySelector('meta[property="og:title"]');
-          if (metaTitle && previousOgTitleRef.current) {
-            metaTitle.setAttribute('content', previousOgTitleRef.current);
-          }
-        }
-        
         // ОДИН лог при закрытии
         console.log('🛒 [CartDrawer] Корзина закрыта');
+        
+        // Принудительно обновляем аналитику для текущей страницы
+        // чтобы она отобразила правильный title после закрытия корзины
+        analytics.trackPageView();
       }
       // Сбрасываем флаг при закрытии
       wasOpenRef.current = false;
