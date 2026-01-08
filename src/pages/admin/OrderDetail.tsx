@@ -83,6 +83,8 @@ export function OrderDetail() {
     if (id) {
       ordersAPI.getOrder(id)
         .then((orderData) => {
+          console.log('[OrderDetail] Order data received:', orderData);
+          console.log('[OrderDetail] Analytics data:', (orderData as any).analytics);
           setOrder(orderData);
           setDeliveryTtn(orderData.deliveryTtn || '');
         })

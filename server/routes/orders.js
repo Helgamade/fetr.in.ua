@@ -333,6 +333,7 @@ router.get('/:id', async (req, res, next) => {
     // Получаем данные сессии аналитики, если она привязана к заказу
     let analyticsSession = null;
     if (order.analytics_session_id) {
+      console.log('[Get Order] Fetching analytics session:', order.analytics_session_id);
       const [sessions] = await pool.execute(`
         SELECT 
           utm_source, utm_medium, utm_campaign, utm_term, utm_content,
@@ -343,9 +344,15 @@ router.get('/:id', async (req, res, next) => {
         WHERE session_id = ?
       `, [order.analytics_session_id]);
       
+      console.log('[Get Order] Analytics sessions found:', sessions.length);
       if (sessions.length > 0) {
         analyticsSession = sessions[0];
+        console.log('[Get Order] Analytics session data:', analyticsSession);
+      } else {
+        console.log('[Get Order] WARNING: Analytics session not found for session_id:', order.analytics_session_id);
       }
+    } else {
+      console.log('[Get Order] No analytics_session_id in order');
     }
 
     // Get items using INT id (order_items.order_id references orders.id INT)
