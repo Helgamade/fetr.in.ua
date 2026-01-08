@@ -165,10 +165,13 @@ class Analytics {
       const productId = this.getProductIdFromUrl();
 
       // Ждем немного, чтобы Helmet успел обновить document.title
-      // Используем requestAnimationFrame для ожидания обновления DOM
+      // Используем requestAnimationFrame + небольшая задержка для страниц с Helmet
       await new Promise(resolve => {
         requestAnimationFrame(() => {
-          requestAnimationFrame(resolve);
+          requestAnimationFrame(() => {
+            // Дополнительная задержка для страниц /user/* и других, где Helmet может обновляться медленнее
+            setTimeout(resolve, 50);
+          });
         });
       });
 
@@ -179,15 +182,15 @@ class Analytics {
       const metaTitle = document.querySelector('meta[property="og:title"]');
       if (metaTitle) {
         const ogTitle = metaTitle.getAttribute('content');
-        if (ogTitle && ogTitle !== 'Lovable App') {
+        if (ogTitle && ogTitle !== 'Lovable App' && ogTitle.trim() !== '') {
           pageTitle = ogTitle;
         }
       }
       
-      // Если заголовок все еще "Lovable App", пытаемся получить из document.title
-      if (pageTitle === 'Lovable App' || pageTitle === '') {
+      // Если заголовок все еще "Lovable App" или пустой, пытаемся получить из document.title
+      if (pageTitle === 'Lovable App' || pageTitle === '' || !pageTitle) {
         // Если document.title обновился, используем его
-        if (document.title && document.title !== 'Lovable App') {
+        if (document.title && document.title !== 'Lovable App' && document.title.trim() !== '') {
           pageTitle = document.title;
         } else {
           // Иначе используем fallback на основе типа страницы
@@ -205,6 +208,15 @@ class Analytics {
           } else {
             pageTitle = fallbackTitle;
           }
+        }
+      }
+      
+      // Дополнительная проверка для страниц /user/* и /cart - если заголовок все еще не правильный
+      const path = window.location.pathname;
+      if ((path.startsWith('/user/') || path === '/cart') && (pageTitle === 'Lovable App' || !pageTitle || pageTitle.trim() === '')) {
+        const specificTitle = this.getPageTitleByType(pageType);
+        if (specificTitle && specificTitle !== 'Lovable App') {
+          pageTitle = specificTitle;
         }
       }
 

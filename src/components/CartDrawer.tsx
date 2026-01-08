@@ -44,19 +44,23 @@ export const CartDrawer: React.FC = () => {
   // Отслеживаем открытие корзины как просмотр страницы "Кошик"
   useEffect(() => {
     if (isOpen) {
-      // Отправляем событие просмотра страницы "Кошик" в аналитику
-      fetch('/api/analytics/page-view', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: sessionStorage.getItem('analytics_session_id'),
-          pageUrl: '/cart',
-          pageTitle: 'Кошик',
-          pageType: 'cart',
-        }),
-      }).catch(() => {
-        // Игнорируем ошибки
-      });
+      // Используем analytics API для правильного отслеживания
+      const sessionId = sessionStorage.getItem('analytics_session_id');
+      if (sessionId) {
+        // Отправляем событие просмотра страницы "Кошик" в аналитику
+        fetch('/api/analytics/page-view', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            pageUrl: '/cart',
+            pageTitle: 'Кошик',
+            pageType: 'cart',
+          }),
+        }).catch((error) => {
+          console.error('Error tracking cart open:', error);
+        });
+      }
     }
   }, [isOpen]);
 
