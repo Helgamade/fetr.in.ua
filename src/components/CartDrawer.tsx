@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useProducts } from '@/hooks/useProducts';
 import { useSettings } from '@/hooks/useSettings';
@@ -41,13 +41,21 @@ export const CartDrawer: React.FC = () => {
   const finalTotal = getFinalTotal();
   const hasFreeDelivery = finalTotal >= FREE_DELIVERY_THRESHOLD;
 
+  // Сохраняем предыдущий title для восстановления при закрытии корзины
+  const previousTitleRef = useRef<string>(document.title);
+  const previousOgTitleRef = useRef<string | null>(null);
+
   // Отслеживаем открытие/закрытие корзины и принудительно меняем title
   useEffect(() => {
-    let previousTitle = document.title;
-
     if (isOpen) {
-      // Сохраняем текущий title
-      previousTitle = document.title;
+      // Сохраняем текущий title перед изменением
+      previousTitleRef.current = document.title;
+      
+      // Сохраняем текущий og:title если есть
+      const currentMetaTitle = document.querySelector('meta[property="og:title"]');
+      if (currentMetaTitle) {
+        previousOgTitleRef.current = currentMetaTitle.getAttribute('content');
+      }
       
       // Принудительно устанавливаем title для корзины
       document.title = 'Кошик | FetrInUA';
@@ -79,16 +87,13 @@ export const CartDrawer: React.FC = () => {
       }
     } else {
       // При закрытии корзины возвращаем предыдущий title
-      // Но только если текущий title - это "Кошик"
-      if (document.title === 'Кошик | FetrInUA' && previousTitle && previousTitle !== 'Кошик | FetrInUA') {
-        document.title = previousTitle;
+      if (document.title === 'Кошик | FetrInUA' && previousTitleRef.current && previousTitleRef.current !== 'Кошик | FetrInUA') {
+        document.title = previousTitleRef.current;
         
-        // Обновляем og:title обратно (если был)
+        // Восстанавливаем og:title если был сохранен
         const metaTitle = document.querySelector('meta[property="og:title"]');
-        if (metaTitle) {
-          // Пытаемся найти оригинальный og:title из Helmet
-          const originalOgTitle = document.querySelector('meta[property="og:title"]')?.getAttribute('data-original') || previousTitle;
-          metaTitle.setAttribute('content', originalOgTitle);
+        if (metaTitle && previousOgTitleRef.current) {
+          metaTitle.setAttribute('content', previousOgTitleRef.current);
         }
       }
     }
