@@ -22,6 +22,7 @@ import { ordersAPI } from '@/lib/api';
 import { useProducts } from '@/hooks/useProducts';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 
 const statusLabels: Record<OrderStatus, string> = {
   created: 'Новий',
@@ -170,8 +171,15 @@ export default function UserOrderDetail() {
       }))
     : generateDefaultHistory(order);
 
+  const orderNumber = order.orderNumber || order.id || id || '';
+
   return (
-    <div className="min-h-screen bg-muted/30">
+    <>
+      <Helmet>
+        <title>Замовлення {orderNumber} | FetrInUA</title>
+        <meta property="og:title" content={`Замовлення ${orderNumber} | FetrInUA`} />
+      </Helmet>
+      <div className="min-h-screen bg-muted/30">
       <div className="container max-w-7xl mx-auto space-y-6 p-4">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -465,6 +473,7 @@ export default function UserOrderDetail() {
         </footer>
       </div>
     </div>
+    </>
   );
 }
 

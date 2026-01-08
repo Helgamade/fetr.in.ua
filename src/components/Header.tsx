@@ -141,7 +141,22 @@ export const Header: React.FC = () => {
                   variant="ghost"
                   size="icon"
                   className="relative rounded-full p-0 overflow-hidden"
-                  onClick={() => setIsUserMenuOpen(true)}
+                  onClick={() => {
+                    setIsUserMenuOpen(true);
+                    // Отслеживаем открытие меню профиля как просмотр страницы "Меню: Мій профіль"
+                    fetch('/api/analytics/page-view', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        sessionId: sessionStorage.getItem('analytics_session_id'),
+                        pageUrl: '/user/profile',
+                        pageTitle: 'Меню: Мій профіль',
+                        pageType: 'user',
+                      }),
+                    }).catch(() => {
+                      // Игнорируем ошибки
+                    });
+                  }}
                 >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={user.avatar} alt={user.name} className="object-cover" />

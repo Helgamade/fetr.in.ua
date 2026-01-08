@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { LogOut, Mail, User, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { Helmet } from 'react-helmet-async';
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -41,8 +42,13 @@ export default function Profile() {
     .slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="container max-w-4xl mx-auto space-y-6 p-4">
+    <>
+      <Helmet>
+        <title>Мій профіль | FetrInUA</title>
+        <meta property="og:title" content="Мій профіль | FetrInUA" />
+      </Helmet>
+      <div className="min-h-screen bg-muted/30">
+        <div className="container max-w-4xl mx-auto space-y-6 p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Мій профіль</h1>
           <Button variant="outline" onClick={() => navigate('/')}>
@@ -136,6 +142,7 @@ export default function Profile() {
         </footer>
       </div>
     </div>
+    </>
   );
 }
 

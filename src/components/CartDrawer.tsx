@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useProducts } from '@/hooks/useProducts';
 import { useSettings } from '@/hooks/useSettings';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { X, Plus, Minus, Trash2, ShoppingBag, Truck, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { analytics } from '@/lib/analytics';
 
 export const CartDrawer: React.FC = () => {
   const navigate = useNavigate();
@@ -39,6 +40,25 @@ export const CartDrawer: React.FC = () => {
 
   const finalTotal = getFinalTotal();
   const hasFreeDelivery = finalTotal >= FREE_DELIVERY_THRESHOLD;
+
+  // Отслеживаем открытие корзины как просмотр страницы "Кошик"
+  useEffect(() => {
+    if (isOpen) {
+      // Отправляем событие просмотра страницы "Кошик" в аналитику
+      fetch('/api/analytics/page-view', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sessionStorage.getItem('analytics_session_id'),
+          pageUrl: '/cart',
+          pageTitle: 'Кошик',
+          pageType: 'cart',
+        }),
+      }).catch(() => {
+        // Игнорируем ошибки
+      });
+    }
+  }, [isOpen]);
 
   return (
     <>

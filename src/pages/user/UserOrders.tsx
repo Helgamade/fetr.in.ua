@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Package, ChevronRight, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatPrice } from '@/lib/utils';
+import { Helmet } from 'react-helmet-async';
 
 const statusMap: Record<string, { label: string; variant: any }> = {
   created: { label: 'Новий', variant: 'default' },
@@ -49,8 +50,13 @@ export default function UserOrders() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="container max-w-7xl mx-auto space-y-6 p-4">
+    <>
+      <Helmet>
+        <title>Мої замовлення | FetrInUA</title>
+        <meta property="og:title" content="Мої замовлення | FetrInUA" />
+      </Helmet>
+      <div className="min-h-screen bg-muted/30">
+        <div className="container max-w-7xl mx-auto space-y-6 p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Мої замовлення</h1>
           <Button variant="outline" onClick={() => navigate('/user/profile')}>
@@ -149,6 +155,7 @@ export default function UserOrders() {
         </footer>
       </div>
     </div>
+    </>
   );
 }
 

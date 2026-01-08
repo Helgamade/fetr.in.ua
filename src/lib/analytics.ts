@@ -172,19 +172,25 @@ class Analytics {
         });
       });
 
-      // Получаем заголовок страницы (проверяем после обновления DOM)
+      // Получаем заголовок страницы (приоритет: og:title из Helmet > document.title > fallback)
       let pageTitle = document.title;
       
-      // Если заголовок все еще "Lovable App", пытаемся получить из Helmet
-      if (pageTitle === 'Lovable App' || pageTitle === '') {
-        // Пытаемся получить из meta тега или используем название страницы по типу
-        const metaTitle = document.querySelector('meta[property="og:title"]');
-        if (metaTitle) {
-          pageTitle = metaTitle.getAttribute('content') || pageTitle;
+      // Сначала пытаемся получить из og:title (более надежно, т.к. Helmet его устанавливает)
+      const metaTitle = document.querySelector('meta[property="og:title"]');
+      if (metaTitle) {
+        const ogTitle = metaTitle.getAttribute('content');
+        if (ogTitle && ogTitle !== 'Lovable App') {
+          pageTitle = ogTitle;
         }
-        
-        // Если все еще дефолтный заголовок, создаем осмысленный на основе типа страницы
-        if (pageTitle === 'Lovable App' || pageTitle === '') {
+      }
+      
+      // Если заголовок все еще "Lovable App", пытаемся получить из document.title
+      if (pageTitle === 'Lovable App' || pageTitle === '') {
+        // Если document.title обновился, используем его
+        if (document.title && document.title !== 'Lovable App') {
+          pageTitle = document.title;
+        } else {
+          // Иначе используем fallback на основе типа страницы
           pageTitle = this.getPageTitleByType(pageType);
         }
       }
@@ -406,6 +412,17 @@ class Analytics {
    * Получить заголовок страницы по типу (fallback если Helmet не обновил)
    */
   private getPageTitleByType(pageType: string): string {
+    const path = window.location.pathname;
+    
+    // Проверяем конкретные пути для более точных заголовков
+    if (path === '/user/profile') return 'Мій профіль | FetrInUA';
+    if (path === '/user/orders') return 'Мої замовлення | FetrInUA';
+    if (path.startsWith('/user/orders/')) {
+      const orderId = path.split('/').pop();
+      return `Замовлення ${orderId} | FetrInUA`;
+    }
+    if (path === '/user/materials') return 'Мої матеріали | FetrInUA';
+    
     const titles: Record<string, string> = {
       home: 'FetrInUA — Набори для творчості з фетру | Купити в Україні',
       product: 'Товар | FetrInUA',
