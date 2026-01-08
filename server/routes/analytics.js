@@ -183,6 +183,19 @@ router.post('/event', async (req, res, next) => {
       toNull(eventValue)
     ]);
 
+    // Обновляем cart_items_count в analytics_sessions при событиях корзины
+    if (eventType === 'add_to_cart' || eventType === 'remove_from_cart' || eventType === 'quick_add_to_cart') {
+      const cartItemsCount = req.body.cartItemsCount;
+      if (cartItemsCount !== undefined && cartItemsCount !== null) {
+        await pool.execute(`
+          UPDATE analytics_sessions
+          SET cart_items_count = ?,
+              last_activity_at = CURRENT_TIMESTAMP
+          WHERE session_id = ?
+        `, [Number(cartItemsCount), sessionId]);
+      }
+    }
+
     res.json({ success: true });
   } catch (error) {
     console.error('Analytics event error:', error);

@@ -290,6 +290,29 @@ class Analytics {
     try {
       const userId = this.getUserId();
 
+      // Получаем текущее количество товаров в корзине для событий корзины
+      let cartItemsCount = null;
+      if (event.eventType === 'add_to_cart' || event.eventType === 'remove_from_cart' || event.eventType === 'quick_add_to_cart') {
+        // Сначала проверяем, передано ли cartItemsCount в eventData
+        if (event.eventData && typeof event.eventData === 'object' && 'cartItemsCount' in event.eventData) {
+          cartItemsCount = event.eventData.cartItemsCount;
+        } else {
+          // Если не передано, вычисляем из localStorage
+          try {
+            const cartData = localStorage.getItem('fetr-cart');
+            if (cartData) {
+              const cartItems = JSON.parse(cartData);
+              if (Array.isArray(cartItems)) {
+                // Вычисляем общее количество товаров (сумма quantity всех позиций)
+                cartItemsCount = cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
+              }
+            }
+          } catch (e) {
+            // Игнорируем ошибки парсинга
+          }
+        }
+      }
+
       // Убеждаемся, что productId передается правильно (может быть undefined)
       const eventData = {
         sessionId: this.sessionId,
@@ -301,6 +324,7 @@ class Analytics {
         productId: event.productId !== undefined ? event.productId : null, // Явно передаем null если undefined
         orderId: event.orderId,
         eventValue: event.eventValue,
+        cartItemsCount: cartItemsCount !== null ? cartItemsCount : undefined, // Передаем только если есть значение
       };
 
       await fetch('/api/analytics/event', {

@@ -36,7 +36,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product.code, []);
-    trackEvent('quick_add_to_cart', { productId: product.id });
+    // quick_add_to_cart уже отслеживается в addToCart через trackEvent из @/lib/analytics
+    // Дополнительный trackEvent через useAnalytics не нужен, так как он использует другой контекст
   };
 
   const handleOpenDetails = () => {

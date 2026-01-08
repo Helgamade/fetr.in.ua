@@ -69,12 +69,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [items]);
 
   const addToCart = useCallback((productId: string, selectedOptions: string[]) => {
-    // Отслеживаем добавление в корзину
+    // Вычисляем новое количество товаров в корзине ДО обновления состояния
+    const sortedOptions = [...selectedOptions].sort();
+    const existing = items.find(item => {
+      if (item.productId !== productId) return false;
+      const itemSortedOptions = [...item.selectedOptions].sort();
+      return JSON.stringify(itemSortedOptions) === JSON.stringify(sortedOptions);
+    });
+    
+    // Вычисляем новое количество товаров
+    let newCartItemsCount = items.reduce((total, item) => total + (item.quantity || 1), 0);
+    if (existing) {
+      // Если товар уже есть, увеличиваем quantity
+      newCartItemsCount += 1;
+    } else {
+      // Если товара нет, добавляем новую позицию
+      newCartItemsCount += 1;
+    }
+    
+    // Отслеживаем добавление в корзину с новым количеством
     trackEvent({
       eventType: 'add_to_cart',
       eventCategory: 'ecommerce',
       productId: parseInt(productId),
-      eventData: { options: selectedOptions },
+      eventData: { options: selectedOptions, cartItemsCount: newCartItemsCount },
     });
     
     trackFunnel({ stage: 'added_to_cart' });
@@ -117,15 +135,24 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.dispatchEvent(new CustomEvent('analytics', {
       detail: { event: 'add_to_cart', productId, selectedOptions }
     }));
-  }, []);
+  }, [items]);
 
   const removeFromCart = useCallback((itemId: string) => {
     const item = items.find(i => i.id === itemId);
     if (item) {
+      // Вычисляем новое количество товаров после удаления
+      const newCartItemsCount = items.reduce((total, i) => {
+        if (i.id === itemId) {
+          return total; // Пропускаем удаляемый товар
+        }
+        return total + (i.quantity || 1);
+      }, 0);
+      
       trackEvent({
         eventType: 'remove_from_cart',
         eventCategory: 'ecommerce',
         productId: parseInt(item.productId),
+        eventData: { cartItemsCount: newCartItemsCount },
       });
     }
     setItems(prev => prev.filter(item => item.id !== itemId));
