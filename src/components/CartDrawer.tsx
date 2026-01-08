@@ -44,10 +44,13 @@ export const CartDrawer: React.FC = () => {
   // Сохраняем предыдущий title для восстановления при закрытии корзины
   const previousTitleRef = useRef<string>(document.title);
   const previousOgTitleRef = useRef<string | null>(null);
+  // Отслеживаем, была ли корзина открыта ранее (чтобы не логировать при первой загрузке)
+  const wasOpenRef = useRef<boolean>(false);
 
   // Отслеживаем открытие/закрытие корзины и принудительно меняем title
   useEffect(() => {
     if (isOpen) {
+      wasOpenRef.current = true; // Отмечаем, что корзина была открыта
       console.log('🛒 [CartDrawer] Корзина открыта - начинаем изменение title');
       
       // Сохраняем текущий title перед изменением
@@ -109,23 +112,28 @@ export const CartDrawer: React.FC = () => {
       }
     } else {
       // При закрытии корзины возвращаем предыдущий title
-      console.log('🛒 [CartDrawer] Корзина закрыта - восстанавливаем предыдущий title');
-      console.log('🛒 [CartDrawer] Текущий title:', document.title);
-      console.log('🛒 [CartDrawer] Сохраненный предыдущий title:', previousTitleRef.current);
-      
-      if (document.title === 'Кошик | FetrInUA' && previousTitleRef.current && previousTitleRef.current !== 'Кошик | FetrInUA') {
-        document.title = previousTitleRef.current;
-        console.log('🛒 [CartDrawer] Восстановлен предыдущий title:', previousTitleRef.current);
+      // НО только если корзина была открыта ранее (не при первой загрузке)
+      if (wasOpenRef.current) {
+        console.log('🛒 [CartDrawer] Корзина закрыта - восстанавливаем предыдущий title');
+        console.log('🛒 [CartDrawer] Текущий title:', document.title);
+        console.log('🛒 [CartDrawer] Сохраненный предыдущий title:', previousTitleRef.current);
         
-        // Восстанавливаем og:title если был сохранен
-        const metaTitle = document.querySelector('meta[property="og:title"]');
-        if (metaTitle && previousOgTitleRef.current) {
-          metaTitle.setAttribute('content', previousOgTitleRef.current);
-          console.log('🛒 [CartDrawer] Восстановлен предыдущий og:title:', previousOgTitleRef.current);
+        if (document.title === 'Кошик | FetrInUA' && previousTitleRef.current && previousTitleRef.current !== 'Кошик | FetrInUA') {
+          document.title = previousTitleRef.current;
+          console.log('🛒 [CartDrawer] Восстановлен предыдущий title:', previousTitleRef.current);
+          
+          // Восстанавливаем og:title если был сохранен
+          const metaTitle = document.querySelector('meta[property="og:title"]');
+          if (metaTitle && previousOgTitleRef.current) {
+            metaTitle.setAttribute('content', previousOgTitleRef.current);
+            console.log('🛒 [CartDrawer] Восстановлен предыдущий og:title:', previousOgTitleRef.current);
+          }
+        } else {
+          console.log('🛒 [CartDrawer] Title не был изменен (не был "Кошик | FetrInUA" или нет предыдущего title)');
         }
-      } else {
-        console.log('🛒 [CartDrawer] Title не был изменен (не был "Кошик | FetrInUA" или нет предыдущего title)');
       }
+      // Сбрасываем флаг при закрытии
+      wasOpenRef.current = false;
     }
   }, [isOpen]);
 
