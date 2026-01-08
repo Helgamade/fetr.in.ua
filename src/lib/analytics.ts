@@ -76,6 +76,11 @@ class Analytics {
   async init() {
     if (this.isInitialized) return;
 
+    // НЕ инициализируем аналитику для админки
+    if (window.location.pathname.startsWith('/admin')) {
+      return;
+    }
+
     try {
       // Получаем UTM метки из URL
       const urlParams = new URLSearchParams(window.location.search);
@@ -155,6 +160,12 @@ class Analytics {
    */
   async trackPageView() {
     try {
+      // НЕ отслеживаем админку - полностью пропускаем
+      const path = window.location.pathname;
+      if (path.startsWith('/admin')) {
+        return;
+      }
+
       // Завершаем предыдущий просмотр страницы
       if (this.currentPageViewId) {
         await this.endPageView();
@@ -212,8 +223,8 @@ class Analytics {
       }
       
       // Дополнительная проверка для страниц /user/* и /cart - если заголовок все еще не правильный
-      const path = window.location.pathname;
-      if ((path.startsWith('/user/') || path === '/cart') && (pageTitle === 'Lovable App' || !pageTitle || pageTitle.trim() === '')) {
+      const currentPath = window.location.pathname;
+      if ((currentPath.startsWith('/user/') || currentPath === '/cart') && (pageTitle === 'Lovable App' || !pageTitle || pageTitle.trim() === '')) {
         const specificTitle = this.getPageTitleByType(pageType);
         if (specificTitle && specificTitle !== 'Lovable App') {
           pageTitle = specificTitle;

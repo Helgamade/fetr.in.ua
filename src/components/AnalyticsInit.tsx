@@ -22,8 +22,13 @@ export function AnalyticsInit() {
     staleTime: 5 * 60 * 1000, // 5 минут
   });
 
-  // Инициализируем аналитику при монтировании
+  // Инициализируем аналитику при монтировании (ТОЛЬКО если НЕ админка)
   useEffect(() => {
+    // НЕ отслеживаем админку - полностью отключаем аналитику для /admin/*
+    if (location.pathname.startsWith('/admin')) {
+      return;
+    }
+
     analytics.init();
 
     // Очищаем при размонтировании
@@ -32,8 +37,13 @@ export function AnalyticsInit() {
     };
   }, []);
 
-  // Отслеживаем изменение страницы
+  // Отслеживаем изменение страницы (ТОЛЬКО если НЕ админка)
   useEffect(() => {
+    // НЕ отслеживаем админку
+    if (location.pathname.startsWith('/admin')) {
+      return;
+    }
+
     analytics.trackPageView();
   }, [location.pathname]);
 

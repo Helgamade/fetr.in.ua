@@ -41,25 +41,55 @@ export const CartDrawer: React.FC = () => {
   const finalTotal = getFinalTotal();
   const hasFreeDelivery = finalTotal >= FREE_DELIVERY_THRESHOLD;
 
-  // Отслеживаем открытие корзины как просмотр страницы "Кошик"
+  // Отслеживаем открытие/закрытие корзины и принудительно меняем title
   useEffect(() => {
+    let previousTitle = document.title;
+
     if (isOpen) {
-      // Используем analytics API для правильного отслеживания
+      // Сохраняем текущий title
+      previousTitle = document.title;
+      
+      // Принудительно устанавливаем title для корзины
+      document.title = 'Кошик | FetrInUA';
+      
+      // Обновляем og:title тоже
+      let metaTitle = document.querySelector('meta[property="og:title"]');
+      if (!metaTitle) {
+        metaTitle = document.createElement('meta');
+        metaTitle.setAttribute('property', 'og:title');
+        document.head.appendChild(metaTitle);
+      }
+      metaTitle.setAttribute('content', 'Кошик | FetrInUA');
+
+      // Отправляем событие просмотра страницы "Кошик" в аналитику
       const sessionId = sessionStorage.getItem('analytics_session_id');
       if (sessionId) {
-        // Отправляем событие просмотра страницы "Кошик" в аналитику
         fetch('/api/analytics/page-view', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sessionId,
             pageUrl: '/cart',
-            pageTitle: 'Кошик',
+            pageTitle: 'Кошик | FetrInUA',
             pageType: 'cart',
           }),
         }).catch((error) => {
           console.error('Error tracking cart open:', error);
         });
+      }
+    } else {
+      // При закрытии корзины возвращаем предыдущий title
+      // Но только если текущий title - это "Кошик"
+      if (document.title === 'Кошик | FetrInUA' && previousTitle && previousTitle !== 'Кошик | FetrInUA') {
+        document.title = previousTitle;
+        
+        // Обновляем og:title обратно (если был)
+        const metaTitle = document.querySelector('meta[property="og:title"]');
+        if (metaTitle) {
+          // Пытаемся найти оригинальный og:title из Helmet
+          const originalOgTitle = document.querySelector('meta[property="og:title"]')?.getAttribute('data-original') || previousTitle;
+          metaTitle.setAttribute('content', originalOgTitle);
+        }
       }
     }
   }, [isOpen]);
