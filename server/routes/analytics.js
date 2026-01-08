@@ -405,8 +405,18 @@ router.get('/realtime', async (req, res, next) => {
 router.get('/stats', async (req, res, next) => {
   try {
     const { from, to } = req.query;
-    const dateFrom = from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const dateTo = to || new Date().toISOString();
+    // Если даты переданы как YYYY-MM-DD, добавляем время для корректного сравнения
+    let dateFrom = from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    let dateTo = to || new Date().toISOString();
+    
+    // Если дата в формате YYYY-MM-DD, добавляем время начала/конца дня
+    if (from && from.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      dateFrom = `${from}T00:00:00.000Z`;
+    }
+    if (to && to.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      dateTo = `${to}T23:59:59.999Z`;
+    }
+    
     console.log('[Analytics Stats] Fetching stats from', dateFrom, 'to', dateTo);
 
     // Общая статистика
@@ -492,8 +502,18 @@ router.get('/stats', async (req, res, next) => {
 router.get('/funnel-stats', async (req, res, next) => {
   try {
     const { from, to } = req.query;
-    const dateFrom = from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const dateTo = to || new Date().toISOString();
+    // Если даты переданы как YYYY-MM-DD, добавляем время для корректного сравнения
+    let dateFrom = from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    let dateTo = to || new Date().toISOString();
+    
+    // Если дата в формате YYYY-MM-DD, добавляем время начала/конца дня
+    if (from && from.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      dateFrom = `${from}T00:00:00.000Z`;
+    }
+    if (to && to.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      dateTo = `${to}T23:59:59.999Z`;
+    }
+    
     console.log('[Analytics Funnel] Fetching funnel stats from', dateFrom, 'to', dateTo);
 
     // Исправляем запрос - убираем GROUP BY drop_stage WITH ROLLUP, так как это вызывает проблемы

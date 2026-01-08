@@ -25,6 +25,8 @@ export function Analytics() {
     from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     to: new Date().toISOString().split('T')[0],
   });
+  
+  console.log('[Analytics] Date range:', dateRange);
 
   // Получаем онлайн пользователей
   const { data: realtimeDataRaw = [], refetch: refetchRealtime } = useQuery({
@@ -380,7 +382,7 @@ export function Analytics() {
                 </p>
               </CardContent>
             </Card>
-          ) : !stats || !stats.general || Object.keys(stats).length === 0 ? (
+          ) : !stats || !stats.general || (stats.general.total_sessions === 0 && stats.general.total_page_views === 0) ? (
             <Card>
               <CardContent className="py-8">
                 <p className="text-center text-muted-foreground">
