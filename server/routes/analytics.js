@@ -98,11 +98,22 @@ router.post('/page-view', async (req, res, next) => {
     // Конвертируем undefined в null для SQL
     const toNull = (val) => (val === undefined ? null : val);
 
+    // Вставляем новый page-view
     const [result] = await pool.execute(`
       INSERT INTO analytics_page_views (
         session_id, page_url, page_title, page_type, product_id
       ) VALUES (?, ?, ?, ?, ?)
     `, [sessionId, pageUrl, toNull(pageTitle), toNull(pageType), toNull(productId)]);
+
+    // ОБЯЗАТЕЛЬНО обновляем сессию, чтобы last_activity_at обновился
+    // и current_page был актуальным в реалтайме
+    await pool.execute(`
+      UPDATE analytics_sessions 
+      SET 
+        last_activity_at = CURRENT_TIMESTAMP,
+        is_online = true
+      WHERE session_id = ?
+    `, [sessionId]);
 
     res.json({ success: true, id: result.insertId });
   } catch (error) {
@@ -321,7 +332,7 @@ router.get('/realtime', async (req, res, next) => {
       LEFT JOIN analytics_page_views pv ON pv.id = (
         SELECT id FROM analytics_page_views 
         WHERE session_id = s.session_id 
-        ORDER BY entered_at DESC LIMIT 1
+        ORDER BY entered_at DESC, id DESC LIMIT 1
       )
       WHERE s.is_online = true
       ORDER BY s.last_activity_at DESC
