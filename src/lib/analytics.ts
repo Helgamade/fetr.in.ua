@@ -179,7 +179,9 @@ class Analytics {
       // Используем requestAnimationFrame + небольшая задержка для страниц с Helmet
       const pagePath = window.location.pathname;
       const isCheckout = pagePath === '/checkout';
-      const delayTime = isCheckout ? 300 : 50; // Для checkout увеличиваем задержку до 300ms
+      const delayTime = isCheckout ? 500 : 50; // Для checkout увеличиваем задержку до 500ms
+      
+      console.log(`[Analytics] trackPageView: path=${pagePath}, delay=${delayTime}ms`);
       
       await new Promise(resolve => {
         requestAnimationFrame(() => {
@@ -234,6 +236,8 @@ class Analytics {
           pageTitle = specificTitle;
         }
       }
+      
+      console.log(`[Analytics] trackPageView: final title="${pageTitle}", path="${currentPath}", type="${pageType}"`);
 
       const response = await fetch('/api/analytics/page-view', {
         method: 'POST',
