@@ -338,7 +338,8 @@ router.get('/realtime', async (req, res, next) => {
     `);
 
     // Получаем онлайн пользователей (ИСКЛЮЧАЕМ тех, кто находится в админке)
-    // ВАЖНО: cart_items_count берем напрямую из analytics_sessions (актуальные данные из БД)
+    // ВАЖНО: cart_items_count берем из analytics_sessions, но если NULL или 0,
+    // восстанавливаем из последней записи в analytics_events
     const [sessions] = await pool.execute(`
       SELECT 
         s.session_id,
@@ -361,7 +362,19 @@ router.get('/realtime', async (req, res, next) => {
         s.city,
         s.pages_viewed,
         s.total_time_spent,
-        s.cart_items_count,
+        COALESCE(
+          NULLIF(s.cart_items_count, 0),
+          (
+            SELECT CAST(JSON_EXTRACT(event_data, '$.cartItemsCount') AS UNSIGNED)
+            FROM analytics_events
+            WHERE session_id = s.session_id
+              AND event_type IN ('add_to_cart', 'remove_from_cart', 'quick_add_to_cart', 'update_cart_quantity')
+              AND JSON_EXTRACT(event_data, '$.cartItemsCount') IS NOT NULL
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+          ),
+          s.cart_items_count
+        ) as cart_items_count,
         s.is_online,
         s.last_activity_at,
         s.created_at,
@@ -500,7 +513,8 @@ router.get('/funnel-stats', async (req, res, next) => {
       WHERE created_at BETWEEN ? AND ?
     `, [dateFrom, dateTo]);
 
-    res.json(stats);
+    // Возвращаем первый элемент массива (результат запроса) или пустой объект
+    res.json(stats[0] || {});
   } catch (error) {
     next(error);
   }

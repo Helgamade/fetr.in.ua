@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { analytics } from '@/lib/analytics';
@@ -35,10 +35,18 @@ export function AnalyticsInit() {
     return () => {
       analytics.destroy();
     };
-  }, []);
+  }, []); // Пустой массив зависимостей - только при монтировании
 
   // Отслеживаем изменение страницы (ТОЛЬКО если НЕ админка)
+  // Используем useRef чтобы избежать двойного вызова при первой загрузке
+  const isFirstRender = React.useRef(true);
   useEffect(() => {
+    // Пропускаем первый рендер (trackPageView уже вызван в init)
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
     // НЕ отслеживаем админку
     if (location.pathname.startsWith('/admin')) {
       return;

@@ -543,7 +543,7 @@ export function Analytics() {
                 </p>
               </CardContent>
             </Card>
-          ) : funnelStats && funnelStats.length > 0 && funnelStats[0] ? (
+          ) : funnelStats && typeof funnelStats === 'object' && !Array.isArray(funnelStats) && Object.keys(funnelStats).length > 0 ? (
             <Card>
               <CardHeader>
                 <CardTitle>Воронка конверсії</CardTitle>
@@ -565,9 +565,11 @@ export function Analytics() {
                     { key: 'completed_order', label: 'Завершили замовлення' },
                     { key: 'paid_order', label: 'Оплатили замовлення' },
                   ].map((stage, index) => {
-                    const count = funnelStats[0][stage.key] || 0;
-                    const total = funnelStats[0].visited_site || 1;
-                    const prevCount = index > 0 ? (funnelStats[0][[
+                    // funnelStats может быть массивом или объектом
+                    const statsData = Array.isArray(funnelStats) ? funnelStats[0] : funnelStats;
+                    const count = statsData?.[stage.key] || 0;
+                    const total = statsData?.visited_site || 1;
+                    const prevCount = index > 0 ? (statsData?.[[
                       'visited_site', 'viewed_product', 'added_to_cart', 'started_checkout',
                       'filled_name', 'filled_phone', 'selected_delivery', 'filled_delivery',
                       'selected_payment', 'clicked_submit', 'completed_order'
