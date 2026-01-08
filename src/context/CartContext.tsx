@@ -130,11 +130,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Открываем корзину сразу без всплывающего сообщения
     setIsOpen(true);
-    
-    // Track analytics
-    window.dispatchEvent(new CustomEvent('analytics', {
-      detail: { event: 'add_to_cart', productId, selectedOptions }
-    }));
   }, [items]);
 
   const removeFromCart = useCallback((itemId: string) => {
