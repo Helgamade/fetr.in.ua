@@ -319,7 +319,7 @@ router.get('/realtime', async (req, res, next) => {
       AND last_activity_at < DATE_SUB(NOW(), INTERVAL 5 MINUTE)
     `);
 
-    // Получаем онлайн пользователей
+    // Получаем онлайн пользователей (ИСКЛЮЧАЕМ тех, кто находится в админке)
     const [sessions] = await pool.execute(`
       SELECT 
         s.*,
@@ -335,6 +335,8 @@ router.get('/realtime', async (req, res, next) => {
         ORDER BY entered_at DESC, id DESC LIMIT 1
       )
       WHERE s.is_online = true
+        AND (pv.page_url IS NULL OR pv.page_url NOT LIKE '/admin%')
+        AND (pv.page_url IS NULL OR pv.page_url != '/admin')
       ORDER BY s.last_activity_at DESC
     `);
 
