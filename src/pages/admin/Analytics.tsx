@@ -224,6 +224,9 @@ export function Analytics() {
                         </div>
                         <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
                           <span>{session.browser} • {session.os}</span>
+                          {session.ip_address && (
+                            <span className="font-mono">IP: {session.ip_address.split(',')[0].trim()}</span>
+                          )}
                           {session.city && <span>{session.city}</span>}
                           {session.utm_source && (
                             <Badge variant="outline" className="text-xs">
