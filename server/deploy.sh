@@ -7,6 +7,10 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$PROJECT_ROOT" || exit 1
 
+# Генерируем timestamp для отслеживания деплоя
+DEPLOY_TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
+DEPLOY_TIMESTAMP_FILE="$PROJECT_ROOT/DEPLOY_TIMESTAMP.txt"
+
 echo "=== DEPLOYMENT STARTED ==="
 echo "Project root: $PROJECT_ROOT"
 
@@ -76,7 +80,13 @@ fi
 
 echo "✓ Deployment verification passed"
 
-# 5. Перезапуск сервера
+# 5. Сохраняем timestamp деплоя
+echo "Saving deployment timestamp..."
+echo "$DEPLOY_TIMESTAMP" > "$DEPLOY_TIMESTAMP_FILE"
+chmod 644 "$DEPLOY_TIMESTAMP_FILE"
+echo "✓ Deployment timestamp saved: $DEPLOY_TIMESTAMP"
+
+# 6. Перезапуск сервера
 echo "Restarting server..."
 # Останавливаем все процессы node, связанные с server/index.js
 pkill -f "node.*server/index.js" || true
@@ -86,17 +96,55 @@ sleep 2
 nohup node --max-old-space-size=512 server/index.js > server/api.log 2>&1 &
 sleep 1
 
+# 7. Проверка, что файлы действительно обновились на сайте
+echo "Verifying files on website..."
+sleep 2
+VERIFY_URL="https://fetr.in.ua/DEPLOY_TIMESTAMP.txt"
+REMOTE_TIMESTAMP=$(curl -s "$VERIFY_URL" 2>/dev/null | head -1 | tr -d '\r\n' || echo "")
+
+if [ -n "$REMOTE_TIMESTAMP" ] && [ "$REMOTE_TIMESTAMP" = "$DEPLOY_TIMESTAMP" ]; then
+  echo "✓ Files verified on website - timestamp matches"
+else
+  echo "⚠ WARNING: Timestamp mismatch or file not accessible"
+  echo "  Expected: $DEPLOY_TIMESTAMP"
+  echo "  Got from website: $REMOTE_TIMESTAMP"
+  echo "  Retrying file copy..."
+  
+  # Повторная попытка копирования
+  cp -f dist/index.html index.html
+  cp -r dist/assets/* assets/ 2>/dev/null || true
+  echo "$DEPLOY_TIMESTAMP" > "$DEPLOY_TIMESTAMP_FILE"
+  chmod 644 "$DEPLOY_TIMESTAMP_FILE"
+  chmod 755 assets
+  chmod 644 assets/* 2>/dev/null || true
+  chmod 644 index.html
+  
+  sleep 2
+  REMOTE_TIMESTAMP_RETRY=$(curl -s "$VERIFY_URL" 2>/dev/null | head -1 | tr -d '\r\n' || echo "")
+  if [ -n "$REMOTE_TIMESTAMP_RETRY" ] && [ "$REMOTE_TIMESTAMP_RETRY" = "$DEPLOY_TIMESTAMP" ]; then
+    echo "✓ Files verified after retry - timestamp matches"
+  else
+    echo "⚠ WARNING: Timestamp still doesn't match after retry"
+    echo "  This might be a caching issue. Please check manually."
+  fi
+fi
+
+echo ""
 echo "=== DEPLOYMENT COMPLETE ==="
+echo ""
+echo "🕐 DEPLOY TIMESTAMP: $DEPLOY_TIMESTAMP"
 echo ""
 echo "✅ All files automatically copied:"
 echo "  - dist/index.html -> index.html"
 echo "  - dist/assets/* -> assets/"
 echo "  - public/.htaccess -> .htaccess (for MIME types)"
+echo "  - DEPLOY_TIMESTAMP.txt -> DEPLOY_TIMESTAMP.txt"
 echo ""
 echo "✅ Permissions set:"
 echo "  - assets/ (755)"
 echo "  - assets/* (644)"
 echo "  - index.html (644)"
+echo "  - DEPLOY_TIMESTAMP.txt (644)"
 echo ""
 echo "✅ Server restarted"
 echo ""
