@@ -34,7 +34,13 @@ export function Analytics() {
       if (!response.ok) throw new Error('Failed to fetch realtime data');
       return response.json();
     },
-    refetchInterval: 10000, // обновляем каждые 10 секунд
+    // Более частое и надежное обновление реалтайм-данных
+    refetchInterval: 3000, // обновляем каждые 3 секунды
+    refetchOnWindowFocus: true,
+    refetchIntervalInBackground: true,
+    refetchOnMount: 'always',
+    staleTime: 0,
+    gcTime: 0,
   });
 
   // Функция дедупликации активных пользователей
