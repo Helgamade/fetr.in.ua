@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// Tabs removed - using routing instead
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,14 +22,31 @@ import {
 } from 'lucide-react';
 
 export function Analytics() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Определяем текущую вкладку из URL
+  const currentTab = location.pathname.split('/').pop() || 'realtime';
+  const isRealtime = currentTab === 'realtime';
+  const isOverview = currentTab === 'overview';
+  const isFunnel = currentTab === 'funnel';
+  const isSettings = currentTab === 'settings';
+  
+  // Редирект на /realtime если открыт /analytics без подпути
+  useEffect(() => {
+    if (location.pathname === '/admin/analytics') {
+      navigate('/admin/analytics/realtime', { replace: true });
+    }
+  }, [location.pathname, navigate]);
+  
   const [dateRange, setDateRange] = useState({
     from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     to: new Date().toISOString().split('T')[0],
   });
   
-  console.log('[Analytics] Date range:', dateRange);
+  console.log('[Analytics] Current tab:', currentTab, 'Date range:', dateRange);
 
-  // Получаем онлайн пользователей
+  // Получаем онлайн пользователей - обновляем ТОЛЬКО на вкладке realtime
   const { data: realtimeDataRaw = [], refetch: refetchRealtime } = useQuery({
     queryKey: ['analytics-realtime'],
     queryFn: async () => {
@@ -36,13 +54,14 @@ export function Analytics() {
       if (!response.ok) throw new Error('Failed to fetch realtime data');
       return response.json();
     },
-    // Более частое и надежное обновление реалтайм-данных
-    refetchInterval: 3000, // обновляем каждые 3 секунды
-    refetchOnWindowFocus: true,
-    refetchIntervalInBackground: true,
+    // Обновляем ТОЛЬКО если находимся на вкладке realtime
+    refetchInterval: isRealtime ? 3000 : false,
+    refetchOnWindowFocus: isRealtime,
+    refetchIntervalInBackground: isRealtime,
     refetchOnMount: 'always',
     staleTime: 0,
     gcTime: 0,
+    enabled: isRealtime, // Запрос выполняется только на вкладке realtime
   });
 
   // Функция дедупликации активных пользователей
@@ -115,7 +134,7 @@ export function Analytics() {
   // Применяем дедупликацию с мемоизацией
   const realtimeData = useMemo(() => deduplicateUsers(realtimeDataRaw), [realtimeDataRaw]);
 
-  // Получаем общую статистику
+  // Получаем общую статистику - обновляем ТОЛЬКО на вкладке overview
   const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: ['analytics-stats', dateRange],
     queryFn: async () => {
@@ -129,9 +148,10 @@ export function Analytics() {
       console.log('[Analytics] Stats data:', data);
       return data;
     },
+    enabled: isOverview, // Запрос выполняется только на вкладке overview
   });
 
-  // Получаем статистику воронки
+  // Получаем статистику воронки - обновляем ТОЛЬКО на вкладке funnel
   const { data: funnelStats, isLoading: funnelLoading, error: funnelError } = useQuery({
     queryKey: ['analytics-funnel', dateRange],
     queryFn: async () => {
@@ -145,9 +165,10 @@ export function Analytics() {
       console.log('[Analytics] Funnel stats data:', data);
       return data;
     },
+    enabled: isFunnel, // Запрос выполняется только на вкладке funnel
   });
 
-  // Получаем настройки аналитики
+  // Получаем настройки аналитики - обновляем ТОЛЬКО на вкладке settings
   const { data: analyticsSettings } = useQuery({
     queryKey: ['analytics-settings'],
     queryFn: async () => {
@@ -155,6 +176,7 @@ export function Analytics() {
       if (!response.ok) throw new Error('Failed to fetch settings');
       return response.json();
     },
+    enabled: isSettings, // Запрос выполняется только на вкладке settings
   });
 
   const handleSaveSettings = async (settings: Record<string, string>) => {
@@ -191,28 +213,56 @@ export function Analytics() {
         </div>
       </div>
 
-      <Tabs defaultValue="realtime" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="realtime">
-            <Activity className="mr-2 h-4 w-4" />
-            В реальному часі
-          </TabsTrigger>
-          <TabsTrigger value="overview">
-            <TrendingUp className="mr-2 h-4 w-4" />
-            Огляд
-          </TabsTrigger>
-          <TabsTrigger value="funnel">
-            <ShoppingCart className="mr-2 h-4 w-4" />
-            Воронка продажів
-          </TabsTrigger>
-          <TabsTrigger value="settings">
-            <Globe className="mr-2 h-4 w-4" />
-            Налаштування
-          </TabsTrigger>
-        </TabsList>
+      <div className="flex gap-2 border-b">
+        <button
+          onClick={() => navigate('/admin/analytics/realtime')}
+          className={`px-4 py-2 flex items-center gap-2 border-b-2 transition-colors ${
+            isRealtime
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Activity className="h-4 w-4" />
+          В реальному часі
+        </button>
+        <button
+          onClick={() => navigate('/admin/analytics/overview')}
+          className={`px-4 py-2 flex items-center gap-2 border-b-2 transition-colors ${
+            isOverview
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <TrendingUp className="h-4 w-4" />
+          Огляд
+        </button>
+        <button
+          onClick={() => navigate('/admin/analytics/funnel')}
+          className={`px-4 py-2 flex items-center gap-2 border-b-2 transition-colors ${
+            isFunnel
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <ShoppingCart className="h-4 w-4" />
+          Воронка продажів
+        </button>
+        <button
+          onClick={() => navigate('/admin/analytics/settings')}
+          className={`px-4 py-2 flex items-center gap-2 border-b-2 transition-colors ${
+            isSettings
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Globe className="h-4 w-4" />
+          Налаштування
+        </button>
+      </div>
 
         {/* Реальний час */}
-        <TabsContent value="realtime" className="space-y-6">
+        {isRealtime && (
+        <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -341,10 +391,12 @@ export function Analytics() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+        )}
 
         {/* Огляд */}
-        <TabsContent value="overview" className="space-y-6">
+        {isOverview && (
+        <div className="space-y-6">
           <div className="flex gap-4 mb-4">
             <div className="flex-1">
               <Label htmlFor="from">Від</Label>
@@ -532,10 +584,12 @@ export function Analytics() {
               </Card>
             </>
           )}
-        </TabsContent>
+        </div>
+        )}
 
         {/* Воронка продажів */}
-        <TabsContent value="funnel" className="space-y-6">
+        {isFunnel && (
+        <div className="space-y-6">
           <div className="flex gap-4 mb-4">
             <div className="flex-1">
               <Label htmlFor="funnel-from">Від</Label>
@@ -660,10 +714,12 @@ export function Analytics() {
               </CardContent>
             </Card>
           )}
-        </TabsContent>
+        </div>
+        )}
 
         {/* Налаштування */}
-        <TabsContent value="settings" className="space-y-6">
+        {isSettings && (
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Налаштування інтеграцій</CardTitle>
@@ -772,8 +828,8 @@ export function Analytics() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+        )}
     </div>
   );
 }

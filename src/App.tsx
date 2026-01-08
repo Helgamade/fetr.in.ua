@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "@/context/CartContext";
 // AnalyticsProvider полностью удален - используем src/lib/analytics.ts
@@ -101,7 +101,13 @@ const App = () => (
                     <Route path="pages" element={<Pages />} />
                     <Route path="pages/:id" element={<PageDetail />} />
                     <Route path="email-templates" element={<EmailTemplates />} />
-                    <Route path="analytics" element={<Analytics />} />
+                    <Route path="analytics" element={<Analytics />}>
+                      <Route index element={<Navigate to="realtime" replace />} />
+                      <Route path="realtime" element={<Analytics />} />
+                      <Route path="overview" element={<Analytics />} />
+                      <Route path="funnel" element={<Analytics />} />
+                      <Route path="settings" element={<Analytics />} />
+                    </Route>
                     <Route path="settings" element={<Settings />} />
                     <Route path="comparison" element={<Comparison />} />
                   </Route>
