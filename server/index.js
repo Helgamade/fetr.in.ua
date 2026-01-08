@@ -115,8 +115,6 @@ app.use('/api/orders', apiRateLimiter, ordersRoutes);
 // Admin routes (требуют роль admin)
 app.use('/api/users', authenticate, authorize('admin'), usersRoutes);
 app.use('/api/gallery', authenticate, authorize('admin'), galleryRoutes);
-app.use('/api/galleries', authenticate, authorize('admin'), galleriesRoutes);
-app.use('/api/comparison', authenticate, authorize('admin'), comparisonRoutes);
 app.use('/api/options', authenticate, authorize('admin'), optionsRoutes);
 app.use('/api/email-templates', authenticate, authorize('admin'), emailTemplatesRoutes);
 
