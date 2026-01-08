@@ -54,18 +54,10 @@ export const CartDrawer: React.FC = () => {
     if (isOpen) {
       wasOpenRef.current = true; // Отмечаем, что корзина была открыта
       
-      // Принудительно устанавливаем title для корзины
+      // Принудительно устанавливаем ТОЛЬКО document.title для корзины
+      // НЕ трогаем og:title, чтобы не мешать Helmet текущей страницы
       const newTitle = 'Кошик | FetrInUA';
       document.title = newTitle;
-      
-      // Обновляем og:title тоже
-      let metaTitle = document.querySelector('meta[property="og:title"]');
-      if (!metaTitle) {
-        metaTitle = document.createElement('meta');
-        metaTitle.setAttribute('property', 'og:title');
-        document.head.appendChild(metaTitle);
-      }
-      metaTitle.setAttribute('content', newTitle);
 
       // ОДИН лог при открытии
       console.log('🛒 [CartDrawer] Корзина открыта');
@@ -87,15 +79,18 @@ export const CartDrawer: React.FC = () => {
         });
       }
     } else {
-      // При закрытии корзины НЕ восстанавливаем title вручную
-      // Пусть Helmet текущей страницы сам управляет title
+      // При закрытии корзины даем React/Helmet обновить title
       if (wasOpenRef.current) {
         // ОДИН лог при закрытии
         console.log('🛒 [CartDrawer] Корзина закрыта');
         
-        // Принудительно обновляем аналитику для текущей страницы
-        // чтобы она отобразила правильный title после закрытия корзины
-        analytics.trackPageView();
+        // Сбрасываем title в пустую строку, чтобы Helmet мог установить свой
+        document.title = '';
+        
+        // Даем время React/Helmet обновить DOM, затем отслеживаем правильный title
+        setTimeout(() => {
+          analytics.trackPageView();
+        }, 200); // 200ms достаточно для Helmet
       }
       // Сбрасываем флаг при закрытии
       wasOpenRef.current = false;
