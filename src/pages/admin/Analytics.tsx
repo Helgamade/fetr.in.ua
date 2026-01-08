@@ -114,7 +114,7 @@ export function Analytics() {
   const realtimeData = useMemo(() => deduplicateUsers(realtimeDataRaw), [realtimeDataRaw]);
 
   // Получаем общую статистику
-  const { data: stats } = useQuery({
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: ['analytics-stats', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -123,12 +123,14 @@ export function Analytics() {
       });
       const response = await fetch(`/api/analytics/stats?${params}`);
       if (!response.ok) throw new Error('Failed to fetch stats');
-      return response.json();
+      const data = await response.json();
+      console.log('[Analytics] Stats data:', data);
+      return data;
     },
   });
 
   // Получаем статистику воронки
-  const { data: funnelStats } = useQuery({
+  const { data: funnelStats, isLoading: funnelLoading, error: funnelError } = useQuery({
     queryKey: ['analytics-funnel', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -137,7 +139,9 @@ export function Analytics() {
       });
       const response = await fetch(`/api/analytics/funnel-stats?${params}`);
       if (!response.ok) throw new Error('Failed to fetch funnel stats');
-      return response.json();
+      const data = await response.json();
+      console.log('[Analytics] Funnel stats data:', data);
+      return data;
     },
   });
 
@@ -360,11 +364,27 @@ export function Analytics() {
             </div>
           </div>
 
-          {!stats ? (
+          {statsLoading ? (
             <Card>
               <CardContent className="py-8">
                 <p className="text-center text-muted-foreground">
                   Завантаження даних...
+                </p>
+              </CardContent>
+            </Card>
+          ) : statsError ? (
+            <Card>
+              <CardContent className="py-8">
+                <p className="text-center text-red-500">
+                  Помилка завантаження: {statsError.message}
+                </p>
+              </CardContent>
+            </Card>
+          ) : !stats || !stats.general || Object.keys(stats).length === 0 ? (
+            <Card>
+              <CardContent className="py-8">
+                <p className="text-center text-muted-foreground">
+                  Немає даних за вибраний період
                 </p>
               </CardContent>
             </Card>
@@ -535,11 +555,27 @@ export function Analytics() {
             </div>
           </div>
 
-          {!funnelStats ? (
+          {funnelLoading ? (
             <Card>
               <CardContent className="py-8">
                 <p className="text-center text-muted-foreground">
                   Завантаження даних...
+                </p>
+              </CardContent>
+            </Card>
+          ) : funnelError ? (
+            <Card>
+              <CardContent className="py-8">
+                <p className="text-center text-red-500">
+                  Помилка завантаження: {funnelError.message}
+                </p>
+              </CardContent>
+            </Card>
+          ) : !funnelStats || (typeof funnelStats === 'object' && Object.keys(funnelStats).length === 0) ? (
+            <Card>
+              <CardContent className="py-8">
+                <p className="text-center text-muted-foreground">
+                  Немає даних за вибраний період
                 </p>
               </CardContent>
             </Card>

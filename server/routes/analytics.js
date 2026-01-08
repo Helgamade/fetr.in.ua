@@ -407,6 +407,7 @@ router.get('/stats', async (req, res, next) => {
     const { from, to } = req.query;
     const dateFrom = from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const dateTo = to || new Date().toISOString();
+    console.log('[Analytics Stats] Fetching stats from', dateFrom, 'to', dateTo);
 
     // Общая статистика
     const [general] = await pool.execute(`
@@ -473,13 +474,15 @@ router.get('/stats', async (req, res, next) => {
       ORDER BY count DESC
     `, [dateFrom, dateTo]);
 
-    res.json({
-      general: general[0],
-      topPages,
-      trafficSources,
-      devices,
-      events
-    });
+    const result = {
+      general: general[0] || {},
+      topPages: topPages || [],
+      trafficSources: trafficSources || [],
+      devices: devices || [],
+      events: events || []
+    };
+    console.log('[Analytics Stats] Returning:', JSON.stringify(result, null, 2));
+    res.json(result);
   } catch (error) {
     next(error);
   }
@@ -491,6 +494,7 @@ router.get('/funnel-stats', async (req, res, next) => {
     const { from, to } = req.query;
     const dateFrom = from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const dateTo = to || new Date().toISOString();
+    console.log('[Analytics Funnel] Fetching funnel stats from', dateFrom, 'to', dateTo);
 
     // Исправляем запрос - убираем GROUP BY drop_stage WITH ROLLUP, так как это вызывает проблемы
     const [stats] = await pool.execute(`
@@ -514,7 +518,9 @@ router.get('/funnel-stats', async (req, res, next) => {
     `, [dateFrom, dateTo]);
 
     // Возвращаем первый элемент массива (результат запроса) или пустой объект
-    res.json(stats[0] || {});
+    const result = stats[0] || {};
+    console.log('[Analytics Funnel] Returning:', JSON.stringify(result, null, 2));
+    res.json(result);
   } catch (error) {
     next(error);
   }
