@@ -5,7 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { usePublicSettings } from '@/hooks/usePublicSettings';
 import { trackEvent } from '@/lib/analytics';
 
-export const HeroSection: React.FC = () =>
+export const HeroSection: React.FC = () => {
   const { t } = useTranslation('hero');
   const { data: publicSettings = {} } = usePublicSettings();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
