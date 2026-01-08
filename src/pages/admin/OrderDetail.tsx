@@ -562,7 +562,8 @@ export function OrderDetail() {
                 )}
               </div>
             </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Sidebar */}
