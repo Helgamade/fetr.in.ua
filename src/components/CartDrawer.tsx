@@ -27,6 +27,8 @@ export const CartDrawer: React.FC = () => {
   } = useCart();
 
   const handleCheckout = () => {
+    // НЕ восстанавливаем title при переходе на checkout - Helmet сам установит правильный
+    wasOpenRef.current = false; // Сбрасываем флаг, чтобы не срабатывало восстановление title
     closeCart();
     navigate('/checkout');
   };

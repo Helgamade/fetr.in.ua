@@ -179,7 +179,7 @@ class Analytics {
       // Используем requestAnimationFrame + небольшая задержка для страниц с Helmet
       const pagePath = window.location.pathname;
       const isCheckout = pagePath === '/checkout';
-      const delayTime = isCheckout ? 500 : 50; // Для checkout увеличиваем задержку до 500ms
+      const delayTime = isCheckout ? 800 : 50; // Для checkout увеличиваем задержку до 800ms (т.к. нужно время после закрытия CartDrawer)
       
       console.log(`[Analytics] trackPageView: path=${pagePath}, delay=${delayTime}ms`);
       
