@@ -602,12 +602,15 @@ export function Analytics() {
                   })}
                 </div>
 
-                {funnelStats[0].avg_cart_value && (
-                  <div className="mt-6 p-4 bg-muted rounded-lg">
-                    <div className="text-sm text-muted-foreground">Середня сума кошика</div>
-                    <div className="text-2xl font-bold">{funnelStats[0].avg_cart_value.toFixed(2)} ₴</div>
-                  </div>
-                )}
+                {(() => {
+                  const statsData = Array.isArray(funnelStats) ? funnelStats[0] : funnelStats;
+                  return statsData?.avg_cart_value && (
+                    <div className="mt-6 p-4 bg-muted rounded-lg">
+                      <div className="text-sm text-muted-foreground">Середня сума кошика</div>
+                      <div className="text-2xl font-bold">{Number(statsData.avg_cart_value).toFixed(2)} ₴</div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           ) : (
