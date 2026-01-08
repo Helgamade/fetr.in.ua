@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { X, ChevronLeft, ChevronRight, ShoppingBag, Check, Users, Eye, Truck, Shield, Gift } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { useAnalytics } from '@/context/AnalyticsContext';
+import { trackEvent } from '@/lib/analytics';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { OptionIcon } from '@/components/OptionIcon';
 import { cn } from '@/lib/utils';
@@ -22,7 +22,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const { addToCart } = useCart();
-  const { trackEvent } = useAnalytics();
 
   useEffect(() => {
     if (isOpen) {

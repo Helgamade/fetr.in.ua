@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { ShoppingBag, Eye, Users, ChevronRight, Sparkles, Flame, Crown } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { useAnalytics } from '@/context/AnalyticsContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
+import { trackEvent } from '@/lib/analytics';
 
 interface ProductCardProps {
   product: Product;
@@ -16,7 +16,6 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }) => {
   const { t } = useTranslation('product');
   const { addToCart } = useCart();
-  const { trackEvent } = useAnalytics();
   const [isHovered, setIsHovered] = useState(false);
 
   const badgeConfig = {
@@ -41,7 +40,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
   };
 
   const handleOpenDetails = () => {
-    trackEvent('open_product_modal', { productId: product.id });
+    trackEvent({
+      eventType: 'product_view',
+      eventCategory: 'product',
+      productId: product.id,
+    });
     onOpenModal(product);
   };
 
