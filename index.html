@@ -23,29 +23,75 @@
         // Сохраняем оригинальные методы консоли
         var originalWarn = console.warn;
         var originalError = console.error;
+        var originalLog = console.log;
+        
+        // Функция для проверки сообщения на предупреждения о cookies
+        function isCookieWarning(message) {
+          if (!message) return false;
+          var msg = message.toLowerCase();
+          return msg.includes('third-party cookie') || 
+                 msg.includes('cookie is blocked') ||
+                 msg.includes('cookie.*blocked') ||
+                 msg.includes('third-party cookie is blocked') ||
+                 msg.includes('cookie.*blocked in chrome') ||
+                 msg.includes('browser configuration') ||
+                 msg.includes('chrome flags') ||
+                 msg.includes('third-party') && msg.includes('cookie') && msg.includes('blocked');
+        }
         
         // Переопределяем console.warn для подавления предупреждений о cookies
         console.warn = function() {
-          var message = arguments[0]?.toString() || '';
-          // Пропускаем все предупреждения о third-party cookies
-          if (message.includes('Third-party cookie') || 
-              message.includes('third-party cookie') ||
-              message.includes('cookie is blocked') ||
-              message.includes('cookie.*blocked')) {
-            return;
+          var message = '';
+          // Проверяем все аргументы на наличие предупреждений о cookies
+          for (var i = 0; i < arguments.length; i++) {
+            var arg = arguments[i];
+            if (typeof arg === 'string') {
+              message += arg + ' ';
+            } else if (arg && typeof arg.toString === 'function') {
+              message += arg.toString() + ' ';
+            }
+          }
+          
+          if (isCookieWarning(message)) {
+            return; // Подавляем предупреждение
           }
           originalWarn.apply(console, arguments);
         };
         
-        // Также переопределяем console.error на случай, если предупреждение идет через error
+        // Также переопределяем console.error
         console.error = function() {
-          var message = arguments[0]?.toString() || '';
-          if (message.includes('Third-party cookie') || 
-              message.includes('third-party cookie') ||
-              message.includes('cookie is blocked')) {
+          var message = '';
+          for (var i = 0; i < arguments.length; i++) {
+            var arg = arguments[i];
+            if (typeof arg === 'string') {
+              message += arg + ' ';
+            } else if (arg && typeof arg.toString === 'function') {
+              message += arg.toString() + ' ';
+            }
+          }
+          
+          if (isCookieWarning(message)) {
             return;
           }
           originalError.apply(console, arguments);
+        };
+        
+        // Также перехватываем console.log
+        console.log = function() {
+          var message = '';
+          for (var i = 0; i < arguments.length; i++) {
+            var arg = arguments[i];
+            if (typeof arg === 'string') {
+              message += arg + ' ';
+            } else if (arg && typeof arg.toString === 'function') {
+              message += arg.toString() + ' ';
+            }
+          }
+          
+          if (isCookieWarning(message)) {
+            return;
+          }
+          originalLog.apply(console, arguments);
         };
       })();
     </script>
