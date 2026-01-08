@@ -330,6 +330,24 @@ router.get('/:id', async (req, res, next) => {
     const order = orders[0];
     const orderIdInt = order.id; // Save INT id before renaming
 
+    // Получаем данные сессии аналитики, если она привязана к заказу
+    let analyticsSession = null;
+    if (order.analytics_session_id) {
+      const [sessions] = await pool.execute(`
+        SELECT 
+          utm_source, utm_medium, utm_campaign, utm_term, utm_content,
+          referrer, landing_page, device_type, browser, os,
+          screen_resolution, language, ip_address, country, city,
+          pages_viewed, total_time_spent, cart_items_count
+        FROM analytics_sessions
+        WHERE session_id = ?
+      `, [order.analytics_session_id]);
+      
+      if (sessions.length > 0) {
+        analyticsSession = sessions[0];
+      }
+    }
+
     // Get items using INT id (order_items.order_id references orders.id INT)
     // JOIN products to get code instead of INT id
     // JOIN product_options to get option code instead of INT id
@@ -390,6 +408,30 @@ router.get('/:id', async (req, res, next) => {
       order.promoCode = order.promo_code;
     }
 
+    // Добавляем данные сессии аналитики к заказу
+    if (analyticsSession) {
+      order.analytics = {
+        utmSource: analyticsSession.utm_source,
+        utmMedium: analyticsSession.utm_medium,
+        utmCampaign: analyticsSession.utm_campaign,
+        utmTerm: analyticsSession.utm_term,
+        utmContent: analyticsSession.utm_content,
+        referrer: analyticsSession.referrer,
+        landingPage: analyticsSession.landing_page,
+        deviceType: analyticsSession.device_type,
+        browser: analyticsSession.browser,
+        os: analyticsSession.os,
+        screenResolution: analyticsSession.screen_resolution,
+        language: analyticsSession.language,
+        ipAddress: analyticsSession.ip_address,
+        country: analyticsSession.country,
+        city: analyticsSession.city,
+        pagesViewed: analyticsSession.pages_viewed,
+        totalTimeSpent: analyticsSession.total_time_spent,
+        cartItemsCount: analyticsSession.cart_items_count,
+      };
+    }
+
     delete order.customer_name;
     delete order.customer_phone;
     delete order.customer_email;
@@ -439,7 +481,7 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', optionalAuthenticate, async (req, res, next) => {
   try {
     const {
-      customer, delivery, payment, items, subtotal, discount, deliveryCost, total, promoCode
+      customer, delivery, payment, items, subtotal, discount, deliveryCost, total, promoCode, analyticsSessionId
     } = req.body;
 
     // Validate required fields (убрали проверку id - генерируется на сервере)
@@ -449,6 +491,9 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
 
     // Получаем user_id если пользователь авторизован
     const userId = req.user ? req.user.id : null;
+    
+    // Получаем analytics_session_id из запроса (передается с фронтенда)
+    const sessionId = analyticsSessionId || null;
 
     const connection = await pool.getConnection();
     await connection.beginTransaction();
@@ -470,13 +515,14 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
       // Insert order БЕЗ order_number (используем AUTO_INCREMENT id)
       const recipient = req.body.recipient || null;
       const [orderResult] = await connection.execute(`
-        INSERT INTO orders (user_id, customer_name, customer_phone, customer_email,
+        INSERT INTO orders (user_id, analytics_session_id, customer_name, customer_phone, customer_email,
           recipient_name, recipient_phone, recipient_first_name, recipient_last_name,
           delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
           payment_method, subtotal, discount, delivery_cost, total, status, comment, promo_code)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         userId, // Привязываем заказ к пользователю если он авторизован
+        sessionId, // Привязываем заказ к сессии аналитики
         customer.name || null, 
         customer.phone || null,
         req.user ? req.user.email : null, // Сохраняем email если пользователь авторизован

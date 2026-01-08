@@ -435,6 +435,121 @@ export function OrderDetail() {
               <div className="text-sm whitespace-pre-wrap">{order.comment}</div>
             </div>
           )}
+
+          {/* Analytics Session Data */}
+          {(order as any).analytics && (
+            <div className="bg-card rounded-lg border p-6">
+              <h2 className="text-lg font-semibold mb-4">Аналітика сесії</h2>
+              <div className="space-y-3 text-sm">
+                {/* UTM параметры */}
+                {((order as any).analytics.utmSource || (order as any).analytics.utmMedium || (order as any).analytics.utmCampaign) && (
+                  <div className="space-y-1">
+                    <div className="font-medium text-muted-foreground">UTM параметри:</div>
+                    <div className="pl-4 space-y-1">
+                      {(order as any).analytics.utmSource && (
+                        <div>Джерело: <span className="font-medium">{(order as any).analytics.utmSource}</span></div>
+                      )}
+                      {(order as any).analytics.utmMedium && (
+                        <div>Канал: <span className="font-medium">{(order as any).analytics.utmMedium}</span></div>
+                      )}
+                      {(order as any).analytics.utmCampaign && (
+                        <div>Кампанія: <span className="font-medium">{(order as any).analytics.utmCampaign}</span></div>
+                      )}
+                      {(order as any).analytics.utmTerm && (
+                        <div>Термін: <span className="font-medium">{(order as any).analytics.utmTerm}</span></div>
+                      )}
+                      {(order as any).analytics.utmContent && (
+                        <div>Контент: <span className="font-medium">{(order as any).analytics.utmContent}</span></div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Referrer и Landing Page */}
+                {((order as any).analytics.referrer || (order as any).analytics.landingPage) && (
+                  <div className="space-y-1">
+                    <div className="font-medium text-muted-foreground">Джерела:</div>
+                    <div className="pl-4 space-y-1">
+                      {(order as any).analytics.referrer && (
+                        <div>Реферер: <span className="font-medium break-all">{(order as any).analytics.referrer}</span></div>
+                      )}
+                      {(order as any).analytics.landingPage && (
+                        <div>Вхідна сторінка: <span className="font-medium break-all">{(order as any).analytics.landingPage}</span></div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Device Info */}
+                {((order as any).analytics.deviceType || (order as any).analytics.browser || (order as any).analytics.os) && (
+                  <div className="space-y-1">
+                    <div className="font-medium text-muted-foreground">Пристрій:</div>
+                    <div className="pl-4 space-y-1">
+                      {(order as any).analytics.deviceType && (
+                        <div>Тип: <span className="font-medium capitalize">{(order as any).analytics.deviceType}</span></div>
+                      )}
+                      {(order as any).analytics.browser && (
+                        <div>Браузер: <span className="font-medium">{(order as any).analytics.browser}</span></div>
+                      )}
+                      {(order as any).analytics.os && (
+                        <div>ОС: <span className="font-medium">{(order as any).analytics.os}</span></div>
+                      )}
+                      {(order as any).analytics.screenResolution && (
+                        <div>Роздільність: <span className="font-medium">{(order as any).analytics.screenResolution}</span></div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Location */}
+                {((order as any).analytics.ipAddress || (order as any).analytics.country || (order as any).analytics.city) && (
+                  <div className="space-y-1">
+                    <div className="font-medium text-muted-foreground">Локація:</div>
+                    <div className="pl-4 space-y-1">
+                      {(order as any).analytics.ipAddress && (
+                        <div>IP: <span className="font-mono font-medium">{(order as any).analytics.ipAddress.split(',')[0].trim()}</span></div>
+                      )}
+                      {(order as any).analytics.country && (
+                        <div>Країна: <span className="font-medium">{(order as any).analytics.country}</span></div>
+                      )}
+                      {(order as any).analytics.city && (
+                        <div>Місто: <span className="font-medium">{(order as any).analytics.city}</span></div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Session Stats */}
+                {(((order as any).analytics.pagesViewed !== null && (order as any).analytics.pagesViewed !== undefined) ||
+                   ((order as any).analytics.totalTimeSpent !== null && (order as any).analytics.totalTimeSpent !== undefined) ||
+                   ((order as any).analytics.cartItemsCount !== null && (order as any).analytics.cartItemsCount !== undefined)) && (
+                  <div className="space-y-1">
+                    <div className="font-medium text-muted-foreground">Статистика сесії:</div>
+                    <div className="pl-4 space-y-1">
+                      {(order as any).analytics.pagesViewed !== null && (order as any).analytics.pagesViewed !== undefined && (
+                        <div>Переглянуто сторінок: <span className="font-medium">{(order as any).analytics.pagesViewed}</span></div>
+                      )}
+                      {(order as any).analytics.totalTimeSpent !== null && (order as any).analytics.totalTimeSpent !== undefined && (
+                        <div>Час на сайті: <span className="font-medium">{Math.floor((order as any).analytics.totalTimeSpent / 60)} хв {((order as any).analytics.totalTimeSpent % 60)} сек</span></div>
+                      )}
+                      {(order as any).analytics.cartItemsCount !== null && (order as any).analytics.cartItemsCount !== undefined && (
+                        <div>Товарів у кошику: <span className="font-medium">{(order as any).analytics.cartItemsCount}</span></div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {(order as any).analytics.language && (
+                  <div className="space-y-1">
+                    <div className="font-medium text-muted-foreground">Мова:</div>
+                    <div className="pl-4">
+                      <span className="font-medium">{(order as any).analytics.language}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}

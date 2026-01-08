@@ -437,6 +437,7 @@ router.get('/funnel-stats', async (req, res, next) => {
     const dateFrom = from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const dateTo = to || new Date().toISOString();
 
+    // Исправляем запрос - убираем GROUP BY drop_stage WITH ROLLUP, так как это вызывает проблемы
     const [stats] = await pool.execute(`
       SELECT 
         COUNT(*) as total_entries,
@@ -452,12 +453,9 @@ router.get('/funnel-stats', async (req, res, next) => {
         COUNT(clicked_submit_at) as clicked_submit,
         COUNT(completed_order_at) as completed_order,
         COUNT(paid_order_at) as paid_order,
-        AVG(cart_total) as avg_cart_value,
-        drop_stage,
-        COUNT(*) as drop_count
+        AVG(cart_total) as avg_cart_value
       FROM analytics_funnel
       WHERE created_at BETWEEN ? AND ?
-      GROUP BY drop_stage WITH ROLLUP
     `, [dateFrom, dateTo]);
 
     res.json(stats);

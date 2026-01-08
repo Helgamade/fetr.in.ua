@@ -290,14 +290,23 @@ class Analytics {
     try {
       const userId = this.getUserId();
 
+      // Убеждаемся, что productId передается правильно (может быть undefined)
+      const eventData = {
+        sessionId: this.sessionId,
+        userId,
+        eventType: event.eventType,
+        eventCategory: event.eventCategory,
+        eventLabel: event.eventLabel,
+        eventData: event.eventData,
+        productId: event.productId !== undefined ? event.productId : null, // Явно передаем null если undefined
+        orderId: event.orderId,
+        eventValue: event.eventValue,
+      };
+
       await fetch('/api/analytics/event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: this.sessionId,
-          userId,
-          ...event,
-        }),
+        body: JSON.stringify(eventData),
       });
 
       // Отправляем событие в Google Analytics если подключен

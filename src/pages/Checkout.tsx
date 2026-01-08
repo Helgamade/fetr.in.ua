@@ -713,9 +713,13 @@ const Checkout = () => {
       const finalTotal = orderTotal + (formData.paymentMethod === "nalojka" ? 20 : 0);
       
       // Номер заказа генерируется на сервере (начиная с 305317)
+      // Получаем session_id аналитики для привязки к заказу
+      const analyticsSessionId = sessionStorage.getItem('analytics_session_id');
+      
       // Prepare order data - convert undefined/empty strings to null for SQL
       const orderData = {
         // id убран - генерируется на сервере
+        analyticsSessionId: analyticsSessionId || null, // Привязываем заказ к сессии аналитики
         customer: {
           name: fullName,
           phone: formData.phone,

@@ -294,6 +294,13 @@ export function Analytics() {
                               ({session.user_email})
                             </span>
                           )}
+                          {/* Иконка корзины с количеством товаров */}
+                          <div className="flex items-center gap-1 ml-2">
+                            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-muted-foreground">
+                              {session.cart_items_count || 0}
+                            </span>
+                          </div>
                         </div>
                         <div className="text-sm text-muted-foreground mt-1">
                           {session.current_page_title || session.current_page}
@@ -353,7 +360,15 @@ export function Analytics() {
             </div>
           </div>
 
-          {stats && (
+          {!stats ? (
+            <Card>
+              <CardContent className="py-8">
+                <p className="text-center text-muted-foreground">
+                  Завантаження даних...
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
             <>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
@@ -520,7 +535,15 @@ export function Analytics() {
             </div>
           </div>
 
-          {funnelStats && funnelStats[0] && (
+          {!funnelStats ? (
+            <Card>
+              <CardContent className="py-8">
+                <p className="text-center text-muted-foreground">
+                  Завантаження даних...
+                </p>
+              </CardContent>
+            </Card>
+          ) : funnelStats && funnelStats.length > 0 && funnelStats[0] ? (
             <Card>
               <CardHeader>
                 <CardTitle>Воронка конверсії</CardTitle>
@@ -583,6 +606,14 @@ export function Analytics() {
                     <div className="text-2xl font-bold">{funnelStats[0].avg_cart_value.toFixed(2)} ₴</div>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="py-8">
+                <p className="text-center text-muted-foreground">
+                  Немає даних за вибраний період
+                </p>
               </CardContent>
             </Card>
           )}
