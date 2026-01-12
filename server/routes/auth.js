@@ -137,18 +137,17 @@ router.post('/logout', authenticate, async (req, res) => {
 
 /**
  * GET /api/auth/me
- * Получение информации о текущем пользователе
+ * Получение информации о текущем пользователе - упрощено, без проверки БД
  */
 router.get('/me', authenticate, async (req, res) => {
   try {
-    const user = req.user;
-
+    // Просто возвращаем данные из токена
     res.json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      avatar: user.avatar_url,
-      role: user.role,
+      id: req.user.id,
+      name: req.user.name,
+      email: req.user.email,
+      avatar: req.user.avatar_url,
+      role: req.user.role,
     });
   } catch (error) {
     console.error('[Get Me] Error:', error);

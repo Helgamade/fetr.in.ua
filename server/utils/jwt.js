@@ -87,6 +87,8 @@ export function generateTokenPair(user) {
     userId: user.id,
     email: user.email,
     role: user.role,
+    name: user.name || user.email,
+    avatar: user.avatar_url || null,
   };
 
   return {
