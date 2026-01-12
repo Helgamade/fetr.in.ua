@@ -341,8 +341,7 @@
 }
 
 .comparison-scroll table tbody tr td.p-4 {
-  padding: 0rem 1rem;
-  height: 50px;
+  padding: 0.4rem 1rem;
   vertical-align: middle;
 }
 
