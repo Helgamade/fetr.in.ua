@@ -335,6 +335,17 @@
   background: hsl(var(--primary));
 }
 
+/* Comparison table row height */
+.comparison-scroll table tbody tr {
+  height: 56px;
+}
+
+.comparison-scroll table tbody tr td.p-4 {
+  padding: 0.5rem 1rem;
+  height: 56px;
+  vertical-align: middle;
+}
+
 /* Custom horizontal scrollbar for order items */
 .order-items-scroll::-webkit-scrollbar {
   height: 6px;
