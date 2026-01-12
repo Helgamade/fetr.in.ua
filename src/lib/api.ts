@@ -81,12 +81,20 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
       // Повторяем запрос с новым токеном
       response = await makeRequest(newToken);
     } else {
-      // Если не удалось обновить токен, очищаем localStorage и выбрасываем ошибку
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      const error = await response.json().catch(() => ({ error: 'Unauthorized' }));
-      throw new Error(error.error || 'Unauthorized');
+      // Если не удалось обновить токен, НЕ очищаем localStorage сразу
+      // Пробуем еще раз через небольшую задержку (может быть временная проблема сети)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const retryToken = await refreshToken();
+      if (retryToken) {
+        response = await makeRequest(retryToken);
+      } else {
+        // Только после второй неудачной попытки очищаем
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        const error = await response.json().catch(() => ({ error: 'Unauthorized' }));
+        throw new Error(error.error || 'Unauthorized');
+      }
     }
   }
 

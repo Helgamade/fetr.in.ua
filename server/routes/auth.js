@@ -2,7 +2,7 @@ import express from 'express';
 import { passport } from '../utils/oauth.js';
 import { generateTokenPair, verifyRefreshToken, generateAccessToken, ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY } from '../utils/jwt.js';
 import { authenticate, optionalAuthenticate } from '../middleware/auth.js';
-import { loginRateLimiter, checkBlockedIp, logLoginAttempt, getClientIp, checkFailedAttempts } from '../middleware/rateLimit.js';
+import { loginRateLimiter, checkBlockedIp, logLoginAttempt, getClientIp, checkFailedAttempts, refreshRateLimiter } from '../middleware/rateLimit.js';
 import pool from '../db.js';
 
 const router = express.Router();
@@ -45,7 +45,7 @@ router.get('/google/callback',
       // Сохраняем сессию в базе
       const ip = getClientIp(req);
       const userAgent = req.headers['user-agent'] || null;
-      const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY * 1000);
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 дней
 
       await pool.execute(
         `INSERT INTO user_sessions (user_id, session_token, refresh_token, ip_address, user_agent, expires_at)
@@ -74,74 +74,78 @@ router.get('/google/callback',
 /**
  * POST /api/auth/refresh
  * Обновление access token используя refresh token
+ * С реализацией Refresh Token Rotation для безопасности
  */
-router.post('/refresh', checkBlockedIp, async (req, res) => {
-  try {
-    const { refreshToken } = req.body;
+router.post('/refresh', 
+  checkBlockedIp,
+  refreshRateLimiter, // Rate limiting для защиты от брутфорса
+  async (req, res) => {
+    try {
+      const { refreshToken } = req.body;
 
-    if (!refreshToken) {
-      return res.status(400).json({ error: 'Refresh token обов\'язковий.' });
+      if (!refreshToken) {
+        return res.status(400).json({ error: 'Refresh token обов\'язковий.' });
+      }
+
+      // Верифицируем refresh token
+      const decoded = verifyRefreshToken(refreshToken);
+      if (!decoded) {
+        return res.status(401).json({ error: 'Недійсний або прострочений refresh token.' });
+      }
+
+      // Проверяем, существует ли сессия и не была ли она уже использована
+      const [sessions] = await pool.execute(
+        'SELECT * FROM user_sessions WHERE refresh_token = ? AND expires_at > NOW()',
+        [refreshToken]
+      );
+
+      if (sessions.length === 0) {
+        return res.status(401).json({ error: 'Сесія не знайдена або прострочена.' });
+      }
+
+      const session = sessions[0];
+
+      // Проверяем пользователя
+      const [users] = await pool.execute(
+        'SELECT id, name, email, role, is_active, avatar_url FROM users WHERE id = ?',
+        [decoded.userId]
+      );
+
+      if (users.length === 0 || !users[0].is_active) {
+        return res.status(401).json({ error: 'Користувач не знайдений або деактивований.' });
+      }
+
+      const user = users[0];
+
+      // Генерируем новую пару токенов (Refresh Token Rotation)
+      const { accessToken: newAccessToken, refreshToken: newRefreshToken } = generateTokenPair(user);
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 дней
+
+      // Обновляем сессию с новыми токенами (старый refresh token инвалидируется)
+      await pool.execute(
+        `UPDATE user_sessions 
+         SET session_token = ?, refresh_token = ?, last_activity = NOW(), expires_at = ?
+         WHERE id = ?`,
+        [newAccessToken, newRefreshToken, expiresAt, session.id]
+      );
+
+      res.json({
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken, // Новый refresh token (старый инвалидирован)
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar_url,
+          role: user.role,
+        },
+      });
+    } catch (error) {
+      console.error('[Refresh Token] Error:', error);
+      res.status(500).json({ error: 'Помилка оновлення токена.' });
     }
-
-    // Верифицируем refresh token
-    const decoded = verifyRefreshToken(refreshToken);
-    if (!decoded) {
-      return res.status(401).json({ error: 'Недійсний або прострочений refresh token.' });
-    }
-
-    // Проверяем, существует ли сессия
-    const [sessions] = await pool.execute(
-      'SELECT * FROM user_sessions WHERE refresh_token = ? AND expires_at > NOW()',
-      [refreshToken]
-    );
-
-    if (sessions.length === 0) {
-      return res.status(401).json({ error: 'Сесія не знайдена або прострочена.' });
-    }
-
-    const session = sessions[0];
-
-    // Проверяем пользователя
-    const [users] = await pool.execute(
-      'SELECT id, name, email, role, is_active, avatar_url FROM users WHERE id = ?',
-      [decoded.userId]
-    );
-
-    if (users.length === 0 || !users[0].is_active) {
-      return res.status(401).json({ error: 'Користувач не знайдений або деактивований.' });
-    }
-
-    const user = users[0];
-
-    // Генерируем новый access token
-    const newAccessToken = generateAccessToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    });
-
-    // Обновляем сессию
-    await pool.execute(
-      'UPDATE user_sessions SET session_token = ?, last_activity = NOW() WHERE id = ?',
-      [newAccessToken, session.id]
-    );
-
-    res.json({
-      accessToken: newAccessToken,
-      refreshToken: refreshToken, // Возвращаем тот же refreshToken (он не меняется)
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar_url,
-        role: user.role,
-      },
-    });
-  } catch (error) {
-    console.error('[Refresh Token] Error:', error);
-    res.status(500).json({ error: 'Помилка оновлення токена.' });
   }
-});
+);
 
 /**
  * POST /api/auth/logout

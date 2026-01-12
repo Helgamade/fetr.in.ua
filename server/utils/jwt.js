@@ -7,7 +7,7 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || crypto.randomBytes(
 
 // Время жизни токенов (в секундах)
 const ACCESS_TOKEN_EXPIRY = 15 * 60; // 15 минут
-const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60; // 7 дней
+const REFRESH_TOKEN_EXPIRY = 30 * 24 * 60 * 60; // 30 дней (увеличено для удобства пользователей)
 
 /**
  * Генерация Access Token (короткий срок жизни)

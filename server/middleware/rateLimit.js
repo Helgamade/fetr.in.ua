@@ -199,6 +199,25 @@ export const adminRateLimiter = rateLimit({
 });
 
 /**
+ * Rate limiter для refresh token endpoint (5 попыток в 15 минут)
+ */
+export const refreshRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 минут
+  max: 5, // максимум 5 попыток обновления за 15 минут
+  message: 'Занадто багато спроб оновлення токена. Спробуйте пізніше.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: false, // Считаем все запросы
+  handler: (req, res) => {
+    const ip = getClientIp(req);
+    console.log(`[Rate Limit] Refresh token limit exceeded for IP: ${ip}`);
+    res.status(429).json({
+      error: 'Занадто багато спроб оновлення токена. Спробуйте пізніше.',
+    });
+  },
+});
+
+/**
  * Очистка старых записей о попытках входа (запускать по крону)
  */
 export async function cleanupOldAttempts() {

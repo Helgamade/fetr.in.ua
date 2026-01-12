@@ -106,7 +106,7 @@ router.post('/login',
       const { accessToken, refreshToken } = generateTokenPair(user);
 
       // Сохраняем сессию
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 дней
       await pool.execute(
         `INSERT INTO user_sessions (user_id, session_token, refresh_token, ip_address, user_agent, expires_at)
          VALUES (?, ?, ?, ?, ?, ?)`,

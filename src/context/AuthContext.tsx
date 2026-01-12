@@ -84,15 +84,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
   }, [refreshAuth, logout]);
 
-  // Автоматическое обновление токена каждые 12 минут (access token живет 15 минут)
+  // Автоматическое обновление токена - только при необходимости
   useEffect(() => {
     if (!user) return;
 
-    const interval = setInterval(() => {
-      refreshAuth();
-    }, 12 * 60 * 1000); // 12 минут (за 3 минуты до истечения access token)
+    // Проверяем время до истечения access token (обновляем за 2 минуты до истечения)
+    const checkAndRefresh = async () => {
+      try {
+        // Проверяем токен через API - если 401, обновим автоматически
+        await authAPI.me();
+      } catch (error) {
+        // Токен истек или невалиден - обновляем
+        await refreshAuth();
+      }
+    };
 
-    return () => clearInterval(interval);
+    // Проверяем каждые 10 минут (access token живет 15 минут)
+    const interval = setInterval(checkAndRefresh, 10 * 60 * 1000);
+
+    // Также проверяем при возврате фокуса на вкладку
+    const handleFocus = () => {
+      checkAndRefresh();
+    };
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [user, refreshAuth]);
 
   return (
