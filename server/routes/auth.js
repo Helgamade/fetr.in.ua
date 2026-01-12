@@ -93,13 +93,48 @@ router.post('/refresh',
         return res.status(401).json({ error: 'Недійсний або прострочений refresh token.' });
       }
 
-      // Проверяем, существует ли сессия и не была ли она уже использована
+      // Проверяем, существует ли сессия
       const [sessions] = await pool.execute(
         'SELECT * FROM user_sessions WHERE refresh_token = ? AND expires_at > NOW()',
         [refreshToken]
       );
 
+      // Если сессия не найдена, возможно refresh token уже был использован (race condition при нескольких вкладках)
+      // Проверяем, есть ли недавно обновленная сессия для этого пользователя (grace period 10 секунд)
       if (sessions.length === 0) {
+        const [recentSessions] = await pool.execute(
+          `SELECT * FROM user_sessions 
+           WHERE user_id = ? 
+           AND expires_at > NOW() 
+           AND last_activity > DATE_SUB(NOW(), INTERVAL 10 SECOND)
+           ORDER BY last_activity DESC 
+           LIMIT 1`,
+          [decoded.userId]
+        );
+
+        if (recentSessions.length > 0) {
+          // Нашли недавно обновленную сессию - возвращаем её токены (для поддержки нескольких вкладок)
+          const recentSession = recentSessions[0];
+          const [users] = await pool.execute(
+            'SELECT id, name, email, role, is_active, avatar_url FROM users WHERE id = ?',
+            [decoded.userId]
+          );
+
+          if (users.length > 0 && users[0].is_active) {
+            return res.json({
+              accessToken: recentSession.session_token,
+              refreshToken: recentSession.refresh_token,
+              user: {
+                id: users[0].id,
+                name: users[0].name,
+                email: users[0].email,
+                avatar: users[0].avatar_url,
+                role: users[0].role,
+              },
+            });
+          }
+        }
+
         return res.status(401).json({ error: 'Сесія не знайдена або прострочена.' });
       }
 

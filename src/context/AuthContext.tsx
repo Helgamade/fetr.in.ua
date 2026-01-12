@@ -22,6 +22,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
+    // Триггерим событие для синхронизации между вкладками
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'accessToken',
+      newValue: accessToken,
+      storageArea: localStorage
+    }));
   }, []);
 
   // Выход из системы
@@ -52,6 +58,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login(response.accessToken, newRefreshToken, response.user);
     } catch (error) {
       console.error('[Auth] Refresh error:', error);
+      // Не выходим сразу - может быть временная ошибка сети
+      // Попробуем еще раз через небольшую задержку
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
+        const retryRefreshToken = localStorage.getItem('refreshToken');
+        if (retryRefreshToken) {
+          const retryResponse = await authAPI.refresh(retryRefreshToken);
+          const newRefreshToken = retryResponse.refreshToken || retryRefreshToken;
+          login(retryResponse.accessToken, newRefreshToken, retryResponse.user);
+          return;
+        }
+      } catch (retryError) {
+        console.error('[Auth] Retry refresh error:', retryError);
+      }
+      // Только после второй неудачной попытки выходим
       await logout();
     }
   }, [login, logout]);
@@ -88,14 +109,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user) return;
 
+    let isRefreshing = false; // Флаг для предотвращения одновременных обновлений
+
     // Проверяем время до истечения access token (обновляем за 2 минуты до истечения)
     const checkAndRefresh = async () => {
+      // Предотвращаем одновременные обновления из разных вкладок
+      if (isRefreshing) return;
+      
       try {
         // Проверяем токен через API - если 401, обновим автоматически
         await authAPI.me();
       } catch (error) {
         // Токен истек или невалиден - обновляем
-        await refreshAuth();
+        if (!isRefreshing) {
+          isRefreshing = true;
+          try {
+            await refreshAuth();
+          } finally {
+            // Сбрасываем флаг через небольшую задержку
+            setTimeout(() => {
+              isRefreshing = false;
+            }, 2000);
+          }
+        }
       }
     };
 
@@ -108,9 +144,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener('focus', handleFocus);
 
+    // Синхронизация между вкладками через storage event
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'accessToken' && e.newValue) {
+        // Токен обновлен в другой вкладке - обновляем локальное состояние
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch (error) {
+            console.error('[Auth] Error parsing user from storage:', error);
+          }
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [user, refreshAuth]);
 
