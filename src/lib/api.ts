@@ -10,18 +10,85 @@ function getAccessToken(): string | null {
   return localStorage.getItem('accessToken');
 }
 
+// Получение refreshToken из localStorage
+function getRefreshToken(): string | null {
+  return localStorage.getItem('refreshToken');
+}
+
+// Обновление токена
+async function refreshToken(): Promise<string | null> {
+  const refreshTokenValue = getRefreshToken();
+  if (!refreshTokenValue) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ refreshToken: refreshTokenValue }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    
+    // Сохраняем новый токен
+    if (data.accessToken) {
+      localStorage.setItem('accessToken', data.accessToken);
+      if (data.refreshToken) {
+        localStorage.setItem('refreshToken', data.refreshToken);
+      }
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+      return data.accessToken;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('[API] Token refresh failed:', error);
+    return null;
+  }
+}
+
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const token = getAccessToken();
+  let token = getAccessToken();
   
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-      ...options?.headers,
-    },
-    credentials: 'include', // Для поддержки cookies
-    ...options,
-  });
+  const makeRequest = async (authToken: string | null): Promise<Response> => {
+    return fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+        ...options?.headers,
+      },
+      credentials: 'include', // Для поддержки cookies
+      ...options,
+    });
+  };
+
+  let response = await makeRequest(token);
+
+  // Если получили 401, пробуем обновить токен и повторить запрос
+  if (response.status === 401 && token) {
+    const newToken = await refreshToken();
+    if (newToken) {
+      // Повторяем запрос с новым токеном
+      response = await makeRequest(newToken);
+    } else {
+      // Если не удалось обновить токен, очищаем localStorage и выбрасываем ошибку
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      const error = await response.json().catch(() => ({ error: 'Unauthorized' }));
+      throw new Error(error.error || 'Unauthorized');
+    }
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Network error' }));

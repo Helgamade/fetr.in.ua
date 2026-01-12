@@ -128,6 +128,7 @@ router.post('/refresh', checkBlockedIp, async (req, res) => {
 
     res.json({
       accessToken: newAccessToken,
+      refreshToken: refreshToken, // Возвращаем тот же refreshToken (он не меняется)
       user: {
         id: user.id,
         name: user.name,

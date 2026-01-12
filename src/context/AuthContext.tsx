@@ -47,7 +47,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const response = await authAPI.refresh(refreshToken);
-      login(response.accessToken, response.refreshToken, response.user);
+      // refreshToken может не возвращаться (остается тот же), используем существующий если не пришел новый
+      const newRefreshToken = response.refreshToken || refreshToken;
+      login(response.accessToken, newRefreshToken, response.user);
     } catch (error) {
       console.error('[Auth] Refresh error:', error);
       await logout();
@@ -82,13 +84,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
   }, [refreshAuth, logout]);
 
-  // Автоматическое обновление токена каждые 10 минут
+  // Автоматическое обновление токена каждые 12 минут (access token живет 15 минут)
   useEffect(() => {
     if (!user) return;
 
     const interval = setInterval(() => {
       refreshAuth();
-    }, 10 * 60 * 1000); // 10 минут
+    }, 12 * 60 * 1000); // 12 минут (за 3 минуты до истечения access token)
 
     return () => clearInterval(interval);
   }, [user, refreshAuth]);

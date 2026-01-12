@@ -31,6 +31,16 @@ export async function authenticate(req, res, next) {
       return res.status(401).json({ error: 'Недействительный или просроченный токен.' });
     }
 
+    // Проверяем, существует ли сессия в базе данных
+    const [sessions] = await pool.execute(
+      'SELECT * FROM user_sessions WHERE session_token = ? AND expires_at > NOW()',
+      [token]
+    );
+
+    if (sessions.length === 0) {
+      return res.status(401).json({ error: 'Сессия не найдена или истекла.' });
+    }
+
     // Проверяем, существует ли пользователь и активен ли он
     const [users] = await pool.execute(
       'SELECT id, name, email, role, is_active, avatar_url FROM users WHERE id = ?',
@@ -46,6 +56,12 @@ export async function authenticate(req, res, next) {
     if (!user.is_active) {
       return res.status(403).json({ error: 'Аккаунт деактивирован.' });
     }
+
+    // Обновляем время последней активности сессии
+    await pool.execute(
+      'UPDATE user_sessions SET last_activity = NOW() WHERE id = ?',
+      [sessions[0].id]
+    );
 
     // Добавляем пользователя в request
     req.user = user;
@@ -104,12 +120,27 @@ export async function optionalAuthenticate(req, res, next) {
       return next();
     }
 
+    // Проверяем, существует ли сессия в базе данных
+    const [sessions] = await pool.execute(
+      'SELECT * FROM user_sessions WHERE session_token = ? AND expires_at > NOW()',
+      [token]
+    );
+
+    if (sessions.length === 0) {
+      return next();
+    }
+
     const [users] = await pool.execute(
       'SELECT id, name, email, role, is_active, avatar_url FROM users WHERE id = ?',
       [decoded.userId]
     );
 
     if (users.length > 0 && users[0].is_active) {
+      // Обновляем время последней активности сессии
+      await pool.execute(
+        'UPDATE user_sessions SET last_activity = NOW() WHERE id = ?',
+        [sessions[0].id]
+      );
       req.user = users[0];
     }
 
