@@ -337,12 +337,12 @@
 
 /* Comparison table row height */
 .comparison-scroll table tbody tr {
-  height: 56px;
+  /* height: 50px; */
 }
 
 .comparison-scroll table tbody tr td.p-4 {
-  padding: 0.5rem 1rem;
-  height: 56px;
+  padding: 0rem 1rem;
+  height: 50px;
   vertical-align: middle;
 }
 
