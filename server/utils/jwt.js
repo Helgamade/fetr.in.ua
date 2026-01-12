@@ -5,9 +5,9 @@ import crypto from 'crypto';
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || crypto.randomBytes(64).toString('hex');
 
-// Время жизни токенов (в секундах)
-const ACCESS_TOKEN_EXPIRY = 15 * 60; // 15 минут
-const REFRESH_TOKEN_EXPIRY = 30 * 24 * 60 * 60; // 30 дней (увеличено для удобства пользователей)
+// Время жизни токенов (в секундах) - максимально упрощено
+const ACCESS_TOKEN_EXPIRY = 365 * 24 * 60 * 60; // 1 год - авторизация не должна пропадать
+const REFRESH_TOKEN_EXPIRY = 365 * 24 * 60 * 60; // 1 год
 
 /**
  * Генерация Access Token (короткий срок жизни)

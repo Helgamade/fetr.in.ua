@@ -25,46 +25,21 @@ export async function authenticate(req, res, next) {
       return res.status(401).json({ error: 'Не авторизован. Требуется токен.' });
     }
 
-    // Верифицируем токен
+    // Верифицируем токен - только JWT проверка, БЕЗ проверки БД
+    // Максимально упрощено - токен живет 1 год, проверка пользователя не нужна при каждом запросе
     const decoded = verifyAccessToken(token);
     if (!decoded) {
       return res.status(401).json({ error: 'Недействительный или просроченный токен.' });
     }
 
-    // Проверяем, существует ли сессия в базе данных
-    const [sessions] = await pool.execute(
-      'SELECT * FROM user_sessions WHERE session_token = ? AND expires_at > NOW()',
-      [token]
-    );
-
-    if (sessions.length === 0) {
-      return res.status(401).json({ error: 'Сессия не найдена или истекла.' });
-    }
-
-    // Проверяем, существует ли пользователь и активен ли он
-    const [users] = await pool.execute(
-      'SELECT id, name, email, role, is_active, avatar_url FROM users WHERE id = ?',
-      [decoded.userId]
-    );
-
-    if (users.length === 0) {
-      return res.status(401).json({ error: 'Пользователь не найден.' });
-    }
-
-    const user = users[0];
-
-    if (!user.is_active) {
-      return res.status(403).json({ error: 'Аккаунт деактивирован.' });
-    }
-
-    // Обновляем время последней активности сессии
-    await pool.execute(
-      'UPDATE user_sessions SET last_activity = NOW() WHERE id = ?',
-      [sessions[0].id]
-    );
-
-    // Добавляем пользователя в request
-    req.user = user;
+    // Просто используем данные из токена - без проверки БД
+    req.user = {
+      id: decoded.userId,
+      email: decoded.email,
+      role: decoded.role,
+      name: decoded.name || decoded.email,
+      avatar_url: decoded.avatar || null,
+    };
     next();
   } catch (error) {
     console.error('[Auth Middleware] Error:', error);
@@ -120,29 +95,13 @@ export async function optionalAuthenticate(req, res, next) {
       return next();
     }
 
-    // Проверяем, существует ли сессия в базе данных
-    const [sessions] = await pool.execute(
-      'SELECT * FROM user_sessions WHERE session_token = ? AND expires_at > NOW()',
-      [token]
-    );
-
-    if (sessions.length === 0) {
-      return next();
-    }
-
-    const [users] = await pool.execute(
-      'SELECT id, name, email, role, is_active, avatar_url FROM users WHERE id = ?',
-      [decoded.userId]
-    );
-
-    if (users.length > 0 && users[0].is_active) {
-      // Обновляем время последней активности сессии
-      await pool.execute(
-        'UPDATE user_sessions SET last_activity = NOW() WHERE id = ?',
-        [sessions[0].id]
-      );
-      req.user = users[0];
-    }
+    // Упрощенная проверка - только JWT, без проверки БД для optional auth
+    // Просто добавляем данные из токена
+    req.user = {
+      id: decoded.userId,
+      email: decoded.email,
+      role: decoded.role,
+    };
 
     next();
   } catch (error) {

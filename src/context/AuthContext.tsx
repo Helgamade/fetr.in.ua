@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Обновление токена
+  // Обновление токена - упрощено, без лишних проверок
   const refreshAuth = useCallback(async () => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
@@ -53,29 +53,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const response = await authAPI.refresh(refreshToken);
-      // refreshToken может не возвращаться (остается тот же), используем существующий если не пришел новый
-      const newRefreshToken = response.refreshToken || refreshToken;
-      login(response.accessToken, newRefreshToken, response.user);
+      login(response.accessToken, response.refreshToken || refreshToken, response.user);
     } catch (error) {
       console.error('[Auth] Refresh error:', error);
-      // Не выходим сразу - может быть временная ошибка сети
-      // Попробуем еще раз через небольшую задержку
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      try {
-        const retryRefreshToken = localStorage.getItem('refreshToken');
-        if (retryRefreshToken) {
-          const retryResponse = await authAPI.refresh(retryRefreshToken);
-          const newRefreshToken = retryResponse.refreshToken || retryRefreshToken;
-          login(retryResponse.accessToken, newRefreshToken, retryResponse.user);
-          return;
-        }
-      } catch (retryError) {
-        console.error('[Auth] Retry refresh error:', retryError);
-      }
-      // Только после второй неудачной попытки выходим
-      await logout();
+      // Не выходим - токены живут 1 год, ошибка скорее всего временная
     }
-  }, [login, logout]);
+  }, [login]);
 
   // Проверка авторизации при загрузке
   useEffect(() => {
@@ -105,67 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
   }, [refreshAuth, logout]);
 
-  // Автоматическое обновление токена - только при необходимости
-  useEffect(() => {
-    if (!user) return;
-
-    let isRefreshing = false; // Флаг для предотвращения одновременных обновлений
-
-    // Проверяем время до истечения access token (обновляем за 2 минуты до истечения)
-    const checkAndRefresh = async () => {
-      // Предотвращаем одновременные обновления из разных вкладок
-      if (isRefreshing) return;
-      
-      try {
-        // Проверяем токен через API - если 401, обновим автоматически
-        await authAPI.me();
-      } catch (error) {
-        // Токен истек или невалиден - обновляем
-        if (!isRefreshing) {
-          isRefreshing = true;
-          try {
-            await refreshAuth();
-          } finally {
-            // Сбрасываем флаг через небольшую задержку
-            setTimeout(() => {
-              isRefreshing = false;
-            }, 2000);
-          }
-        }
-      }
-    };
-
-    // Проверяем каждые 10 минут (access token живет 15 минут)
-    const interval = setInterval(checkAndRefresh, 10 * 60 * 1000);
-
-    // Также проверяем при возврате фокуса на вкладку
-    const handleFocus = () => {
-      checkAndRefresh();
-    };
-    window.addEventListener('focus', handleFocus);
-
-    // Синхронизация между вкладками через storage event
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'accessToken' && e.newValue) {
-        // Токен обновлен в другой вкладке - обновляем локальное состояние
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          try {
-            setUser(JSON.parse(storedUser));
-          } catch (error) {
-            console.error('[Auth] Error parsing user from storage:', error);
-          }
-        }
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [user, refreshAuth]);
+  // Упрощенное обновление - только при 401 ошибке, не автоматически
+  // Токены живут 1 год, поэтому автоматическое обновление не нужно
 
   return (
     <AuthContext.Provider

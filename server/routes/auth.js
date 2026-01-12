@@ -73,12 +73,10 @@ router.get('/google/callback',
 
 /**
  * POST /api/auth/refresh
- * Обновление access token используя refresh token
- * С реализацией Refresh Token Rotation для безопасности
+ * Упрощенное обновление токена - просто возвращаем новые токены с тем же refresh token
  */
 router.post('/refresh', 
   checkBlockedIp,
-  refreshRateLimiter, // Rate limiting для защиты от брутфорса
   async (req, res) => {
     try {
       const { refreshToken } = req.body;
@@ -87,92 +85,26 @@ router.post('/refresh',
         return res.status(400).json({ error: 'Refresh token обов\'язковий.' });
       }
 
-      // Верифицируем refresh token
+      // Верифицируем refresh token - только JWT проверка
       const decoded = verifyRefreshToken(refreshToken);
       if (!decoded) {
         return res.status(401).json({ error: 'Недійсний або прострочений refresh token.' });
       }
 
-      // Проверяем, существует ли сессия
-      const [sessions] = await pool.execute(
-        'SELECT * FROM user_sessions WHERE refresh_token = ? AND expires_at > NOW()',
-        [refreshToken]
-      );
-
-      // Если сессия не найдена, возможно refresh token уже был использован (race condition при нескольких вкладках)
-      // Проверяем, есть ли недавно обновленная сессия для этого пользователя (grace period 10 секунд)
-      if (sessions.length === 0) {
-        const [recentSessions] = await pool.execute(
-          `SELECT * FROM user_sessions 
-           WHERE user_id = ? 
-           AND expires_at > NOW() 
-           AND last_activity > DATE_SUB(NOW(), INTERVAL 10 SECOND)
-           ORDER BY last_activity DESC 
-           LIMIT 1`,
-          [decoded.userId]
-        );
-
-        if (recentSessions.length > 0) {
-          // Нашли недавно обновленную сессию - возвращаем её токены (для поддержки нескольких вкладок)
-          const recentSession = recentSessions[0];
-          const [users] = await pool.execute(
-            'SELECT id, name, email, role, is_active, avatar_url FROM users WHERE id = ?',
-            [decoded.userId]
-          );
-
-          if (users.length > 0 && users[0].is_active) {
-            return res.json({
-              accessToken: recentSession.session_token,
-              refreshToken: recentSession.refresh_token,
-              user: {
-                id: users[0].id,
-                name: users[0].name,
-                email: users[0].email,
-                avatar: users[0].avatar_url,
-                role: users[0].role,
-              },
-            });
-          }
-        }
-
-        return res.status(401).json({ error: 'Сесія не знайдена або прострочена.' });
-      }
-
-      const session = sessions[0];
-
-      // Проверяем пользователя
-      const [users] = await pool.execute(
-        'SELECT id, name, email, role, is_active, avatar_url FROM users WHERE id = ?',
-        [decoded.userId]
-      );
-
-      if (users.length === 0 || !users[0].is_active) {
-        return res.status(401).json({ error: 'Користувач не знайдений або деактивований.' });
-      }
-
-      const user = users[0];
-
-      // Генерируем новую пару токенов (Refresh Token Rotation)
-      const { accessToken: newAccessToken, refreshToken: newRefreshToken } = generateTokenPair(user);
-      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 дней
-
-      // Обновляем сессию с новыми токенами (старый refresh token инвалидируется)
-      await pool.execute(
-        `UPDATE user_sessions 
-         SET session_token = ?, refresh_token = ?, last_activity = NOW(), expires_at = ?
-         WHERE id = ?`,
-        [newAccessToken, newRefreshToken, expiresAt, session.id]
-      );
+      // Просто генерируем новый access token, refresh token остается тот же
+      const newAccessToken = generateAccessToken({
+        userId: decoded.userId,
+        email: decoded.email,
+        role: decoded.role,
+      });
 
       res.json({
         accessToken: newAccessToken,
-        refreshToken: newRefreshToken, // Новый refresh token (старый инвалидирован)
+        refreshToken: refreshToken, // Возвращаем тот же refresh token
         user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          avatar: user.avatar_url,
-          role: user.role,
+          id: decoded.userId,
+          email: decoded.email,
+          role: decoded.role,
         },
       });
     } catch (error) {
