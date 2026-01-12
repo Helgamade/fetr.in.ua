@@ -563,6 +563,20 @@ export function Products() {
                     />
                   </div>
                   <div className="space-y-2 pt-4 border-t">
+                    <Label>Текст додаткових позицій</Label>
+                    <Input
+                      value={editingProduct.featuresExtraText || ''}
+                      onChange={(e) => setEditingProduct({ 
+                        ...editingProduct, 
+                        featuresExtraText: e.target.value 
+                      })}
+                      placeholder="+ ще 2 позицій"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Текст, який відображається після перших 3 позицій у картці товару (наприклад, "+ ще 2 позицій")
+                    </p>
+                  </div>
+                  <div className="space-y-2 pt-4 border-t">
                     <Label>SVG іконка для заголовка "Що входить"</Label>
                     <Textarea
                       value={editingProduct.sectionIconFeatures || ''}

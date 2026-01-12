@@ -129,9 +129,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
               {feature}
             </li>
           ))}
-          {product.features.length > 3 && (
+          {product.featuresExtraText && (
             <li className="text-sm text-primary font-medium">
-              + ще {product.features.length - 3} позицій
+              {product.featuresExtraText}
             </li>
           )}
         </ul>

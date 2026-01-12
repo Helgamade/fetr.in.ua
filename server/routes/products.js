@@ -145,6 +145,7 @@ router.get('/', async (req, res, next) => {
       product.sectionIconCanMake = product.section_icon_can_make || null;
       product.sectionIconSuitableFor = product.section_icon_suitable_for || null;
       product.sectionIconOptions = product.section_icon_options || null;
+      product.featuresExtraText = product.features_extra_text || null;
       // Keep code field for comparison and cart
       product.code = product.code;
       
@@ -314,7 +315,8 @@ router.put('/:id', async (req, res, next) => {
       name, slug, shortDescription, fullDescription,
       basePrice, salePrice, badge, stock, viewCount, purchaseCount, displayOrder,
       features, materials, canMake, suitableFor, options, images,
-      sectionIconFeatures, sectionIconMaterials, sectionIconCanMake, sectionIconSuitableFor, sectionIconOptions
+      sectionIconFeatures, sectionIconMaterials, sectionIconCanMake, sectionIconSuitableFor, sectionIconOptions,
+      featuresExtraText
     } = req.body;
 
     // Update main product fields
@@ -324,13 +326,13 @@ router.put('/:id', async (req, res, next) => {
         base_price = ?, sale_price = ?, badge = ?, stock = ?,
         view_count = ?, purchase_count = ?, display_order = ?,
         section_icon_features = ?, section_icon_materials = ?, section_icon_can_make = ?,
-        section_icon_suitable_for = ?, section_icon_options = ?
+        section_icon_suitable_for = ?, section_icon_options = ?, features_extra_text = ?
       WHERE id = ?
     `, [
       name, slug, shortDescription, fullDescription, basePrice, salePrice, badge, stock,
       viewCount || 0, purchaseCount || 0, displayOrder || 0,
       sectionIconFeatures || null, sectionIconMaterials || null, sectionIconCanMake || null,
-      sectionIconSuitableFor || null, sectionIconOptions || null,
+      sectionIconSuitableFor || null, sectionIconOptions || null, featuresExtraText || null,
       id
     ]);
 

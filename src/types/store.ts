@@ -32,6 +32,7 @@ export interface Product {
   sectionIconCanMake?: string; // SVG код или URL иконки для секции "Що можна зробити"
   sectionIconSuitableFor?: string; // SVG код или URL иконки для секции "Підходить для"
   sectionIconOptions?: string; // SVG код или URL иконки для секции "Додаткові опції"
+  featuresExtraText?: string; // Текст для отображения дополнительных позиций (например, "+ ще 2 позицій")
 }
 
 export interface CartItem {
