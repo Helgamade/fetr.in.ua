@@ -22,7 +22,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [touchEndX, setTouchEndX] = useState<number | null>(null);
+  const [touchEndY, setTouchEndY] = useState<number | null>(null);
+  const [isSwiping, setIsSwiping] = useState(false);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const lightboxContainerRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
@@ -101,50 +104,99 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
   // Обработка свайпов для модального окна
   const onTouchStart = (e: React.TouchEvent) => {
+    const touch = e.targetTouches[0];
+    setTouchStartX(touch.clientX);
+    setTouchStartY(touch.clientY);
     setTouchEndX(null);
-    setTouchStartX(e.targetTouches[0].clientX);
+    setTouchEndY(null);
+    setIsSwiping(false);
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEndX(e.targetTouches[0].clientX);
+    if (!touchStartX || !touchStartY) return;
+    
+    const touch = e.targetTouches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartX);
+    const deltaY = Math.abs(touch.clientY - touchStartY);
+    
+    // Если горизонтальное движение больше вертикального, это свайп
+    if (deltaX > deltaY && deltaX > 10) {
+      setIsSwiping(true);
+      e.preventDefault(); // Предотвращаем прокрутку при горизонтальном свайпе
+    }
+    
+    setTouchEndX(touch.clientX);
+    setTouchEndY(touch.clientY);
   };
 
-  const onTouchEnd = () => {
-    if (!touchStartX || !touchEndX || !product) return;
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartX || !touchEndX || !touchStartY || !touchEndY || !product) {
+      setTouchStartX(null);
+      setTouchStartY(null);
+      setTouchEndX(null);
+      setTouchEndY(null);
+      setIsSwiping(false);
+      return;
+    }
     
-    const distance = touchStartX - touchEndX;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
+    const distanceX = touchStartX - touchEndX;
+    const distanceY = Math.abs(touchStartY - touchEndY);
+    
+    // Проверяем, что это горизонтальный свайп
+    if (Math.abs(distanceX) > distanceY && Math.abs(distanceX) > minSwipeDistance) {
+      const isLeftSwipe = distanceX > 0;
+      const isRightSwipe = distanceX < 0;
 
-    if (isLeftSwipe && product.images.length > 1) {
-      nextImage();
+      if (isLeftSwipe && product.images.length > 1) {
+        e.preventDefault();
+        nextImage();
+      } else if (isRightSwipe && product.images.length > 1) {
+        e.preventDefault();
+        prevImage();
+      }
     }
-    if (isRightSwipe && product.images.length > 1) {
-      prevImage();
-    }
+    
+    setTouchStartX(null);
+    setTouchStartY(null);
+    setTouchEndX(null);
+    setTouchEndY(null);
+    setIsSwiping(false);
   };
 
   // Обработка свайпов для полноэкранной галереи
+  const [lightboxTouchStart, setLightboxTouchStart] = useState<{ x: number; y: number } | null>(null);
+
   const onLightboxTouchStart = (e: React.TouchEvent) => {
     const touch = e.targetTouches[0];
-    if (lightboxContainerRef.current) {
-      lightboxContainerRef.current.dataset.touchStartX = touch.clientX.toString();
-      lightboxContainerRef.current.dataset.touchStartY = touch.clientY.toString();
+    setLightboxTouchStart({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const onLightboxTouchMove = (e: React.TouchEvent) => {
+    if (!lightboxTouchStart) return;
+    
+    const touch = e.targetTouches[0];
+    const deltaX = Math.abs(touch.clientX - lightboxTouchStart.x);
+    const deltaY = Math.abs(touch.clientY - lightboxTouchStart.y);
+    
+    // Предотвращаем прокрутку при горизонтальном свайпе
+    if (deltaX > deltaY && deltaX > 10) {
+      e.preventDefault();
     }
   };
 
   const onLightboxTouchEnd = (e: React.TouchEvent) => {
-    if (!lightboxContainerRef.current || !product) return;
-    
-    const touchStartX = parseFloat(lightboxContainerRef.current.dataset.touchStartX || '0');
-    const touchStartY = parseFloat(lightboxContainerRef.current.dataset.touchStartY || '0');
+    if (!lightboxTouchStart || !product) {
+      setLightboxTouchStart(null);
+      return;
+    }
     
     const touch = e.changedTouches[0];
-    const distanceX = touch.clientX - touchStartX;
-    const distanceY = touch.clientY - touchStartY;
+    const distanceX = touch.clientX - lightboxTouchStart.x;
+    const distanceY = Math.abs(touch.clientY - lightboxTouchStart.y);
     
     // Проверяем, что свайп горизонтальный (больше горизонтального движения)
-    if (Math.abs(distanceX) > Math.abs(distanceY) && Math.abs(distanceX) > minSwipeDistance) {
+    if (Math.abs(distanceX) > distanceY && Math.abs(distanceX) > minSwipeDistance) {
+      e.preventDefault();
       if (distanceX > 0) {
         // Свайп вправо - предыдущее изображение
         prevImage();
@@ -153,6 +205,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
         nextImage();
       }
     }
+    
+    setLightboxTouchStart(null);
   };
 
   // Обработка клавиатуры для полноэкранной галереи
@@ -206,7 +260,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                 src={product.images[currentImageIndex]}
                 alt={product.name}
                 className="w-full h-full object-contain cursor-pointer"
-                onClick={openLightbox}
+                onClick={(e) => {
+                  // Открываем галерею только если не было свайпа
+                  if (!isSwiping) {
+                    openLightbox();
+                  }
+                }}
               />
               
               {/* Image navigation */}
@@ -461,6 +520,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
             }
           }}
           onTouchStart={onLightboxTouchStart}
+          onTouchMove={onLightboxTouchMove}
           onTouchEnd={onLightboxTouchEnd}
         >
           <button
