@@ -107,10 +107,11 @@ router.get('/', async (req, res, next) => {
 
       // Get materials (new structure)
       const [materials] = await pool.execute(`
-        SELECT m.*
-        FROM product_materials m
-        WHERE m.product_id = ?
-        ORDER BY m.sort_order ASC, m.id ASC
+        SELECT m.*, pm.sort_order
+        FROM materials m
+        INNER JOIN product_materials pm ON m.id = pm.material_id
+        WHERE pm.product_id = ?
+        ORDER BY pm.sort_order ASC, m.id ASC
       `, [product.id]);
       product.materials = materials.map(mat => ({
         id: mat.id,
@@ -225,10 +226,11 @@ router.get('/:id', async (req, res, next) => {
 
     // Get materials (new structure)
     const [materials] = await pool.execute(`
-      SELECT m.*
-      FROM product_materials m
-      WHERE m.product_id = ?
-      ORDER BY m.sort_order ASC, m.id ASC
+      SELECT m.*, pm.sort_order
+      FROM materials m
+      INNER JOIN product_materials pm ON m.id = pm.material_id
+      WHERE pm.product_id = ?
+      ORDER BY pm.sort_order ASC, m.id ASC
     `, [product.id]);
     product.materials = materials.map(mat => ({
       id: mat.id,
