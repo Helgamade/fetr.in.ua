@@ -91,7 +91,7 @@ router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const [materials] = await pool.execute(`
-      SELECT * FROM product_materials WHERE id = ?
+      SELECT * FROM materials WHERE id = ?
     `, [id]);
     
     if (materials.length === 0) {
@@ -143,7 +143,7 @@ router.post('/', upload.single('image'), async (req, res, next) => {
     }
     
     const [result] = await pool.execute(`
-      INSERT INTO product_materials (name, description, image, thumbnail)
+      INSERT INTO materials (name, description, image, thumbnail)
       VALUES (?, ?, ?, ?)
     `, [name, description || null, imagePath, thumbnailPath]);
     
@@ -172,7 +172,7 @@ router.put('/:id', upload.single('image'), async (req, res, next) => {
     
     // Получаем текущий материал для удаления старых изображений
     const [currentMaterials] = await pool.execute(`
-      SELECT image, thumbnail FROM product_materials WHERE id = ?
+      SELECT image, thumbnail FROM materials WHERE id = ?
     `, [id]);
     
     if (currentMaterials.length === 0) {
@@ -226,7 +226,7 @@ router.put('/:id', upload.single('image'), async (req, res, next) => {
     }
     
     await pool.execute(`
-      UPDATE product_materials
+      UPDATE materials
       SET name = ?, description = ?, image = ?, thumbnail = ?
       WHERE id = ?
     `, [name, description || null, imagePath, thumbnailPath, id]);
@@ -244,7 +244,7 @@ router.delete('/:id', async (req, res, next) => {
     
     // Получаем материал для удаления изображений
     const [materials] = await pool.execute(`
-      SELECT image, thumbnail FROM product_materials WHERE id = ?
+      SELECT image, thumbnail FROM materials WHERE id = ?
     `, [id]);
     
     if (materials.length === 0) {
