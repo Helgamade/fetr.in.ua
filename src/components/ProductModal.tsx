@@ -26,6 +26,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   const [touchEndX, setTouchEndX] = useState<number | null>(null);
   const [touchEndY, setTouchEndY] = useState<number | null>(null);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [lightboxTouchStart, setLightboxTouchStart] = useState<{ x: number; y: number } | null>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const lightboxContainerRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
@@ -164,8 +165,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   };
 
   // Обработка свайпов для полноэкранной галереи
-  const [lightboxTouchStart, setLightboxTouchStart] = useState<{ x: number; y: number } | null>(null);
-
   const onLightboxTouchStart = (e: React.TouchEvent) => {
     const touch = e.targetTouches[0];
     setLightboxTouchStart({ x: touch.clientX, y: touch.clientY });
