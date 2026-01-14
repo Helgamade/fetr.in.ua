@@ -61,33 +61,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
     };
   }, [isOpen, product]);
 
-  // ВАЖНО: Не используем ранний return, чтобы не нарушать правила хуков
-  // Все хуки должны быть вызваны перед любыми условными возвратами
-
-  const saleEndDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-  const viewingNow = Math.floor(Math.random() * 8) + 2;
-
-  const basePrice = product.salePrice || product.basePrice;
-  const optionsTotal = selectedOptions.reduce((sum, optId) => {
-    const option = product.options.find(o => o.code === optId);
-    return sum + (option?.price || 0);
-  }, 0);
-  const totalPrice = basePrice + optionsTotal;
-
-  const toggleOption = (optionId: string) => {
-    setSelectedOptions(prev =>
-      prev.includes(optionId)
-        ? prev.filter(id => id !== optionId)
-        : [...prev, optionId]
-    );
-  };
-
-  const handleAddToCart = () => {
-    addToCart(product.code, selectedOptions);
-    // trackEvent уже вызывается в addToCart из CartContext
-    onClose();
-  };
-
   const nextImage = useCallback(() => {
     setCurrentImageIndex(prev => {
       if (!product || !product.images || product.images.length === 0) return prev;
@@ -235,6 +208,31 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
   // Ранний возврат ПОСЛЕ всех хуков
   if (!product || !isOpen) return null;
+
+  // Теперь можем безопасно использовать product, так как мы знаем что он не null
+  const saleEndDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+  const viewingNow = Math.floor(Math.random() * 8) + 2;
+
+  const basePrice = product.salePrice || product.basePrice;
+  const optionsTotal = selectedOptions.reduce((sum, optId) => {
+    const option = product.options.find(o => o.code === optId);
+    return sum + (option?.price || 0);
+  }, 0);
+  const totalPrice = basePrice + optionsTotal;
+
+  const toggleOption = (optionId: string) => {
+    setSelectedOptions(prev =>
+      prev.includes(optionId)
+        ? prev.filter(id => id !== optionId)
+        : [...prev, optionId]
+    );
+  };
+
+  const handleAddToCart = () => {
+    addToCart(product.code, selectedOptions);
+    // trackEvent уже вызывается в addToCart из CartContext
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex md:items-center md:justify-center">
