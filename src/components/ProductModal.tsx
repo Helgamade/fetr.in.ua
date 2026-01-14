@@ -61,7 +61,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
     };
   }, [isOpen, product]);
 
-  if (!product || !isOpen) return null;
+  // ВАЖНО: Не используем ранний return, чтобы не нарушать правила хуков
+  // Все хуки должны быть вызваны перед любыми условными возвратами
 
   const saleEndDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
   const viewingNow = Math.floor(Math.random() * 8) + 2;
@@ -88,13 +89,17 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   };
 
   const nextImage = useCallback(() => {
-    if (!product || !product.images || product.images.length === 0) return;
-    setCurrentImageIndex(prev => (prev + 1) % product.images.length);
+    setCurrentImageIndex(prev => {
+      if (!product || !product.images || product.images.length === 0) return prev;
+      return (prev + 1) % product.images.length;
+    });
   }, [product]);
 
   const prevImage = useCallback(() => {
-    if (!product || !product.images || product.images.length === 0) return;
-    setCurrentImageIndex(prev => (prev - 1 + product.images.length) % product.images.length);
+    setCurrentImageIndex(prev => {
+      if (!product || !product.images || product.images.length === 0) return prev;
+      return (prev - 1 + product.images.length) % product.images.length;
+    });
   }, [product]);
 
   const openLightbox = useCallback(() => {
@@ -227,6 +232,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isLightboxOpen, product, nextImage, prevImage, closeLightbox]);
+
+  // Ранний возврат ПОСЛЕ всех хуков
+  if (!product || !isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex md:items-center md:justify-center">
