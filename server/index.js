@@ -15,6 +15,7 @@ import galleryRoutes from './routes/gallery.js';
 import galleriesRoutes from './routes/galleries.js';
 import comparisonRoutes from './routes/comparison.js';
 import optionsRoutes from './routes/options.js';
+import materialsRoutes from './routes/materials.js';
 import instagramRoutes from './routes/instagram.js';
 import textsRoutes from './routes/texts.js';
 import novaPoshtaRoutes from './routes/nova-poshta.js';
@@ -118,6 +119,7 @@ app.use('/api/orders', apiRateLimiter, ordersRoutes);
 app.use('/api/users', authenticate, authorize('admin'), usersRoutes);
 app.use('/api/gallery', authenticate, authorize('admin'), galleryRoutes);
 app.use('/api/options', authenticate, authorize('admin'), optionsRoutes);
+app.use('/api/materials', authenticate, authorize('admin'), materialsRoutes);
 app.use('/api/email-templates', authenticate, authorize('admin'), emailTemplatesRoutes);
 
 // Serve uploaded files

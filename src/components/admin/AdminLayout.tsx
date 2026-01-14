@@ -14,7 +14,8 @@ import {
   FileText,
   HelpCircle,
   Mail,
-  BarChart3
+  BarChart3,
+  Layers
 } from 'lucide-react';
 import {
   Sidebar,
@@ -40,6 +41,7 @@ const menuItems = [
   { icon: ShoppingCart, label: 'Замовлення', path: '/admin/orders' },
   { icon: Package, label: 'Товари', path: '/admin/products' },
   { icon: GripVertical, label: 'Опції', path: '/admin/options' },
+  { icon: Layers, label: 'Матеріали', path: '/admin/materials' },
   { icon: Images, label: 'Галерея', path: '/admin/galleries' },
   { icon: MessageSquare, label: 'Відгуки', path: '/admin/reviews' },
   { icon: HelpCircle, label: 'Часті питання', path: '/admin/faq' },

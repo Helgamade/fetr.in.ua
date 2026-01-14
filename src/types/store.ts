@@ -7,6 +7,14 @@ export interface ProductOption {
   icon?: string; // SVG код или URL иконки
 }
 
+export interface ProductMaterial {
+  id: number;
+  name: string;
+  description?: string;
+  image?: string;
+  thumbnail?: string;
+}
+
 export interface Product {
   id: number; // Changed to number (INT AUTO_INCREMENT)
   code: string; // Product code like 'starter', 'optimal', 'premium'
@@ -19,7 +27,7 @@ export interface Product {
   images: string[];
   badge?: 'hit' | 'recommended' | 'limited';
   features: string[];
-  materials: { name: string; description: string }[];
+  materials: ProductMaterial[];
   canMake: string[];
   suitableFor: string[];
   options: ProductOption[];

@@ -1,5 +1,5 @@
 // API client for backend
-import { Product, Order, ProductOption } from '@/types/store';
+import { Product, Order, ProductOption, ProductMaterial } from '@/types/store';
 
 // Always use /api (proxied to Node.js backend)
 // Hardcoded to /api to avoid any environment variable issues
@@ -136,6 +136,61 @@ export const optionsAPI = {
     body: JSON.stringify(data),
   }),
   delete: (id: number) => fetchAPI<any>(`/options/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
+// Materials API
+export const materialsAPI = {
+  getAll: () => fetchAPI<ProductMaterial[]>('/materials'),
+  getById: (id: number) => fetchAPI<ProductMaterial>(`/materials/${id}`),
+  create: async (data: { name: string; description?: string; image?: File }): Promise<ProductMaterial> => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    if (data.description) formData.append('description', data.description);
+    if (data.image) formData.append('image', data.image);
+
+    const token = getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/materials`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      credentials: 'include',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Network error' }));
+      throw new Error(error.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  },
+  update: async (id: number, data: { name: string; description?: string; image?: File }): Promise<any> => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    if (data.description) formData.append('description', data.description);
+    if (data.image) formData.append('image', data.image);
+
+    const token = getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/materials/${id}`, {
+      method: 'PUT',
+      headers: {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      credentials: 'include',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Network error' }));
+      throw new Error(error.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  },
+  delete: (id: number) => fetchAPI<any>(`/materials/${id}`, {
     method: 'DELETE',
   }),
 };

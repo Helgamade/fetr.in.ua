@@ -105,14 +105,21 @@ router.get('/', async (req, res, next) => {
       `, [product.id]);
       product.features = features.map(f => f.value);
 
-      // Get materials
+      // Get materials (new structure)
       const [materials] = await pool.execute(`
-        SELECT value as name, description 
-        FROM product_features 
-        WHERE product_id = ? AND type = 'material'
-        ORDER BY sort_order ASC
+        SELECT m.*, pm.sort_order 
+        FROM materials m
+        INNER JOIN product_materials pm ON m.id = pm.material_id
+        WHERE pm.product_id = ?
+        ORDER BY pm.sort_order ASC, m.id ASC
       `, [product.id]);
-      product.materials = materials;
+      product.materials = materials.map(mat => ({
+        id: mat.id,
+        name: mat.name,
+        description: mat.description || null,
+        image: mat.image || null,
+        thumbnail: mat.thumbnail || null,
+      }));
 
       // Get canMake
       const [canMake] = await pool.execute(`
@@ -217,14 +224,21 @@ router.get('/:id', async (req, res, next) => {
     `, [product.id]);
     product.features = features.map(f => f.value);
 
-    // Get materials
+    // Get materials (new structure)
     const [materials] = await pool.execute(`
-      SELECT value as name, description 
-      FROM product_features 
-      WHERE product_id = ? AND type = 'material'
-      ORDER BY sort_order ASC
+      SELECT m.*, pm.sort_order 
+      FROM materials m
+      INNER JOIN product_materials pm ON m.id = pm.material_id
+      WHERE pm.product_id = ?
+      ORDER BY pm.sort_order ASC, m.id ASC
     `, [product.id]);
-    product.materials = materials;
+    product.materials = materials.map(mat => ({
+      id: mat.id,
+      name: mat.name,
+      description: mat.description || null,
+      image: mat.image || null,
+      thumbnail: mat.thumbnail || null,
+    }));
 
     // Get canMake
     const [canMake] = await pool.execute(`
@@ -347,15 +361,19 @@ router.put('/:id', async (req, res, next) => {
       }
     }
 
-    // Update materials (type = 'material')
-    await pool.execute('DELETE FROM product_features WHERE product_id = ? AND type = ?', [id, 'material']);
+    // Update materials (new structure - product_materials)
+    await pool.execute('DELETE FROM product_materials WHERE product_id = ?', [id]);
     if (materials && Array.isArray(materials)) {
       for (let i = 0; i < materials.length; i++) {
         const material = materials[i];
-        await pool.execute(`
-          INSERT INTO product_features (product_id, type, value, description, sort_order)
-          VALUES (?, 'material', ?, ?, ?)
-        `, [id, material.name || material, material.description || null, i]);
+        // Support both formats: array of IDs or array of {id, ...} objects
+        const materialId = typeof material === 'object' && material !== null ? material.id : material;
+        if (materialId) {
+          await pool.execute(`
+            INSERT INTO product_materials (product_id, material_id, sort_order)
+            VALUES (?, ?, ?)
+          `, [id, materialId, i]);
+        }
       }
     }
 

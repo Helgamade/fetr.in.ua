@@ -22,6 +22,7 @@ import { Products } from "./pages/admin/Products";
 import { Settings } from "./pages/admin/Settings";
 import { Comparison } from "./pages/admin/Comparison";
 import { Options } from "./pages/admin/Options";
+import { Materials } from "./pages/admin/Materials";
 import { Galleries } from "./pages/admin/Galleries";
 import { Reviews } from "./pages/admin/Reviews";
 import { FAQ } from "./pages/admin/FAQ";
@@ -92,6 +93,7 @@ const App = () => (
                     <Route path="orders/:id" element={<OrderDetail />} />
                     <Route path="products" element={<Products />} />
                     <Route path="options" element={<Options />} />
+                    <Route path="materials" element={<Materials />} />
                     <Route path="galleries" element={<Galleries />} />
                     <Route path="reviews" element={<Reviews />} />
                     <Route path="faq" element={<FAQ />} />

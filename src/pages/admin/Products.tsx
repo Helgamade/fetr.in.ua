@@ -28,11 +28,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Product, ProductOption } from '@/types/store';
+import { Product, ProductOption, ProductMaterial } from '@/types/store';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts, useUpdateProduct, useDeleteProduct } from '@/hooks/useProducts';
 import { useTranslation } from '@/hooks/useTranslation';
-import { optionsAPI } from '@/lib/api';
+import { optionsAPI, materialsAPI } from '@/lib/api';
 
 const badgeColors = {
   hit: 'bg-red-100 text-red-800',
@@ -49,6 +49,7 @@ export function Products() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [availableOptions, setAvailableOptions] = useState<ProductOption[]>([]);
+  const [availableMaterials, setAvailableMaterials] = useState<ProductMaterial[]>([]);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const fileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
   const { toast } = useToast();
@@ -59,15 +60,21 @@ export function Products() {
     limited: t('badge.limited'),
   };
 
-  // Load available options when dialog opens
+  // Load available options and materials when dialog opens
   useEffect(() => {
     if (isDialogOpen) {
-      optionsAPI.getAll()
-        .then(setAvailableOptions)
+      Promise.all([
+        optionsAPI.getAll(),
+        materialsAPI.getAll()
+      ])
+        .then(([options, materials]) => {
+          setAvailableOptions(options);
+          setAvailableMaterials(materials);
+        })
         .catch(() => {
           toast({
             title: 'Помилка',
-            description: 'Не вдалося завантажити опції',
+            description: 'Не вдалося завантажити опції або матеріали',
             variant: 'destructive',
           });
         });
@@ -90,13 +97,14 @@ export function Products() {
   const handleSave = () => {
     if (!editingProduct) return;
 
-    // Prepare data for API - convert options to array of objects with id and sortOrder, filter empty images
+    // Prepare data for API - convert options and materials to arrays of IDs, filter empty images
     const dataToSave = {
       ...editingProduct,
       options: editingProduct.options.map((opt, index) => ({
         id: opt.id,
         sortOrder: index
       })),
+      materials: editingProduct.materials.map((mat) => mat.id),
       images: editingProduct.images.filter(img => img && img.trim()),
     };
 
@@ -597,55 +605,129 @@ export function Products() {
               {/* Materials Tab */}
               <TabsContent value="materials" className="space-y-4 mt-4">
                 <div className="space-y-4">
-                <div className="space-y-3">
-                  {editingProduct.materials.map((material, index) => (
-                    <div key={index} className="flex gap-2 items-start p-3 border rounded-lg">
-                      <div className="flex-1 space-y-2">
-                        <Input
-                          placeholder="Назва матеріалу"
-                          value={material.name}
-                          onChange={(e) => {
-                            const newMaterials = [...editingProduct.materials];
-                            newMaterials[index] = { ...material, name: e.target.value };
-                            setEditingProduct({ ...editingProduct, materials: newMaterials });
-                          }}
-                        />
-                        <Textarea
-                          placeholder="Опис"
-                          value={material.description || ''}
-                          onChange={(e) => {
-                            const newMaterials = [...editingProduct.materials];
-                            newMaterials[index] = { ...material, description: e.target.value };
-                            setEditingProduct({ ...editingProduct, materials: newMaterials });
-                          }}
-                          rows={2}
-                        />
+                  <div>
+                    <Label>Вибрані матеріали (відсортовані для цього товару)</Label>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Використовуйте кнопки ↑ ↓ для зміни порядку відображення
+                    </p>
+                    {editingProduct.materials.length > 0 ? (
+                      <div className="space-y-2">
+                        {editingProduct.materials.map((material, index) => (
+                          <div key={material.id} className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
+                            <div className="flex flex-col gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                disabled={index === 0}
+                                onClick={() => {
+                                  const newMaterials = [...editingProduct.materials];
+                                  [newMaterials[index - 1], newMaterials[index]] = [newMaterials[index], newMaterials[index - 1]];
+                                  setEditingProduct({ ...editingProduct, materials: newMaterials });
+                                }}
+                              >
+                                <ChevronUp className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                disabled={index === editingProduct.materials.length - 1}
+                                onClick={() => {
+                                  const newMaterials = [...editingProduct.materials];
+                                  [newMaterials[index], newMaterials[index + 1]] = [newMaterials[index + 1], newMaterials[index]];
+                                  setEditingProduct({ ...editingProduct, materials: newMaterials });
+                                }}
+                              >
+                                <ChevronDown className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            {material.thumbnail && (
+                              <div className="flex-shrink-0">
+                                <img
+                                  src={material.thumbnail}
+                                  alt={material.name}
+                                  className="w-12 h-12 object-cover rounded border"
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <div className="font-medium">{material.name}</div>
+                              {material.description && (
+                                <div className="text-sm text-muted-foreground">{material.description}</div>
+                              )}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  materials: editingProduct.materials.filter(mat => mat.id !== material.id)
+                                });
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          const newMaterials = editingProduct.materials.filter((_, i) => i !== index);
-                          setEditingProduct({ ...editingProduct, materials: newMaterials });
-                        }}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setEditingProduct({
-                        ...editingProduct,
-                        materials: [...editingProduct.materials, { name: '', description: '' }]
-                      });
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Додати матеріал
-                  </Button>
-                </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg">
+                        Матеріали не вибрані. Додайте матеріали зі списку нижче.
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>Доступні матеріали для додавання</Label>
+                    {availableMaterials.filter(mat => !editingProduct.materials.some(m => m.id === mat.id)).length > 0 ? (
+                      <div className="space-y-2 mt-3">
+                        {availableMaterials
+                          .filter(mat => !editingProduct.materials.some(m => m.id === mat.id))
+                          .map((material) => (
+                            <div key={material.id} className="flex items-start gap-3 p-3 border rounded-lg">
+                              {material.thumbnail && (
+                                <div className="flex-shrink-0">
+                                  <img
+                                    src={material.thumbnail}
+                                    alt={material.name}
+                                    className="w-12 h-12 object-cover rounded border"
+                                  />
+                                </div>
+                              )}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingProduct({
+                                    ...editingProduct,
+                                    materials: [...editingProduct.materials, material]
+                                  });
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Додати
+                              </Button>
+                              <div className="flex-1">
+                                <div className="font-medium">{material.name}</div>
+                                {material.description && (
+                                  <div className="text-sm text-muted-foreground">{material.description}</div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg mt-3">
+                        Всі доступні матеріали додано або матеріали відсутні. Створіть нові матеріали в розділі "Матеріали".
+                      </div>
+                    )}
+                  </div>
                   <div className="space-y-2 pt-4 border-t">
                     <Label>SVG іконка для заголовка "Матеріали"</Label>
                     <Textarea
