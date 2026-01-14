@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Product } from '@/types/store';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { X, ChevronLeft, ChevronRight, ShoppingBag, Check, Users, Eye, Truck, Shield, Gift } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { trackEvent } from '@/lib/analytics';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { OptionIcon } from '@/components/OptionIcon';
 import { cn } from '@/lib/utils';
@@ -21,7 +20,15 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   const { t } = useTranslation('product');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const lightboxContainerRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
+
+  // Минимальное расстояние для определения свайпа
+  const minSwipeDistance = 50;
 
   useEffect(() => {
     if (isOpen) {
@@ -84,6 +91,89 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
     setCurrentImageIndex(prev => (prev - 1 + product.images.length) % product.images.length);
   };
 
+  const openLightbox = () => {
+    setIsLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+  };
+
+  // Обработка свайпов для модального окна
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEndX(null);
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartX || !touchEndX || !product) return;
+    
+    const distance = touchStartX - touchEndX;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && product.images.length > 1) {
+      nextImage();
+    }
+    if (isRightSwipe && product.images.length > 1) {
+      prevImage();
+    }
+  };
+
+  // Обработка свайпов для полноэкранной галереи
+  const onLightboxTouchStart = (e: React.TouchEvent) => {
+    const touch = e.targetTouches[0];
+    if (lightboxContainerRef.current) {
+      lightboxContainerRef.current.dataset.touchStartX = touch.clientX.toString();
+      lightboxContainerRef.current.dataset.touchStartY = touch.clientY.toString();
+    }
+  };
+
+  const onLightboxTouchEnd = (e: React.TouchEvent) => {
+    if (!lightboxContainerRef.current || !product) return;
+    
+    const touchStartX = parseFloat(lightboxContainerRef.current.dataset.touchStartX || '0');
+    const touchStartY = parseFloat(lightboxContainerRef.current.dataset.touchStartY || '0');
+    
+    const touch = e.changedTouches[0];
+    const distanceX = touch.clientX - touchStartX;
+    const distanceY = touch.clientY - touchStartY;
+    
+    // Проверяем, что свайп горизонтальный (больше горизонтального движения)
+    if (Math.abs(distanceX) > Math.abs(distanceY) && Math.abs(distanceX) > minSwipeDistance) {
+      if (distanceX > 0) {
+        // Свайп вправо - предыдущее изображение
+        prevImage();
+      } else {
+        // Свайп влево - следующее изображение
+        nextImage();
+      }
+    }
+  };
+
+  // Обработка клавиатуры для полноэкранной галереи
+  useEffect(() => {
+    if (!isLightboxOpen || !product) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeLightbox();
+      } else if (e.key === 'ArrowLeft' && product.images.length > 1) {
+        prevImage();
+      } else if (e.key === 'ArrowRight' && product.images.length > 1) {
+        nextImage();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLightboxOpen, product?.images.length]);
+
   return (
     <div className="fixed inset-0 z-50 flex md:items-center md:justify-center">
       {/* Backdrop */}
@@ -105,11 +195,18 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
         <div className="h-full overflow-y-auto">
           <div className="flex flex-col md:flex-row">
             {/* Image Gallery */}
-            <div className="relative aspect-square md:aspect-auto md:flex-1 md:h-[90vh] bg-muted flex items-center justify-center min-w-0">
+            <div 
+              ref={imageContainerRef}
+              className="relative aspect-square md:aspect-auto md:flex-1 md:h-[90vh] bg-muted flex items-center justify-center min-w-0"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
               <img
                 src={product.images[currentImageIndex]}
                 alt={product.name}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain cursor-pointer"
+                onClick={openLightbox}
               />
               
               {/* Image navigation */}
@@ -352,6 +449,68 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
           </div>
         </div>
       </div>
+
+      {/* Fullscreen Lightbox */}
+      {isLightboxOpen && (
+        <div 
+          ref={lightboxContainerRef}
+          className="fixed inset-0 z-[60] bg-foreground/95 backdrop-blur-sm flex items-center justify-center"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeLightbox();
+            }
+          }}
+          onTouchStart={onLightboxTouchStart}
+          onTouchEnd={onLightboxTouchEnd}
+        >
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
+          >
+            <X className="w-6 h-6 text-primary-foreground" />
+          </button>
+
+          {product.images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevImage();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
+              >
+                <ChevronLeft className="w-6 h-6 text-primary-foreground" />
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextImage();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
+              >
+                <ChevronRight className="w-6 h-6 text-primary-foreground" />
+              </button>
+            </>
+          )}
+
+          <div 
+            className="max-w-7xl max-h-[90vh] mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={product.images[currentImageIndex]}
+              alt={product.name}
+              className="max-w-full max-h-[90vh] object-contain rounded-xl"
+            />
+            <div className="text-center mt-4">
+              <p className="text-primary-foreground/60 text-sm">
+                {currentImageIndex + 1} / {product.images.length}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
