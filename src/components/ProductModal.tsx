@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Product } from '@/types/store';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -87,21 +87,23 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
     onClose();
   };
 
-  const nextImage = () => {
+  const nextImage = useCallback(() => {
+    if (!product || !product.images || product.images.length === 0) return;
     setCurrentImageIndex(prev => (prev + 1) % product.images.length);
-  };
+  }, [product]);
 
-  const prevImage = () => {
+  const prevImage = useCallback(() => {
+    if (!product || !product.images || product.images.length === 0) return;
     setCurrentImageIndex(prev => (prev - 1 + product.images.length) % product.images.length);
-  };
+  }, [product]);
 
-  const openLightbox = () => {
+  const openLightbox = useCallback(() => {
     setIsLightboxOpen(true);
-  };
+  }, []);
 
-  const closeLightbox = () => {
+  const closeLightbox = useCallback(() => {
     setIsLightboxOpen(false);
-  };
+  }, []);
 
   // Обработка свайпов для модального окна
   const onTouchStart = (e: React.TouchEvent) => {
@@ -215,17 +217,16 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         closeLightbox();
-      } else if (e.key === 'ArrowLeft' && product.images.length > 1) {
+      } else if (e.key === 'ArrowLeft' && product && product.images && product.images.length > 1) {
         prevImage();
-      } else if (e.key === 'ArrowRight' && product.images.length > 1) {
+      } else if (e.key === 'ArrowRight' && product && product.images && product.images.length > 1) {
         nextImage();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLightboxOpen, product?.images.length]);
+  }, [isLightboxOpen, product, nextImage, prevImage, closeLightbox]);
 
   return (
     <div className="fixed inset-0 z-50 flex md:items-center md:justify-center">
