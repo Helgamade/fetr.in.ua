@@ -60,12 +60,24 @@ router.get('/', async (req, res, next) => {
       SELECT * FROM materials ORDER BY name ASC
     `);
     
-    const transformedMaterials = materials.map(mat => ({
-      id: mat.id,
-      name: mat.name,
-      description: mat.description || null,
-      image: mat.image || null,
-      thumbnail: mat.thumbnail || null,
+    const transformedMaterials = await Promise.all(materials.map(async (mat) => {
+      // Get products that use this material
+      const [products] = await pool.execute(`
+        SELECT p.id, p.name
+        FROM products p
+        INNER JOIN product_materials pm ON p.id = pm.product_id
+        WHERE pm.material_id = ?
+        ORDER BY p.name ASC
+      `, [mat.id]);
+      
+      return {
+        id: mat.id,
+        name: mat.name,
+        description: mat.description || null,
+        image: mat.image || null,
+        thumbnail: mat.thumbnail || null,
+        products: products.map(p => ({ id: p.id, name: p.name })),
+      };
     }));
     
     res.json(transformedMaterials);
@@ -79,7 +91,7 @@ router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const [materials] = await pool.execute(`
-      SELECT * FROM materials WHERE id = ?
+      SELECT * FROM product_materials WHERE id = ?
     `, [id]);
     
     if (materials.length === 0) {
@@ -131,7 +143,7 @@ router.post('/', upload.single('image'), async (req, res, next) => {
     }
     
     const [result] = await pool.execute(`
-      INSERT INTO materials (name, description, image, thumbnail)
+      INSERT INTO product_materials (name, description, image, thumbnail)
       VALUES (?, ?, ?, ?)
     `, [name, description || null, imagePath, thumbnailPath]);
     
@@ -160,7 +172,7 @@ router.put('/:id', upload.single('image'), async (req, res, next) => {
     
     // Получаем текущий материал для удаления старых изображений
     const [currentMaterials] = await pool.execute(`
-      SELECT image, thumbnail FROM materials WHERE id = ?
+      SELECT image, thumbnail FROM product_materials WHERE id = ?
     `, [id]);
     
     if (currentMaterials.length === 0) {
@@ -214,7 +226,7 @@ router.put('/:id', upload.single('image'), async (req, res, next) => {
     }
     
     await pool.execute(`
-      UPDATE materials
+      UPDATE product_materials
       SET name = ?, description = ?, image = ?, thumbnail = ?
       WHERE id = ?
     `, [name, description || null, imagePath, thumbnailPath, id]);
@@ -232,7 +244,7 @@ router.delete('/:id', async (req, res, next) => {
     
     // Получаем материал для удаления изображений
     const [materials] = await pool.execute(`
-      SELECT image, thumbnail FROM materials WHERE id = ?
+      SELECT image, thumbnail FROM product_materials WHERE id = ?
     `, [id]);
     
     if (materials.length === 0) {
@@ -275,7 +287,7 @@ router.delete('/:id', async (req, res, next) => {
       }
     }
     
-    await pool.execute('DELETE FROM materials WHERE id = ?', [id]);
+    await pool.execute('DELETE FROM product_materials WHERE id = ?', [id]);
     res.json({ id, message: 'Material deleted' });
   } catch (error) {
     next(error);

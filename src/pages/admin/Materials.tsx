@@ -3,6 +3,7 @@ import { Plus, Edit, Trash2, Search, Upload, X, Image as ImageIcon } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -238,7 +239,16 @@ export function Materials() {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-lg mb-2">{material.name}</h3>
                   {material.description && (
-                    <p className="text-sm text-muted-foreground">{material.description}</p>
+                    <p className="text-sm text-muted-foreground mb-2">{material.description}</p>
+                  )}
+                  {material.products && material.products.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {material.products.map((product) => (
+                        <Badge key={product.id} variant="secondary">
+                          {product.name}
+                        </Badge>
+                      ))}
+                    </div>
                   )}
                 </div>
                 {/* Actions */}

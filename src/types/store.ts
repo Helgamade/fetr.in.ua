@@ -13,6 +13,7 @@ export interface ProductMaterial {
   description?: string;
   image?: string;
   thumbnail?: string;
+  products?: { id: string; name: string }[];
 }
 
 export interface Product {
