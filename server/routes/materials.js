@@ -57,7 +57,7 @@ const upload = multer({
 router.get('/', async (req, res, next) => {
   try {
     const [materials] = await pool.execute(`
-      SELECT * FROM materials ORDER BY name ASC
+      SELECT * FROM materials ORDER BY sort_order ASC, name ASC
     `);
     
     const transformedMaterials = await Promise.all(materials.map(async (mat) => {
@@ -76,6 +76,7 @@ router.get('/', async (req, res, next) => {
         description: mat.description || null,
         image: mat.image || null,
         thumbnail: mat.thumbnail || null,
+        sortOrder: mat.sort_order || 0,
         products: products.map(p => ({ id: p.id, name: p.name })),
       };
     }));
@@ -105,6 +106,7 @@ router.get('/:id', async (req, res, next) => {
       description: material.description || null,
       image: material.image || null,
       thumbnail: material.thumbnail || null,
+      sortOrder: material.sort_order || 0,
     });
   } catch (error) {
     next(error);
@@ -114,7 +116,7 @@ router.get('/:id', async (req, res, next) => {
 // Create material
 router.post('/', upload.single('image'), async (req, res, next) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, sortOrder } = req.body;
     
     if (!name) {
       return res.status(400).json({ error: 'Name is required' });
@@ -143,9 +145,9 @@ router.post('/', upload.single('image'), async (req, res, next) => {
     }
     
     const [result] = await pool.execute(`
-      INSERT INTO materials (name, description, image, thumbnail)
-      VALUES (?, ?, ?, ?)
-    `, [name, description || null, imagePath, thumbnailPath]);
+      INSERT INTO materials (name, description, image, thumbnail, sort_order)
+      VALUES (?, ?, ?, ?, ?)
+    `, [name, description || null, imagePath, thumbnailPath, parseInt(sortOrder) || 0]);
     
     res.status(201).json({ 
       id: result.insertId, 
@@ -164,7 +166,7 @@ router.post('/', upload.single('image'), async (req, res, next) => {
 router.put('/:id', upload.single('image'), async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { name, description, sortOrder } = req.body;
     
     if (!name) {
       return res.status(400).json({ error: 'Name is required' });
@@ -227,9 +229,9 @@ router.put('/:id', upload.single('image'), async (req, res, next) => {
     
     await pool.execute(`
       UPDATE materials
-      SET name = ?, description = ?, image = ?, thumbnail = ?
+      SET name = ?, description = ?, image = ?, thumbnail = ?, sort_order = ?
       WHERE id = ?
-    `, [name, description || null, imagePath, thumbnailPath, id]);
+    `, [name, description || null, imagePath, thumbnailPath, parseInt(sortOrder) || 0, id]);
     
     res.json({ id, message: 'Material updated' });
   } catch (error) {

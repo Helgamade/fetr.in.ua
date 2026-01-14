@@ -167,11 +167,12 @@ export const materialsAPI = {
 
     return response.json();
   },
-  update: async (id: number, data: { name: string; description?: string; image?: File }): Promise<any> => {
+  update: async (id: number, data: { name: string; description?: string; image?: File; sortOrder?: number }): Promise<any> => {
     const formData = new FormData();
     formData.append('name', data.name);
     if (data.description) formData.append('description', data.description);
     if (data.image) formData.append('image', data.image);
+    if (data.sortOrder !== undefined) formData.append('sortOrder', String(data.sortOrder));
 
     const token = getAccessToken();
     const response = await fetch(`${API_BASE_URL}/materials/${id}`, {

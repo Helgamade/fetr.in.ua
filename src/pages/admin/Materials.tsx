@@ -21,6 +21,7 @@ interface EditingMaterial extends Omit<ProductMaterial, 'id'> {
   id: number;
   imageFile?: File | null;
   imagePreview?: string | null;
+  sortOrder?: number;
 }
 
 export function Materials() {
@@ -40,7 +41,7 @@ export function Materials() {
   );
 
   const handleCreate = () => {
-    setEditingMaterial({ id: 0, name: '', description: '', image: null, thumbnail: null });
+    setEditingMaterial({ id: 0, name: '', description: '', image: null, thumbnail: null, sortOrder: 0 });
     setIsDialogOpen(true);
   };
 
@@ -103,6 +104,7 @@ export function Materials() {
       name: editingMaterial.name,
       description: editingMaterial.description || undefined,
       image: editingMaterial.imageFile || undefined,
+      sortOrder: editingMaterial.sortOrder || 0,
     };
 
     if (editingMaterial.id === 0) {
@@ -243,11 +245,19 @@ export function Materials() {
                   )}
                   {material.products && material.products.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {material.products.map((product) => (
-                        <Badge key={product.id} variant="secondary">
-                          {product.name}
-                        </Badge>
-                      ))}
+                      {material.products.map((product) => {
+                        const getBadgeColor = (productName: string) => {
+                          if (productName.includes('Стартовий')) return 'bg-blue-100 text-blue-800 border-blue-200';
+                          if (productName.includes('Оптимальний')) return 'bg-green-100 text-green-800 border-green-200';
+                          if (productName.includes('Преміум')) return 'bg-purple-100 text-purple-800 border-purple-200';
+                          return 'bg-secondary text-secondary-foreground';
+                        };
+                        return (
+                          <Badge key={product.id} variant="outline" className={getBadgeColor(product.name)}>
+                            {product.name}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -312,6 +322,18 @@ export function Materials() {
                   onChange={(e) => setEditingMaterial({ ...editingMaterial, description: e.target.value })}
                   placeholder="Набір ниток Peri, Китай"
                   rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sortOrder">Порядок сортування</Label>
+                <Input
+                  id="sortOrder"
+                  type="number"
+                  min="0"
+                  value={editingMaterial.sortOrder || 0}
+                  onChange={(e) => setEditingMaterial({ ...editingMaterial, sortOrder: parseInt(e.target.value) || 0 })}
+                  placeholder="0"
                 />
               </div>
 
