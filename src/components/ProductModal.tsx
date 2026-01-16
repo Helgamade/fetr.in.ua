@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Product } from '@/types/store';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { X, ChevronLeft, ChevronRight, ShoppingBag, Check, Users, Eye, Truck, Shield, Gift } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ShoppingBag, Check, Users, Eye, Truck, Shield, Gift, Grid3x3 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { OptionIcon } from '@/components/OptionIcon';
@@ -30,6 +30,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   const [isSwiping, setIsSwiping] = useState(false);
   const [lightboxTouchStart, setLightboxTouchStart] = useState<{ x: number; y: number } | null>(null);
   const [materialsLightboxTouchStart, setMaterialsLightboxTouchStart] = useState<{ x: number; y: number } | null>(null);
+  const [showThumbnails, setShowThumbnails] = useState(false);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const lightboxContainerRef = useRef<HTMLDivElement>(null);
   const materialsLightboxContainerRef = useRef<HTMLDivElement>(null);
@@ -381,29 +382,39 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                 </>
               )}
 
-              {/* Image indicators */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-card/80 backdrop-blur-sm text-sm font-medium">
-                  {currentImageIndex + 1} / {product.images.length}
-                </span>
-              </div>
-
-              {/* Thumbnails */}
-              <div className="absolute bottom-16 left-4 right-4 flex gap-2 overflow-x-auto scrollbar-hide">
-                {product.images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentImageIndex(idx)}
-                    className={cn(
-                      'w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors',
-                      idx === currentImageIndex ? 'border-primary' : 'border-transparent'
-                    )}
-                  >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
+              {/* Toggle thumbnails button */}
+              {product.images.length > 1 && (
+                <button
+                  onClick={() => setShowThumbnails(!showThumbnails)}
+                  className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors z-10"
+                >
+                  <Grid3x3 className="w-5 h-5" />
+                </button>
+              )}
             </div>
+
+            {/* Thumbnails - below image, hidden by default */}
+            {product.images.length > 1 && (
+              <div className={cn(
+                'w-full p-4 bg-muted/50 transition-all duration-300 overflow-hidden',
+                showThumbnails ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'
+              )}>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                  {product.images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentImageIndex(idx)}
+                      className={cn(
+                        'w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors',
+                        idx === currentImageIndex ? 'border-primary' : 'border-transparent'
+                      )}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Content */}
             <div className="p-6 md:w-[660px] md:flex-shrink-0 md:overflow-y-auto md:max-h-[90vh]">
