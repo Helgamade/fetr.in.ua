@@ -391,30 +391,30 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                   <Grid3x3 className="w-5 h-5" />
                 </button>
               )}
-            </div>
 
-            {/* Thumbnails - below image, hidden by default */}
-            {product.images.length > 1 && (
-              <div className={cn(
-                'w-full p-4 bg-muted/50 transition-all duration-300 overflow-hidden',
-                showThumbnails ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'
-              )}>
-                <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-                  {product.images.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentImageIndex(idx)}
-                      className={cn(
-                        'w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors',
-                        idx === currentImageIndex ? 'border-primary' : 'border-transparent'
-                      )}
-                    >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
+              {/* Thumbnails - below image, hidden by default */}
+              {product.images.length > 1 && (
+                <div className={cn(
+                  'absolute bottom-0 left-0 right-0 bg-muted/50 transition-all duration-300 overflow-hidden',
+                  showThumbnails ? 'max-h-24 opacity-100 p-4' : 'max-h-0 opacity-0 p-0'
+                )}>
+                  <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                    {product.images.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        className={cn(
+                          'w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors',
+                          idx === currentImageIndex ? 'border-primary' : 'border-transparent'
+                        )}
+                      >
+                        <img src={img} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Content */}
             <div className="p-6 md:w-[660px] md:flex-shrink-0 md:overflow-y-auto md:max-h-[90vh]">
