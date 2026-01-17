@@ -1,53 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, Palette } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
+import { Palette } from 'lucide-react';
 import { useGalleries } from '@/hooks/useGalleries';
-import { Gallery, GalleryImage } from '@/lib/api';
+import { Gallery } from '@/lib/api';
 import { useTranslation } from '@/hooks/useTranslation';
+import { ImageLightbox, ImageLightboxItem } from '@/components/ImageLightbox';
 
 export const GallerySection: React.FC = () => {
   const { t } = useTranslation('gallery');
   const { data: galleries = [], isLoading } = useGalleries(true); // Only published galleries
   const [selectedGallery, setSelectedGallery] = useState<Gallery | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   const openLightbox = (gallery: Gallery, index: number) => {
     setSelectedGallery(gallery);
     setSelectedImageIndex(index);
+    setIsLightboxOpen(true);
   };
 
   const closeLightbox = () => {
-    setSelectedGallery(null);
-    setSelectedImageIndex(null);
-  };
-
-  // Handle Esc key to close lightbox
-  useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && selectedGallery) {
-        closeLightbox();
-      }
-    };
-
-    if (selectedGallery) {
-      document.addEventListener('keydown', handleEsc);
-      return () => {
-        document.removeEventListener('keydown', handleEsc);
-      };
-    }
-  }, [selectedGallery]);
-
-  const goNext = () => {
-    if (selectedGallery && selectedImageIndex !== null && selectedGallery.images) {
-      setSelectedImageIndex((selectedImageIndex + 1) % selectedGallery.images.length);
-    }
-  };
-
-  const goPrev = () => {
-    if (selectedGallery && selectedImageIndex !== null && selectedGallery.images) {
-      const images = selectedGallery.images;
-      setSelectedImageIndex((selectedImageIndex - 1 + images.length) % images.length);
-    }
+    setIsLightboxOpen(false);
+    // Сохраняем gallery и index для правильной работы ImageLightbox
+    // Очистим их после закрытия анимации
+    setTimeout(() => {
+      setSelectedGallery(null);
+      setSelectedImageIndex(null);
+    }, 300);
   };
 
   // Get first image from each gallery (limit to 6 galleries)
@@ -111,70 +89,19 @@ export const GallerySection: React.FC = () => {
         )}
       </div>
 
-      {/* Lightbox */}
+      {/* Lightbox - используем универсальный компонент ImageLightbox */}
       {selectedGallery && selectedImageIndex !== null && selectedGallery.images && (
-        <div 
-          className="fixed inset-0 z-50 bg-foreground/90 backdrop-blur-sm flex items-center justify-center"
-          onClick={(e) => {
-            // Close on click outside image
-            if (e.target === e.currentTarget) {
-              closeLightbox();
-            }
-          }}
-        >
-          <button
-            onClick={closeLightbox}
-            className="absolute top-4 right-4 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
-          >
-            <X className="w-6 h-6 text-primary-foreground" />
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              goPrev();
-            }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
-          >
-            <ChevronLeft className="w-6 h-6 text-primary-foreground" />
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              goNext();
-            }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
-          >
-            <ChevronRight className="w-6 h-6 text-primary-foreground" />
-          </button>
-
-          <div 
-            className="max-w-4xl max-h-[80vh] mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={selectedGallery.images[selectedImageIndex].url}
-              alt={selectedGallery.images[selectedImageIndex].title || `Gallery image ${selectedImageIndex + 1}`}
-              className="max-w-full max-h-[80vh] object-contain rounded-xl"
-            />
-            <div className="text-center mt-4">
-              {selectedGallery.images[selectedImageIndex].title && (
-                <p className="text-primary-foreground font-medium text-lg">
-                  {selectedGallery.images[selectedImageIndex].title}
-                </p>
-              )}
-              {selectedGallery.images[selectedImageIndex].description && (
-                <p className="text-primary-foreground/80 text-sm mt-2">
-                  {selectedGallery.images[selectedImageIndex].description}
-                </p>
-              )}
-              <p className="text-primary-foreground/60 text-sm mt-2">
-                {selectedImageIndex + 1} / {selectedGallery.images.length}
-              </p>
-            </div>
-          </div>
-        </div>
+        <ImageLightbox
+          isOpen={isLightboxOpen}
+          images={selectedGallery.images.map(img => ({
+            url: img.url,
+            title: img.title || undefined,
+            description: img.description || undefined,
+          }))}
+          initialIndex={selectedImageIndex}
+          onClose={closeLightbox}
+          zIndex={50}
+        />
       )}
     </section>
   );

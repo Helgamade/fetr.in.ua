@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Product } from '@/types/store';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { X, ChevronLeft, ChevronRight, ShoppingBag, Check, Users, Eye, Truck, Shield, Gift, Grid3x3 } from 'lucide-react';
+import { X, ShoppingBag, Check, Users, Eye, Truck, Shield, Gift, Grid3x3 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { OptionIcon } from '@/components/OptionIcon';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { trackEvent, trackFunnel } from '@/lib/analytics';
+import { ImageLightbox, ImageLightboxItem } from '@/components/ImageLightbox';
 
 interface ProductModalProps {
   product: Product | null;
@@ -28,12 +29,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   const [touchEndX, setTouchEndX] = useState<number | null>(null);
   const [touchEndY, setTouchEndY] = useState<number | null>(null);
   const [isSwiping, setIsSwiping] = useState(false);
-  const [lightboxTouchStart, setLightboxTouchStart] = useState<{ x: number; y: number } | null>(null);
-  const [materialsLightboxTouchStart, setMaterialsLightboxTouchStart] = useState<{ x: number; y: number } | null>(null);
   const [showThumbnails, setShowThumbnails] = useState(false);
   const imageContainerRef = useRef<HTMLDivElement>(null);
-  const lightboxContainerRef = useRef<HTMLDivElement>(null);
-  const materialsLightboxContainerRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
 
   // Минимальное расстояние для определения свайпа
@@ -97,20 +94,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
     setIsMaterialsLightboxOpen(false);
   }, []);
 
-  const nextMaterialImage = useCallback(() => {
-    setMaterialsLightboxIndex(prev => {
-      if (!product || !product.materials || product.materials.length === 0) return prev;
-      return (prev + 1) % product.materials.length;
-    });
-  }, [product]);
-
-  const prevMaterialImage = useCallback(() => {
-    setMaterialsLightboxIndex(prev => {
-      if (!product || !product.materials || product.materials.length === 0) return prev;
-      return (prev - 1 + product.materials.length) % product.materials.length;
-    });
-  }, [product]);
-
   // Обработка свайпов для модального окна
   const onTouchStart = (e: React.TouchEvent) => {
     const touch = e.targetTouches[0];
@@ -172,129 +155,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
     setIsSwiping(false);
   };
 
-  // Обработка свайпов для полноэкранной галереи
-  const onLightboxTouchStart = (e: React.TouchEvent) => {
-    const touch = e.targetTouches[0];
-    setLightboxTouchStart({ x: touch.clientX, y: touch.clientY });
-  };
-
-  const onLightboxTouchMove = (e: React.TouchEvent) => {
-    if (!lightboxTouchStart) return;
-    
-    const touch = e.targetTouches[0];
-    const deltaX = Math.abs(touch.clientX - lightboxTouchStart.x);
-    const deltaY = Math.abs(touch.clientY - lightboxTouchStart.y);
-    
-    // Предотвращаем прокрутку при горизонтальном свайпе
-    if (deltaX > deltaY && deltaX > 10) {
-      e.preventDefault();
-    }
-  };
-
-  const onLightboxTouchEnd = (e: React.TouchEvent) => {
-    if (!lightboxTouchStart || !product) {
-      setLightboxTouchStart(null);
-      return;
-    }
-    
-    const touch = e.changedTouches[0];
-    const distanceX = touch.clientX - lightboxTouchStart.x;
-    const distanceY = Math.abs(touch.clientY - lightboxTouchStart.y);
-    
-    // Проверяем, что свайп горизонтальный (больше горизонтального движения)
-    if (Math.abs(distanceX) > distanceY && Math.abs(distanceX) > minSwipeDistance) {
-      e.preventDefault();
-      if (distanceX > 0) {
-        // Свайп вправо - предыдущее изображение
-        prevImage();
-      } else {
-        // Свайп влево - следующее изображение
-        nextImage();
-      }
-    }
-    
-    setLightboxTouchStart(null);
-  };
-
-  // Обработка свайпов для галереи материалов
-  const onMaterialsLightboxTouchStart = (e: React.TouchEvent) => {
-    const touch = e.targetTouches[0];
-    setMaterialsLightboxTouchStart({ x: touch.clientX, y: touch.clientY });
-  };
-
-  const onMaterialsLightboxTouchMove = (e: React.TouchEvent) => {
-    if (!materialsLightboxTouchStart) return;
-    
-    const touch = e.targetTouches[0];
-    const deltaX = Math.abs(touch.clientX - materialsLightboxTouchStart.x);
-    const deltaY = Math.abs(touch.clientY - materialsLightboxTouchStart.y);
-    
-    // Предотвращаем прокрутку при горизонтальном свайпе
-    if (deltaX > deltaY && deltaX > 10) {
-      e.preventDefault();
-    }
-  };
-
-  const onMaterialsLightboxTouchEnd = (e: React.TouchEvent) => {
-    if (!materialsLightboxTouchStart || !product) {
-      setMaterialsLightboxTouchStart(null);
-      return;
-    }
-    
-    const touch = e.changedTouches[0];
-    const distanceX = touch.clientX - materialsLightboxTouchStart.x;
-    const distanceY = Math.abs(touch.clientY - materialsLightboxTouchStart.y);
-    
-    // Проверяем, что свайп горизонтальный (больше горизонтального движения)
-    if (Math.abs(distanceX) > distanceY && Math.abs(distanceX) > minSwipeDistance) {
-      e.preventDefault();
-      if (distanceX > 0) {
-        // Свайп вправо - предыдущее изображение
-        prevMaterialImage();
-      } else {
-        // Свайп влево - следующее изображение
-        nextMaterialImage();
-      }
-    }
-    
-    setMaterialsLightboxTouchStart(null);
-  };
-
-  // Обработка клавиатуры для полноэкранной галереи
-  useEffect(() => {
-    if (!isLightboxOpen || !product) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        closeLightbox();
-      } else if (e.key === 'ArrowLeft' && product && product.images && product.images.length > 1) {
-        prevImage();
-      } else if (e.key === 'ArrowRight' && product && product.images && product.images.length > 1) {
-        nextImage();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isLightboxOpen, product, nextImage, prevImage, closeLightbox]);
-
-  // Обработка клавиатуры для галереи материалов
-  useEffect(() => {
-    if (!isMaterialsLightboxOpen || !product) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        closeMaterialsLightbox();
-      } else if (e.key === 'ArrowLeft' && product && product.materials && product.materials.length > 1) {
-        prevMaterialImage();
-      } else if (e.key === 'ArrowRight' && product && product.materials && product.materials.length > 1) {
-        nextMaterialImage();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isMaterialsLightboxOpen, product, nextMaterialImage, prevMaterialImage, closeMaterialsLightbox]);
 
   // Ранний возврат ПОСЛЕ всех хуков
   if (!product || !isOpen) return null;
@@ -302,6 +162,18 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   // Теперь можем безопасно использовать product, так как мы знаем что он не null
   const saleEndDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
   const viewingNow = Math.floor(Math.random() * 8) + 2;
+
+  // Преобразуем изображения товара для ImageLightbox
+  const productLightboxImages: ImageLightboxItem[] = product.images.map(url => ({ url }));
+  
+  // Преобразуем материалы для ImageLightbox
+  const materialsLightboxImages: ImageLightboxItem[] = (product.materials || [])
+    .filter(m => m.image)
+    .map(m => ({
+      url: m.image!,
+      title: m.name,
+      description: m.description || undefined,
+    }));
 
   const basePrice = product.salePrice || product.basePrice;
   const optionsTotal = selectedOptions.reduce((sum, optId) => {
@@ -631,143 +503,23 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
         </div>
       </div>
 
-      {/* Fullscreen Lightbox */}
-      {isLightboxOpen && (
-        <div 
-          ref={lightboxContainerRef}
-          className="fixed inset-0 z-[60] bg-foreground/95 backdrop-blur-sm flex items-center justify-center"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              closeLightbox();
-            }
-          }}
-          onTouchStart={onLightboxTouchStart}
-          onTouchMove={onLightboxTouchMove}
-          onTouchEnd={onLightboxTouchEnd}
-        >
-          <button
-            onClick={closeLightbox}
-            className="absolute top-4 right-4 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
-          >
-            <X className="w-6 h-6 text-primary-foreground" />
-          </button>
+      {/* Fullscreen Lightbox - используем универсальный компонент ImageLightbox */}
+      <ImageLightbox
+        isOpen={isLightboxOpen}
+        images={productLightboxImages}
+        initialIndex={currentImageIndex}
+        onClose={closeLightbox}
+        zIndex={60}
+      />
 
-          {product.images.length > 1 && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  prevImage();
-                }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
-              >
-                <ChevronLeft className="w-6 h-6 text-primary-foreground" />
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  nextImage();
-                }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
-              >
-                <ChevronRight className="w-6 h-6 text-primary-foreground" />
-              </button>
-            </>
-          )}
-
-          <div 
-            className="max-w-7xl max-h-[90vh] mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={product.images[currentImageIndex]}
-              alt={product.name}
-              className="max-w-full max-h-[90vh] object-contain rounded-xl"
-            />
-            <div className="text-center mt-4">
-              <p className="text-primary-foreground/60 text-sm">
-                {currentImageIndex + 1} / {product.images.length}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Materials Fullscreen Lightbox */}
-      {isMaterialsLightboxOpen && product.materials && product.materials.length > 0 && (
-        <div 
-          ref={materialsLightboxContainerRef}
-          className="fixed inset-0 z-[70] bg-foreground/95 backdrop-blur-sm flex items-center justify-center"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              closeMaterialsLightbox();
-            }
-          }}
-          onTouchStart={onMaterialsLightboxTouchStart}
-          onTouchMove={onMaterialsLightboxTouchMove}
-          onTouchEnd={onMaterialsLightboxTouchEnd}
-        >
-          <button
-            onClick={closeMaterialsLightbox}
-            className="absolute top-4 right-4 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
-          >
-            <X className="w-6 h-6 text-primary-foreground" />
-          </button>
-
-          {product.materials.length > 1 && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  prevMaterialImage();
-                }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
-              >
-                <ChevronLeft className="w-6 h-6 text-primary-foreground" />
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  nextMaterialImage();
-                }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-card/20 flex items-center justify-center hover:bg-card/40 transition-colors z-10"
-              >
-                <ChevronRight className="w-6 h-6 text-primary-foreground" />
-              </button>
-            </>
-          )}
-
-          <div 
-            className="max-w-7xl max-h-[90vh] mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {product.materials[materialsLightboxIndex]?.image && (
-              <img
-                src={product.materials[materialsLightboxIndex].image}
-                alt={product.materials[materialsLightboxIndex].name}
-                className="max-w-full max-h-[90vh] object-contain rounded-xl"
-              />
-            )}
-            <div className="text-center mt-4">
-              <p className="text-primary-foreground font-medium text-lg">
-                {product.materials[materialsLightboxIndex]?.name}
-              </p>
-              {product.materials[materialsLightboxIndex]?.description && (
-                <p className="text-primary-foreground/80 text-sm mt-2">
-                  {product.materials[materialsLightboxIndex].description}
-                </p>
-              )}
-              {product.materials.length > 1 && (
-                <p className="text-primary-foreground/60 text-sm mt-2">
-                  {materialsLightboxIndex + 1} / {product.materials.length}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Materials Fullscreen Lightbox - используем универсальный компонент ImageLightbox */}
+      <ImageLightbox
+        isOpen={isMaterialsLightboxOpen}
+        images={materialsLightboxImages}
+        initialIndex={materialsLightboxIndex}
+        onClose={closeMaterialsLightbox}
+        zIndex={70}
+      />
     </div>
   );
 };
