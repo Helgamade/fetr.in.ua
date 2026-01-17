@@ -99,14 +99,13 @@ export const CartDrawer: React.FC = () => {
 
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className={cn(
-          'fixed inset-0 bg-foreground/50 backdrop-blur-sm z-50 transition-opacity duration-300',
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        )}
-        onClick={closeCart}
-      />
+      {/* Backdrop - только когда корзина открыта */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-foreground/50 backdrop-blur-sm z-50 transition-opacity duration-300"
+          onClick={closeCart}
+        />
+      )}
 
       {/* Drawer */}
       <div

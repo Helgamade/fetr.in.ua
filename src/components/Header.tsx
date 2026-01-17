@@ -204,23 +204,21 @@ export const Header: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
-      <div
-        className={cn(
-          'fixed inset-0 bg-foreground/50 backdrop-blur-sm z-50 lg:hidden transition-opacity duration-300',
-          isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        )}
-        onClick={() => setIsMobileMenuOpen(false)}
-      />
+      {/* Mobile Menu Overlay - только когда меню открыто */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-foreground/50 backdrop-blur-sm z-50 lg:hidden transition-opacity duration-300"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
 
-      {/* User Menu Overlay */}
-      <div
-        className={cn(
-          'fixed inset-0 bg-foreground/50 backdrop-blur-sm z-50 transition-opacity duration-300',
-          isUserMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        )}
-        onClick={() => setIsUserMenuOpen(false)}
-      />
+      {/* User Menu Overlay - только когда меню открыто */}
+      {isUserMenuOpen && (
+        <div
+          className="fixed inset-0 bg-foreground/50 backdrop-blur-sm z-50 transition-opacity duration-300"
+          onClick={() => setIsUserMenuOpen(false)}
+        />
+      )}
 
       {/* User Menu (Desktop & Mobile) */}
       {isAuthenticated && user && (
