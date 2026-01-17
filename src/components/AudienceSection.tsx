@@ -32,7 +32,7 @@ export const AudienceSection: React.FC = () => {
   const card2Items = [card2Item1, card2Item2, card2Item3, card2Item4, card2Item5].filter(item => item && item.trim());
 
   return (
-    <section id="audience" className="py-20 bg-peach/30">
+    <section id="audience" className="py-20 bg-muted/30">
       <div className="container-tight">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
@@ -45,7 +45,7 @@ export const AudienceSection: React.FC = () => {
         
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {/* Первая карточка - Майбутнім мамам */}
-          <div className="rounded-lg text-card-foreground shadow-sm glass-card border-0 overflow-hidden bg-peach/30">
+          <div className="rounded-lg text-card-foreground shadow-sm glass-card border-0 overflow-hidden bg-peach/50">
             <div className="p-8">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 rounded-xl bg-background/80 flex items-center justify-center text-3xl shadow-sm">
@@ -67,7 +67,7 @@ export const AudienceSection: React.FC = () => {
           </div>
 
           {/* Вторая карточка - Батькам з дітьми */}
-          <div className="rounded-lg text-card-foreground shadow-sm glass-card border-0 overflow-hidden bg-sage/30">
+          <div className="rounded-lg text-card-foreground shadow-sm glass-card border-0 overflow-hidden bg-sage/50">
             <div className="p-8">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 rounded-xl bg-background/80 flex items-center justify-center text-3xl shadow-sm">
