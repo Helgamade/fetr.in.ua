@@ -25,9 +25,9 @@ export const AudienceSection: React.FC = () => {
   const card2Item4 = texts.find(t => t.key === 'audience.card2.item4')?.value || 'Корони, маски, костюми';
   const card2Item5 = texts.find(t => t.key === 'audience.card2.item5')?.value || 'Спільні творчі вечори з дитиною';
 
-  // Фильтруем пустые элементы
-  const card1Items = [card1Item1, card1Item2, card1Item3, card1Item4, card1Item5].filter(item => item);
-  const card2Items = [card2Item1, card2Item2, card2Item3, card2Item4, card2Item5].filter(item => item);
+  // Фильтруем пустые элементы (оставляем только непустые строки)
+  const card1Items = [card1Item1, card1Item2, card1Item3, card1Item4, card1Item5].filter(item => item && item.trim());
+  const card2Items = [card2Item1, card2Item2, card2Item3, card2Item4, card2Item5].filter(item => item && item.trim());
 
   return (
     <section id="audience" className="py-20 bg-peach/30">
