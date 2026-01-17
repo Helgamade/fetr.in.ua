@@ -32,8 +32,15 @@ export const AudienceSection: React.FC = () => {
   const card2Items = [card2Item1, card2Item2, card2Item3, card2Item4, card2Item5].filter(item => item && item.trim());
 
   return (
-    <section id="audience" className="py-20" style={{ backgroundColor: 'oklch(98% 0.016 73.684)' }}>
-      <div className="container-tight">
+    <section id="audience" className="py-20 relative overflow-hidden">
+      {/* Градиентный фон */}
+      <div 
+        className="absolute inset-0 -z-10" 
+        style={{
+          background: `linear-gradient(to bottom right, oklch(98% 0.016 73.684), oklch(96% 0.016 73.684), oklch(98% 0.016 73.684))`
+        }}
+      />
+      <div className="container-tight relative z-10">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
             {title}
