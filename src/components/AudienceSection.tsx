@@ -55,14 +55,14 @@ export const AudienceSection: React.FC = () => {
                   {card1Title}
                 </h3>
               </div>
-              <ul className="space-y-3">
-                {card1Items.map((item, index) => (
-                  <li key={index} className="flex items-start gap-3 text-foreground/80">
-                    <span className="text-primary mt-1">✦</span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+                  <ul className="space-y-3">
+                    {card1Items.map((item, index) => (
+                      <li key={index} className="flex items-start gap-3 text-foreground/80">
+                        <span className="text-primary">✦</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
             </div>
           </div>
 
@@ -77,14 +77,14 @@ export const AudienceSection: React.FC = () => {
                   {card2Title}
                 </h3>
               </div>
-              <ul className="space-y-3">
-                {card2Items.map((item, index) => (
-                  <li key={index} className="flex items-start gap-3 text-foreground/80">
-                    <span className="text-primary mt-1">✦</span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+                  <ul className="space-y-3">
+                    {card2Items.map((item, index) => (
+                      <li key={index} className="flex items-start gap-3 text-foreground/80">
+                        <span className="text-primary">✦</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
             </div>
           </div>
         </div>
