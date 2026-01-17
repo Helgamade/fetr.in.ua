@@ -36,7 +36,7 @@ export const AudienceSection: React.FC = () => {
       id="audience" 
       className="py-20 relative overflow-hidden"
       style={{
-        background: `linear-gradient(to bottom right, oklch(98% 0.016 73.684), oklch(96% 0.016 73.684), oklch(98% 0.016 73.684))`
+        background: `linear-gradient(to right bottom, oklch(0.98 0.02 73.68 / 0.5), oklch(0.96 0.02 73.68 / 0.5), oklch(0.96 0.02 74.35 / 0.5))`
       }}
     >
       <div className="container-tight relative">
