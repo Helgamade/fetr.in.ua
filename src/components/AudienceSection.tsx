@@ -2,8 +2,10 @@ import React from 'react';
 import { useTexts, SiteText } from '@/hooks/useTexts';
 
 export const AudienceSection: React.FC = () => {
-  const { data: textsData } = useTexts();
+  const { data: textsData, isLoading } = useTexts();
   const texts: SiteText[] = Array.isArray(textsData) ? textsData : [];
+  
+  // Компонент всегда рендерится, даже если данные еще загружаются
 
   // Получаем тексты из базы данных
   const title = texts.find(t => t.key === 'audience.title')?.value || 'Кому підійде?';
