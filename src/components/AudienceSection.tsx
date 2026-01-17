@@ -48,8 +48,8 @@ export const AudienceSection: React.FC = () => {
           <div className="rounded-lg text-card-foreground shadow-sm glass-card border-0 overflow-hidden bg-peach/50">
             <div className="p-8">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-xl bg-background/80 flex items-center justify-center text-3xl shadow-sm">
-                  🤰
+                <div className="rounded-xl bg-background/80 flex items-center justify-center shadow-sm" style={{ width: '3rem', height: '3rem' }}>
+                  <span style={{ fontSize: '1.5rem', lineHeight: '2.25rem' }}>🤰</span>
                 </div>
                 <h3 className="font-heading text-2xl font-bold text-foreground">
                   {card1Title}
@@ -70,8 +70,8 @@ export const AudienceSection: React.FC = () => {
           <div className="rounded-lg text-card-foreground shadow-sm glass-card border-0 overflow-hidden bg-sage/50">
             <div className="p-8">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-xl bg-background/80 flex items-center justify-center text-3xl shadow-sm">
-                  👶
+                <div className="rounded-xl bg-background/80 flex items-center justify-center shadow-sm" style={{ width: '3rem', height: '3rem' }}>
+                  <span style={{ fontSize: '1.5rem', lineHeight: '2.25rem' }}>👶</span>
                 </div>
                 <h3 className="font-heading text-2xl font-bold text-foreground">
                   {card2Title}
