@@ -47,6 +47,13 @@ router.get('/google/callback',
       const userAgent = req.headers['user-agent'] || null;
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 дней
 
+      // Удаляем старые сессии с таким же токеном перед созданием новой
+      // Это предотвращает ошибку ER_DUP_ENTRY при повторной авторизации
+      await pool.execute(
+        'DELETE FROM user_sessions WHERE session_token = ?',
+        [accessToken]
+      );
+
       await pool.execute(
         `INSERT INTO user_sessions (user_id, session_token, refresh_token, ip_address, user_agent, expires_at)
          VALUES (?, ?, ?, ?, ?, ?)`,
