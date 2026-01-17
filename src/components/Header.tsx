@@ -224,8 +224,8 @@ export const Header: React.FC = () => {
       {isAuthenticated && user && (
         <div
           className={cn(
-            'fixed top-0 right-0 bottom-0 w-[280px] bg-card z-50 transition-transform duration-300 shadow-large',
-            isUserMenuOpen ? 'translate-x-0' : 'translate-x-full'
+            'fixed top-0 right-0 bottom-0 w-[280px] bg-card z-50 transition-transform duration-300',
+            isUserMenuOpen ? 'translate-x-0 shadow-large' : 'translate-x-full shadow-none'
           )}
         >
           <div className="flex items-center justify-between p-4 border-b border-border">
@@ -298,8 +298,8 @@ export const Header: React.FC = () => {
       {/* Mobile Menu */}
       <div
         className={cn(
-          'fixed top-0 right-0 bottom-0 w-[280px] bg-card z-50 lg:hidden transition-transform duration-300 shadow-large',
-          isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          'fixed top-0 right-0 bottom-0 w-[280px] bg-card z-50 lg:hidden transition-transform duration-300',
+          isMobileMenuOpen ? 'translate-x-0 shadow-large' : 'translate-x-full shadow-none'
         )}
       >
         <div className="flex items-center justify-between p-4 border-b border-border">

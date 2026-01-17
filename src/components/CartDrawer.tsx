@@ -110,9 +110,9 @@ export const CartDrawer: React.FC = () => {
       {/* Drawer */}
       <div
         className={cn(
-          'fixed top-0 right-0 bottom-0 w-full sm:w-[420px] bg-card z-50 transition-transform duration-300 shadow-large flex flex-col',
+          'fixed top-0 right-0 bottom-0 w-full sm:w-[420px] bg-card z-50 transition-transform duration-300 flex flex-col',
           'rounded-l-2xl',
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+          isOpen ? 'translate-x-0 shadow-large' : 'translate-x-full shadow-none'
         )}
       >
         {/* Header */}
