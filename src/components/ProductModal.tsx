@@ -333,7 +333,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
       />
 
       {/* Modal */}
-      <div className="relative w-full h-full md:h-auto md:max-h-[90vh] md:mx-4 bg-card md:rounded-2xl overflow-hidden animate-scale-in md:max-w-[calc(660px+min(90vh,100vw-660px-2rem))]">
+      <div className="relative w-full h-full md:h-auto md:max-h-[90vh] md:mx-4 bg-card md:rounded-xl overflow-hidden animate-scale-in md:max-w-[calc(660px+min(90vh,100vw-660px-2rem))]">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -404,7 +404,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                         key={idx}
                         onClick={() => setCurrentImageIndex(idx)}
                         className={cn(
-                          'w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors',
+                          'w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-colors',
                           idx === currentImageIndex ? 'border-primary' : 'border-transparent'
                         )}
                       >
@@ -527,11 +527,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                 </h3>
                 <div className="space-y-2">
                   {product.materials.map((material, idx) => (
-                    <div key={material.id || idx} className="flex gap-3 p-3 rounded-lg bg-muted">
+                    <div key={material.id || idx} className="flex gap-3 p-2 rounded-xl bg-muted">
                       {material.thumbnail && (
                         <button
                           onClick={() => openMaterialsLightbox(idx)}
-                          className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-border hover:opacity-80 transition-opacity"
+                          className="flex-shrink-0 w-12 h-12 rounded-xl overflow-hidden border border-border hover:opacity-80 transition-opacity"
                         >
                           <img
                             src={material.thumbnail}
