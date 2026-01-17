@@ -32,7 +32,7 @@ export const AudienceSection: React.FC = () => {
   const card2Items = [card2Item1, card2Item2, card2Item3, card2Item4, card2Item5].filter(item => item && item.trim());
 
   return (
-    <section id="audience" className="py-20 bg-muted/30">
+    <section id="audience" className="py-20" style={{ backgroundColor: 'oklch(98% 0.016 73.684)' }}>
       <div className="container-tight">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
