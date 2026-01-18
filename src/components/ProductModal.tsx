@@ -204,15 +204,15 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   // Обновляются только при изменении часа или при открытии модалки (перезагрузка данных)
   const saleEndDate = useMemo(() => getEndOfTodayKyiv(), []);
   
-  // Ранний возврат ПОСЛЕ всех хуков
-  if (!product || !isOpen) return null;
-
-  // Теперь можем безопасно использовать product, так как мы знаем что он не null
   // Используем useMemo для стабильности просмотров - обновляется только при изменении часа или открытии модалки
+  // Вызываем ДО раннего возврата (правила хуков)
   const viewingNow = useMemo(
     () => product ? getViewingNowCount(product.id, product.purchaseCount || 0) : 0,
     [product?.id, product?.purchaseCount, currentHour, isOpen]
   );
+  
+  // Ранний возврат ПОСЛЕ всех хуков
+  if (!product || !isOpen) return null;
 
   // Преобразуем изображения товара для ImageLightbox
   const productLightboxImages: ImageLightboxItem[] = product.images.map(url => ({ url }));

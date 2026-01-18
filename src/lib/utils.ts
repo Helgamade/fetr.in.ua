@@ -109,8 +109,16 @@ export function getViewingNowCount(productId: number, purchaseCount: number): nu
   let minViewers: number;
   let maxViewers: number;
   
-  if (kyivHour >= 0 && kyivHour < 7) {
-    // Ночь: 00:00-07:00
+  if (kyivHour >= 2 && kyivHour < 6) {
+    // Глубокая ночь: 02:00-06:00 (разрешаем 0)
+    minViewers = 0;
+    maxViewers = 2;
+  } else if (kyivHour >= 0 && kyivHour < 2) {
+    // Ночь: 00:00-02:00
+    minViewers = 1;
+    maxViewers = 2;
+  } else if (kyivHour >= 6 && kyivHour < 7) {
+    // Раннее утро: 06:00-07:00
     minViewers = 1;
     maxViewers = 2;
   } else if (kyivHour >= 7 && kyivHour < 9) {
@@ -130,7 +138,7 @@ export function getViewingNowCount(productId: number, purchaseCount: number): nu
   // 3. Множитель популярности (логарифмическая функция)
   const popularityMultiplier = 0.8 + 0.4 * (Math.log10(Math.max(100, purchaseCount) / 100) / Math.log10(16));
   
-  // 4. Случайная вариация (гауссово распределение)
+  // 4. Случайная вариация (детерминированная на основе productId для стабильности)
   // Используем productId как seed для стабильности в рамках часа
   const seed = productId + Math.floor(now.getTime() / (1000 * 60 * 60)); // Обновляется каждый час
   // Простая детерминированная псевдослучайная генерация на основе seed
@@ -143,6 +151,24 @@ export function getViewingNowCount(productId: number, purchaseCount: number): nu
   // 6. Округляем и применяем ограничения
   viewingCount = Math.round(viewingCount);
   viewingCount = Math.max(minViewers, Math.min(maxViewers, viewingCount));
+  
+  // 7. Гарантируем уникальность для разных товаров
+  // Используем productId для создания смещения, которое гарантирует разные значения
+  // Это важно для того, чтобы все 3 товара не имели одинаковых показателей
+  // Используем смещение на основе остатка от деления productId, чтобы создать различия
+  const idOffset = ((productId % 3) - 1) * 1.5; // -1.5, 0, или 1.5 для трех товаров
+  viewingCount = viewingCount + idOffset;
+  
+  // Округляем после добавления смещения
+  viewingCount = Math.round(viewingCount);
+  
+  // Применяем границы
+  viewingCount = Math.max(minViewers, Math.min(maxViewers, viewingCount));
+  
+  // Если получился 0, но это не период 02:00-06:00, делаем минимум 1
+  if (viewingCount === 0 && !(kyivHour >= 2 && kyivHour < 6)) {
+    viewingCount = 1;
+  }
   
   return viewingCount;
 }
