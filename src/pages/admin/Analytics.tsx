@@ -366,7 +366,9 @@ export function Analytics() {
                           {session.ip_address && (
                             <span className="font-mono">IP: {session.ip_address.split(',')[0].trim()}</span>
                           )}
-                          {session.city && <span>• {session.city}</span>}
+                          {(session.city || session.country) && (
+                            <span>• {[session.city, session.country].filter(Boolean).join(', ')}</span>
+                          )}
                           {session.utm_source && (
                             <Badge variant="outline" className="text-xs">
                               {session.utm_source}
