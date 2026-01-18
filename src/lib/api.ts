@@ -106,6 +106,9 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
   return response.json();
 }
 
+// Export fetchAPI for use in admin pages
+export { fetchAPI };
+
 // Products API
 export const productsAPI = {
   getAll: () => fetchAPI<Product[]>('/products'),

@@ -34,7 +34,7 @@ async function getLocationByIP(ip) {
     const timeoutId = setTimeout(() => controller.abort(), 3000);
 
     try {
-      const response = await fetch(`http://ip-api.com/json/${cleanIP}?fields=status,city,country`, {
+      const response = await fetch(`http://ip-api.com/json/${cleanIP}?fields=status,city,country,lat,lon`, {
         signal: controller.signal,
       });
 
@@ -53,8 +53,10 @@ async function getLocationByIP(ip) {
         const result = {
           city: data.city || null,
           country: data.country || null,
+          lat: data.lat || null,
+          lon: data.lon || null,
         };
-        console.log(`[Analytics] Location determined: ${result.city}, ${result.country}`);
+        console.log(`[Analytics] Location determined: ${result.city}, ${result.country}, lat: ${result.lat}, lon: ${result.lon}`);
         return result;
       }
 

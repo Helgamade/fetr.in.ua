@@ -1,6 +1,6 @@
 import express from 'express';
 import pool from '../db.js';
-import { adminGuard } from '../middleware/adminGuard.js';
+import { adminGuard, logAdminAction } from '../middleware/adminGuard.js';
 
 const router = express.Router();
 
@@ -53,6 +53,19 @@ router.put('/settings', adminGuard, async (req, res, next) => {
          VALUES (?, ?, ?) 
          ON DUPLICATE KEY UPDATE setting_value = ?, setting_type = ?`,
         [key, stringValue, settingType, stringValue, settingType]
+      );
+    }
+    
+    // Логируем изменение настроек
+    if (req.user) {
+      await logAdminAction(
+        req.user.id,
+        'UPDATE_SOCIAL_PROOF_SETTINGS',
+        'social_proof_settings',
+        null,
+        null,
+        updates,
+        req
       );
     }
     
@@ -178,6 +191,106 @@ router.get('/logs', adminGuard, async (req, res, next) => {
       }
     });
   } catch (error) {
+    next(error);
+  }
+});
+
+// Получить координаты по IP и город через НП (публичный endpoint для SocialProof)
+router.get('/location-by-ip', async (req, res, next) => {
+  try {
+    // Получаем IP из запроса (аналогично analytics)
+    let ipAddress = req.headers['x-forwarded-for'] 
+      || req.headers['x-real-ip'] 
+      || req.headers['cf-connecting-ip']
+      || req.socket?.remoteAddress 
+      || req.connection?.remoteAddress 
+      || req.ip;
+
+    if (ipAddress && typeof ipAddress === 'string' && ipAddress.includes(',')) {
+      ipAddress = ipAddress.split(',')[0].trim();
+    }
+
+    // Нормализуем IP
+    let cleanIP = String(ipAddress || '').split(',')[0].trim();
+    if (cleanIP.startsWith('::ffff:')) {
+      cleanIP = cleanIP.substring(7);
+    }
+
+    // Исключаем локальные IP
+    if (!cleanIP || cleanIP === '::1' || cleanIP === '127.0.0.1' || 
+        cleanIP.startsWith('192.168.') || cleanIP.startsWith('10.') || 
+        cleanIP.startsWith('172.') || cleanIP === 'localhost') {
+      return res.json({ lat: null, lon: null, city_np: null, city_ip: null });
+    }
+
+    // Получаем координаты и город по IP через ip-api.com
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    try {
+      const response = await fetch(`http://ip-api.com/json/${cleanIP}?fields=status,city,country,lat,lon`, {
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        return res.json({ lat: null, lon: null, city_np: null, city_ip: null });
+      }
+
+      const data = await response.json();
+
+      if (data.status !== 'success' || !data.lat || !data.lon) {
+        return res.json({ lat: null, lon: null, city_np: null, city_ip: data.city || null });
+      }
+
+      const lat = parseFloat(data.lat);
+      const lon = parseFloat(data.lon);
+      const cityFromIP = data.city || null;
+
+      // Определяем ближайшее отделение НП по координатам
+      let cityFromNP = null;
+      if (lat && lon) {
+        const [warehouses] = await pool.execute(`
+          SELECT 
+            nw.city_description_ua as city,
+            (
+              6371 * acos(
+                cos(radians(?)) * 
+                cos(radians(nw.latitude)) * 
+                cos(radians(nw.longitude) - radians(?)) + 
+                sin(radians(?)) * 
+                sin(radians(nw.latitude))
+              )
+            ) AS distance_km
+          FROM nova_poshta_warehouses nw
+          INNER JOIN nova_poshta_cities nc ON nw.city_ref = nc.ref
+          WHERE nc.settlement_type_description_ua = 'місто'
+            AND nw.latitude IS NOT NULL 
+            AND nw.longitude IS NOT NULL
+          HAVING distance_km <= 20
+          ORDER BY distance_km ASC
+          LIMIT 1
+        `, [lat, lon, lat]);
+
+        if (warehouses.length > 0) {
+          cityFromNP = warehouses[0].city; // Уже на украинском из БД НП
+        }
+      }
+
+      res.json({
+        lat,
+        lon,
+        city_ip: cityFromIP, // Город из ip-api.com (может быть на английском)
+        city_np: cityFromNP  // Город из НП на украинском (приоритетный)
+      });
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      console.error('[Social Proof] Error getting location by IP:', fetchError.message);
+      res.json({ lat: null, lon: null, city_np: null, city_ip: null });
+    }
+  } catch (error) {
+    console.error('[Social Proof] Error in location-by-ip:', error);
     next(error);
   }
 });

@@ -121,40 +121,31 @@ export const SocialProof: React.FC = () => {
     }
   }, [typesData]);
 
-  // Функция для получения ближайшего города через API Новой Почты
-  const getNearestCity = async (lat: number, lon: number): Promise<string | null> => {
+  // Функция для получения координат и города через НП по IP
+  const getLocationByIP = async (): Promise<{ 
+    lat: number | null; 
+    lon: number | null; 
+    city_np: string | null; 
+    city_ip: string | null;
+    country: string | null;
+  }> => {
     try {
-      const response = await fetch(`/api/nova-poshta/nearest-warehouse?lat=${lat}&lon=${lon}&radius=20000`);
+      // Используем новый endpoint который получает координаты и город НП
+      const response = await fetch('/api/social-proof/location-by-ip');
       if (response.ok) {
         const data = await response.json();
-        return data.city || null;
+        return {
+          lat: data.lat || null,
+          lon: data.lon || null,
+          city_np: data.city_np || null, // Город из НП на украинском (приоритетный)
+          city_ip: data.city_ip || null, // Город из ip-api.com (может быть на английском)
+          country: null // Можно добавить в endpoint если нужно
+        };
       }
     } catch (error) {
-      console.error('Error getting nearest city:', error);
+      console.error('Error getting location by IP:', error);
     }
-    return null;
-  };
-
-  // Функция для получения города из IP (из аналитики)
-  const getCityFromIP = async (): Promise<{ city: string | null; country: string | null }> => {
-    try {
-      // Получаем текущую сессию из аналитики
-      const sessionId = getSessionId();
-      const response = await fetch(`/api/analytics/realtime`);
-      if (response.ok) {
-        const sessions = await response.json();
-        const currentSession = sessions.find((s: any) => s.session_id === sessionId);
-        if (currentSession) {
-          return {
-            city: currentSession.city || null,
-            country: currentSession.country || null
-          };
-        }
-      }
-    } catch (error) {
-      console.error('Error getting city from IP:', error);
-    }
-    return { city: null, country: null };
+    return { lat: null, lon: null, city_np: null, city_ip: null, country: null };
   };
 
   // Функция для сохранения лога уведомления
@@ -174,23 +165,23 @@ export const SocialProof: React.FC = () => {
         variables_used: variables
       };
 
-      // Для purchased_local добавляем персональные данные
+      // Для purchased_local добавляем персональные данные через IP -> координаты -> НП
       if (notification.type === 'purchased_local') {
-        const ipLocation = await getCityFromIP();
-        logData.client_city_from_ip = ipLocation.city;
-        logData.client_country_from_ip = ipLocation.country;
-        
-        // Координаты оставляем null (не используем браузерную геолокацию)
-        logData.client_latitude = null;
-        logData.client_longitude = null;
-        logData.client_city_from_np = null; // Можно попробовать определить по городу из IP
+        const location = await getLocationByIP();
+        logData.client_latitude = location.lat;
+        logData.client_longitude = location.lon;
+        logData.client_city_from_ip = location.city_ip; // Город из ip-api.com (может быть на английском)
+        logData.client_city_from_np = location.city_np; // Город из НП на украинском (приоритетный)
+        logData.client_country_from_ip = location.country || null;
         
         logData.client_name = notification.name;
         logData.hours_ago = notification.hoursAgo;
       } else if (notification.type === 'purchased_today') {
-        const ipLocation = await getCityFromIP();
-        logData.client_city_from_ip = ipLocation.city;
-        logData.client_country_from_ip = ipLocation.country;
+        const location = await getLocationByIP();
+        logData.client_city_from_ip = location.city_ip;
+        logData.client_country_from_ip = location.country || null;
+        logData.client_latitude = location.lat;
+        logData.client_longitude = location.lon;
       }
 
       await fetch('/api/social-proof/log', {
@@ -315,11 +306,13 @@ export const SocialProof: React.FC = () => {
           };
         } else if (selectedType.code === 'purchased_local') {
           // Тип 3: "Ольга (Київ) купила N годин назад" - всегда валидно
-          let city = 'Київ';
-          const ipLocation = await getCityFromIP();
-          if (ipLocation.city) {
-            city = ipLocation.city;
-          }
+          // Получаем координаты по IP и город через НП (на украинском)
+          const location = await getLocationByIP();
+          
+          // Используем город НП (на украинском) как приоритетный, если есть
+          // Иначе используем город из ip-api.com (может быть на английском)
+          // Иначе fallback на "Київ"
+          let city = location.city_np || location.city_ip || 'Київ';
 
           const name = namesData.length > 0 
             ? namesData[Math.floor(Math.random() * namesData.length)].name

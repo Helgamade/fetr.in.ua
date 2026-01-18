@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,43 +12,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Save, Plus, Trash2, Settings, BarChart3, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
-
-// Вспомогательная функция для авторизованных запросов
-async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const token = localStorage.getItem('accessToken');
-  
-  const response = await fetch(`/api${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-      ...options?.headers,
-    },
-    credentials: 'include',
-  });
-
-  if (!response.ok) {
-    let errorMessage = `HTTP error! status: ${response.status}`;
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.error || errorData.message || errorMessage;
-    } catch {
-      // Если не удалось распарсить JSON, используем дефолтное сообщение
-    }
-    
-    if (response.status === 401) {
-      throw new Error('Unauthorized');
-    }
-    
-    throw new Error(errorMessage);
-  }
-
-  return response.json();
-}
+import { fetchAPI } from '@/lib/api';
 
 export function SocialProof() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'settings';
 
   // Загрузка настроек
   const { data: settings = {}, isLoading: settingsLoading } = useQuery({
@@ -221,7 +192,7 @@ export function SocialProof() {
         <p className="text-muted-foreground">Налаштування автоматичних сповіщень</p>
       </div>
 
-      <Tabs defaultValue="settings" className="space-y-4">
+      <Tabs value={currentTab} onValueChange={(value) => setSearchParams({ tab: value })} className="space-y-4">
         <TabsList>
           <TabsTrigger value="settings">
             <Settings className="w-4 h-4 mr-2" />
