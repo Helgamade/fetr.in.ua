@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Product } from '@/types/store';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -6,7 +6,7 @@ import { X, ChevronLeft, ChevronRight, ShoppingBag, Check, Users, Eye, Truck, Sh
 import { useCart } from '@/context/CartContext';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { OptionIcon } from '@/components/OptionIcon';
-import { cn } from '@/lib/utils';
+import { cn, getEndOfTodayKyiv } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { trackEvent, trackFunnel } from '@/lib/analytics';
 import { ImageLightbox, ImageLightboxItem } from '@/components/ImageLightbox';
@@ -156,11 +156,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   };
 
 
+  // Используем useMemo для стабильности даты - не будет меняться при ре-рендере
+  const saleEndDate = useMemo(() => getEndOfTodayKyiv(), []);
+
   // Ранний возврат ПОСЛЕ всех хуков
   if (!product || !isOpen) return null;
 
   // Теперь можем безопасно использовать product, так как мы знаем что он не null
-  const saleEndDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
   const viewingNow = Math.floor(Math.random() * 8) + 2;
 
   // Преобразуем изображения товара для ImageLightbox

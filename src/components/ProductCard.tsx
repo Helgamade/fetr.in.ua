@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Product } from '@/types/store';
 import { Button } from '@/components/ui/button';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { ShoppingBag, Eye, Users, ChevronRight, Sparkles, Flame, Crown } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/hooks/useTranslation';
-import { cn } from '@/lib/utils';
+import { cn, getEndOfTodayKyiv } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics';
 
 interface ProductCardProps {
@@ -26,7 +26,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
 
   // Mock data for social proof
   const viewingNow = Math.floor(Math.random() * 8) + 2;
-  const saleEndDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 3 days from now
+  
+  // Используем useMemo для стабильности даты - не будет меняться при ре-рендере
+  const saleEndDate = useMemo(() => getEndOfTodayKyiv(), []);
 
   const discount = product.salePrice 
     ? Math.round((1 - product.salePrice / product.basePrice) * 100)
