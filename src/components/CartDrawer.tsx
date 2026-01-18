@@ -1,11 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useProducts } from '@/hooks/useProducts';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
-import { X, Plus, Minus, Trash2, ShoppingBag, Truck, ArrowRight } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ShoppingBag, Truck, ArrowRight, Clock } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { cn, getNextShippingDate } from '@/lib/utils';
 import { analytics } from '@/lib/analytics';
 
 export const CartDrawer: React.FC = () => {
@@ -41,6 +41,31 @@ export const CartDrawer: React.FC = () => {
 
   const finalTotal = getFinalTotal();
   const hasFreeDelivery = finalTotal >= FREE_DELIVERY_THRESHOLD;
+
+  // Shipping info
+  const shippingInfo = useMemo(() => getNextShippingDate(), []);
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    if (!shippingInfo.deadlineDate) return;
+    
+    const calculateTimeLeft = () => {
+      const difference = shippingInfo.deadlineDate!.getTime() - new Date().getTime();
+      if (difference > 0) {
+        setTimeLeft({
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60),
+        });
+      } else {
+        setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+    
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [shippingInfo.deadlineDate]);
 
   // Отслеживаем, была ли корзина открыта ранее (чтобы не логировать при первой загрузке)
   const wasOpenRef = useRef<boolean>(false);
@@ -317,6 +342,27 @@ export const CartDrawer: React.FC = () => {
                   );
                 })}
               </ul>
+
+              {/* Shipping info */}
+              <div className="p-4 rounded-xl bg-muted/50 mt-4">
+                <div className="flex items-center gap-2 text-sm mb-1">
+                  <Clock className="w-4 h-4 text-primary" />
+                  <span className="text-muted-foreground">
+                    Найближча відправка — у {shippingInfo.dayName}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground mb-2">
+                  📦 Відправляємо Пн–Пт о 18:00
+                </div>
+                {shippingInfo.isToday && shippingInfo.deadlineDate && (() => {
+                  const timeString = `${String(timeLeft.hours).padStart(2, '0')}:${String(timeLeft.minutes).padStart(2, '0')}:${String(timeLeft.seconds).padStart(2, '0')}`;
+                  return timeString ? (
+                    <div className="text-xs text-muted-foreground">
+                      При оплаті протягом {timeString} — відправимо ще сьогодні
+                    </div>
+                  ) : null;
+                })()}
+              </div>
 
               {/* Totals and checkout button */}
               <div className="bg-card rounded-b-lg p-4 space-y-4 border-t border-border">

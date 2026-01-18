@@ -52,6 +52,109 @@ export function getEndOfTodayKyiv(): Date {
 }
 
 /**
+ * Получает текущую дату и время в часовом поясе Europe/Kyiv
+ * @returns объект с датой, часом, днем недели (0=воскресенье, 1=понедельник, ...)
+ */
+export function getKyivDateTime(): { date: Date; hour: number; dayOfWeek: number; isWeekday: boolean } {
+  const now = new Date();
+  const kyivDateStr = now.toLocaleString('en-CA', { timeZone: 'Europe/Kyiv' }); // YYYY-MM-DD, HH:MM:SS
+  const kyivParts = now.toLocaleString('en-US', { 
+    timeZone: 'Europe/Kyiv',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).split(/[\/,\s:]+/);
+  
+  const [month, day, year, hour, minute, second] = kyivParts.map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+  
+  // День недели в Киеве (0=воскресенье, 1=понедельник, ..., 6=суббота)
+  const dayOfWeek = parseInt(now.toLocaleString('en-US', { timeZone: 'Europe/Kyiv', weekday: 'numeric' })) % 7;
+  const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5; // Пн-Пт
+  
+  return { date, hour, dayOfWeek, isWeekday };
+}
+
+/**
+ * Вычисляет ближайшую дату отправки заказа
+ * Правила:
+ * - Отправки Пн-Пт в 18:00
+ * - Оплата до 16:00 → отправка в тот же день
+ * - Оплата после 16:00 → отправка на следующий рабочий день
+ * - Оплата в пятницу после 16:00 → отправка в понедельник
+ * - Оплата на выходных → отправка в понедельник
+ * @returns объект с датой отправки, днем недели и текстом
+ */
+export function getNextShippingDate(): {
+  date: Date;
+  dayName: string;
+  isToday: boolean;
+  deadlineDate: Date | null; // Дата/время дедлайна для оплаты (16:00 сегодня), если отправка возможна сегодня
+} {
+  const { hour, dayOfWeek, isWeekday } = getKyivDateTime();
+  
+  const dayNames = ['неділю', 'понеділок', 'вівторок', 'середу', 'четвер', 'п\'ятницю', 'суботу'];
+  
+  // Если сегодня рабочий день и время до 16:00 - отправка сегодня
+  if (isWeekday && hour < 16) {
+    const now = new Date();
+    const todayKyiv = now.toLocaleDateString('en-CA', { timeZone: 'Europe/Kyiv' });
+    const [year, month, day] = todayKyiv.split('-').map(Number);
+    
+    // Получаем смещение киевского часового пояса
+    const testDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+    const kyivNoonParts = new Intl.DateTimeFormat('en', {
+      timeZone: 'Europe/Kyiv',
+      hour: '2-digit',
+      hour12: false
+    }).formatToParts(testDate);
+    const kyivHour = parseInt(kyivNoonParts.find(p => p.type === 'hour')!.value);
+    const offsetHours = kyivHour - 12;
+    
+    // Создаем дедлайн 16:00 в Киеве
+    const deadlineKyiv = new Date(Date.UTC(year, month - 1, day, 16 - offsetHours, 0, 0, 0));
+    
+    return {
+      date: now,
+      dayName: dayNames[dayOfWeek],
+      isToday: true,
+      deadlineDate: deadlineKyiv
+    };
+  }
+  
+  // Иначе - следующий рабочий день
+  let daysToAdd = 1;
+  
+  if (!isWeekday) {
+    // Сегодня выходной - следующий понедельник
+    daysToAdd = dayOfWeek === 0 ? 1 : (8 - dayOfWeek); // Если воскресенье -> 1 день, если суббота -> 2 дня
+  } else if (dayOfWeek === 5) {
+    // Сегодня пятница - следующий понедельник
+    daysToAdd = 3;
+  } else {
+    // Сегодня рабочий день после 16:00 - следующий рабочий день
+    daysToAdd = 1;
+  }
+  
+  const shippingDate = new Date();
+  shippingDate.setDate(shippingDate.getDate() + daysToAdd);
+  
+  // Убеждаемся, что это рабочий день
+  const shippingDayOfWeek = (dayOfWeek + daysToAdd) % 7;
+  
+  return {
+    date: shippingDate,
+    dayName: dayNames[shippingDayOfWeek],
+    isToday: false,
+    deadlineDate: null
+  };
+}
+
+/**
  * Генерирует случайное число с гауссовым распределением
  * @param mean - среднее значение
  * @param stdDev - стандартное отклонение
