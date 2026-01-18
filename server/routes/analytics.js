@@ -6,13 +6,27 @@ const router = express.Router();
 // Функция для определения города по IP-адресу
 async function getLocationByIP(ip) {
   try {
-    // Исключаем локальные и внутренние IP
-    if (!ip || ip === '::1' || ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
+    if (!ip) {
+      console.log(`[Analytics] No IP provided, skipping location detection`);
       return { city: null, country: null };
     }
-
-    // Берем первый IP из списка, если их несколько (x-forwarded-for)
-    const cleanIP = ip.split(',')[0].trim();
+    
+    // Нормализуем IP (убираем IPv6 префикс, берем первый если список)
+    let cleanIP = String(ip).split(',')[0].trim();
+    // Убираем IPv6 префикс ::ffff: если есть
+    if (cleanIP.startsWith('::ffff:')) {
+      cleanIP = cleanIP.substring(7);
+    }
+    
+    // Исключаем локальные и внутренние IP
+    if (cleanIP === '::1' || cleanIP === '127.0.0.1' || 
+        cleanIP.startsWith('192.168.') || 
+        cleanIP.startsWith('10.') || 
+        cleanIP.startsWith('172.') ||
+        cleanIP === 'localhost') {
+      console.log(`[Analytics] IP ${cleanIP} is local/internal, skipping`);
+      return { city: null, country: null };
+    }
 
     // Используем ip-api.com (бесплатный, 45 запросов/минуту)
     // Используем AbortController для таймаута
@@ -20,26 +34,31 @@ async function getLocationByIP(ip) {
     const timeoutId = setTimeout(() => controller.abort(), 3000);
 
     try {
-      const response = await fetch(`http://ip-api.com/json/${cleanIP}?fields=city,country`, {
+      const response = await fetch(`http://ip-api.com/json/${cleanIP}?fields=status,city,country`, {
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        console.error(`[Analytics] IP-API response not OK: ${response.status} for IP ${cleanIP}`);
         return { city: null, country: null };
       }
 
       const data = await response.json();
+      console.log(`[Analytics] IP-API response for ${cleanIP}:`, JSON.stringify(data));
     
       // ip-api.com возвращает status: 'success' при успехе, 'fail' при ошибке
       if (data.status === 'success') {
-        return {
+        const result = {
           city: data.city || null,
           country: data.country || null,
         };
+        console.log(`[Analytics] Location determined: ${result.city}, ${result.country}`);
+        return result;
       }
 
+      console.error(`[Analytics] IP-API returned status 'fail' for IP ${cleanIP}:`, data.message || 'unknown error');
       return { city: null, country: null };
     } catch (fetchError) {
       clearTimeout(timeoutId);
@@ -86,7 +105,20 @@ router.post('/session', async (req, res, next) => {
       cartItemsCount
     } = req.body;
 
-    const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    // Получаем IP адрес из различных заголовков (для прокси)
+    let ipAddress = req.headers['x-forwarded-for'] 
+      || req.headers['x-real-ip'] 
+      || req.headers['cf-connecting-ip'] // Cloudflare
+      || req.socket?.remoteAddress 
+      || req.connection?.remoteAddress 
+      || req.ip;
+    
+    // Если x-forwarded-for содержит несколько IP, берем первый (реальный клиент)
+    if (ipAddress && ipAddress.includes(',')) {
+      ipAddress = ipAddress.split(',')[0].trim();
+    }
+    
+    console.log(`[Analytics] Session ${sessionId}: IP detected = ${ipAddress}`);
 
     // Конвертируем undefined в null для SQL
     const toNull = (val) => (val === undefined ? null : val);
@@ -105,9 +137,11 @@ router.post('/session', async (req, res, next) => {
     if (existing.length > 0) {
       // Если город уже есть - используем его, иначе пытаемся определить
       if (!existing[0].city && ipAddress) {
+        console.log(`[Analytics] Determining location for existing session ${sessionId}, IP: ${ipAddress}`);
         const location = await getLocationByIP(ipAddress);
         city = location.city;
         country = location.country;
+        console.log(`[Analytics] Location for session ${sessionId}: city=${city}, country=${country}`);
         
         // Обновляем сессию с городом, если определили
         if (city || country) {
@@ -122,6 +156,7 @@ router.post('/session', async (req, res, next) => {
               country = COALESCE(?, country)
             WHERE session_id = ?
           `, [toNull(userId), toNullOrNumber(cartItemsCount), toNull(city), toNull(country), sessionId]);
+          console.log(`[Analytics] Session ${sessionId} updated with city=${city}, country=${country}`);
         } else {
           // Обновляем без города
           await pool.execute(`
@@ -149,9 +184,11 @@ router.post('/session', async (req, res, next) => {
     } else {
       // Создаем новую сессию - определяем город
       if (ipAddress) {
+        console.log(`[Analytics] Determining location for new session ${sessionId}, IP: ${ipAddress}`);
         const location = await getLocationByIP(ipAddress);
         city = location.city;
         country = location.country;
+        console.log(`[Analytics] Location for session ${sessionId}: city=${city}, country=${country}`);
       }
       
       await pool.execute(`
@@ -167,6 +204,7 @@ router.post('/session', async (req, res, next) => {
         toNull(referrer), toNull(landingPage), toNull(deviceType), toNull(browser), toNull(os),
         toNull(screenResolution), toNull(language), toNull(ipAddress), toNull(country), toNull(city), toNullOrNumber(cartItemsCount)
       ]);
+      console.log(`[Analytics] Session ${sessionId} created with city=${city}, country=${country}`);
     }
 
     res.json({ success: true });
