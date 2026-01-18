@@ -267,6 +267,7 @@ router.get('/:id', async (req, res, next) => {
       product.salePrice = product.sale_price ? parseFloat(product.sale_price) : null;
       product.purchaseCount = parseInt(product.purchase_count) || 0;
       product.viewCount = parseInt(product.view_count) || 0;
+      product.actualPurchaseCount = parseInt(product.actual_purchase_count) || 0;
       product.dailySalesTarget = product.daily_sales_target ? parseInt(product.daily_sales_target) : null;
       product.displayOrder = parseInt(product.display_order) || 0;
       product.shortDescription = product.short_description;
@@ -279,6 +280,7 @@ router.get('/:id', async (req, res, next) => {
       delete product.sale_price;
       delete product.purchase_count;
       delete product.view_count;
+      delete product.actual_purchase_count;
       delete product.daily_sales_target;
       delete product.display_order;
       delete product.short_description;
