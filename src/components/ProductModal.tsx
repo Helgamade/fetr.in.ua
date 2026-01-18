@@ -6,7 +6,7 @@ import { X, ChevronLeft, ChevronRight, ShoppingBag, Check, Users, Eye, Truck, Sh
 import { useCart } from '@/context/CartContext';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { OptionIcon } from '@/components/OptionIcon';
-import { cn, getEndOfTodayKyiv } from '@/lib/utils';
+import { cn, getEndOfTodayKyiv, getViewingNowCount } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { trackEvent, trackFunnel } from '@/lib/analytics';
 import { ImageLightbox, ImageLightboxItem } from '@/components/ImageLightbox';
@@ -33,8 +33,52 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
 
+  // Состояние для текущего часа (обновляется раз в час)
+  const [currentHour, setCurrentHour] = useState(() => {
+    const now = new Date();
+    return parseInt(now.toLocaleString('en-US', { 
+      timeZone: 'Europe/Kyiv',
+      hour: '2-digit',
+      hour12: false
+    }));
+  });
+
   // Минимальное расстояние для определения свайпа
   const minSwipeDistance = 50;
+
+  // Обновление часа раз в час
+  useEffect(() => {
+    const updateHour = () => {
+      const now = new Date();
+      const newHour = parseInt(now.toLocaleString('en-US', { 
+        timeZone: 'Europe/Kyiv',
+        hour: '2-digit',
+        hour12: false
+      }));
+      setCurrentHour(newHour);
+    };
+
+    // Обновляем сразу при монтировании
+    updateHour();
+
+    // Вычисляем время до следующего часа
+    const now = new Date();
+    const msUntilNextHour = 3600000 - (now.getTime() % 3600000);
+    
+    let intervalId: NodeJS.Timeout | null = null;
+    
+    // Устанавливаем таймер на обновление в начале следующего часа
+    const timeoutId = setTimeout(() => {
+      updateHour();
+      // Затем обновляем каждый час
+      intervalId = setInterval(updateHour, 3600000);
+    }, msUntilNextHour);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -156,14 +200,19 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   };
 
 
-  // Используем useMemo для стабильности даты - не будет меняться при ре-рендере
+  // Используем useMemo для стабильности даты и просмотров - не будут меняться при ре-рендере
+  // Обновляются только при изменении часа или при открытии модалки (перезагрузка данных)
   const saleEndDate = useMemo(() => getEndOfTodayKyiv(), []);
-
+  
   // Ранний возврат ПОСЛЕ всех хуков
   if (!product || !isOpen) return null;
 
   // Теперь можем безопасно использовать product, так как мы знаем что он не null
-  const viewingNow = Math.floor(Math.random() * 8) + 2;
+  // Используем useMemo для стабильности просмотров - обновляется только при изменении часа или открытии модалки
+  const viewingNow = useMemo(
+    () => product ? getViewingNowCount(product.id, product.purchaseCount || 0) : 0,
+    [product?.id, product?.purchaseCount, currentHour, isOpen]
+  );
 
   // Преобразуем изображения товара для ImageLightbox
   const productLightboxImages: ImageLightboxItem[] = product.images.map(url => ({ url }));

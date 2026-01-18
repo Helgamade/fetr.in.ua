@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Product } from '@/types/store';
 import { Button } from '@/components/ui/button';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { ShoppingBag, Eye, Users, ChevronRight, Sparkles, Flame, Crown } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/hooks/useTranslation';
-import { cn, getEndOfTodayKyiv } from '@/lib/utils';
+import { cn, getEndOfTodayKyiv, getViewingNowCount } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics';
 
 interface ProductCardProps {
@@ -24,11 +24,57 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
     limited: { icon: Crown, label: t('badge.limited'), className: 'badge-limited' },
   };
 
-  // Mock data for social proof
-  const viewingNow = Math.floor(Math.random() * 8) + 2;
-  
-  // Используем useMemo для стабильности даты - не будет меняться при ре-рендере
+  // Состояние для текущего часа (обновляется раз в час)
+  const [currentHour, setCurrentHour] = useState(() => {
+    const now = new Date();
+    return parseInt(now.toLocaleString('en-US', { 
+      timeZone: 'Europe/Kyiv',
+      hour: '2-digit',
+      hour12: false
+    }));
+  });
+
+  // Обновление часа раз в час
+  useEffect(() => {
+    const updateHour = () => {
+      const now = new Date();
+      const newHour = parseInt(now.toLocaleString('en-US', { 
+        timeZone: 'Europe/Kyiv',
+        hour: '2-digit',
+        hour12: false
+      }));
+      setCurrentHour(newHour);
+    };
+
+    // Обновляем сразу при монтировании
+    updateHour();
+
+    // Вычисляем время до следующего часа
+    const now = new Date();
+    const msUntilNextHour = 3600000 - (now.getTime() % 3600000);
+    
+    let intervalId: NodeJS.Timeout | null = null;
+    
+    // Устанавливаем таймер на обновление в начале следующего часа
+    const timeoutId = setTimeout(() => {
+      updateHour();
+      // Затем обновляем каждый час
+      intervalId = setInterval(updateHour, 3600000);
+    }, msUntilNextHour);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
+
+  // Используем useMemo для стабильности даты и просмотров - не будут меняться при ре-рендере
+  // Обновляются только при изменении часа или при перезагрузке страницы
   const saleEndDate = useMemo(() => getEndOfTodayKyiv(), []);
+  const viewingNow = useMemo(
+    () => getViewingNowCount(product.id, product.purchaseCount || 0),
+    [product.id, product.purchaseCount, currentHour]
+  );
 
   const discount = product.salePrice 
     ? Math.round((1 - product.salePrice / product.basePrice) * 100)
