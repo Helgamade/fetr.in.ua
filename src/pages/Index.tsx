@@ -27,20 +27,20 @@ const Index = () => {
   const location = useLocation();
   
   // Handle hash navigation - scroll to section when coming from other pages
-  // Use both useLocation.hash (React Router) and window.location.hash (direct navigation)
+  // For navigation within same page, let browser handle it naturally with CSS scroll-margin-top (perfect scroll)
+  // For cross-page navigation, we need to manually scroll after page loads
   useEffect(() => {
     const hash = location.hash || window.location.hash;
     
-    if (!hash) return;
+    if (!hash || location.pathname !== '/') return;
     
-    // Multiple attempts with increasing delays to ensure element is rendered
+    // Cross-page navigation - scroll after page renders
     const scrollToElement = (attempt = 0) => {
       const element = document.querySelector(hash);
       if (element) {
-        // Element found - scroll to it
-        const yOffset = -80; // Offset for fixed header
-        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        window.scrollTo({ top: y, behavior: 'smooth' });
+        // Use scrollIntoView with block: 'start' for consistent behavior
+        // CSS scroll-margin-top on sections will handle header offset
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return true;
       }
       
@@ -51,11 +51,11 @@ const Index = () => {
       return false;
     };
     
-    // Start scrolling after a small delay to let page render
-    const timeoutId = setTimeout(() => scrollToElement(0), 50);
+    // Start scrolling after a delay to let page render
+    const timeoutId = setTimeout(() => scrollToElement(0), 100);
     
     return () => clearTimeout(timeoutId);
-  }, [location.pathname, location.hash]); // Trigger on pathname or hash change
+  }, [location.pathname]); // Only trigger on pathname change (cross-page navigation)
   
   // Получаем тексты баннера
   const bannerText1 = texts.find(t => t.key === 'banner.text1')?.value || '🎁 Безкоштовна доставка від 1500 грн';
