@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Navigation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .page {
+            min-height: 100vh;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .page1 { background: #f0f0f0; }
+        .page2 { background: #e0e0e0; }
+        .section {
+            min-height: 100vh;
+            padding: 100px 20px;
+            margin: 20px 0;
+            border: 2px solid #333;
+        }
+        #products { background: #ffcccc; }
+        #comparison { background: #ccffcc; }
+        #gallery { background: #ccccff; }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff;
+            border-left: 4px solid #333;
+        }
+        .success { border-left-color: green; }
+        .error { border-left-color: red; }
+    </style>
+</head>
+<body>
+    <!-- Page 1 (Home) -->
+    <div id="page1" class="page page1">
+        <h1>Головна сторінка</h1>
+        
+        <div class="section" id="products">
+            <h2>Секція #products</h2>
+            <p>Висота: 100vh</p>
+        </div>
+        
+        <div class="section" id="comparison">
+            <h2>Секція #comparison</h2>
+            <p>Висота: 100vh</p>
+        </div>
+        
+        <div class="section" id="gallery">
+            <h2>Секція #gallery</h2>
+            <p>Висота: 100vh</p>
+        </div>
+        
+        <h2>Тести навігації (на головній):</h2>
+        <button onclick="test1()">Тест 1: window.location.href = '#products'</button>
+        <button onclick="test2()">Тест 2: document.querySelector('#products').scrollIntoView()</button>
+        <button onclick="test3()">Тест 3: window.location.hash = '#products'</button>
+        
+        <div id="results1"></div>
+        
+        <a href="test-navigation.html#page2">Перейти на сторінку 2</a>
+    </div>
+
+    <!-- Page 2 (Other page) -->
+    <div id="page2" class="page page2">
+        <h1>Сторінка 2</h1>
+        
+        <h2>Тести навігації (з іншої сторінки на головну з якорем):</h2>
+        
+        <button onclick="test4()">Тест 4: window.location.href = '/#products' (відносний)</button>
+        <button onclick="test5()">Тест 5: window.location.href = 'test-navigation.html#products'</button>
+        <button onclick="test6()">Тест 6: navigate + setTimeout scrollIntoView</button>
+        <button onclick="test7()">Тест 7: window.location.replace('test-navigation.html#products')</button>
+        <button onclick="test8()">Тест 8: Перехід + addEventListener hashchange</button>
+        
+        <div id="results2"></div>
+        
+        <a href="test-navigation.html#page1">Повернутися на головну</a>
+    </div>
+
+    <script>
+        // Test results
+        const results1 = document.getElementById('results1');
+        const results2 = document.getElementById('results2');
+        
+        function logResult(container, testName, success, message) {
+            const div = document.createElement('div');
+            div.className = `test-result ${success ? 'success' : 'error'}`;
+            div.innerHTML = `<strong>${testName}:</strong> ${success ? '✅' : '❌'} ${message}`;
+            container.appendChild(div);
+        }
+        
+        // Test 1: window.location.href = '#products'
+        function test1() {
+            results1.innerHTML = '';
+            try {
+                window.location.href = '#products';
+                logResult(results1, 'Тест 1', true, 'Виконано window.location.href = "#products"');
+            } catch(e) {
+                logResult(results1, 'Тест 1', false, e.message);
+            }
+        }
+        
+        // Test 2: scrollIntoView
+        function test2() {
+            results1.innerHTML = '';
+            try {
+                const el = document.querySelector('#products');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                    logResult(results1, 'Тест 2', true, 'Виконано scrollIntoView');
+                } else {
+                    logResult(results1, 'Тест 2', false, 'Елемент не знайдено');
+                }
+            } catch(e) {
+                logResult(results1, 'Тест 2', false, e.message);
+            }
+        }
+        
+        // Test 3: window.location.hash
+        function test3() {
+            results1.innerHTML = '';
+            try {
+                window.location.hash = '#products';
+                logResult(results1, 'Тест 3', true, 'Виконано window.location.hash = "#products"');
+            } catch(e) {
+                logResult(results1, 'Тест 3', false, e.message);
+            }
+        }
+        
+        // Test 4: window.location.href = '/#products' (relative)
+        function test4() {
+            results2.innerHTML = '';
+            try {
+                window.location.href = 'test-navigation.html#products';
+                logResult(results2, 'Тест 4', true, 'Виконано window.location.href = "test-navigation.html#products"');
+            } catch(e) {
+                logResult(results2, 'Тест 4', false, e.message);
+            }
+        }
+        
+        // Test 5: window.location.href with full path
+        function test5() {
+            results2.innerHTML = '';
+            try {
+                const currentPath = window.location.pathname;
+                const basePath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+                window.location.href = basePath + 'test-navigation.html#products';
+                logResult(results2, 'Тест 5', true, 'Виконано з повним шляхом');
+            } catch(e) {
+                logResult(results2, 'Тест 5', false, e.message);
+            }
+        }
+        
+        // Test 6: navigate + setTimeout scrollIntoView
+        function test6() {
+            results2.innerHTML = '';
+            try {
+                window.location.href = 'test-navigation.html#products';
+                // This will be handled by hashchange event
+                logResult(results2, 'Тест 6', true, 'Перехід виконано, скролл обробляється hashchange');
+            } catch(e) {
+                logResult(results2, 'Тест 6', false, e.message);
+            }
+        }
+        
+        // Test 7: window.location.replace
+        function test7() {
+            results2.innerHTML = '';
+            try {
+                window.location.replace('test-navigation.html#products');
+                logResult(results2, 'Тест 7', true, 'Виконано window.location.replace');
+            } catch(e) {
+                logResult(results2, 'Тест 7', false, e.message);
+            }
+        }
+        
+        // Test 8: Transition + hashchange listener
+        function test8() {
+            results2.innerHTML = '';
+            try {
+                // Add listener for hashchange
+                window.addEventListener('hashchange', function() {
+                    const hash = window.location.hash;
+                    if (hash) {
+                        const element = document.querySelector(hash);
+                        if (element) {
+                            setTimeout(() => {
+                                element.scrollIntoView({ behavior: 'smooth' });
+                            }, 100);
+                        }
+                    }
+                }, { once: true });
+                
+                window.location.href = 'test-navigation.html#products';
+                logResult(results2, 'Тест 8', true, 'Перехід + hashchange listener');
+            } catch(e) {
+                logResult(results2, 'Тест 8', false, e.message);
+            }
+        }
+        
+        // Handle hash on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const hash = window.location.hash;
+            if (hash) {
+                // Show appropriate page
+                if (hash === '#page2') {
+                    document.getElementById('page1').style.display = 'none';
+                    document.getElementById('page2').style.display = 'block';
+                } else {
+                    document.getElementById('page1').style.display = 'block';
+                    document.getElementById('page2').style.display = 'none';
+                    
+                    // Scroll to section after page loads
+                    setTimeout(() => {
+                        const element = document.querySelector(hash);
+                        if (element) {
+                            element.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    }, 100);
+                }
+            } else {
+                document.getElementById('page1').style.display = 'block';
+                document.getElementById('page2').style.display = 'none';
+            }
+        });
+        
+        // Handle hash changes (for navigation between pages)
+        window.addEventListener('hashchange', function() {
+            const hash = window.location.hash;
+            if (hash === '#page2') {
+                document.getElementById('page1').style.display = 'none';
+                document.getElementById('page2').style.display = 'block';
+                window.scrollTo(0, 0);
+            } else if (hash === '#page1' || !hash || hash.startsWith('#products') || hash.startsWith('#comparison') || hash.startsWith('#gallery')) {
+                document.getElementById('page1').style.display = 'block';
+                document.getElementById('page2').style.display = 'none';
+                
+                // If it's a section hash, scroll to it
+                if (hash && (hash.startsWith('#products') || hash.startsWith('#comparison') || hash.startsWith('#gallery'))) {
+                    setTimeout(() => {
+                        const element = document.querySelector(hash);
+                        if (element) {
+                            element.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    }, 100);
+                } else {
+                    window.scrollTo(0, 0);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

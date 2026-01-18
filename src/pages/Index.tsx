@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { AudienceSection } from "@/components/AudienceSection";
@@ -22,6 +23,33 @@ import { useTexts } from "@/hooks/useTexts";
 const Index = () => {
   const { t } = useTranslation('index');
   const { data: texts = [] } = useTexts();
+  
+  // Handle hash navigation - scroll to section when coming from other pages
+  useEffect(() => {
+    const handleHashNavigation = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        // Wait for page to render, then scroll to section
+        setTimeout(() => {
+          const element = document.querySelector(hash);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      }
+    };
+
+    // Handle initial load with hash
+    handleHashNavigation();
+
+    // Handle hash changes (for navigation within page)
+    const handleHashChange = () => {
+      handleHashNavigation();
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
   
   // Получаем тексты баннера
   const bannerText1 = texts.find(t => t.key === 'banner.text1')?.value || '🎁 Безкоштовна доставка від 1500 грн';
