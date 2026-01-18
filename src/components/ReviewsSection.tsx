@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useReviews, useCreateReview } from '@/hooks/useReviews';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Star, MessageSquarePlus, X, Send, Quote } from 'lucide-react';
+import { Star, MessageSquarePlus, X, Send, Quote, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { sanitizeName, sanitizeString, validateRating } from '@/utils/sanitize';
@@ -131,6 +132,19 @@ export const ReviewsSection: React.FC = () => {
               </div>
             </div>
             ))}
+          </div>
+        )}
+
+        {/* Link to all reviews */}
+        {reviews.length > 0 && (
+          <div className="text-center mt-8">
+            <Link 
+              to="/reviews" 
+              className="inline-flex items-center gap-2 text-primary font-medium hover:underline text-lg"
+            >
+              Читати всі відгуки
+              <ArrowRight className="w-5 h-5" />
+            </Link>
           </div>
         )}
 

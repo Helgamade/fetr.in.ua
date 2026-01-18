@@ -40,6 +40,7 @@ import Profile from "./pages/user/Profile";
 import UserOrders from "./pages/user/UserOrders";
 import UserOrderDetail from "./pages/user/UserOrderDetail";
 import UserMaterials from "./pages/user/UserMaterials";
+import AllReviews from "./pages/AllReviews";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
               <Routes>
                   {/* Public routes */}
                   <Route path="/" element={<Index />} />
+                  <Route path="/reviews" element={<AllReviews />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/thank-you" element={<ThankYou />} />
                   <Route path="/login" element={<Login />} />

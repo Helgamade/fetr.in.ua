@@ -19,23 +19,23 @@ router.get('/', async (req, res, next) => {
         LIMIT 4
       `);
 
-      // Get other approved reviews if we have less than 4 featured
+      // Get other approved reviews if we have less than 4 featured (random order)
       const [otherReviews] = await pool.execute(`
         SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
         FROM reviews
         WHERE is_approved = TRUE AND (featured = FALSE OR featured IS NULL)
-        ORDER BY created_at DESC
+        ORDER BY RAND()
         LIMIT ?
       `, [Math.max(0, 4 - featuredReviews.length)]);
 
       reviews = [...featuredReviews, ...otherReviews].slice(0, 4);
     } catch (error) {
-      // If featured column doesn't exist, fallback to regular query
+      // If featured column doesn't exist, fallback to regular query (random order)
       const [allReviews] = await pool.execute(`
         SELECT id, name, text, rating, photo, is_approved, created_at, updated_at
         FROM reviews
         WHERE is_approved = TRUE
-        ORDER BY created_at DESC
+        ORDER BY RAND()
         LIMIT 4
       `);
       reviews = allReviews.map(r => ({ ...r, featured: false }));
@@ -51,6 +51,101 @@ router.get('/', async (req, res, next) => {
     });
 
     res.json(reviews);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get all reviews with filters (for public page)
+router.get('/all-public', async (req, res, next) => {
+  try {
+    const { rating, sort = 'newest' } = req.query;
+    
+    let whereConditions = ['is_approved = TRUE'];
+    let params = [];
+    
+    if (rating) {
+      whereConditions.push('rating = ?');
+      params.push(parseInt(rating));
+    }
+    
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+    
+    let orderBy = 'created_at DESC';
+    if (sort === 'oldest') {
+      orderBy = 'created_at ASC';
+    } else if (sort === 'rating_high') {
+      orderBy = 'rating DESC, created_at DESC';
+    } else if (sort === 'rating_low') {
+      orderBy = 'rating ASC, created_at DESC';
+    }
+    
+    let reviews;
+    try {
+      const [result] = await pool.execute(`
+        SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
+        FROM reviews
+        ${whereClause}
+        ORDER BY ${orderBy}
+      `, params);
+      reviews = result;
+    } catch (error) {
+      const [result] = await pool.execute(`
+        SELECT id, name, text, rating, photo, is_approved, created_at, updated_at
+        FROM reviews
+        ${whereClause}
+        ORDER BY ${orderBy}
+      `, params);
+      reviews = result.map(r => ({ ...r, featured: false }));
+    }
+    
+    // Convert dates
+    reviews.forEach(review => {
+      review.createdAt = new Date(review.created_at);
+      review.updatedAt = new Date(review.updated_at);
+      review.featured = review.featured || false;
+      delete review.created_at;
+      delete review.updated_at;
+    });
+    
+    // Get statistics
+    const [statsResult] = await pool.execute(`
+      SELECT 
+        COUNT(*) as total,
+        AVG(rating) as average_rating,
+        SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as rating_5,
+        SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as rating_4,
+        SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as rating_3,
+        SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as rating_2,
+        SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as rating_1
+      FROM reviews
+      WHERE is_approved = TRUE
+    `);
+    
+    const stats = statsResult[0] || {
+      total: 0,
+      average_rating: 0,
+      rating_5: 0,
+      rating_4: 0,
+      rating_3: 0,
+      rating_2: 0,
+      rating_1: 0
+    };
+    
+    res.json({
+      reviews,
+      stats: {
+        total: parseInt(stats.total) || 0,
+        averageRating: parseFloat(stats.average_rating) || 0,
+        byRating: {
+          5: parseInt(stats.rating_5) || 0,
+          4: parseInt(stats.rating_4) || 0,
+          3: parseInt(stats.rating_3) || 0,
+          2: parseInt(stats.rating_2) || 0,
+          1: parseInt(stats.rating_1) || 0
+        }
+      }
+    });
   } catch (error) {
     next(error);
   }

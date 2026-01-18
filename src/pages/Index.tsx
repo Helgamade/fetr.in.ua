@@ -13,7 +13,7 @@ import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
 import { SocialProof } from "@/components/SocialProof";
 import { ChatWidget } from "@/components/ChatWidget";
-import { ExitIntentPopup } from "@/components/ExitIntentPopup";
+// import { ExitIntentPopup } from "@/components/ExitIntentPopup"; // временно отключен
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -165,7 +165,7 @@ const Index = () => {
           <CartDrawer />
           <SocialProof />
           <ChatWidget />
-          <ExitIntentPopup />
+          {/* <ExitIntentPopup /> - временно отключен */}
           <StickyMobileCTA />
         </div>
     </>

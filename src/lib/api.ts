@@ -305,6 +305,13 @@ export const faqsAPI = {
 // Reviews API
 export const reviewsAPI = {
   getAll: () => fetchAPI<any[]>('/reviews'),
+  getAllWithFilters: (params?: { rating?: number; sort?: string }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.rating) searchParams.append('rating', params.rating.toString());
+    if (params?.sort) searchParams.append('sort', params.sort);
+    const queryString = searchParams.toString();
+    return fetchAPI<{ reviews: any[]; stats: any }>(`/reviews/all-public${queryString ? `?${queryString}` : ''}`);
+  },
   getById: (id: number) => fetchAPI<any>(`/reviews/${id}`),
   create: (data: any) => fetchAPI<any>('/reviews', {
     method: 'POST',
