@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { CartDrawer } from '@/components/CartDrawer';
@@ -26,6 +27,7 @@ import { reviewsAPI } from '@/lib/api';
 import { Review } from '@/types/store';
 
 export default function AllReviews() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [ratingFilter, setRatingFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('newest');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,6 +48,17 @@ export default function AllReviews() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
+
+  // Auto-open modal if ?add in URL
+  useEffect(() => {
+    if (searchParams.has('add')) {
+      setIsModalOpen(true);
+      // Remove parameter from URL without page reload
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('add');
+      setSearchParams(newSearchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
