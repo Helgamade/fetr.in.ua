@@ -89,6 +89,8 @@ export function DateTimePicker({ label, value, onChange, id }: DateTimePickerPro
               captionLayout="dropdown"
               onSelect={handleDateSelect}
               className="rounded-md border"
+              fromYear={1900}
+              toYear={new Date().getFullYear() + 10}
             />
           </PopoverContent>
         </Popover>
