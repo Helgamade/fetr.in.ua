@@ -305,6 +305,7 @@ export const faqsAPI = {
 // Reviews API
 export const reviewsAPI = {
   getAll: () => fetchAPI<any[]>('/reviews'),
+  getStats: () => fetchAPI<{ total: number; averageRating: number; byRating: Record<number, number> }>('/reviews/stats'),
   getAllWithFilters: (params?: { rating?: number; sort?: string }) => {
     const searchParams = new URLSearchParams();
     if (params?.rating) searchParams.append('rating', params.rating.toString());

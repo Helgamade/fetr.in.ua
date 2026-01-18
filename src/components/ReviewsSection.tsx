@@ -10,10 +10,16 @@ import { cn } from '@/lib/utils';
 import { sanitizeName, sanitizeString, validateRating } from '@/utils/sanitize';
 import { formatRelativeTime } from '@/utils/dateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useQuery } from '@tanstack/react-query';
+import { reviewsAPI } from '@/lib/api';
 
 export const ReviewsSection: React.FC = () => {
   const { t } = useTranslation('reviews');
   const { data: reviews = [], isLoading } = useReviews();
+  const { data: stats } = useQuery({
+    queryKey: ['reviews-stats'],
+    queryFn: () => reviewsAPI.getStats(),
+  });
   const createReview = useCreateReview();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', text: '', rating: 5 });
@@ -149,16 +155,12 @@ export const ReviewsSection: React.FC = () => {
         )}
 
         {/* Statistics */}
-        {reviews.length > 0 && (() => {
-          const approvedReviews = reviews.filter(r => r.isApproved !== false);
-          const averageRating = approvedReviews.length > 0
-            ? approvedReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / approvedReviews.length
+        {stats && stats.total > 0 && (() => {
+          const averageRating = stats.averageRating || 0;
+          const satisfiedCount = (stats.byRating[5] || 0) + (stats.byRating[4] || 0);
+          const satisfiedPercent = stats.total > 0
+            ? Math.round((satisfiedCount / stats.total) * 100)
             : 0;
-          const satisfiedCount = approvedReviews.filter(r => (r.rating || 0) >= 4).length;
-          const satisfiedPercent = approvedReviews.length > 0
-            ? Math.round((satisfiedCount / approvedReviews.length) * 100)
-            : 0;
-          const reviewsCount = approvedReviews.length;
 
           return (
             <div className="mt-12 flex flex-wrap items-center justify-center gap-8">

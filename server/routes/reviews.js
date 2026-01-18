@@ -151,6 +151,48 @@ router.get('/all-public', async (req, res, next) => {
   }
 });
 
+// Get reviews statistics only
+router.get('/stats', async (req, res, next) => {
+  try {
+    const [statsResult] = await pool.execute(`
+      SELECT 
+        COUNT(*) as total,
+        AVG(rating) as average_rating,
+        SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as rating_5,
+        SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as rating_4,
+        SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as rating_3,
+        SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as rating_2,
+        SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as rating_1
+      FROM reviews
+      WHERE is_approved = TRUE
+    `);
+    
+    const stats = statsResult[0] || {
+      total: 0,
+      average_rating: 0,
+      rating_5: 0,
+      rating_4: 0,
+      rating_3: 0,
+      rating_2: 0,
+      rating_1: 0
+    };
+    
+    res.json({
+      total: parseInt(stats.total) || 0,
+      averageRating: parseFloat(stats.average_rating) || 0,
+      byRating: {
+        5: parseInt(stats.rating_5) || 0,
+        4: parseInt(stats.rating_4) || 0,
+        3: parseInt(stats.rating_3) || 0,
+        2: parseInt(stats.rating_2) || 0,
+        1: parseInt(stats.rating_1) || 0
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get all reviews (for admin - includes unapproved)
 router.get('/all', async (req, res, next) => {
   try {
