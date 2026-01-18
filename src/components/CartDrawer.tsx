@@ -342,58 +342,64 @@ export const CartDrawer: React.FC = () => {
                   );
                 })}
               </ul>
-
-              {/* Shipping info */}
-              <div className="p-4 rounded-xl bg-muted/50 mt-4">
-                <div className="flex items-center gap-2 text-sm mb-1">
-                  <Clock className="w-4 h-4 text-primary" />
-                  <span className="text-muted-foreground">
-                    Найближча відправка — у {shippingInfo.dayName}
-                  </span>
-                </div>
-                <div className="text-xs text-muted-foreground mb-2">
-                  📦 Відправляємо Пн–Пт о 18:00
-                </div>
-                {shippingInfo.isToday && shippingInfo.deadlineDate && (() => {
-                  const timeString = `${String(timeLeft.hours).padStart(2, '0')}:${String(timeLeft.minutes).padStart(2, '0')}:${String(timeLeft.seconds).padStart(2, '0')}`;
-                  return timeString ? (
-                    <div className="text-xs text-muted-foreground">
-                      При оплаті протягом {timeString} — відправимо ще сьогодні
-                    </div>
-                  ) : null;
-                })()}
-              </div>
-
-              {/* Totals and checkout button */}
-              <div className="bg-card rounded-b-lg p-4 space-y-4 border-t border-border">
-                {/* Totals */}
-                {hasFreeDelivery ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-sm text-muted-foreground">Доставка:</span>
-                      <span className="text-sm font-medium">Безкоштовно</span>
-                    </div>
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-base font-bold text-foreground">До оплати з доставкою:</span>
-                      <span className="text-base font-bold text-foreground">{finalTotal} ₴</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between w-full">
-                    <span className="text-base font-bold text-foreground">До оплати без доставки:</span>
-                    <span className="text-base font-bold text-foreground">{finalTotal} ₴</span>
-                  </div>
-                )}
-
-                {/* Checkout button */}
-                <Button size="lg" className="w-full rounded-xl" onClick={handleCheckout}>
-                  Оформити замовлення
-                </Button>
-                </div>
               </div>
             </div>
           )}
         </div>
+
+        {/* Shipping info - отдельный блок после списка товаров, перед итогами */}
+        {items.length > 0 && (
+          <div className="px-3 pt-4">
+            <div className="p-4 rounded-xl bg-muted/50">
+              <div className="flex items-center gap-2 text-sm mb-1">
+                <Clock className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">
+                  Найближча відправка — у {shippingInfo.dayName}
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground mb-2">
+                📦 Відправляємо Пн–Пт о 18:00
+              </div>
+              {shippingInfo.isToday && shippingInfo.deadlineDate && (() => {
+                const timeString = `${String(timeLeft.hours).padStart(2, '0')}:${String(timeLeft.minutes).padStart(2, '0')}:${String(timeLeft.seconds).padStart(2, '0')}`;
+                return timeString ? (
+                  <div className="text-xs text-muted-foreground">
+                    При оплаті протягом {timeString} — відправимо ще сьогодні
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* Totals and checkout button */}
+        {items.length > 0 && (
+          <div className="bg-card rounded-b-lg p-4 space-y-4 border-t border-border">
+            {/* Totals */}
+            {hasFreeDelivery ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-sm text-muted-foreground">Доставка:</span>
+                  <span className="text-sm font-medium">Безкоштовно</span>
+                </div>
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-base font-bold text-foreground">До оплати з доставкою:</span>
+                  <span className="text-base font-bold text-foreground">{finalTotal} ₴</span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between w-full">
+                <span className="text-base font-bold text-foreground">До оплати без доставки:</span>
+                <span className="text-base font-bold text-foreground">{finalTotal} ₴</span>
+              </div>
+            )}
+
+            {/* Checkout button */}
+            <Button size="lg" className="w-full rounded-xl" onClick={handleCheckout}>
+              Оформити замовлення
+            </Button>
+          </div>
+        )}
       </div>
     </>
   );
