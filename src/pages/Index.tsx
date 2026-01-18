@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
@@ -25,22 +25,35 @@ const Index = () => {
   const { t } = useTranslation('index');
   const { data: texts = [] } = useTexts();
   const location = useLocation();
+  const prevPathnameRef = useRef<string | null>(null);
   
-  // Handle hash navigation - scroll to section when coming from other pages
-  // For navigation within same page, let browser handle it naturally with CSS scroll-margin-top (perfect scroll)
-  // For cross-page navigation, we need to manually scroll after page loads
+  // Handle hash navigation ONLY for cross-page navigation (from other pages to /#hash)
+  // For navigation within same page, browser handles it naturally - DON'T TOUCH IT!
   useEffect(() => {
     const hash = location.hash || window.location.hash;
     
-    if (!hash || location.pathname !== '/') return;
+    // Only handle if we just came from another page (pathname changed to /)
+    const isCrossPageNavigation = prevPathnameRef.current !== null && 
+                                   prevPathnameRef.current !== '/' && 
+                                   location.pathname === '/' && 
+                                   hash;
+    
+    if (!isCrossPageNavigation) {
+      // Update ref for next render
+      prevPathnameRef.current = location.pathname;
+      return;
+    }
     
     // Cross-page navigation - scroll after page renders
     const scrollToElement = (attempt = 0) => {
       const element = document.querySelector(hash);
       if (element) {
-        // Use scrollIntoView with block: 'start' for consistent behavior
-        // CSS scroll-margin-top on sections will handle header offset
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Calculate header height dynamically for offset
+        const header = document.querySelector('header');
+        const headerHeight = header ? header.getBoundingClientRect().height : 80;
+        const yOffset = -headerHeight;
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
         return true;
       }
       
@@ -54,8 +67,11 @@ const Index = () => {
     // Start scrolling after a delay to let page render
     const timeoutId = setTimeout(() => scrollToElement(0), 100);
     
+    // Update ref
+    prevPathnameRef.current = location.pathname;
+    
     return () => clearTimeout(timeoutId);
-  }, [location.pathname]); // Only trigger on pathname change (cross-page navigation)
+  }, [location.pathname]); // Only trigger on pathname change
   
   // Получаем тексты баннера
   const bannerText1 = texts.find(t => t.key === 'banner.text1')?.value || '🎁 Безкоштовна доставка від 1500 грн';

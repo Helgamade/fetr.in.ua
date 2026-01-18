@@ -221,11 +221,6 @@
   .badge-limited {
     @apply bg-warning text-warning-foreground text-xs font-semibold px-3 py-1 rounded-full;
   }
-
-  /* Scroll margin for anchor sections to account for fixed header */
-  section[id] {
-    scroll-margin-top: 5rem; /* ~80px - accounts for fixed header height */
-  }
 }
 
 @layer utilities {
