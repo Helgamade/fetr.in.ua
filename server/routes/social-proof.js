@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../db.js';
-import { adminGuard, logAdminAction } from '../middleware/adminGuard.js';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { logAdminAction } from '../middleware/adminGuard.js';
 
 const router = express.Router();
 
@@ -35,7 +36,7 @@ router.get('/settings', async (req, res, next) => {
 });
 
 // Сохранить настройки
-router.put('/settings', adminGuard, async (req, res, next) => {
+router.put('/settings', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const updates = req.body;
     
@@ -88,7 +89,7 @@ router.get('/notification-types', async (req, res, next) => {
 });
 
 // Обновить тип уведомления
-router.put('/notification-types/:id', adminGuard, async (req, res, next) => {
+router.put('/notification-types/:id', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, template, is_enabled, sort_order } = req.body;
@@ -119,7 +120,7 @@ router.get('/names', async (req, res, next) => {
 });
 
 // Добавить имя
-router.post('/names', adminGuard, async (req, res, next) => {
+router.post('/names', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { name } = req.body;
     if (!name || !name.trim()) {
@@ -137,7 +138,7 @@ router.post('/names', adminGuard, async (req, res, next) => {
 });
 
 // Удалить имя
-router.delete('/names/:id', adminGuard, async (req, res, next) => {
+router.delete('/names/:id', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { id } = req.params;
     await pool.execute('DELETE FROM social_proof_names WHERE id = ?', [id]);
@@ -148,7 +149,7 @@ router.delete('/names/:id', adminGuard, async (req, res, next) => {
 });
 
 // Логи уведомлений с пагинацией
-router.get('/logs', adminGuard, async (req, res, next) => {
+router.get('/logs', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { page = 1, limit = 50, type, session_id } = req.query;
     const offset = (page - 1) * limit;
@@ -346,7 +347,7 @@ router.post('/log', async (req, res, next) => {
 });
 
 // Статистика отправок
-router.get('/stats', adminGuard, async (req, res, next) => {
+router.get('/stats', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { from, to } = req.query;
     

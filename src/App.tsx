@@ -105,7 +105,7 @@ const App = () => (
                     <Route path="pages/:id" element={<PageDetail />} />
                     <Route path="email-templates" element={<EmailTemplates />} />
                     <Route path="analytics/*" element={<Analytics />} />
-                    <Route path="social-proof" element={<SocialProof />} />
+                    <Route path="social-proof/*" element={<SocialProof />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="comparison" element={<Comparison />} />
                   </Route>

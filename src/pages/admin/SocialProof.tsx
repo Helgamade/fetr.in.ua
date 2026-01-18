@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,8 +17,18 @@ import { fetchAPI } from '@/lib/api';
 export function SocialProof() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const currentTab = searchParams.get('tab') || 'settings';
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Определяем текущую вкладку из URL (как в Analytics)
+  const currentTab = location.pathname.split('/').pop() || 'settings';
+  
+  // Редирект на /settings если открыт /social-proof без подпути
+  useEffect(() => {
+    if (location.pathname === '/admin/social-proof') {
+      navigate('/admin/social-proof/settings', { replace: true });
+    }
+  }, [location.pathname, navigate]);
 
   // Загрузка настроек
   const { data: settings = {}, isLoading: settingsLoading } = useQuery({
@@ -192,7 +202,7 @@ export function SocialProof() {
         <p className="text-muted-foreground">Налаштування автоматичних сповіщень</p>
       </div>
 
-      <Tabs value={currentTab} onValueChange={(value) => setSearchParams({ tab: value })} className="space-y-4">
+      <Tabs value={currentTab} onValueChange={(value) => navigate(`/admin/social-proof/${value}`)} className="space-y-4">
         <TabsList>
           <TabsTrigger value="settings">
             <Settings className="w-4 h-4 mr-2" />
