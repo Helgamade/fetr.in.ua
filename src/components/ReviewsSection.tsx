@@ -131,9 +131,14 @@ export const ReviewsSection: React.FC = () => {
                     )}
                   </div>
                   <p className="text-muted-foreground">{review.text}</p>
-                  <p className="text-sm text-muted-foreground/60 mt-2">
-                    {formatRelativeTime(review.createdAt)}
-                  </p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-sm text-muted-foreground/60">
+                      {formatRelativeTime(review.createdAt)}
+                    </p>
+                    <span className="text-sm" style={{ color: 'hsl(var(--success))' }}>
+                      ✓ Підтверджено
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
