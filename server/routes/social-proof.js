@@ -304,6 +304,26 @@ router.get('/location-by-ip', async (req, res, next) => {
 });
 
 // Сохранить лог уведомления (публичный endpoint)
+// Получить количество уведомлений для сессии
+router.get('/session-count', async (req, res, next) => {
+  try {
+    const { session_id } = req.query;
+    
+    if (!session_id) {
+      return res.status(400).json({ error: 'session_id is required' });
+    }
+    
+    const [result] = await pool.execute(
+      'SELECT COUNT(*) as count FROM social_proof_notifications_log WHERE session_id = ?',
+      [session_id]
+    );
+    
+    res.json({ count: result[0].count || 0 });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post('/log', async (req, res, next) => {
   try {
     const {

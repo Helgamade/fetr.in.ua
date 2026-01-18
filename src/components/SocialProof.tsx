@@ -211,6 +211,25 @@ export const SocialProof: React.FC = () => {
     return `${hours} годин`;
   };
 
+  // Загрузка количества уже отправленных уведомлений для текущей сессии
+  useEffect(() => {
+    const loadSessionCount = async () => {
+      try {
+        const sessionId = getSessionId();
+        const response = await fetch(`/api/social-proof/session-count?session_id=${encodeURIComponent(sessionId)}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Устанавливаем начальное значение счетчика на основе данных из БД
+          setNotificationsCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Error loading session notification count:', error);
+      }
+    };
+    
+    loadSessionCount();
+  }, []);
+
   // Основной эффект для показа уведомлений
   useEffect(() => {
     if (products.length === 0 || notificationTypes.length === 0) return;
@@ -233,7 +252,29 @@ export const SocialProof: React.FC = () => {
         return;
       }
 
-      if (notificationsCount >= settings.max_notifications_per_session) {
+      // КРИТИЧНО: Проверяем лимит по данным из БД перед попыткой показать уведомление
+      // Это гарантирует, что лимит будет работать даже после перезагрузки страницы
+      const sessionId = getSessionId();
+      let currentCount = notificationsCount;
+      
+      try {
+        const countResponse = await fetch(`/api/social-proof/session-count?session_id=${encodeURIComponent(sessionId)}`);
+        if (countResponse.ok) {
+          const countData = await countResponse.json();
+          currentCount = countData.count || 0;
+          // Синхронизируем локальный счетчик с данными из БД
+          if (currentCount !== notificationsCount) {
+            setNotificationsCount(currentCount);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking session notification count:', error);
+        // В случае ошибки используем локальный счетчик как fallback
+        currentCount = notificationsCount;
+      }
+
+      // Проверяем лимит ПЕРЕД попыткой создать уведомление
+      if (currentCount >= settings.max_notifications_per_session) {
         return;
       }
 
