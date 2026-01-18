@@ -60,8 +60,8 @@ router.get('/', async (req, res, next) => {
 router.get('/all-public', async (req, res, next) => {
   try {
     const { rating, sort = 'newest', page = 1, limit = 20 } = req.query;
-    const pageNum = parseInt(page as string) || 1;
-    const limitNum = parseInt(limit as string) || 20;
+    const pageNum = parseInt(String(page)) || 1;
+    const limitNum = parseInt(String(limit)) || 20;
     const offset = (pageNum - 1) * limitNum;
     
     let whereConditions = ['is_approved = TRUE'];
