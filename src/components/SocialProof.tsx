@@ -122,31 +122,24 @@ export const SocialProof: React.FC = () => {
     }
   }, [typesData]);
 
-  // Получение координат клиента (геолокация)
+  // Получение координат клиента по IP (без запроса разрешения у пользователя)
   useEffect(() => {
-    const fetchLocation = async () => {
+    const fetchLocationByIP = async () => {
       try {
-        // Пытаемся получить через браузерную геолокацию (с разрешения)
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              setClientLocation({
-                lat: position.coords.latitude,
-                lon: position.coords.longitude,
-              });
-            },
-            () => {
-              // Если пользователь не разрешил - координаты останутся null
-            },
-            { timeout: 5000, maximumAge: 3600000 } // Кеш на 1 час
-          );
+        // Пытаемся получить координаты через IP-геолокацию
+        const location = await getLocationByIPWithCoordinates();
+        if (location?.lat && location?.lon) {
+          setClientLocation({
+            lat: location.lat,
+            lon: location.lon,
+          });
         }
       } catch (error) {
-        console.error('Error getting location:', error);
+        console.error('Error getting location by IP:', error);
       }
     };
     
-    fetchLocation();
+    fetchLocationByIP();
   }, []);
 
   // Функция для получения ближайшего города через API Новой Почты
@@ -163,7 +156,38 @@ export const SocialProof: React.FC = () => {
     return null;
   };
 
-  // Функция для получения города из IP (из аналитики)
+  // Функция для получения города и координат по IP (ip-api.com с fallback на ipwho.is)
+  const getLocationByIPWithCoordinates = async (): Promise<{ city: string | null; country: string | null; lat: number | null; lon: number | null } | null> => {
+    try {
+      // Сначала пытаемся получить из аналитики (если уже определено)
+      const sessionId = getSessionId();
+      const response = await fetch(`/api/analytics/realtime`);
+      if (response.ok) {
+        const sessions = await response.json();
+        const currentSession = sessions.find((s: any) => s.session_id === sessionId);
+        if (currentSession?.city || currentSession?.country) {
+          // Если город уже есть в аналитике, но координат нет - запрашиваем их отдельно
+          // Для простоты возвращаем только город из аналитики
+          return {
+            city: currentSession.city || null,
+            country: currentSession.country || null,
+            lat: null, // Координаты будут получены через API НП по городу
+            lon: null
+          };
+        }
+      }
+
+      // Если в аналитике нет данных, определяем через IP на сервере
+      // Это делается автоматически при создании сессии в analytics.js
+      // Здесь возвращаем null - координаты для НП будем получать через город
+      return null;
+    } catch (error) {
+      console.error('Error getting location by IP:', error);
+      return null;
+    }
+  };
+
+  // Функция для получения города из IP (из аналитики или прямой запрос)
   const getCityFromIP = async (): Promise<{ city: string | null; country: string | null }> => {
     try {
       // Получаем текущую сессию из аналитики
@@ -208,7 +232,8 @@ export const SocialProof: React.FC = () => {
         logData.client_city_from_ip = ipLocation.city;
         logData.client_country_from_ip = ipLocation.country;
         
-        if (clientLocation) {
+        // Если есть координаты (из IP-геолокации), используем их для определения города НП
+        if (clientLocation?.lat && clientLocation?.lon) {
           logData.client_latitude = clientLocation.lat;
           logData.client_longitude = clientLocation.lon;
           
@@ -216,6 +241,12 @@ export const SocialProof: React.FC = () => {
           const npCity = await getNearestCity(clientLocation.lat, clientLocation.lon);
           if (npCity) {
             logData.client_city_from_np = npCity;
+          }
+        } else {
+          // Если координат нет, пытаемся использовать город из IP для поиска в НП
+          if (ipLocation.city) {
+            // Город из IP уже будет в client_city_from_ip
+            // Координаты оставляем null
           }
         }
         

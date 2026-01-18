@@ -27,11 +27,19 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
   });
 
   if (!response.ok) {
+    let errorMessage = `HTTP error! status: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorData.message || errorMessage;
+    } catch {
+      // Если не удалось распарсить JSON, используем дефолтное сообщение
+    }
+    
     if (response.status === 401) {
       throw new Error('Unauthorized');
     }
-    const error = await response.json().catch(() => ({ error: 'Network error' }));
-    throw new Error(error.error || `HTTP error! status: ${response.status}`);
+    
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -68,11 +76,12 @@ export function SocialProof() {
     }
   }, [notificationTypes]);
 
-  // Загрузка логов
+  // Загрузка логов (требует авторизации админа)
   const [logPage, setLogPage] = useState(1);
   const { data: logsData, isLoading: logsLoading } = useQuery({
     queryKey: ['social-proof-logs', logPage],
-    queryFn: () => fetchAPI<{ logs: any[]; pagination: any }>(`/social-proof/logs?page=${logPage}&limit=50`)
+    queryFn: () => fetchAPI<{ logs: any[]; pagination: any }>(`/social-proof/logs?page=${logPage}&limit=50`),
+    retry: 1
   });
 
   // Локальное состояние для настроек
@@ -346,7 +355,6 @@ export function SocialProof() {
                 <Button 
                   onClick={() => saveNotificationTypes.mutate(localNotificationTypes)}
                   disabled={saveNotificationTypes.isPending}
-                  className="w-full"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   {saveNotificationTypes.isPending ? 'Збереження...' : 'Зберегти типи сповіщень'}
