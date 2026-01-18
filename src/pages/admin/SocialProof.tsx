@@ -440,6 +440,7 @@ export function SocialProof() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Час</TableHead>
+                          <TableHead>Користувач/Сесія</TableHead>
                           <TableHead>Тип</TableHead>
                           <TableHead>Товар</TableHead>
                           <TableHead>Повідомлення</TableHead>
@@ -453,6 +454,11 @@ export function SocialProof() {
                           <TableRow key={log.id}>
                             <TableCell className="whitespace-nowrap">
                               {formatDate(log.created_at)}
+                            </TableCell>
+                            <TableCell className="text-xs font-mono">
+                              {log.analytics_user_id 
+                                ? `User ${log.analytics_user_id} (Session ${log.analytics_session_id_value || log.analytics_session_id})`
+                                : `Session ${log.analytics_session_id_value || log.analytics_session_id || log.session_id}`}
                             </TableCell>
                             <TableCell>
                               <Badge variant={

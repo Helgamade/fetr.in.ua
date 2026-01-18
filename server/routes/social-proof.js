@@ -158,27 +158,34 @@ router.get('/logs', authenticate, authorize('admin'), async (req, res, next) => 
     let params = [];
     
     if (type) {
-      where.push('notification_type = ?');
+      where.push('log.notification_type = ?');
       params.push(type);
     }
     
     if (session_id) {
-      where.push('session_id = ?');
+      where.push('log.session_id = ?');
       params.push(session_id);
     }
     
     const whereClause = where.length > 0 ? 'WHERE ' + where.join(' AND ') : '';
     
     const [logs] = await pool.execute(
-      `SELECT * FROM social_proof_notifications_log 
+      `SELECT 
+         log.*,
+         sess.user_id as analytics_user_id,
+         sess.id as analytics_session_id_value
+       FROM social_proof_notifications_log log
+       LEFT JOIN analytics_sessions sess ON log.analytics_session_id = sess.id
        ${whereClause}
-       ORDER BY created_at DESC 
+       ORDER BY log.created_at DESC 
        LIMIT ? OFFSET ?`,
       [...params, parseInt(limit), parseInt(offset)]
     );
     
     const [count] = await pool.execute(
-      `SELECT COUNT(*) as total FROM social_proof_notifications_log ${whereClause}`,
+      `SELECT COUNT(*) as total 
+       FROM social_proof_notifications_log log
+       ${whereClause}`,
       params
     );
     
@@ -321,16 +328,28 @@ router.post('/log', async (req, res, next) => {
       return res.status(400).json({ error: 'session_id, notification_type and message_text are required' });
     }
     
+    // Получаем analytics_session_id по session_id
+    let analyticsSessionId = null;
+    if (session_id) {
+      const [sessions] = await pool.execute(
+        'SELECT id, user_id FROM analytics_sessions WHERE session_id = ? LIMIT 1',
+        [session_id]
+      );
+      if (sessions.length > 0) {
+        analyticsSessionId = sessions[0].id;
+      }
+    }
+    
     await pool.execute(
       `INSERT INTO social_proof_notifications_log (
-        session_id, visitor_fingerprint, notification_type,
+        session_id, analytics_session_id, visitor_fingerprint, notification_type,
         product_id, product_code, product_name,
         client_city_from_ip, client_country_from_ip,
         client_latitude, client_longitude, client_city_from_np,
         client_name, hours_ago, message_text, variables_used
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        session_id, visitor_fingerprint || null, notification_type,
+        session_id, analyticsSessionId, visitor_fingerprint || null, notification_type,
         product_id || null, product_code || null, product_name || null,
         client_city_from_ip || null, client_country_from_ip || null,
         client_latitude || null, client_longitude || null, client_city_from_np || null,
