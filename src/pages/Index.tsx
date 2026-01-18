@@ -25,26 +25,23 @@ const Index = () => {
   const { t } = useTranslation('index');
   const { data: texts = [] } = useTexts();
   const location = useLocation();
-  const prevPathnameRef = useRef<string | null>(null);
-  const hasScrolledRef = useRef<boolean>(false);
+  const hasHandledInitialHashRef = useRef<boolean>(false);
   
   // Handle hash navigation ONLY for cross-page navigation (from other pages to /#hash)
   // For navigation within same page, browser handles it naturally - DON'T TOUCH IT!
   useEffect(() => {
+    // Only handle hash on initial mount or when pathname changes to /
+    // If hash changes while already on /, browser handles it naturally
+    if (location.pathname !== '/') {
+      hasHandledInitialHashRef.current = false;
+      return;
+    }
+    
     const hash = location.hash || window.location.hash;
-    const currentPath = location.pathname;
-    const prevPath = prevPathnameRef.current;
     
-    // Check if this is cross-page navigation (coming from another page with hash)
-    const isCrossPageNavigation = prevPath !== null && 
-                                   prevPath !== '/' && 
-                                   currentPath === '/' && 
-                                   hash && 
-                                   !hasScrolledRef.current;
-    
-    if (isCrossPageNavigation) {
-      // Cross-page navigation - scroll after page renders
-      hasScrolledRef.current = true;
+    // If hash exists and we haven't handled it yet (cross-page navigation)
+    if (hash && !hasHandledInitialHashRef.current) {
+      hasHandledInitialHashRef.current = true;
       
       const scrollToElement = (attempt = 0) => {
         const element = document.querySelector(hash);
@@ -68,29 +65,14 @@ const Index = () => {
       // Start scrolling after a delay to let page render
       const timeoutId = setTimeout(() => scrollToElement(0), 100);
       
-      // Reset scroll flag after navigation within page
-      const handleHashChange = () => {
-        if (currentPath === '/') {
-          hasScrolledRef.current = false;
-        }
-      };
-      
-      window.addEventListener('hashchange', handleHashChange, { once: true });
-      
-      return () => {
-        clearTimeout(timeoutId);
-        window.removeEventListener('hashchange', handleHashChange);
-      };
+      return () => clearTimeout(timeoutId);
     }
     
-    // Reset scroll flag if we navigate away from home
-    if (currentPath !== '/') {
-      hasScrolledRef.current = false;
+    // Reset flag when navigating away and back (but not for hash-only changes)
+    if (!hash) {
+      hasHandledInitialHashRef.current = false;
     }
-    
-    // Update ref for next render
-    prevPathnameRef.current = currentPath;
-  }, [location.pathname, location.hash]); // Trigger on pathname or hash change
+  }, [location.pathname]); // Only trigger on pathname change, NOT on hash change
   
   // Получаем тексты баннера
   const bannerText1 = texts.find(t => t.key === 'banner.text1')?.value || '🎁 Безкоштовна доставка від 1500 грн';
