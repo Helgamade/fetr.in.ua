@@ -130,7 +130,7 @@ export default function AllReviews() {
       <div className="min-h-screen bg-background">
         <Header />
         
-        <main className="pt-24 pb-20">
+        <main>
           <section className="py-20 bg-peach/30">
             <div className="container-tight">
               {/* Section header */}
