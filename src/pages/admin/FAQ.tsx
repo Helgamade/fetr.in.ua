@@ -60,10 +60,41 @@ export function FAQ() {
     }
 
     try {
+      const newSortOrder = editingFAQ.sort_order || 0;
+      const oldSortOrder = editingFAQ.id === 0 ? -1 : sortedFAQs.find(f => f.id === editingFAQ.id)?.sort_order || -1;
+
+      // Если sort_order изменился, нужно пересчитать позиции других FAQ
+      if (editingFAQ.id !== 0 && oldSortOrder !== newSortOrder) {
+        // Находим все FAQ, которые нужно сдвинуть
+        const faqsToShift = sortedFAQs.filter(f => {
+          if (f.id === editingFAQ.id) return false; // Пропускаем текущий FAQ
+          
+          if (oldSortOrder < newSortOrder) {
+            // Перемещение вниз: сдвигаем FAQ с позиций от oldSortOrder+1 до newSortOrder
+            return f.sort_order > oldSortOrder && f.sort_order <= newSortOrder;
+          } else {
+            // Перемещение вверх: сдвигаем FAQ с позиций от newSortOrder до oldSortOrder-1
+            return f.sort_order >= newSortOrder && f.sort_order < oldSortOrder;
+          }
+        });
+
+        // Обновляем sort_order для всех FAQ, которые нужно сдвинуть
+        const shiftPromises = faqsToShift.map(faq => {
+          const newOrder = oldSortOrder < newSortOrder 
+            ? faq.sort_order - 1  // При движении вниз - уменьшаем на 1
+            : faq.sort_order + 1; // При движении вверх - увеличиваем на 1
+          return updateFAQ.mutateAsync({ id: faq.id, data: { sort_order: newOrder } });
+        });
+
+        // Выполняем все сдвиги
+        await Promise.all(shiftPromises);
+      }
+
+      // Обновляем сам FAQ
       const data = {
         question: editingFAQ.question.trim(),
         answer: editingFAQ.answer.trim(),
-        sort_order: editingFAQ.sort_order || 0,
+        sort_order: newSortOrder,
         is_published: editingFAQ.is_published ?? true,
       };
 
