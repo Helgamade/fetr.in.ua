@@ -12,6 +12,31 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Save, Plus, Trash2, Settings, BarChart3, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 
+// Вспомогательная функция для авторизованных запросов
+async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const token = localStorage.getItem('accessToken');
+  
+  const response = await fetch(`/api${endpoint}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...options?.headers,
+    },
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Unauthorized');
+    }
+    const error = await response.json().catch(() => ({ error: 'Network error' }));
+    throw new Error(error.error || `HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 export function SocialProof() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -19,42 +44,35 @@ export function SocialProof() {
   // Загрузка настроек
   const { data: settings = {}, isLoading: settingsLoading } = useQuery({
     queryKey: ['social-proof-settings'],
-    queryFn: async () => {
-      const res = await fetch('/api/social-proof/settings');
-      if (!res.ok) throw new Error('Failed to fetch settings');
-      return res.json();
-    }
+    queryFn: () => fetchAPI<Record<string, any>>('/social-proof/settings')
   });
 
   // Загрузка типов уведомлений
   const { data: notificationTypes = [] } = useQuery({
     queryKey: ['social-proof-types'],
-    queryFn: async () => {
-      const res = await fetch('/api/social-proof/notification-types');
-      if (!res.ok) throw new Error('Failed to fetch types');
-      return res.json();
-    }
+    queryFn: () => fetchAPI<any[]>('/social-proof/notification-types')
   });
 
   // Загрузка имен
   const { data: names = [] } = useQuery({
     queryKey: ['social-proof-names'],
-    queryFn: async () => {
-      const res = await fetch('/api/social-proof/names');
-      if (!res.ok) throw new Error('Failed to fetch names');
-      return res.json();
-    }
+    queryFn: () => fetchAPI<any[]>('/social-proof/names')
   });
+
+  // Локальное состояние для типов уведомлений
+  const [localNotificationTypes, setLocalNotificationTypes] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (notificationTypes.length > 0) {
+      setLocalNotificationTypes(notificationTypes);
+    }
+  }, [notificationTypes]);
 
   // Загрузка логов
   const [logPage, setLogPage] = useState(1);
   const { data: logsData, isLoading: logsLoading } = useQuery({
     queryKey: ['social-proof-logs', logPage],
-    queryFn: async () => {
-      const res = await fetch(`/api/social-proof/logs?page=${logPage}&limit=50`);
-      if (!res.ok) throw new Error('Failed to fetch logs');
-      return res.json();
-    }
+    queryFn: () => fetchAPI<{ logs: any[]; pagination: any }>(`/social-proof/logs?page=${logPage}&limit=50`)
   });
 
   // Локальное состояние для настроек
@@ -78,15 +96,11 @@ export function SocialProof() {
 
   // Сохранение настроек
   const saveSettings = useMutation({
-    mutationFn: async (newSettings: Record<string, any>) => {
-      const res = await fetch('/api/social-proof/settings', {
+    mutationFn: (newSettings: Record<string, any>) => 
+      fetchAPI<any>('/social-proof/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newSettings)
-      });
-      if (!res.ok) throw new Error('Failed to save settings');
-      return res.json();
-    },
+      }),
     onSuccess: () => {
       toast({ title: 'Налаштування збережено' });
       queryClient.invalidateQueries({ queryKey: ['social-proof-settings'] });
@@ -96,38 +110,40 @@ export function SocialProof() {
     }
   });
 
-  // Обновление типа уведомления
-  const updateNotificationType = useMutation({
-    mutationFn: async ({ id, ...data }: any) => {
-      const res = await fetch(`/api/social-proof/notification-types/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (!res.ok) throw new Error('Failed to update type');
-      return res.json();
+  // Сохранение всех типов уведомлений
+  const saveNotificationTypes = useMutation({
+    mutationFn: async (types: any[]) => {
+      // Сохраняем каждый тип последовательно
+      const promises = types.map(type => 
+        fetchAPI<any>(`/social-proof/notification-types/${type.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            name: type.name,
+            template: type.template,
+            is_enabled: type.is_enabled,
+            sort_order: type.sort_order
+          })
+        })
+      );
+      await Promise.all(promises);
     },
     onSuccess: () => {
-      toast({ title: 'Тип оновлено' });
+      toast({ title: 'Типи збережено' });
       queryClient.invalidateQueries({ queryKey: ['social-proof-types'] });
     },
     onError: () => {
-      toast({ title: 'Помилка оновлення', variant: 'destructive' });
+      toast({ title: 'Помилка збереження', variant: 'destructive' });
     }
   });
 
   // Добавление имени
   const [newName, setNewName] = useState('');
   const addName = useMutation({
-    mutationFn: async (name: string) => {
-      const res = await fetch('/api/social-proof/names', {
+    mutationFn: (name: string) => 
+      fetchAPI<any>('/social-proof/names', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
-      });
-      if (!res.ok) throw new Error('Failed to add name');
-      return res.json();
-    },
+      }),
     onSuccess: () => {
       toast({ title: 'Ім\'я додано' });
       setNewName('');
@@ -140,13 +156,10 @@ export function SocialProof() {
 
   // Удаление имени
   const deleteName = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await fetch(`/api/social-proof/names/${id}`, {
+    mutationFn: (id: number) => 
+      fetchAPI<any>(`/social-proof/names/${id}`, {
         method: 'DELETE'
-      });
-      if (!res.ok) throw new Error('Failed to delete name');
-      return res.json();
-    },
+      }),
     onSuccess: () => {
       toast({ title: 'Ім\'я видалено' });
       queryClient.invalidateQueries({ queryKey: ['social-proof-names'] });
@@ -280,52 +293,67 @@ export function SocialProof() {
 
         {/* Типы уведомлений */}
         <TabsContent value="types">
-          <div className="space-y-4">
-            {notificationTypes.map((type: any) => (
-              <Card key={type.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>{type.name}</CardTitle>
-                      <CardDescription>Код: {type.code}</CardDescription>
-                    </div>
-                    <Switch
-                      checked={type.is_enabled}
-                      onCheckedChange={(checked) => 
-                        updateNotificationType.mutate({
-                          id: type.id,
-                          ...type,
-                          is_enabled: checked
-                        })
-                      }
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Шаблон повідомлення</Label>
-                    <Textarea
-                      value={type.template}
-                      onChange={(e) => 
-                        updateNotificationType.mutate({
-                          id: type.id,
-                          ...type,
-                          template: e.target.value
-                        })
-                      }
-                      rows={3}
-                      className="font-mono text-sm"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Змінні: {type.code === 'viewing' ? '<code>{count}</code>, <code>{product_name}</code>' :
-                              type.code === 'purchased_today' ? '<code>{count}</code>, <code>{product_name}</code>' :
-                              '<code>{name}</code>, <code>{city}</code>, <code>{hours_ago}</code>, <code>{product_name}</code>'}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Типи сповіщень</CardTitle>
+              <CardDescription>Налаштування шаблонів та порядку показу сповіщень</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {localNotificationTypes.map((type: any) => (
+                  <Card key={type.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>{type.name}</CardTitle>
+                          <CardDescription>Код: {type.code}</CardDescription>
+                        </div>
+                        <Switch
+                          checked={type.is_enabled}
+                          onCheckedChange={(checked) => {
+                            setLocalNotificationTypes(prev => 
+                              prev.map(t => t.id === type.id ? { ...t, is_enabled: checked } : t)
+                            );
+                          }}
+                        />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Шаблон повідомлення</Label>
+                        <Textarea
+                          value={type.template}
+                          onChange={(e) => {
+                            setLocalNotificationTypes(prev => 
+                              prev.map(t => t.id === type.id ? { ...t, template: e.target.value } : t)
+                            );
+                          }}
+                          rows={3}
+                          className="font-mono text-sm"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Змінні: {type.code === 'viewing' ? '{count}, {product_name}' :
+                                  type.code === 'purchased_today' ? '{count}, {product_name}' :
+                                  '{name}, {city}, {hours_ago}, {product_name}'}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              <div className="mt-6 pt-6 border-t">
+                <Button 
+                  onClick={() => saveNotificationTypes.mutate(localNotificationTypes)}
+                  disabled={saveNotificationTypes.isPending}
+                  className="w-full"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {saveNotificationTypes.isPending ? 'Збереження...' : 'Зберегти типи сповіщень'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Имена */}
