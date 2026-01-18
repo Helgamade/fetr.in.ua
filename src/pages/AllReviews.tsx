@@ -257,9 +257,14 @@ export default function AllReviews() {
                               )}
                             </div>
                             <p className="text-muted-foreground">{review.text}</p>
-                            <p className="text-sm text-muted-foreground/60 mt-2">
-                              {formatRelativeTime(review.createdAt)}
-                            </p>
+                            <div className="flex items-center justify-between mt-2">
+                              <p className="text-sm text-muted-foreground/60">
+                                {formatRelativeTime(review.createdAt)}
+                              </p>
+                              <span className="text-xs py-0.5 px-2 rounded-full bg-success/10" style={{ color: '#609f7a' }}>
+                                ✓ Підтверджено
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
