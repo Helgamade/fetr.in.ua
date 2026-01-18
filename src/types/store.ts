@@ -152,6 +152,7 @@ export interface TeamMember {
 export interface InstagramPost {
   id: number;
   image_url: string;
+  description?: string | null;
   instagram_url: string;
   likes_count: number;
   comments_count: number;

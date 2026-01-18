@@ -61,11 +61,11 @@ router.get('/', async (req, res, next) => {
   try {
     const activeOnly = req.query.active === 'true';
     const query = activeOnly
-      ? `SELECT id, image_url, instagram_url, likes_count, comments_count, sort_order, is_active, created_at, updated_at
+      ? `SELECT id, image_url, description, instagram_url, likes_count, comments_count, sort_order, is_active, created_at, updated_at
          FROM instagram_posts
          WHERE is_active = TRUE
          ORDER BY sort_order ASC, created_at DESC`
-      : `SELECT id, image_url, instagram_url, likes_count, comments_count, sort_order, is_active, created_at, updated_at
+      : `SELECT id, image_url, description, instagram_url, likes_count, comments_count, sort_order, is_active, created_at, updated_at
          FROM instagram_posts
          ORDER BY sort_order ASC, created_at DESC`;
     
@@ -81,7 +81,7 @@ router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const [posts] = await pool.execute(`
-      SELECT id, image_url, instagram_url, likes_count, comments_count, sort_order, is_active, created_at, updated_at
+      SELECT id, image_url, description, instagram_url, likes_count, comments_count, sort_order, is_active, created_at, updated_at
       FROM instagram_posts WHERE id = ?
     `, [id]);
 
@@ -98,18 +98,19 @@ router.get('/:id', async (req, res, next) => {
 // Create Instagram post (требует авторизацию admin)
 router.post('/', authenticate, authorize('admin'), async (req, res, next) => {
   try {
-    const { image_url, instagram_url, likes_count, comments_count, sort_order, is_active } = req.body;
+    const { image_url, description, instagram_url, likes_count, comments_count, sort_order, is_active } = req.body;
 
-    if (!image_url || !instagram_url) {
-      return res.status(400).json({ error: 'image_url and instagram_url are required' });
+    if (!image_url) {
+      return res.status(400).json({ error: 'image_url is required' });
     }
 
     const [result] = await pool.execute(`
-      INSERT INTO instagram_posts (image_url, instagram_url, likes_count, comments_count, sort_order, is_active)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO instagram_posts (image_url, description, instagram_url, likes_count, comments_count, sort_order, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [
       image_url,
-      instagram_url,
+      description || null,
+      instagram_url || '',
       likes_count || 0,
       comments_count || 0,
       sort_order || 0,
@@ -126,7 +127,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res, next) => {
 router.put('/:id', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { image_url, instagram_url, likes_count, comments_count, sort_order, is_active } = req.body;
+    const { image_url, description, instagram_url, likes_count, comments_count, sort_order, is_active } = req.body;
 
     // If image is being updated, delete old image if it exists
     if (image_url) {
@@ -144,11 +145,12 @@ router.put('/:id', authenticate, authorize('admin'), async (req, res, next) => {
 
     await pool.execute(`
       UPDATE instagram_posts SET
-        image_url = ?, instagram_url = ?, likes_count = ?, comments_count = ?, sort_order = ?, is_active = ?
+        image_url = ?, description = ?, instagram_url = ?, likes_count = ?, comments_count = ?, sort_order = ?, is_active = ?
       WHERE id = ?
     `, [
       image_url,
-      instagram_url,
+      description || null,
+      instagram_url || '',
       likes_count || 0,
       comments_count || 0,
       sort_order,

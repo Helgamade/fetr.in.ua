@@ -19,7 +19,8 @@ export function useCreateInstagramPost() {
   return useMutation({
     mutationFn: (newPost: Partial<InstagramPost>) => instagramAPI.create({
       image_url: newPost.image_url!,
-      instagram_url: newPost.instagram_url!,
+      description: newPost.description || null,
+      instagram_url: newPost.instagram_url || '',
       likes_count: newPost.likes_count || 0,
       comments_count: newPost.comments_count || 0,
       sort_order: newPost.sort_order || 0,
@@ -37,6 +38,7 @@ export function useUpdateInstagramPost() {
     mutationFn: ({ id, data }: { id: number; data: Partial<InstagramPost> }) =>
       instagramAPI.update(id, {
         image_url: data.image_url,
+        description: data.description,
         instagram_url: data.instagram_url,
         likes_count: data.likes_count,
         comments_count: data.comments_count,

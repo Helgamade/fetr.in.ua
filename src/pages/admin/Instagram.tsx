@@ -36,6 +36,7 @@ export function Instagram() {
     setEditingPost({
       id: 0,
       image_url: '',
+      description: '',
       instagram_url: '',
       likes_count: 0,
       comments_count: 0,
@@ -55,10 +56,10 @@ export function Instagram() {
   const handleSave = () => {
     if (!editingPost) return;
 
-    if (!editingPost.image_url || !editingPost.instagram_url) {
+    if (!editingPost.image_url) {
       toast({
         title: 'Помилка',
-        description: 'Зображення та посилання на Instagram обов\'язкові',
+        description: 'Зображення обов\'язкове',
         variant: 'destructive',
       });
       return;
@@ -66,7 +67,8 @@ export function Instagram() {
 
     const data = {
       image_url: editingPost.image_url,
-      instagram_url: editingPost.instagram_url,
+      description: editingPost.description || null,
+      instagram_url: editingPost.instagram_url || '',
       likes_count: editingPost.likes_count || 0,
       comments_count: editingPost.comments_count || 0,
       sort_order: editingPost.sort_order || 0,
@@ -374,12 +376,13 @@ export function Instagram() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="instagram_url">Посилання на Instagram пост</Label>
-                <Input
-                  id="instagram_url"
-                  value={editingPost.instagram_url}
-                  onChange={(e) => setEditingPost({ ...editingPost, instagram_url: e.target.value })}
-                  placeholder="https://www.instagram.com/p/..."
+                <Label htmlFor="description">Опис до зображення (відображається в галереї)</Label>
+                <Textarea
+                  id="description"
+                  value={editingPost.description || ''}
+                  onChange={(e) => setEditingPost({ ...editingPost, description: e.target.value })}
+                  placeholder="Опис до зображення..."
+                  rows={3}
                 />
               </div>
 

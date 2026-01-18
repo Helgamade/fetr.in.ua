@@ -1,15 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Instagram, Heart, MessageCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useInstagramPosts } from '@/hooks/useInstagram';
 import { useTranslation } from '@/hooks/useTranslation';
+import { ImageLightbox, ImageLightboxItem } from '@/components/ImageLightbox';
 
 export const InstagramSection: React.FC = () => {
   const { t } = useTranslation('instagram');
   const { data: instagramPosts = [], isLoading } = useInstagramPosts(true);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // Limit to 6 posts
   const displayedPosts = instagramPosts.slice(0, 6);
+
+  // Преобразуем посты для ImageLightbox
+  const lightboxImages: ImageLightboxItem[] = displayedPosts.map(post => ({
+    url: post.image_url,
+    description: post.description || undefined,
+  }));
+
+  const openLightbox = (index: number) => {
+    setCurrentImageIndex(index);
+    setIsLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+  };
 
   return (
     <section className="py-20 bg-gradient-to-b from-peach/20 to-sage/20">
@@ -35,13 +53,11 @@ export const InstagramSection: React.FC = () => {
           </div>
         ) : displayedPosts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
-            {displayedPosts.map((post) => (
-              <a
+            {displayedPosts.map((post, index) => (
+              <button
                 key={post.id}
-                href={post.instagram_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative aspect-square overflow-hidden rounded-xl group"
+                onClick={() => openLightbox(index)}
+                className="relative aspect-square overflow-hidden rounded-xl group cursor-pointer"
               >
                 <img
                   src={post.image_url}
@@ -58,7 +74,7 @@ export const InstagramSection: React.FC = () => {
                     <span className="font-medium">{post.comments_count}</span>
                   </div>
                 </div>
-              </a>
+              </button>
             ))}
           </div>
         ) : null}
@@ -84,6 +100,17 @@ export const InstagramSection: React.FC = () => {
             {t('subscribers_count')}
           </p>
         </div>
+
+        {/* Lightbox для изображений Instagram */}
+        {displayedPosts.length > 0 && (
+          <ImageLightbox
+            isOpen={isLightboxOpen}
+            images={lightboxImages}
+            initialIndex={currentImageIndex}
+            onClose={closeLightbox}
+            zIndex={50}
+          />
+        )}
       </div>
     </section>
   );
