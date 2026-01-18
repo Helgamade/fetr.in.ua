@@ -4,12 +4,13 @@ import { useProducts } from '@/hooks/useProducts';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
 import { X, Plus, Minus, Trash2, ShoppingBag, Truck, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { analytics } from '@/lib/analytics';
 
 export const CartDrawer: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: products = [] } = useProducts();
   const { data: settings = {} } = useSettings();
   const FREE_DELIVERY_THRESHOLD = parseInt(settings.free_delivery_threshold) || 1500;
@@ -163,7 +164,14 @@ export const CartDrawer: React.FC = () => {
               <ShoppingBag className="w-16 h-16 text-muted-foreground/30 mb-4" />
               <h3 className="font-heading font-bold text-lg mb-2">Кошик порожній</h3>
               <p className="text-muted-foreground mb-4">Додайте товари для оформлення замовлення</p>
-              <Button variant="hero" onClick={closeCart}>
+              <Button variant="hero" onClick={() => {
+                closeCart();
+                if (location.pathname !== '/') {
+                  navigate('/#products');
+                } else {
+                  window.location.href = '#products';
+                }
+              }}>
                 Перейти до наборів
               </Button>
             </div>

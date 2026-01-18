@@ -218,7 +218,6 @@ export const ReviewsSection: React.FC = () => {
                     const sanitized = sanitizeName(e.target.value);
                     setFormData({ ...formData, name: sanitized });
                   }}
-                  placeholder="Олена"
                   required
                   maxLength={100}
                 />

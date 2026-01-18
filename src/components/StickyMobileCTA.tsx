@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ShoppingBag, ArrowUp } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
 
 export const StickyMobileCTA: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { openCart, getItemCount, getSubtotal, getDiscount } = useCart();
@@ -23,7 +26,13 @@ export const StickyMobileCTA: React.FC = () => {
   }, []);
 
   const scrollToProducts = () => {
-    document.querySelector('#products')?.scrollIntoView({ behavior: 'smooth' });
+    if (location.pathname === '/') {
+      // На главной - просто скроллим к якорю
+      document.querySelector('#products')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // На другой странице - переходим на главную с якорем
+      navigate('/#products');
+    }
   };
 
   const scrollToTop = () => {
