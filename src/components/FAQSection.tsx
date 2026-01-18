@@ -53,7 +53,7 @@ export const FAQSection: React.FC = () => {
                     {faq.question}
                   </span>
                 </AccordionTrigger>
-                <AccordionContent className="pb-5 text-muted-foreground">
+                <AccordionContent className="pb-5 text-muted-foreground whitespace-pre-line">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
