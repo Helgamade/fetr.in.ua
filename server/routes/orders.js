@@ -589,6 +589,13 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
         const itemPrice = product.sale_price || product.base_price || 0;
         const productIdInt = product.id; // Use INT id from products table
         
+        // Уменьшаем количество на складе
+        await connection.execute(`
+          UPDATE products 
+          SET stock = GREATEST(0, stock - ?)
+          WHERE id = ?
+        `, [item.quantity, productIdInt]);
+        
         const [itemResult] = await connection.execute(`
           INSERT INTO order_items (order_id, product_id, quantity, price)
           VALUES (?, ?, ?, ?)

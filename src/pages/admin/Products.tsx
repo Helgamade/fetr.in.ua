@@ -421,6 +421,22 @@ export function Products() {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="dailySalesTarget">Цільові продажі в день</Label>
+                    <Input
+                      id="dailySalesTarget"
+                      type="number"
+                      value={editingProduct.dailySalesTarget || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, dailySalesTarget: e.target.value ? parseInt(e.target.value) : undefined })}
+                      placeholder="Наприклад: 7"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Використовується для модуля Social Proof та відображення "X купили сьогодні"
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <Label htmlFor="badge">Бейдж</Label>
                     <select
                       id="badge"

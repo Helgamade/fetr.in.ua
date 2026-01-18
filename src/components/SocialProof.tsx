@@ -284,7 +284,7 @@ export const SocialProof: React.FC = () => {
             messageText: formatTemplate(selectedType.template, tempVariables)
           };
         } else if (selectedType.code === 'purchased_today') {
-          const todayPurchases = getTodayPurchases(product.code || '');
+          const todayPurchases = getTodayPurchases(product);
           
           // КРИТИЧНО: Если count = 0, пропускаем
           if (todayPurchases === 0) {
