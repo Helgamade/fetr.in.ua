@@ -8,6 +8,7 @@ import { CountdownTimer } from '@/components/CountdownTimer';
 import { OptionIcon } from '@/components/OptionIcon';
 import { cn, getEndOfTodayKyiv, getViewingNowCount } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useTexts } from '@/hooks/useTexts';
 import { trackEvent, trackFunnel } from '@/lib/analytics';
 import { ImageLightbox, ImageLightboxItem } from '@/components/ImageLightbox';
 
@@ -19,6 +20,7 @@ interface ProductModalProps {
 
 export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose }) => {
   const { t } = useTranslation('product');
+  const { data: texts = [] } = useTexts();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -519,15 +521,15 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
               <div className="flex flex-wrap gap-4 mb-6 p-4 rounded-xl bg-sage">
                 <div className="flex items-center gap-2 text-sm">
                   <Truck className="w-5 h-5 text-secondary" />
-                  <span>Безкоштовна доставка від 1500 ₴</span>
+                  <span>{texts.find(t => t.key === 'product.benefits.freeDelivery')?.value || 'Безкоштовна доставка від 1500 ₴'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Shield className="w-5 h-5 text-secondary" />
-                  <span>Гарантія якості</span>
+                  <span>{texts.find(t => t.key === 'product.benefits.quality')?.value || 'Гарантія якості'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Gift className="w-5 h-5 text-secondary" />
-                  <span>Подарунок до замовлення</span>
+                  <span>{texts.find(t => t.key === 'product.benefits.gift')?.value || 'Подарунок до замовлення'}</span>
                 </div>
               </div>
 
