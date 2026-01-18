@@ -82,12 +82,13 @@ export function DateTimePicker({ label, value, onChange, id }: DateTimePickerPro
               <ChevronDownIcon />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
+          <PopoverContent className="w-auto p-0 z-[60]" align="start" sideOffset={4} side="bottom">
             <Calendar
               mode="single"
               selected={value}
               captionLayout="dropdown"
               onSelect={handleDateSelect}
+              className="rounded-md border"
             />
           </PopoverContent>
         </Popover>
