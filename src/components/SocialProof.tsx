@@ -51,7 +51,6 @@ export const SocialProof: React.FC = () => {
   const [sessionStartTime] = useState(() => Date.now());
   const [lastNotificationTime, setLastNotificationTime] = useState(0);
   const [notificationsCount, setNotificationsCount] = useState(0);
-  const [clientLocation, setClientLocation] = useState<{ lat: number; lon: number; city?: string } | null>(null);
   const [notificationTypes, setNotificationTypes] = useState<any[]>([]);
   const [settings, setSettings] = useState({
     first_notification_delay: 60000,
@@ -77,7 +76,7 @@ export const SocialProof: React.FC = () => {
     queryKey: ['social-proof-settings'],
     queryFn: async () => {
       const res = await fetch('/api/social-proof/settings');
-      if (!res.ok) return null;
+      if (!res.ok) return {};
       return res.json();
     }
   });
@@ -122,26 +121,6 @@ export const SocialProof: React.FC = () => {
     }
   }, [typesData]);
 
-  // Получение координат клиента по IP (без запроса разрешения у пользователя)
-  useEffect(() => {
-    const fetchLocationByIP = async () => {
-      try {
-        // Пытаемся получить координаты через IP-геолокацию
-        const location = await getLocationByIPWithCoordinates();
-        if (location?.lat && location?.lon) {
-          setClientLocation({
-            lat: location.lat,
-            lon: location.lon,
-          });
-        }
-      } catch (error) {
-        console.error('Error getting location by IP:', error);
-      }
-    };
-    
-    fetchLocationByIP();
-  }, []);
-
   // Функция для получения ближайшего города через API Новой Почты
   const getNearestCity = async (lat: number, lon: number): Promise<string | null> => {
     try {
@@ -156,38 +135,7 @@ export const SocialProof: React.FC = () => {
     return null;
   };
 
-  // Функция для получения города и координат по IP (ip-api.com с fallback на ipwho.is)
-  const getLocationByIPWithCoordinates = async (): Promise<{ city: string | null; country: string | null; lat: number | null; lon: number | null } | null> => {
-    try {
-      // Сначала пытаемся получить из аналитики (если уже определено)
-      const sessionId = getSessionId();
-      const response = await fetch(`/api/analytics/realtime`);
-      if (response.ok) {
-        const sessions = await response.json();
-        const currentSession = sessions.find((s: any) => s.session_id === sessionId);
-        if (currentSession?.city || currentSession?.country) {
-          // Если город уже есть в аналитике, но координат нет - запрашиваем их отдельно
-          // Для простоты возвращаем только город из аналитики
-          return {
-            city: currentSession.city || null,
-            country: currentSession.country || null,
-            lat: null, // Координаты будут получены через API НП по городу
-            lon: null
-          };
-        }
-      }
-
-      // Если в аналитике нет данных, определяем через IP на сервере
-      // Это делается автоматически при создании сессии в analytics.js
-      // Здесь возвращаем null - координаты для НП будем получать через город
-      return null;
-    } catch (error) {
-      console.error('Error getting location by IP:', error);
-      return null;
-    }
-  };
-
-  // Функция для получения города из IP (из аналитики или прямой запрос)
+  // Функция для получения города из IP (из аналитики)
   const getCityFromIP = async (): Promise<{ city: string | null; country: string | null }> => {
     try {
       // Получаем текущую сессию из аналитики
@@ -232,23 +180,10 @@ export const SocialProof: React.FC = () => {
         logData.client_city_from_ip = ipLocation.city;
         logData.client_country_from_ip = ipLocation.country;
         
-        // Если есть координаты (из IP-геолокации), используем их для определения города НП
-        if (clientLocation?.lat && clientLocation?.lon) {
-          logData.client_latitude = clientLocation.lat;
-          logData.client_longitude = clientLocation.lon;
-          
-          // Получаем город из НП по координатам
-          const npCity = await getNearestCity(clientLocation.lat, clientLocation.lon);
-          if (npCity) {
-            logData.client_city_from_np = npCity;
-          }
-        } else {
-          // Если координат нет, пытаемся использовать город из IP для поиска в НП
-          if (ipLocation.city) {
-            // Город из IP уже будет в client_city_from_ip
-            // Координаты оставляем null
-          }
-        }
+        // Координаты оставляем null (не используем браузерную геолокацию)
+        logData.client_latitude = null;
+        logData.client_longitude = null;
+        logData.client_city_from_np = null; // Можно попробовать определить по городу из IP
         
         logData.client_name = notification.name;
         logData.hours_ago = notification.hoursAgo;
@@ -291,12 +226,10 @@ export const SocialProof: React.FC = () => {
 
     // Инициализация порядка уведомлений
     if (settings.notification_order === 'sequential') {
-      // Создаем последовательность индексов типов
       const typeIndices: number[] = [];
       for (let i = 0; i < notificationTypes.length; i++) {
         typeIndices.push(i);
       }
-      // Перемешиваем случайно в начале сессии, но потом используем последовательно
       notificationOrderRef.current = typeIndices.sort(() => Math.random() - 0.5);
       currentOrderIndexRef.current = 0;
     }
@@ -305,128 +238,141 @@ export const SocialProof: React.FC = () => {
       const now = Date.now();
       const timeSinceLastNotification = now - lastNotificationTime;
       
-      // Проверяем минимальный интервал (в миллисекундах)
       if (lastNotificationTime > 0 && timeSinceLastNotification < settings.notification_interval) {
-        return; // Пропускаем, если прошло менее интервала
+        return;
       }
 
-      // Проверяем максимальное количество уведомлений за сессию
       if (notificationsCount >= settings.max_notifications_per_session) {
-        return; // Достигнут лимит
+        return;
       }
 
-      // Выбираем тип уведомления
-      let selectedType;
-      if (settings.notification_order === 'sequential') {
-        const typeIndex = notificationOrderRef.current[currentOrderIndexRef.current % notificationOrderRef.current.length];
-        selectedType = notificationTypes[typeIndex];
-        currentOrderIndexRef.current++;
-      } else {
-        // Случайный выбор из включенных типов
-        selectedType = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
-      }
-
-      if (!selectedType) return;
-
-      // Выбираем случайный товар
-      const product = products[Math.floor(Math.random() * products.length)];
-      if (!product) return;
-
-      let newNotification: Notification;
-      let variables: Record<string, any> = {};
-
-      if (selectedType.code === 'viewing') {
-        // Тип 1: "Х людей переглядають"
-        const viewingCount = getViewingNowCount(product.id, product.purchaseCount || 0);
-        variables = {
-          count: viewingCount,
-          product_name: product.name
-        };
-        newNotification = {
-          id: Date.now().toString(),
-          type: 'viewing',
-          productName: product.name,
-          productId: product.id,
-          productCode: product.code,
-          count: viewingCount,
-          messageText: formatTemplate(selectedType.template, variables)
-        };
-      } else if (selectedType.code === 'purchased_today') {
-        // Тип 2: "Х людей купили сьогодні"
-        const todayPurchases = getTodayPurchases(product.code || '');
-        variables = {
-          count: todayPurchases,
-          product_name: product.name
-        };
-        newNotification = {
-          id: Date.now().toString(),
-          type: 'purchased_today',
-          productName: product.name,
-          productId: product.id,
-          productCode: product.code,
-          count: todayPurchases,
-          messageText: formatTemplate(selectedType.template, variables)
-        };
-      } else {
-        // Тип 3: "Ольга (Київ) купила N годин назад"
-        let city = 'Київ'; // Fallback
-        
-        // Пытаемся получить город из геолокации
-        if (clientLocation?.lat && clientLocation?.lon) {
-          const nearestCity = await getNearestCity(clientLocation.lat, clientLocation.lon);
-          if (nearestCity) {
-            city = nearestCity;
-          }
+      // Пытаемся найти уведомление с ненулевым значением (максимум 5 попыток)
+      let notificationFound = false;
+      let finalNotification: Notification | null = null;
+      let finalVariables: Record<string, any> = {};
+      
+      for (let attempt = 0; attempt < 5 && !notificationFound; attempt++) {
+        // Выбираем тип уведомления
+        let selectedType;
+        if (settings.notification_order === 'sequential') {
+          const typeIndex = notificationOrderRef.current[currentOrderIndexRef.current % notificationOrderRef.current.length];
+          selectedType = notificationTypes[typeIndex];
+          currentOrderIndexRef.current++;
         } else {
-          // Пытаемся получить город из IP
+          selectedType = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
+        }
+
+        if (!selectedType) continue;
+
+        // Выбираем случайный товар
+        const product = products[Math.floor(Math.random() * products.length)];
+        if (!product) continue;
+
+        let tempNotification: Notification | null = null;
+        let tempVariables: Record<string, any> = {};
+
+        if (selectedType.code === 'viewing') {
+          const viewingCount = getViewingNowCount(product.id, product.purchaseCount || 0);
+          
+          // КРИТИЧНО: Если count = 0, пропускаем
+          if (viewingCount === 0) {
+            continue;
+          }
+          
+          tempVariables = {
+            count: viewingCount,
+            product_name: product.name
+          };
+          tempNotification = {
+            id: Date.now().toString(),
+            type: 'viewing',
+            productName: product.name,
+            productId: product.id,
+            productCode: product.code,
+            count: viewingCount,
+            messageText: formatTemplate(selectedType.template, tempVariables)
+          };
+        } else if (selectedType.code === 'purchased_today') {
+          const todayPurchases = getTodayPurchases(product.code || '');
+          
+          // КРИТИЧНО: Если count = 0, пропускаем
+          if (todayPurchases === 0) {
+            continue;
+          }
+          
+          tempVariables = {
+            count: todayPurchases,
+            product_name: product.name
+          };
+          tempNotification = {
+            id: Date.now().toString(),
+            type: 'purchased_today',
+            productName: product.name,
+            productId: product.id,
+            productCode: product.code,
+            count: todayPurchases,
+            messageText: formatTemplate(selectedType.template, tempVariables)
+          };
+        } else if (selectedType.code === 'purchased_local') {
+          // Тип 3: "Ольга (Київ) купила N годин назад" - всегда валидно
+          let city = 'Київ';
           const ipLocation = await getCityFromIP();
           if (ipLocation.city) {
             city = ipLocation.city;
           }
+
+          const name = namesData.length > 0 
+            ? namesData[Math.floor(Math.random() * namesData.length)].name
+            : 'Ольга';
+          
+          const hoursAgo = Math.floor(Math.random() * 6) + 1;
+
+          tempVariables = {
+            name,
+            city,
+            hours_ago: formatHoursAgo(hoursAgo),
+            product_name: product.name
+          };
+
+          tempNotification = {
+            id: Date.now().toString(),
+            type: 'purchased_local',
+            productName: product.name,
+            productId: product.id,
+            productCode: product.code,
+            city,
+            name,
+            hoursAgo,
+            messageText: formatTemplate(selectedType.template, tempVariables)
+          };
         }
 
-        // Выбираем случайное имя из списка
-        const name = namesData.length > 0 
-          ? namesData[Math.floor(Math.random() * namesData.length)].name
-          : 'Ольга';
-        
-        const hoursAgo = Math.floor(Math.random() * 6) + 1; // 1-6 часов назад
-
-        variables = {
-          name,
-          city,
-          hours_ago: formatHoursAgo(hoursAgo),
-          product_name: product.name
-        };
-
-        newNotification = {
-          id: Date.now().toString(),
-          type: 'purchased_local',
-          productName: product.name,
-          productId: product.id,
-          productCode: product.code,
-          city,
-          name,
-          hoursAgo,
-          messageText: formatTemplate(selectedType.template, variables)
-        };
+        // Если нашли валидное уведомление
+        if (tempNotification) {
+          finalNotification = tempNotification;
+          finalVariables = tempVariables;
+          notificationFound = true;
+          break;
+        }
       }
 
-      setNotification(newNotification);
+      // Если не нашли валидное уведомление - пропускаем показ
+      if (!finalNotification || !notificationFound) {
+        return;
+      }
+
+      setNotification(finalNotification);
       setIsVisible(true);
       setLastNotificationTime(now);
       setNotificationsCount(count => count + 1);
 
-      // Сохраняем лог
-      saveLog(newNotification, variables);
+      saveLog(finalNotification, finalVariables);
 
-      // Скрываем через 5 секунд
       setTimeout(() => {
         setIsVisible(false);
       }, 5000);
     };
 
-    // Первое уведомление через указанную задержку
     const initialTimeout = setTimeout(() => {
       (async () => {
         try {
@@ -437,14 +383,11 @@ export const SocialProof: React.FC = () => {
       })();
     }, settings.first_notification_delay);
 
-    // Последующие уведомления каждые N секунд
     const interval = setInterval(() => {
       const now = Date.now();
       const timeSinceLastNotification = now - lastNotificationTime;
       
-      // Если прошло достаточно времени - показываем
       if (timeSinceLastNotification >= settings.notification_interval) {
-        // Используем async IIFE для обработки async функции
         (async () => {
           try {
             await showNotification();
@@ -465,7 +408,6 @@ export const SocialProof: React.FC = () => {
     settings, 
     lastNotificationTime, 
     notificationsCount,
-    clientLocation,
     namesData,
     currentHour
   ]);

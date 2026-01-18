@@ -105,17 +105,30 @@ export function SocialProof() {
 
   // Сохранение настроек
   const saveSettings = useMutation({
-    mutationFn: (newSettings: Record<string, any>) => 
-      fetchAPI<any>('/social-proof/settings', {
-        method: 'PUT',
-        body: JSON.stringify(newSettings)
-      }),
+    mutationFn: async (newSettings: Record<string, any>) => {
+      try {
+        const result = await fetchAPI<any>('/social-proof/settings', {
+          method: 'PUT',
+          body: JSON.stringify(newSettings)
+        });
+        return result;
+      } catch (error: any) {
+        console.error('Error saving settings:', error);
+        throw error;
+      }
+    },
     onSuccess: () => {
       toast({ title: 'Налаштування збережено' });
       queryClient.invalidateQueries({ queryKey: ['social-proof-settings'] });
     },
-    onError: () => {
-      toast({ title: 'Помилка збереження', variant: 'destructive' });
+    onError: (error: any) => {
+      const errorMessage = error?.message || 'Помилка збереження';
+      toast({ 
+        title: 'Помилка збереження', 
+        description: errorMessage,
+        variant: 'destructive' 
+      });
+      console.error('Error saving settings:', error);
     }
   });
 
@@ -140,8 +153,14 @@ export function SocialProof() {
       toast({ title: 'Типи збережено' });
       queryClient.invalidateQueries({ queryKey: ['social-proof-types'] });
     },
-    onError: () => {
-      toast({ title: 'Помилка збереження', variant: 'destructive' });
+    onError: (error: any) => {
+      const errorMessage = error?.message || 'Помилка збереження';
+      toast({ 
+        title: 'Помилка збереження типів', 
+        description: errorMessage,
+        variant: 'destructive' 
+      });
+      console.error('Error saving notification types:', error);
     }
   });
 
