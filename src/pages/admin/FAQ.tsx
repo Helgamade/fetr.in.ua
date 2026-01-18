@@ -23,7 +23,10 @@ export function FAQ() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPublishing, setIsPublishing] = useState<number | null>(null);
 
-  const filteredFAQs = faqs.filter(faq =>
+  // Сортируем FAQ по sort_order для правильного отображения порядка
+  const sortedFAQs = [...faqs].sort((a, b) => a.sort_order - b.sort_order);
+  
+  const filteredFAQs = sortedFAQs.filter(faq =>
     faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
     faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -122,16 +125,20 @@ export function FAQ() {
   };
 
   const handleMoveUp = async (faq: FAQ) => {
-    const currentIndex = faqs.findIndex(f => f.id === faq.id);
+    // Используем отсортированный список для правильного определения индекса
+    const currentIndex = sortedFAQs.findIndex(f => f.id === faq.id);
     if (currentIndex <= 0) return;
 
-    const prevFAQ = faqs[currentIndex - 1];
+    const prevFAQ = sortedFAQs[currentIndex - 1];
     const newSortOrder = prevFAQ.sort_order;
     const prevSortOrder = faq.sort_order;
 
     try {
-      await updateFAQ.mutateAsync({ id: faq.id, data: { sort_order: newSortOrder } });
-      await updateFAQ.mutateAsync({ id: prevFAQ.id, data: { sort_order: prevSortOrder } });
+      // Обновляем оба FAQ одновременно через Promise.all для избежания race conditions
+      await Promise.all([
+        updateFAQ.mutateAsync({ id: faq.id, data: { sort_order: newSortOrder } }),
+        updateFAQ.mutateAsync({ id: prevFAQ.id, data: { sort_order: prevSortOrder } })
+      ]);
       toast({ title: 'Порядок оновлено', description: 'FAQ переміщено вгору' });
     } catch (error: any) {
       toast({
@@ -143,16 +150,20 @@ export function FAQ() {
   };
 
   const handleMoveDown = async (faq: FAQ) => {
-    const currentIndex = faqs.findIndex(f => f.id === faq.id);
-    if (currentIndex >= faqs.length - 1) return;
+    // Используем отсортированный список для правильного определения индекса
+    const currentIndex = sortedFAQs.findIndex(f => f.id === faq.id);
+    if (currentIndex >= sortedFAQs.length - 1) return;
 
-    const nextFAQ = faqs[currentIndex + 1];
+    const nextFAQ = sortedFAQs[currentIndex + 1];
     const newSortOrder = nextFAQ.sort_order;
     const nextSortOrder = faq.sort_order;
 
     try {
-      await updateFAQ.mutateAsync({ id: faq.id, data: { sort_order: newSortOrder } });
-      await updateFAQ.mutateAsync({ id: nextFAQ.id, data: { sort_order: nextSortOrder } });
+      // Обновляем оба FAQ одновременно через Promise.all для избежания race conditions
+      await Promise.all([
+        updateFAQ.mutateAsync({ id: faq.id, data: { sort_order: newSortOrder } }),
+        updateFAQ.mutateAsync({ id: nextFAQ.id, data: { sort_order: nextSortOrder } })
+      ]);
       toast({ title: 'Порядок оновлено', description: 'FAQ переміщено вниз' });
     } catch (error: any) {
       toast({
