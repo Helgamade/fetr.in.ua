@@ -171,9 +171,18 @@ const Index = () => {
                     {t('guarantee.text')}
                   </p>
                   <div className="flex flex-wrap justify-center gap-4 text-sm">
-                    <span className="flex items-center gap-2">✅ {t('guarantee.safe_payment')}</span>
-                    <span className="flex items-center gap-2">✅ {t('guarantee.fast_delivery')}</span>
-                    <span className="flex items-center gap-2">✅ {t('guarantee.master_support')}</span>
+                    <span className="flex items-center justify-center gap-2">
+                      <CircleCheckBig className="w-5 h-5 text-success flex-shrink-0" aria-hidden="true" />
+                      {t('guarantee.safe_payment')}
+                    </span>
+                    <span className="flex items-center justify-center gap-2">
+                      <CircleCheckBig className="w-5 h-5 text-success flex-shrink-0" aria-hidden="true" />
+                      {t('guarantee.fast_delivery')}
+                    </span>
+                    <span className="flex items-center justify-center gap-2">
+                      <CircleCheckBig className="w-5 h-5 text-success flex-shrink-0" aria-hidden="true" />
+                      {t('guarantee.master_support')}
+                    </span>
                   </div>
                 </div>
               </div>
