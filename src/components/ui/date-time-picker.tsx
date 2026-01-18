@@ -1,17 +1,16 @@
 "use client"
 
 import * as React from "react"
-import { ChevronDownIcon } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface DateTimePickerProps {
   label?: string
@@ -20,82 +19,153 @@ interface DateTimePickerProps {
   id?: string
 }
 
+const months = [
+  { value: 0, label: "Січень" },
+  { value: 1, label: "Лютий" },
+  { value: 2, label: "Березень" },
+  { value: 3, label: "Квітень" },
+  { value: 4, label: "Травень" },
+  { value: 5, label: "Червень" },
+  { value: 6, label: "Липень" },
+  { value: 7, label: "Серпень" },
+  { value: 8, label: "Вересень" },
+  { value: 9, label: "Жовтень" },
+  { value: 10, label: "Листопад" },
+  { value: 11, label: "Грудень" },
+]
+
+function getDaysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate()
+}
+
+function generateYears(): number[] {
+  const currentYear = new Date().getFullYear()
+  const years: number[] = []
+  for (let i = currentYear + 10; i >= 1900; i--) {
+    years.push(i)
+  }
+  return years
+}
+
 export function DateTimePicker({ label, value, onChange, id }: DateTimePickerProps) {
-  const [open, setOpen] = React.useState(false)
+  const date = value || new Date()
+  const [day, setDay] = React.useState(date.getDate())
+  const [month, setMonth] = React.useState(date.getMonth())
+  const [year, setYear] = React.useState(date.getFullYear())
   const [timeValue, setTimeValue] = React.useState(() => {
-    if (value) {
-      const hours = String(value.getHours()).padStart(2, '0')
-      const minutes = String(value.getMinutes()).padStart(2, '0')
-      return `${hours}:${minutes}`
-    }
-    return '00:00'
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${hours}:${minutes}`
   })
 
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      const [hours, minutes] = timeValue.split(':')
-      const newDate = new Date(date)
-      newDate.setHours(parseInt(hours) || 0, parseInt(minutes) || 0, 0, 0)
-      onChange(newDate)
-      setOpen(false)
-    } else {
-      onChange(undefined)
+  const daysInMonth = React.useMemo(() => getDaysInMonth(year, month), [year, month])
+  const years = React.useMemo(() => generateYears(), [])
+
+  // Синхронизация с внешним value
+  React.useEffect(() => {
+    if (value) {
+      const newDay = value.getDate()
+      const newMonth = value.getMonth()
+      const newYear = value.getFullYear()
+      const hours = String(value.getHours()).padStart(2, '0')
+      const minutes = String(value.getMinutes()).padStart(2, '0')
+      
+      setDay(newDay)
+      setMonth(newMonth)
+      setYear(newYear)
+      setTimeValue(`${hours}:${minutes}`)
     }
+  }, [value])
+
+  const updateDate = React.useCallback((newDay: number, newMonth: number, newYear: number, time: string) => {
+    const [hours, minutes] = time.split(':')
+    const newDate = new Date(newYear, newMonth, newDay, parseInt(hours) || 0, parseInt(minutes) || 0, 0, 0)
+    onChange(newDate)
+  }, [onChange])
+
+  const handleDayChange = (newDay: number) => {
+    const clampedDay = Math.min(newDay, daysInMonth)
+    setDay(clampedDay)
+    updateDate(clampedDay, month, year, timeValue)
+  }
+
+  const handleMonthChange = (newMonth: number) => {
+    setMonth(newMonth)
+    const clampedDay = Math.min(day, getDaysInMonth(year, newMonth))
+    setDay(clampedDay)
+    updateDate(clampedDay, newMonth, year, timeValue)
+  }
+
+  const handleYearChange = (newYear: number) => {
+    setYear(newYear)
+    const clampedDay = Math.min(day, getDaysInMonth(newYear, month))
+    setDay(clampedDay)
+    updateDate(clampedDay, month, newYear, timeValue)
   }
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = e.target.value
     setTimeValue(newTime)
-    if (value) {
-      const [hours, minutes] = newTime.split(':')
-      const newDate = new Date(value)
-      newDate.setHours(parseInt(hours) || 0, parseInt(minutes) || 0, 0, 0)
-      onChange(newDate)
-    } else {
-      const [hours, minutes] = newTime.split(':')
-      const today = new Date()
-      today.setHours(parseInt(hours) || 0, parseInt(minutes) || 0, 0, 0)
-      onChange(today)
-    }
+    updateDate(day, month, year, newTime)
   }
 
-  React.useEffect(() => {
-    if (value) {
-      const hours = String(value.getHours()).padStart(2, '0')
-      const minutes = String(value.getMinutes()).padStart(2, '0')
-      setTimeValue(`${hours}:${minutes}`)
-    }
-  }, [value])
+  const displayDate = value 
+    ? value.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : "Оберіть дату"
 
   return (
     <div className="flex gap-4">
       <div className="flex flex-col gap-3 flex-1">
         {label && <Label htmlFor={id || "date-picker"} className="px-1">{label}</Label>}
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              id={id || "date-picker"}
-              className="w-full justify-between font-normal"
-            >
-              {value ? value.toLocaleDateString('uk-UA') : "Оберіть дату"}
-              <ChevronDownIcon />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 z-[60] overflow-visible" align="start" sideOffset={4} side="bottom">
-            <div className="overflow-visible">
-              <Calendar
-                mode="single"
-                selected={value}
-                captionLayout="dropdown-buttons"
-                onSelect={handleDateSelect}
-                className="rounded-md border"
-                fromYear={1900}
-                toYear={new Date().getFullYear() + 10}
-              />
-            </div>
-          </PopoverContent>
-        </Popover>
+        <div className="flex gap-2">
+          <Select
+            value={day.toString()}
+            onValueChange={(val) => handleDayChange(parseInt(val))}
+          >
+            <SelectTrigger className="w-[80px]">
+              <SelectValue placeholder="День" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => (
+                <SelectItem key={d} value={d.toString()}>
+                  {String(d).padStart(2, '0')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={month.toString()}
+            onValueChange={(val) => handleMonthChange(parseInt(val))}
+          >
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder="Місяць" />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map((m) => (
+                <SelectItem key={m.value} value={m.value.toString()}>
+                  {m.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={year.toString()}
+            onValueChange={(val) => handleYearChange(parseInt(val))}
+          >
+            <SelectTrigger className="w-[100px]">
+              <SelectValue placeholder="Рік" />
+            </SelectTrigger>
+            <SelectContent className="max-h-[200px]">
+              {years.map((y) => (
+                <SelectItem key={y} value={y.toString()}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <div className="flex flex-col gap-3 w-32">
         <Label htmlFor={`${id || "time"}-picker`} className="px-1">Час</Label>
@@ -104,11 +174,9 @@ export function DateTimePicker({ label, value, onChange, id }: DateTimePickerPro
           id={`${id || "time"}-picker`}
           value={timeValue}
           onChange={handleTimeChange}
-          className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+          className="bg-background"
         />
       </div>
     </div>
   )
 }
-
-
