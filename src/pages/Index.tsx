@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { CircleCheckBig } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { AudienceSection } from "@/components/AudienceSection";
@@ -173,15 +173,15 @@ const Index = () => {
                   </p>
                   <div className="flex flex-wrap justify-center gap-4 text-sm">
                     <span className="flex items-center justify-center gap-2">
-                      <CircleCheckBig className="w-5 h-5 text-success flex-shrink-0" aria-hidden="true" />
+                      <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" aria-hidden="true" />
                       {t('guarantee.safe_payment')}
                     </span>
                     <span className="flex items-center justify-center gap-2">
-                      <CircleCheckBig className="w-5 h-5 text-success flex-shrink-0" aria-hidden="true" />
+                      <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" aria-hidden="true" />
                       {t('guarantee.fast_delivery')}
                     </span>
                     <span className="flex items-center justify-center gap-2">
-                      <CircleCheckBig className="w-5 h-5 text-success flex-shrink-0" aria-hidden="true" />
+                      <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" aria-hidden="true" />
                       {t('guarantee.master_support')}
                     </span>
                   </div>
