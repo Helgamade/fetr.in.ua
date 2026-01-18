@@ -25,24 +25,33 @@ const Index = () => {
   const { t } = useTranslation('index');
   const { data: texts = [] } = useTexts();
   const location = useLocation();
-  const hasHandledInitialHashRef = useRef<boolean>(false);
+  const isInitialMountRef = useRef<boolean>(true);
+  const prevPathnameRef = useRef<string | null>(null);
   
   // Handle hash navigation ONLY for cross-page navigation (from other pages to /#hash)
-  // For navigation within same page, browser handles it naturally - DON'T TOUCH IT!
+  // For navigation within same page OR page reload with hash, browser handles it naturally - DON'T TOUCH IT!
   useEffect(() => {
-    // Only handle hash on initial mount or when pathname changes to /
-    // If hash changes while already on /, browser handles it naturally
-    if (location.pathname !== '/') {
-      hasHandledInitialHashRef.current = false;
+    const currentPath = location.pathname;
+    const prevPath = prevPathnameRef.current;
+    
+    // On initial mount - let browser handle hash naturally (for page reloads with hash)
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      prevPathnameRef.current = currentPath;
+      return; // Don't interfere with browser's native scroll on page load/reload
+    }
+    
+    // Only handle hash when pathname changes from another page to /
+    // If we're already on / and hash changes, browser handles it naturally
+    if (currentPath !== '/') {
+      prevPathnameRef.current = currentPath;
       return;
     }
     
     const hash = location.hash || window.location.hash;
     
-    // If hash exists and we haven't handled it yet (cross-page navigation)
-    if (hash && !hasHandledInitialHashRef.current) {
-      hasHandledInitialHashRef.current = true;
-      
+    // Only scroll if we came from another page (not from initial load or within-page navigation)
+    if (hash && prevPath !== null && prevPath !== '/') {
       const scrollToElement = (attempt = 0) => {
         const element = document.querySelector(hash);
         if (element) {
@@ -65,14 +74,12 @@ const Index = () => {
       // Start scrolling after a delay to let page render
       const timeoutId = setTimeout(() => scrollToElement(0), 100);
       
+      prevPathnameRef.current = currentPath;
       return () => clearTimeout(timeoutId);
     }
     
-    // Reset flag when navigating away and back (but not for hash-only changes)
-    if (!hash) {
-      hasHandledInitialHashRef.current = false;
-    }
-  }, [location.pathname]); // Only trigger on pathname change, NOT on hash change
+    prevPathnameRef.current = currentPath;
+  }, [location.pathname]); // Only trigger on pathname change, NOT on hash change or initial mount
   
   // Получаем тексты баннера
   const bannerText1 = texts.find(t => t.key === 'banner.text1')?.value || '🎁 Безкоштовна доставка від 1500 грн';
