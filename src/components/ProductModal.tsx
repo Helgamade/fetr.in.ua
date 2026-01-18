@@ -520,16 +520,16 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
               {/* Benefits */}
               <div className="flex flex-wrap gap-4 mb-6 p-4 rounded-xl bg-sage">
                 <div className="flex items-center gap-2 text-sm">
-                  <Truck className="w-5 h-5 text-secondary" />
-                  <span>{texts.find(t => t.key === 'product.benefits.freeDelivery')?.value || 'Безкоштовна доставка від 1500 ₴'}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
                   <Shield className="w-5 h-5 text-secondary" />
-                  <span>{texts.find(t => t.key === 'product.benefits.quality')?.value || 'Гарантія якості'}</span>
+                  <span>{texts.find(t => t.key === 'product.benefits.quality')?.value || 'Безпечні матеріали для дитячої творчості'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <RefreshCw className="w-5 h-5 text-secondary" />
                   <span>{texts.find(t => t.key === 'product.benefits.return')?.value || 'Обмін і повернення без зайвих питань'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Truck className="w-5 h-5 text-secondary" />
+                  <span>{texts.find(t => t.key === 'product.benefits.freeDelivery')?.value || 'Безкоштовна доставка від 1500 ₴'}</span>
                 </div>
               </div>
 
