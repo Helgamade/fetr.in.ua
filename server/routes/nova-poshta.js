@@ -251,5 +251,69 @@ router.get('/warehouses/:ref', async (req, res, next) => {
   }
 });
 
+// Получить ближайшее отделение по координатам
+router.get('/nearest-warehouse', async (req, res, next) => {
+  try {
+    const { lat, lon, radius = 20000 } = req.query; // radius в метрах
+    
+    if (!lat || !lon) {
+      return res.status(400).json({ error: 'Latitude and longitude are required' });
+    }
+
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lon);
+    const radiusKm = parseFloat(radius) / 1000; // Конвертируем метры в км
+
+    // Формула гаверсинуса для расчета расстояния
+    // Используем примерный bounding box для оптимизации запроса
+    const latRange = radiusKm / 111; // Примерно 1 градус = 111 км
+    const lonRange = radiusKm / (111 * Math.cos(latitude * Math.PI / 180));
+
+    const [warehouses] = await pool.execute(`
+      SELECT 
+        nw.city_description_ua as city,
+        nw.latitude,
+        nw.longitude,
+        (
+          6371 * acos(
+            cos(radians(?)) * 
+            cos(radians(nw.latitude)) * 
+            cos(radians(nw.longitude) - radians(?)) + 
+            sin(radians(?)) * 
+            sin(radians(nw.latitude))
+          )
+        ) AS distance_km
+      FROM nova_poshta_warehouses nw
+      INNER JOIN nova_poshta_cities nc ON nw.city_ref = nc.ref
+      WHERE nc.settlement_type_description_ua = 'місто'
+        AND nw.latitude IS NOT NULL 
+        AND nw.longitude IS NOT NULL
+        AND nw.latitude BETWEEN ? AND ?
+        AND nw.longitude BETWEEN ? AND ?
+      HAVING distance_km <= ?
+      ORDER BY distance_km ASC
+      LIMIT 1
+    `, [
+      latitude,
+      longitude,
+      latitude,
+      latitude - latRange,
+      latitude + latRange,
+      longitude - lonRange,
+      longitude + lonRange,
+      radiusKm
+    ]);
+
+    if (warehouses.length > 0) {
+      res.json({ city: warehouses[0].city, distance: warehouses[0].distance_km });
+    } else {
+      res.json({ city: null, distance: null });
+    }
+  } catch (error) {
+    console.error('Error getting nearest warehouse:', error);
+    next(error);
+  }
+});
+
 export default router;
 

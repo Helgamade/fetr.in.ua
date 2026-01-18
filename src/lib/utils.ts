@@ -220,3 +220,46 @@ export function getViewingNowCount(productId: number, purchaseCount: number): nu
   
   return viewingCount;
 }
+
+/**
+ * Получает количество покупок за сегодня для товара (пропорционально времени суток)
+ * @param productCode - код товара (starter, optimal, premium)
+ * @returns количество покупок сегодня
+ */
+export function getTodayPurchases(productCode: string): number {
+  // Максимальные покупки в день по товарам
+  const DAILY_PURCHASES: Record<string, number> = {
+    'optimal': 10, // Товар 2 (Optimal) - 1-е место
+    'starter': 7,  // Товар 1 (Starter) - 2-е место  
+    'premium': 5,  // Товар 3 (Premium) - 3-е место
+  };
+  
+  const maxPurchases = DAILY_PURCHASES[productCode] || 5;
+  const now = new Date();
+  const kyivNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Kyiv' }));
+  const hoursSinceMidnight = kyivNow.getHours() + kyivNow.getMinutes() / 60;
+
+  // Распределение покупок по времени суток
+  let multiplier = 0;
+  
+  if (hoursSinceMidnight >= 0 && hoursSinceMidnight < 7) {
+    // Ночь (00:00-07:00): минимальная активность (1-2% от дневной)
+    multiplier = 0.01 + (hoursSinceMidnight / 7) * 0.01; // 0.01 до 0.02
+  } else if (hoursSinceMidnight >= 7 && hoursSinceMidnight < 9) {
+    // Утро (07:00-09:00): растущая активность (5-15%)
+    multiplier = 0.05 + ((hoursSinceMidnight - 7) / 2) * 0.10; // 0.05 до 0.15
+  } else if (hoursSinceMidnight >= 9 && hoursSinceMidnight < 21) {
+    // День (09:00-21:00): пик активности (15-100%)
+    // Пик около 14:00-16:00
+    const dayProgress = (hoursSinceMidnight - 9) / 12; // 0 до 1
+    const peakOffset = Math.sin((dayProgress - 0.4) * Math.PI * 2) * 0.3 + 0.7;
+    multiplier = 0.15 + dayProgress * 0.85 * peakOffset;
+  } else {
+    // Вечер (21:00-00:00): снижающаяся активность (15-1%)
+    const eveningProgress = (hoursSinceMidnight - 21) / 3; // 0 до 1
+    multiplier = 0.15 - eveningProgress * 0.14; // 0.15 до 0.01
+  }
+
+  const purchases = Math.floor(maxPurchases * multiplier);
+  return Math.max(0, purchases); // Минимум 0
+}

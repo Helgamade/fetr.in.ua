@@ -15,7 +15,8 @@ import {
   HelpCircle,
   Mail,
   BarChart3,
-  Layers
+  Layers,
+  Bell
 } from 'lucide-react';
 import {
   Sidebar,
@@ -51,6 +52,7 @@ const menuItems = [
   { icon: FileText, label: 'Сторінки', path: '/admin/pages' },
   { icon: Table2, label: 'Порівняння', path: '/admin/comparison' },
   { icon: Mail, label: 'Email шаблони', path: '/admin/email-templates' },
+  { icon: Bell, label: 'Соц. підтвердження', path: '/admin/social-proof' },
   { icon: Settings, label: 'Налаштування', path: '/admin/settings' },
 ];
 
