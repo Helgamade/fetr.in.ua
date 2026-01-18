@@ -39,9 +39,8 @@ function getDaysInMonth(year: number, month: number): number {
 }
 
 function generateYears(): number[] {
-  const currentYear = new Date().getFullYear()
   const years: number[] = []
-  for (let i = currentYear + 10; i >= 1900; i--) {
+  for (let i = 2027; i >= 2013; i--) {
     years.push(i)
   }
   return years
