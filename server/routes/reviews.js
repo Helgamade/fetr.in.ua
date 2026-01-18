@@ -69,7 +69,7 @@ router.get('/all-public', async (req, res, next) => {
     
     if (rating) {
       whereConditions.push('rating = ?');
-      params.push(parseInt(rating as string));
+      params.push(parseInt(String(rating)));
     }
     
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
