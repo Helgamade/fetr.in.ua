@@ -155,7 +155,7 @@ export const Footer: React.FC = () => {
 
       {/* Copyright */}
       <div className="border-t border-primary-foreground/10">
-        <div className="container-tight py-6">
+        <div className="container-tight py-6 pb-[5.5rem] md:pb-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-primary-foreground/40 text-sm">
               © {currentYear} {storeName}. {t('copyright')}
