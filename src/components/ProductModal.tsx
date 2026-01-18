@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Product } from '@/types/store';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { X, ChevronLeft, ChevronRight, ShoppingBag, Check, Users, Eye, Truck, Shield, Gift, Grid3x3 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ShoppingBag, Check, Users, Eye, Truck, Shield, RefreshCw, Grid3x3 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { OptionIcon } from '@/components/OptionIcon';
@@ -528,8 +528,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                   <span>{texts.find(t => t.key === 'product.benefits.quality')?.value || 'Гарантія якості'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <Gift className="w-5 h-5 text-secondary" />
-                  <span>{texts.find(t => t.key === 'product.benefits.gift')?.value || 'Подарунок до замовлення'}</span>
+                  <RefreshCw className="w-5 h-5 text-secondary" />
+                  <span>{texts.find(t => t.key === 'product.benefits.return')?.value || 'Обмін і повернення без зайвих питань'}</span>
                 </div>
               </div>
 
