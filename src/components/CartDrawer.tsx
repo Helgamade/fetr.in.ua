@@ -372,11 +372,11 @@ export const CartDrawer: React.FC = () => {
 
               {/* Shipping info - отдельный блок после кнопки, внутри скроллируемой области */}
               <div className="px-3 pt-4 pb-4">
-                <div className="p-4 rounded-xl bg-muted/50">
+                <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
                   <div className="flex items-center gap-2 text-sm mb-1">
                     <Clock className="w-4 h-4 text-primary" />
                     <span className="text-muted-foreground">
-                      Найближча відправка — у {shippingInfo.dayName}
+                      Найближча відправка – у {shippingInfo.dayName}
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground mb-2">
@@ -386,7 +386,7 @@ export const CartDrawer: React.FC = () => {
                     const timeString = `${String(timeLeft.hours).padStart(2, '0')}:${String(timeLeft.minutes).padStart(2, '0')}:${String(timeLeft.seconds).padStart(2, '0')}`;
                     return timeString ? (
                       <div className="text-xs text-muted-foreground">
-                        При оплаті протягом {timeString} — відправимо ще сьогодні
+                        При оплаті протягом {timeString} – відправимо ще сьогодні
                       </div>
                     ) : null;
                   })()}

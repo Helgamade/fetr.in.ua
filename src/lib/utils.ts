@@ -73,9 +73,17 @@ export function getKyivDateTime(): { date: Date; hour: number; dayOfWeek: number
   const date = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
   
   // День недели в Киеве (0=воскресенье, 1=понедельник, ..., 6=суббота)
-  // Создаем дату из киевских компонентов и получаем день недели
-  const kyivDateForDay = new Date(Date.UTC(year, month - 1, day));
-  const dayOfWeek = kyivDateForDay.getUTCDay();
+  // Используем строковое представление для получения дня недели в киевском времени
+  const kyivWeekdayStr = now.toLocaleDateString('en-US', {
+    timeZone: 'Europe/Kyiv',
+    weekday: 'long'
+  });
+  
+  // Преобразуем название дня недели в число
+  const weekdayMap: { [key: string]: number } = {
+    'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6
+  };
+  const dayOfWeek = weekdayMap[kyivWeekdayStr] ?? 0;
   const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5; // Пн-Пт
   
   return { date, hour, dayOfWeek, isWeekday };
