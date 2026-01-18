@@ -166,10 +166,15 @@ export const CartDrawer: React.FC = () => {
               <p className="text-muted-foreground mb-4">Додайте товари для оформлення замовлення</p>
               <Button variant="hero" onClick={() => {
                 closeCart();
-                if (location.pathname !== '/') {
-                  navigate('/#products');
-                } else {
+                if (location.pathname === '/') {
+                  // На главной - скроллим к якорю
                   window.location.href = '#products';
+                } else {
+                  // На другой странице - переходим на главную с якорем
+                  navigate('/');
+                  setTimeout(() => {
+                    window.location.href = '#products';
+                  }, 100);
                 }
               }}>
                 Перейти до наборів
