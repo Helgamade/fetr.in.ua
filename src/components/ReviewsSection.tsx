@@ -135,7 +135,7 @@ export const ReviewsSection: React.FC = () => {
                     <p className="text-sm text-muted-foreground/60">
                       {formatRelativeTime(review.createdAt)}
                     </p>
-                    <span className="text-sm" style={{ color: '#609f7a' }}>
+                    <span className="text-xs py-0.5 px-2 rounded-full bg-success/10" style={{ color: '#609f7a' }}>
                       ✓ Підтверджено
                     </span>
                   </div>
