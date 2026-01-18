@@ -3,6 +3,59 @@ import pool from '../db.js';
 
 const router = express.Router();
 
+// Функция для определения города по IP-адресу
+async function getLocationByIP(ip) {
+  try {
+    // Исключаем локальные и внутренние IP
+    if (!ip || ip === '::1' || ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
+      return { city: null, country: null };
+    }
+
+    // Берем первый IP из списка, если их несколько (x-forwarded-for)
+    const cleanIP = ip.split(',')[0].trim();
+
+    // Используем ip-api.com (бесплатный, 45 запросов/минуту)
+    // Используем AbortController для таймаута
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    try {
+      const response = await fetch(`http://ip-api.com/json/${cleanIP}?fields=city,country`, {
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        return { city: null, country: null };
+      }
+
+      const data = await response.json();
+    
+      // ip-api.com возвращает status: 'success' при успехе, 'fail' при ошибке
+      if (data.status === 'success') {
+        return {
+          city: data.city || null,
+          country: data.country || null,
+        };
+      }
+
+      return { city: null, country: null };
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.error('[Analytics] Timeout getting location by IP');
+      } else {
+        console.error('[Analytics] Error getting location by IP:', fetchError.message);
+      }
+      return { city: null, country: null };
+    }
+  } catch (error) {
+    console.error('[Analytics] Error getting location by IP:', error.message);
+    return { city: null, country: null };
+  }
+}
+
 // ============================================
 // PUBLIC ENDPOINTS (для отслеживания)
 // ============================================
@@ -39,37 +92,80 @@ router.post('/session', async (req, res, next) => {
     const toNull = (val) => (val === undefined ? null : val);
     const toNullOrNumber = (val) => (val === undefined || val === null ? 0 : Number(val));
 
+    // Определяем город по IP для новых сессий
+    let city = null;
+    let country = null;
+    
     // Проверяем существование сессии
     const [existing] = await pool.execute(
-      'SELECT id FROM analytics_sessions WHERE session_id = ?',
+      'SELECT id, city, country FROM analytics_sessions WHERE session_id = ?',
       [sessionId]
     );
 
     if (existing.length > 0) {
-      // Обновляем существующую сессию
-      await pool.execute(`
-        UPDATE analytics_sessions SET
-          last_activity_at = CURRENT_TIMESTAMP,
-          is_online = true,
-          user_id = COALESCE(?, user_id),
-          cart_items_count = COALESCE(?, cart_items_count),
-          pages_viewed = pages_viewed + 1
-        WHERE session_id = ?
-      `, [toNull(userId), toNullOrNumber(cartItemsCount), sessionId]);
+      // Если город уже есть - используем его, иначе пытаемся определить
+      if (!existing[0].city && ipAddress) {
+        const location = await getLocationByIP(ipAddress);
+        city = location.city;
+        country = location.country;
+        
+        // Обновляем сессию с городом, если определили
+        if (city || country) {
+          await pool.execute(`
+            UPDATE analytics_sessions SET
+              last_activity_at = CURRENT_TIMESTAMP,
+              is_online = true,
+              user_id = COALESCE(?, user_id),
+              cart_items_count = COALESCE(?, cart_items_count),
+              pages_viewed = pages_viewed + 1,
+              city = COALESCE(?, city),
+              country = COALESCE(?, country)
+            WHERE session_id = ?
+          `, [toNull(userId), toNullOrNumber(cartItemsCount), toNull(city), toNull(country), sessionId]);
+        } else {
+          // Обновляем без города
+          await pool.execute(`
+            UPDATE analytics_sessions SET
+              last_activity_at = CURRENT_TIMESTAMP,
+              is_online = true,
+              user_id = COALESCE(?, user_id),
+              cart_items_count = COALESCE(?, cart_items_count),
+              pages_viewed = pages_viewed + 1
+            WHERE session_id = ?
+          `, [toNull(userId), toNullOrNumber(cartItemsCount), sessionId]);
+        }
+      } else {
+        // Город уже есть или нет IP - просто обновляем активность
+        await pool.execute(`
+          UPDATE analytics_sessions SET
+            last_activity_at = CURRENT_TIMESTAMP,
+            is_online = true,
+            user_id = COALESCE(?, user_id),
+            cart_items_count = COALESCE(?, cart_items_count),
+            pages_viewed = pages_viewed + 1
+          WHERE session_id = ?
+        `, [toNull(userId), toNullOrNumber(cartItemsCount), sessionId]);
+      }
     } else {
-      // Создаем новую сессию
+      // Создаем новую сессию - определяем город
+      if (ipAddress) {
+        const location = await getLocationByIP(ipAddress);
+        city = location.city;
+        country = location.country;
+      }
+      
       await pool.execute(`
         INSERT INTO analytics_sessions (
           session_id, user_id, visitor_fingerprint,
           utm_source, utm_medium, utm_campaign, utm_term, utm_content,
           referrer, landing_page, device_type, browser, os,
-          screen_resolution, language, ip_address, cart_items_count
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          screen_resolution, language, ip_address, country, city, cart_items_count
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         sessionId, toNull(userId), fingerprint,
         toNull(utmSource), toNull(utmMedium), toNull(utmCampaign), toNull(utmTerm), toNull(utmContent),
         toNull(referrer), toNull(landingPage), toNull(deviceType), toNull(browser), toNull(os),
-        toNull(screenResolution), toNull(language), toNull(ipAddress), toNullOrNumber(cartItemsCount)
+        toNull(screenResolution), toNull(language), toNull(ipAddress), toNull(country), toNull(city), toNullOrNumber(cartItemsCount)
       ]);
     }
 
