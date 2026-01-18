@@ -56,7 +56,8 @@ export const SocialProof: React.FC = () => {
     first_notification_delay: 60000,
     notification_interval: 60000,
     notification_order: 'random',
-    max_notifications_per_session: 10
+    max_notifications_per_session: 10,
+    city_search_radius: 30
   });
   const notificationOrderRef = useRef<number[]>([]);
   const currentOrderIndexRef = useRef(0);
@@ -108,7 +109,8 @@ export const SocialProof: React.FC = () => {
         first_notification_delay: (settingsData.first_notification_delay || 60) * 1000,
         notification_interval: (settingsData.notification_interval || 60) * 1000,
         notification_order: settingsData.notification_order || 'random',
-        max_notifications_per_session: settingsData.max_notifications_per_session || 10
+        max_notifications_per_session: settingsData.max_notifications_per_session || 10,
+        city_search_radius: settingsData.city_search_radius || 30
       });
     }
   }, [settingsData]);
@@ -146,6 +148,25 @@ export const SocialProof: React.FC = () => {
       console.error('Error getting location by IP:', error);
     }
     return { lat: null, lon: null, city_np: null, city_ip: null, country: null };
+  };
+
+  // Функция для получения случайного города в радиусе от координат
+  const getRandomCityInRadius = async (lat: number, lon: number, radius: number): Promise<string | null> => {
+    try {
+      const response = await fetch(`/api/nova-poshta/cities-in-radius?lat=${lat}&lon=${lon}&radius=${radius}`);
+      if (response.ok) {
+        const data = await response.json();
+        const cities = data.cities || [];
+        if (cities.length > 0) {
+          // Выбираем случайный город из списка
+          const randomCity = cities[Math.floor(Math.random() * cities.length)];
+          return randomCity.city_description_ua || null;
+        }
+      }
+    } catch (error) {
+      console.error('Error getting cities in radius:', error);
+    }
+    return null;
   };
 
   // Функция для сохранения лога уведомления
@@ -347,13 +368,25 @@ export const SocialProof: React.FC = () => {
           };
         } else if (selectedType.code === 'purchased_local') {
           // Тип 3: "Ольга (Київ) купила N годин назад" - всегда валидно
-          // Получаем координаты по IP и город через НП (на украинском)
+          // Получаем координаты по IP
           const location = await getLocationByIP();
           
-          // Используем город НП (на украинском) как приоритетный, если есть
-          // Иначе используем город из ip-api.com (может быть на английском)
-          // Иначе fallback на "Київ"
-          let city = location.city_np || location.city_ip || 'Київ';
+          // Пытаемся получить случайный город в радиусе от наших координат
+          let city: string | null = null;
+          
+          if (location.lat && location.lon) {
+            // Используем радиус из настроек, по умолчанию 30 км
+            const radius = settings.city_search_radius || 30;
+            city = await getRandomCityInRadius(location.lat, location.lon, radius);
+          }
+          
+          // Если не нашли город в радиусе, используем fallback
+          if (!city) {
+            // Используем город НП (на украинском) как приоритетный, если есть
+            // Иначе используем город из ip-api.com (может быть на английском)
+            // Иначе fallback на "Київ"
+            city = location.city_np || location.city_ip || 'Київ';
+          }
 
           const name = namesData.length > 0 
             ? namesData[Math.floor(Math.random() * namesData.length)].name

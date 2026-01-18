@@ -70,7 +70,8 @@ export function SocialProof() {
     first_notification_delay: 60,
     notification_interval: 60,
     notification_order: 'random',
-    max_notifications_per_session: 10
+    max_notifications_per_session: 10,
+    city_search_radius: 30
   });
 
   useEffect(() => {
@@ -79,7 +80,8 @@ export function SocialProof() {
         first_notification_delay: settings.first_notification_delay || 60,
         notification_interval: settings.notification_interval || 60,
         notification_order: settings.notification_order || 'random',
-        max_notifications_per_session: settings.max_notifications_per_session || 10
+        max_notifications_per_session: settings.max_notifications_per_session || 10,
+        city_search_radius: settings.city_search_radius || 30
       });
     }
   }, [settings]);
@@ -287,6 +289,23 @@ export function SocialProof() {
                   <option value="sequential">Послідовний (по черзі)</option>
                   <option value="random">Випадковий</option>
                 </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Радіус пошуку міста (км)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={localSettings.city_search_radius}
+                  onChange={(e) => setLocalSettings({
+                    ...localSettings,
+                    city_search_radius: parseInt(e.target.value) || 30
+                  })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Радіус пошуку міст для уведомлень типу "Ольга (Київ) купила N годин тому". Випадковий місто буде вибране з цього радіусу
+                </p>
               </div>
 
               <Button 

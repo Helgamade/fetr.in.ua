@@ -218,6 +218,61 @@ router.get('/cities/:ref', async (req, res, next) => {
   }
 });
 
+// Получить города в радиусе от координат (для Social Proof)
+router.get('/cities-in-radius', async (req, res, next) => {
+  try {
+    const { lat, lon, radius = 30 } = req.query;
+    
+    if (!lat || !lon) {
+      return res.status(400).json({ error: 'lat and lon are required' });
+    }
+    
+    const latNum = parseFloat(lat);
+    const lonNum = parseFloat(lon);
+    const radiusNum = parseFloat(radius);
+    
+    if (isNaN(latNum) || isNaN(lonNum) || isNaN(radiusNum)) {
+      return res.status(400).json({ error: 'Invalid coordinates or radius' });
+    }
+    
+    // Haversine формула для расчета расстояния
+    // Расстояние в метрах: 6371000 * ACOS(COS(RADIANS(lat1)) * COS(RADIANS(lat2)) * COS(RADIANS(lon2) - RADIANS(lon1)) + SIN(RADIANS(lat1)) * SIN(RADIANS(lat2)))
+    // Радиус в км: radiusNum * 1000
+    const [cities] = await pool.execute(`
+      SELECT DISTINCT
+        nc.description_ua as city_description_ua,
+        (
+          6371000 * ACOS(
+            COS(RADIANS(?)) * COS(RADIANS(nw.latitude)) * COS(RADIANS(nw.longitude) - RADIANS(?)) +
+            SIN(RADIANS(?)) * SIN(RADIANS(nw.latitude))
+          )
+        ) / 1000 as distance_km
+      FROM nova_poshta_warehouses nw
+      JOIN nova_poshta_cities nc ON nw.city_ref = nc.ref
+      WHERE nc.settlement_type_description_ua = 'місто'
+        AND nw.latitude IS NOT NULL 
+        AND nw.longitude IS NOT NULL
+        AND (
+          6371000 * ACOS(
+            COS(RADIANS(?)) * COS(RADIANS(nw.latitude)) * COS(RADIANS(nw.longitude) - RADIANS(?)) +
+            SIN(RADIANS(?)) * SIN(RADIANS(nw.latitude))
+          )
+        ) / 1000 <= ?
+      ORDER BY distance_km ASC
+    `, [latNum, lonNum, latNum, latNum, lonNum, latNum, radiusNum]);
+    
+    // Получаем уникальные города (могут быть несколько отделений в одном городе)
+    const uniqueCities = Array.from(
+      new Map(cities.map(c => [c.city_description_ua, c])).values()
+    );
+    
+    res.json({ cities: uniqueCities });
+  } catch (error) {
+    console.error('Error getting cities in radius:', error);
+    next(error);
+  }
+});
+
 // Получить информацию об отделении по ref
 router.get('/warehouses/:ref', async (req, res, next) => {
   try {
