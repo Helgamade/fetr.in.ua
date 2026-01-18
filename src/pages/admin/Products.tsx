@@ -282,14 +282,18 @@ export function Products() {
               </div>
 
               {/* Stats */}
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                 <div className="flex items-center gap-1">
                   <Eye className="h-4 w-4" />
                   {product.viewCount}
                 </div>
                 <div className="flex items-center gap-1">
                   <ShoppingCart className="h-4 w-4" />
-                  {product.purchaseCount}
+                  {product.purchaseCount} (маркет.)
+                </div>
+                <div className="flex items-center gap-1">
+                  <ShoppingCart className="h-4 w-4" />
+                  {product.actualPurchaseCount || 0} (факт.)
                 </div>
               </div>
 

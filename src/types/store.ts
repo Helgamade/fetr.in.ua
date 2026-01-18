@@ -36,6 +36,7 @@ export interface Product {
   stock: number;
   viewCount: number;
   purchaseCount: number;
+  actualPurchaseCount?: number; // Реальное количество продаж из завершенных заказов
   dailySalesTarget?: number; // Целевое количество продаж в день
   displayOrder?: number;
   sectionIconFeatures?: string; // SVG код или URL иконки для секции "Що входить"
