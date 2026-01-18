@@ -25,42 +25,38 @@ const Index = () => {
   const { t } = useTranslation('index');
   const { data: texts = [] } = useTexts();
   const location = useLocation();
-  const isInitialMountRef = useRef<boolean>(true);
-  const prevPathnameRef = useRef<string | null>(null);
+  const hasHandledHashRef = useRef<boolean>(false);
+  const hashToHandleRef = useRef<string | null>(null);
   
-  // Handle hash navigation ONLY for cross-page navigation (from other pages to /#hash)
-  // For navigation within same page OR page reload with hash, browser handles it naturally - DON'T TOUCH IT!
+  // Handle hash navigation - same logic for page reload and cross-page navigation
+  // This ensures consistent behavior: if it works on reload, it works on navigation
   useEffect(() => {
+    const hash = location.hash || window.location.hash;
     const currentPath = location.pathname;
-    const prevPath = prevPathnameRef.current;
     
-    // On initial mount - let browser handle hash naturally (for page reloads with hash)
-    if (isInitialMountRef.current) {
-      isInitialMountRef.current = false;
-      prevPathnameRef.current = currentPath;
-      return; // Don't interfere with browser's native scroll on page load/reload
-    }
-    
-    // Only handle hash when pathname changes from another page to /
-    // If we're already on / and hash changes, browser handles it naturally
+    // Only handle hash on homepage
     if (currentPath !== '/') {
-      prevPathnameRef.current = currentPath;
+      hasHandledHashRef.current = false;
+      hashToHandleRef.current = null;
       return;
     }
     
-    const hash = location.hash || window.location.hash;
+    // If hash exists and we haven't handled this specific hash yet
+    if (hash && hashToHandleRef.current !== hash) {
+      hashToHandleRef.current = hash;
+      hasHandledHashRef.current = false;
+    }
     
-    // Only scroll if we came from another page (not from initial load or within-page navigation)
-    if (hash && prevPath !== null && prevPath !== '/') {
+    // Scroll to element if we have a hash to handle
+    if (hashToHandleRef.current && !hasHandledHashRef.current) {
+      hasHandledHashRef.current = true;
+      
       const scrollToElement = (attempt = 0) => {
-        const element = document.querySelector(hash);
+        const element = document.querySelector(hashToHandleRef.current || '');
         if (element) {
-          // Calculate header height dynamically for offset
-          const header = document.querySelector('header');
-          const headerHeight = header ? header.getBoundingClientRect().height : 80;
-          const yOffset = -headerHeight;
-          const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-          window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+          // Use native scrollIntoView with smooth behavior - same as browser does
+          // This works the same way as browser's native hash scroll on page reload
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           return true;
         }
         
@@ -71,15 +67,12 @@ const Index = () => {
         return false;
       };
       
-      // Start scrolling after a delay to let page render
+      // Start scrolling after a delay to let page render (same for reload and navigation)
       const timeoutId = setTimeout(() => scrollToElement(0), 100);
       
-      prevPathnameRef.current = currentPath;
       return () => clearTimeout(timeoutId);
     }
-    
-    prevPathnameRef.current = currentPath;
-  }, [location.pathname]); // Only trigger on pathname change, NOT on hash change or initial mount
+  }, [location.pathname, location.hash]); // Trigger on pathname OR hash change
   
   // Получаем тексты баннера
   const bannerText1 = texts.find(t => t.key === 'banner.text1')?.value || '🎁 Безкоштовна доставка від 1500 грн';
