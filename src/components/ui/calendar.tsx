@@ -25,17 +25,11 @@ function Calendar({
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: cn(
           "text-sm font-medium",
-          captionLayout === "dropdown" && "hidden"
+          (captionLayout === "dropdown" || captionLayout === "dropdown-buttons") && "hidden"
         ),
         month_caption: "flex justify-center pt-1 relative items-center",
-        dropdowns: cn(
-          "flex h-8 w-full items-center justify-center gap-1.5 text-sm font-medium",
-          captionLayout === "dropdown" ? "block" : "hidden"
-        ),
-        dropdown_root: cn(
-          "has-focus:border-ring border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] relative rounded-md border",
-          captionLayout === "dropdown" ? "inline-block" : "hidden"
-        ),
+        dropdowns: "flex h-8 w-full items-center justify-center gap-1.5",
+        dropdown_root: "relative inline-flex rounded-md border border-input bg-background text-sm",
         dropdown: "absolute inset-0 opacity-0 cursor-pointer",
         nav: "space-x-1 flex items-center",
         nav_button: cn(

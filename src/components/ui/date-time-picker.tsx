@@ -82,16 +82,18 @@ export function DateTimePicker({ label, value, onChange, id }: DateTimePickerPro
               <ChevronDownIcon />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 z-[60]" align="start" sideOffset={4} side="bottom">
-            <Calendar
-              mode="single"
-              selected={value}
-              captionLayout="dropdown"
-              onSelect={handleDateSelect}
-              className="rounded-md border"
-              fromYear={1900}
-              toYear={new Date().getFullYear() + 10}
-            />
+          <PopoverContent className="w-auto p-0 z-[60] overflow-visible" align="start" sideOffset={4} side="bottom">
+            <div className="overflow-visible">
+              <Calendar
+                mode="single"
+                selected={value}
+                captionLayout="dropdown-buttons"
+                onSelect={handleDateSelect}
+                className="rounded-md border"
+                fromYear={1900}
+                toYear={new Date().getFullYear() + 10}
+              />
+            </div>
           </PopoverContent>
         </Popover>
       </div>
