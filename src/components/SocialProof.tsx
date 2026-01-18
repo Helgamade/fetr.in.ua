@@ -232,6 +232,30 @@ export const SocialProof: React.FC = () => {
     return `${hours} годин`;
   };
 
+  // Функция для правильного склонения "людина/людини/людин" и глагола
+  const formatPeopleCount = (count: number): { text: string; verb: string } => {
+    const lastDigit = count % 10;
+    const lastTwoDigits = count % 100;
+    
+    // Исключения: 11, 12, 13, 14 всегда используют множественное число
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+      return { text: `${count} людин`, verb: 'купили' };
+    }
+    
+    // 1, 21, 31, 41... (окончание на 1)
+    if (lastDigit === 1) {
+      return { text: `${count} людина`, verb: 'купила' };
+    }
+    
+    // 2, 3, 4, 22, 23, 24, 32, 33, 34... (окончание на 2, 3, 4)
+    if (lastDigit >= 2 && lastDigit <= 4) {
+      return { text: `${count} людини`, verb: 'купили' };
+    }
+    
+    // 5, 6, 7, 8, 9, 10, 20, 25... (все остальные)
+    return { text: `${count} людин`, verb: 'купили' };
+  };
+
   // Загрузка количества уже отправленных уведомлений для текущей сессии
   useEffect(() => {
     const loadSessionCount = async () => {
@@ -332,8 +356,12 @@ export const SocialProof: React.FC = () => {
             continue;
           }
           
+          // Правильное склонение для "переглядають"
+          const peopleInfo = formatPeopleCount(viewingCount);
           tempVariables = {
             count: viewingCount,
+            people_text: peopleInfo.text,
+            verb: 'переглядають', // Глагол одинаковый для всех
             product_name: product.name
           };
           tempNotification = {
@@ -353,8 +381,12 @@ export const SocialProof: React.FC = () => {
             continue;
           }
           
+          // Правильное склонение для "купили/купила"
+          const peopleInfo = formatPeopleCount(todayPurchases);
           tempVariables = {
             count: todayPurchases,
+            people_text: peopleInfo.text,
+            verb: peopleInfo.verb, // "купила" или "купили"
             product_name: product.name
           };
           tempNotification = {
