@@ -226,21 +226,9 @@ export function getViewingNowCount(productId: number, purchaseCount: number): nu
  * @param productCode - код товара (starter, optimal, premium)
  * @returns количество покупок сегодня
  */
-export function getTodayPurchases(product: { dailySalesTarget?: number | null; code?: string } | string): number {
-  // Поддержка старого формата (только код)
-  let maxPurchases: number;
-  if (typeof product === 'string') {
-    // Старый формат для обратной совместимости
-    const DAILY_PURCHASES: Record<string, number> = {
-      'optimal': 10,
-      'starter': 7,
-      'premium': 5,
-    };
-    maxPurchases = DAILY_PURCHASES[product] || 5;
-  } else {
-    // Новый формат - используем dailySalesTarget из товара
-    maxPurchases = product.dailySalesTarget || 5;
-  }
+export function getTodayPurchases(product: { dailySalesTarget?: number | null }): number {
+  // Используем только dailySalesTarget из БД
+  const maxPurchases = product.dailySalesTarget || 5;
   const now = new Date();
   const kyivNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Kyiv' }));
   const hoursSinceMidnight = kyivNow.getHours() + kyivNow.getMinutes() / 60;

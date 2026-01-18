@@ -5,7 +5,7 @@ import { CountdownTimer } from '@/components/CountdownTimer';
 import { ShoppingBag, Eye, Users, ChevronRight, Sparkles, Flame, Crown } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/hooks/useTranslation';
-import { cn, getEndOfTodayKyiv, getViewingNowCount, getTodayPurchases } from '@/lib/utils';
+import { cn, getEndOfTodayKyiv, getViewingNowCount } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics';
 
 interface ProductCardProps {
@@ -75,11 +75,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
     () => getViewingNowCount(product.id, product.purchaseCount || 0),
     [product.id, product.purchaseCount, currentHour]
   );
-  const todayPurchases = useMemo(
-    () => getTodayPurchases(product),
-    [product, currentHour]
-  );
-  const displayPurchases = (product.purchaseCount || 0) + todayPurchases;
 
   const discount = product.salePrice 
     ? Math.round((1 - product.salePrice / product.basePrice) * 100)
@@ -141,7 +136,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
           </div>
           <div className="flex items-center gap-2 bg-card/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium">
             <Users className="w-3 h-3 text-sage-dark" />
-            <span>{displayPurchases}+ купили</span>
+            <span>{product.purchaseCount || 0}+ купили</span>
           </div>
         </div>
 

@@ -163,5 +163,26 @@ app.listen(PORT, HOST, () => {
   // Это экономит память при инициализации
   startCleanupInterval();
   startSanitizeCleanup();
+  
+  // Запускаем периодическое обновление purchase_count
+  (async () => {
+    const { updatePurchaseCounts } = await import('./utils/updatePurchaseCount.js');
+    
+    // Обновляем сразу при старте
+    try {
+      await updatePurchaseCounts();
+    } catch (error) {
+      console.error('[Server Start] Error updating purchase counts:', error);
+    }
+    
+    // Обновляем каждый час
+    setInterval(async () => {
+      try {
+        await updatePurchaseCounts();
+      } catch (error) {
+        console.error('[Purchase Count Update] Error:', error);
+      }
+    }, 3600000); // 1 час = 3600000 мс
+  })();
 });
 

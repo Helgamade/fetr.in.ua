@@ -6,7 +6,7 @@ import { X, ChevronLeft, ChevronRight, ShoppingBag, Check, Users, Eye, Truck, Sh
 import { useCart } from '@/context/CartContext';
 import { CountdownTimer } from '@/components/CountdownTimer';
 import { OptionIcon } from '@/components/OptionIcon';
-import { cn, getEndOfTodayKyiv, getViewingNowCount, getTodayPurchases } from '@/lib/utils';
+import { cn, getEndOfTodayKyiv, getViewingNowCount } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTexts } from '@/hooks/useTexts';
 import { trackEvent, trackFunnel } from '@/lib/analytics';
@@ -212,11 +212,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
     () => product ? getViewingNowCount(product.id, product.purchaseCount || 0) : 0,
     [product?.id, product?.purchaseCount, currentHour, isOpen]
   );
-  const todayPurchases = useMemo(
-    () => product ? getTodayPurchases(product) : 0,
-    [product, currentHour, isOpen]
-  );
-  const displayPurchases = product ? (product.purchaseCount || 0) + todayPurchases : 0;
   
   // Ранний возврат ПОСЛЕ всех хуков
   if (!product || !isOpen) return null;
@@ -370,7 +365,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                 </div>
                 <div className="flex items-center gap-1 text-success">
                   <Users className="w-4 h-4" />
-                  <span>{displayPurchases}+ купили</span>
+                  <span>{product.purchaseCount || 0}+ купили</span>
                 </div>
               </div>
 

@@ -719,18 +719,48 @@ router.patch('/:id/status', async (req, res, next) => {
     const { id } = req.params;
     const { status, statusComment } = req.body;
 
-    // Получаем старый статус для логирования
+    // Получаем старый статус и ID для логирования и обновления счетчиков
     const [oldOrder] = await pool.execute(`
-      SELECT status FROM orders WHERE order_number = ?
+      SELECT id, status FROM orders WHERE order_number = ?
     `, [id]);
     
     const oldStatus = oldOrder.length > 0 ? oldOrder[0].status : null;
+    const orderIdInt = oldOrder.length > 0 ? oldOrder[0].id : null;
     
     // id is order_number (VARCHAR), not INT id
     await pool.execute(`
       UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE order_number = ?
     `, [status, id]);
+    
+    // Обновляем actual_purchase_count товаров при изменении статуса на/с 'completed'
+    if (oldStatus !== status && orderIdInt) {
+      // Получаем товары из заказа
+      const [items] = await pool.execute(`
+        SELECT product_id, quantity FROM order_items WHERE order_id = ?
+      `, [orderIdInt]);
+      
+      // Если статус изменился на 'completed' - увеличиваем actual_purchase_count
+      if (status === 'completed' && oldStatus !== 'completed') {
+        for (const item of items) {
+          await pool.execute(`
+            UPDATE products 
+            SET actual_purchase_count = actual_purchase_count + ?
+            WHERE id = ?
+          `, [item.quantity, item.product_id]);
+        }
+      }
+      // Если статус изменился с 'completed' на другой - уменьшаем actual_purchase_count
+      else if (oldStatus === 'completed' && status !== 'completed') {
+        for (const item of items) {
+          await pool.execute(`
+            UPDATE products 
+            SET actual_purchase_count = GREATEST(0, actual_purchase_count - ?)
+            WHERE id = ?
+          `, [item.quantity, item.product_id]);
+        }
+      }
+    }
     
     // Логируем изменение статуса, если есть авторизованный пользователь
     if (req.user) {
