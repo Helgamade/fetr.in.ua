@@ -1,9 +1,16 @@
-import { useState } from 'react';
-import { Search, Check, X as XIcon, Trash2, Eye, EyeOff, Plus, Edit, Star } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Check, X as XIcon, Trash2, Eye, EyeOff, Plus, Edit, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -39,6 +46,8 @@ export function Reviews() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending'>('all');
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   // Get all reviews (including unapproved)
   const { data: reviews = [], isLoading } = useQuery<Review[]>({
@@ -216,6 +225,28 @@ export function Reviews() {
   const approvedCount = reviews.filter(r => r.is_approved).length;
   const pendingCount = reviews.filter(r => !r.is_approved).length;
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredReviews.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedReviews = filteredReviews.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchQuery]);
+
+  // Reset page when filter changes
+  const handleStatusFilterChange = (filter: 'all' | 'approved' | 'pending') => {
+    setStatusFilter(filter);
+    setCurrentPage(1);
+  };
+
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(parseInt(value));
+    setCurrentPage(1);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -246,20 +277,20 @@ export function Reviews() {
             <div className="flex gap-2">
               <Button
                 variant={statusFilter === 'all' ? 'default' : 'outline'}
-                onClick={() => setStatusFilter('all')}
+                onClick={() => handleStatusFilterChange('all')}
               >
                 Всі ({allCount})
               </Button>
               <Button
                 variant={statusFilter === 'approved' ? 'default' : 'outline'}
-                onClick={() => setStatusFilter('approved')}
+                onClick={() => handleStatusFilterChange('approved')}
               >
                 <Check className="h-4 w-4 mr-2" />
                 Опубліковані ({approvedCount})
               </Button>
               <Button
                 variant={statusFilter === 'pending' ? 'default' : 'outline'}
-                onClick={() => setStatusFilter('pending')}
+                onClick={() => handleStatusFilterChange('pending')}
               >
                 <EyeOff className="h-4 w-4 mr-2" />
                 На модерації ({pendingCount})
@@ -269,9 +300,36 @@ export function Reviews() {
         </CardContent>
       </Card>
 
+      {/* Pagination controls */}
+      {filteredReviews.length > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Показувати на сторінці:</span>
+                <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Показано {startIndex + 1}-{Math.min(endIndex, filteredReviews.length)} з {filteredReviews.length}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="space-y-4">
-        {filteredReviews.length > 0 ? (
-          filteredReviews.map((review) => (
+        {paginatedReviews.length > 0 ? (
+          paginatedReviews.map((review) => (
             <Card key={review.id}>
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between gap-4">
@@ -371,6 +429,37 @@ export function Reviews() {
           </Card>
         )}
       </div>
+
+      {/* Pagination navigation */}
+      {filteredReviews.length > 0 && totalPages > 1 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Назад
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Сторінка {currentPage} з {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage(p => p + 1)}
+              >
+                Вперед
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Edit/Create Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
