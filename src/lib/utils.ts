@@ -145,30 +145,78 @@ export function getViewingNowCount(productId: number, purchaseCount: number): nu
   const pseudoRandom = ((seed * 9301 + 49297) % 233280) / 233280;
   const randomVariation = (pseudoRandom - 0.5) * 2; // -1 до 1
   
-  // 5. Итоговый расчет
+  // 5. Специальная логика для периода 02:00-06:00 (разрешаем 0)
+  if (kyivHour >= 2 && kyivHour < 6) {
+    // Для глубокой ночи: прямое назначение значений 0, 1, 2 на основе популярности
+    // Товар с большими продажами получает большее значение
+    // Определяем позицию товара по продажам для правильного распределения
+    let position: number;
+    if (purchaseCount >= 1500) {
+      position = 1; // 1-е место
+    } else if (purchaseCount >= 1200) {
+      position = 2; // 2-е место
+    } else if (purchaseCount >= 700) {
+      position = 3; // 3-е место
+    } else {
+      position = 4; // Меньше продаж
+    }
+    
+    // Распределяем значения: 1-е место = 2, 2-е место = 1, 3-е место = 0
+    // Но используем productId для небольшой вариации, если товары имеют одинаковую позицию
+    let nightValue: number;
+    if (position === 1) {
+      nightValue = 2; // 1-е место - самое большое значение
+    } else if (position === 2) {
+      nightValue = 1; // 2-е место - среднее значение
+    } else {
+      nightValue = 0; // 3-е место и ниже - может быть 0
+    }
+    
+    // Добавляем небольшую вариацию на основе productId для уникальности
+    const idVariation = (productId % 3) - 1; // -1, 0, 1
+    nightValue = nightValue + idVariation;
+    
+    // Применяем границы для периода 02:00-06:00
+    nightValue = Math.max(0, Math.min(2, nightValue));
+    
+    return nightValue;
+  }
+  
+  // 6. Для остального времени: обычный расчет
   let viewingCount = baseViewers * timeMultiplier * popularityMultiplier + randomVariation;
   
-  // 6. Округляем и применяем ограничения
+  // 7. Округляем и применяем ограничения
   viewingCount = Math.round(viewingCount);
   viewingCount = Math.max(minViewers, Math.min(maxViewers, viewingCount));
   
-  // 7. Гарантируем уникальность для разных товаров
-  // Используем productId для создания смещения, которое гарантирует разные значения
-  // Это важно для того, чтобы все 3 товара не имели одинаковых показателей
-  // Используем смещение на основе остатка от деления productId, чтобы создать различия
-  const idOffset = ((productId % 3) - 1) * 1.5; // -1.5, 0, или 1.5 для трех товаров
-  viewingCount = viewingCount + idOffset;
-  
-  // Округляем после добавления смещения
-  viewingCount = Math.round(viewingCount);
-  
-  // Применяем границы
-  viewingCount = Math.max(minViewers, Math.min(maxViewers, viewingCount));
-  
-  // Если получился 0, но это не период 02:00-06:00, делаем минимум 1
-  if (viewingCount === 0 && !(kyivHour >= 2 && kyivHour < 6)) {
-    viewingCount = 1;
+  // 8. Гарантируем уникальность и правильный порядок для разных товаров
+  // Товар с большими продажами должен иметь больше просмотров
+  // Используем смещение на основе позиции по продажам
+  let popularityOffset: number;
+  if (purchaseCount >= 1500) {
+    // 1-е место - добавляем +1 для гарантии что будет больше других
+    popularityOffset = 1;
+  } else if (purchaseCount >= 1200) {
+    // 2-е место - нейтральное смещение
+    popularityOffset = 0;
+  } else if (purchaseCount >= 700) {
+    // 3-е место - убираем 1 для гарантии что будет меньше других
+    popularityOffset = -1;
+  } else {
+    // Меньше продаж - убираем еще больше
+    popularityOffset = -2;
   }
+  
+  viewingCount = viewingCount + popularityOffset;
+  
+  // Применяем границы еще раз после смещения
+  viewingCount = Math.max(minViewers, Math.min(maxViewers, viewingCount));
+  
+  // Дополнительно гарантируем уникальность через productId (если значения совпали)
+  // Добавляем небольшое смещение на основе productId для финальной уникальности
+  const finalIdOffset = ((productId % 3) - 1) * 0.3; // -0.3, 0, 0.3
+  viewingCount = Math.round(viewingCount + finalIdOffset);
+  viewingCount = Math.max(minViewers, Math.min(maxViewers, viewingCount));
   
   return viewingCount;
 }
