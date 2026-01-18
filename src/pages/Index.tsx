@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { AudienceSection } from "@/components/AudienceSection";
@@ -23,33 +24,38 @@ import { useTexts } from "@/hooks/useTexts";
 const Index = () => {
   const { t } = useTranslation('index');
   const { data: texts = [] } = useTexts();
+  const location = useLocation();
   
   // Handle hash navigation - scroll to section when coming from other pages
+  // Use both useLocation.hash (React Router) and window.location.hash (direct navigation)
   useEffect(() => {
-    const handleHashNavigation = () => {
-      const hash = window.location.hash;
-      if (hash) {
-        // Wait for page to render, then scroll to section
-        setTimeout(() => {
-          const element = document.querySelector(hash);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 100);
+    const hash = location.hash || window.location.hash;
+    
+    if (!hash) return;
+    
+    // Multiple attempts with increasing delays to ensure element is rendered
+    const scrollToElement = (attempt = 0) => {
+      const element = document.querySelector(hash);
+      if (element) {
+        // Element found - scroll to it
+        const yOffset = -80; // Offset for fixed header
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        return true;
       }
+      
+      // Element not found yet - retry up to 5 times with increasing delays
+      if (attempt < 5) {
+        setTimeout(() => scrollToElement(attempt + 1), 50 * (attempt + 1));
+      }
+      return false;
     };
-
-    // Handle initial load with hash
-    handleHashNavigation();
-
-    // Handle hash changes (for navigation within page)
-    const handleHashChange = () => {
-      handleHashNavigation();
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+    
+    // Start scrolling after a small delay to let page render
+    const timeoutId = setTimeout(() => scrollToElement(0), 50);
+    
+    return () => clearTimeout(timeoutId);
+  }, [location.pathname, location.hash]); // Trigger on pathname or hash change
   
   // Получаем тексты баннера
   const bannerText1 = texts.find(t => t.key === 'banner.text1')?.value || '🎁 Безкоштовна доставка від 1500 грн';
