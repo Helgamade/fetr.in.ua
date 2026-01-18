@@ -211,6 +211,11 @@ export function Reviews() {
     return matchesSearch && matchesStatus;
   });
 
+  // Count reviews by status
+  const allCount = reviews.length;
+  const approvedCount = reviews.filter(r => r.is_approved).length;
+  const pendingCount = reviews.filter(r => !r.is_approved).length;
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -243,21 +248,21 @@ export function Reviews() {
                 variant={statusFilter === 'all' ? 'default' : 'outline'}
                 onClick={() => setStatusFilter('all')}
               >
-                Всі
+                Всі ({allCount})
               </Button>
               <Button
                 variant={statusFilter === 'approved' ? 'default' : 'outline'}
                 onClick={() => setStatusFilter('approved')}
               >
                 <Check className="h-4 w-4 mr-2" />
-                Опубліковані
+                Опубліковані ({approvedCount})
               </Button>
               <Button
                 variant={statusFilter === 'pending' ? 'default' : 'outline'}
                 onClick={() => setStatusFilter('pending')}
               >
                 <EyeOff className="h-4 w-4 mr-2" />
-                На модерації
+                На модерації ({pendingCount})
               </Button>
             </div>
           </div>

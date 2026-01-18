@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
@@ -41,6 +41,11 @@ export default function AllReviews() {
 
   const reviews = data?.reviews || [];
   const stats = data?.stats || { total: 0, averageRating: 0, byRating: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } };
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,6 +268,7 @@ export default function AllReviews() {
                 <Input
                   value={formData.name}
                   onChange={(e) => {
+                    // Sanitize on input to prevent dangerous characters
                     const sanitized = sanitizeName(e.target.value);
                     setFormData({ ...formData, name: sanitized });
                   }}
@@ -270,6 +276,9 @@ export default function AllReviews() {
                   required
                   maxLength={100}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Мінімум 2 символи, тільки літери, пробіли, дефіси та апострофи
+                </p>
               </div>
 
               <div>
@@ -300,6 +309,7 @@ export default function AllReviews() {
                 <Textarea
                   value={formData.text}
                   onChange={(e) => {
+                    // Limit length and remove HTML
                     let value = e.target.value;
                     if (value.length > 2000) {
                       value = value.substring(0, 2000);
@@ -311,6 +321,9 @@ export default function AllReviews() {
                   required
                   maxLength={2000}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Мінімум 10 символів, максимум 2000 символів ({formData.text.length}/2000)
+                </p>
               </div>
 
               <Button type="submit" variant="hero" className="w-full">
