@@ -26,52 +26,71 @@ const Index = () => {
   const { data: texts = [] } = useTexts();
   const location = useLocation();
   const prevPathnameRef = useRef<string | null>(null);
+  const hasScrolledRef = useRef<boolean>(false);
   
   // Handle hash navigation ONLY for cross-page navigation (from other pages to /#hash)
   // For navigation within same page, browser handles it naturally - DON'T TOUCH IT!
   useEffect(() => {
     const hash = location.hash || window.location.hash;
+    const currentPath = location.pathname;
+    const prevPath = prevPathnameRef.current;
     
-    // Only handle if we just came from another page (pathname changed to /)
-    const isCrossPageNavigation = prevPathnameRef.current !== null && 
-                                   prevPathnameRef.current !== '/' && 
-                                   location.pathname === '/' && 
-                                   hash;
+    // Check if this is cross-page navigation (coming from another page with hash)
+    const isCrossPageNavigation = prevPath !== null && 
+                                   prevPath !== '/' && 
+                                   currentPath === '/' && 
+                                   hash && 
+                                   !hasScrolledRef.current;
     
-    if (!isCrossPageNavigation) {
-      // Update ref for next render
-      prevPathnameRef.current = location.pathname;
-      return;
+    if (isCrossPageNavigation) {
+      // Cross-page navigation - scroll after page renders
+      hasScrolledRef.current = true;
+      
+      const scrollToElement = (attempt = 0) => {
+        const element = document.querySelector(hash);
+        if (element) {
+          // Calculate header height dynamically for offset
+          const header = document.querySelector('header');
+          const headerHeight = header ? header.getBoundingClientRect().height : 80;
+          const yOffset = -headerHeight;
+          const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+          return true;
+        }
+        
+        // Element not found yet - retry up to 5 times with increasing delays
+        if (attempt < 5) {
+          setTimeout(() => scrollToElement(attempt + 1), 50 * (attempt + 1));
+        }
+        return false;
+      };
+      
+      // Start scrolling after a delay to let page render
+      const timeoutId = setTimeout(() => scrollToElement(0), 100);
+      
+      // Reset scroll flag after navigation within page
+      const handleHashChange = () => {
+        if (currentPath === '/') {
+          hasScrolledRef.current = false;
+        }
+      };
+      
+      window.addEventListener('hashchange', handleHashChange, { once: true });
+      
+      return () => {
+        clearTimeout(timeoutId);
+        window.removeEventListener('hashchange', handleHashChange);
+      };
     }
     
-    // Cross-page navigation - scroll after page renders
-    const scrollToElement = (attempt = 0) => {
-      const element = document.querySelector(hash);
-      if (element) {
-        // Calculate header height dynamically for offset
-        const header = document.querySelector('header');
-        const headerHeight = header ? header.getBoundingClientRect().height : 80;
-        const yOffset = -headerHeight;
-        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
-        return true;
-      }
-      
-      // Element not found yet - retry up to 5 times with increasing delays
-      if (attempt < 5) {
-        setTimeout(() => scrollToElement(attempt + 1), 50 * (attempt + 1));
-      }
-      return false;
-    };
+    // Reset scroll flag if we navigate away from home
+    if (currentPath !== '/') {
+      hasScrolledRef.current = false;
+    }
     
-    // Start scrolling after a delay to let page render
-    const timeoutId = setTimeout(() => scrollToElement(0), 100);
-    
-    // Update ref
-    prevPathnameRef.current = location.pathname;
-    
-    return () => clearTimeout(timeoutId);
-  }, [location.pathname]); // Only trigger on pathname change
+    // Update ref for next render
+    prevPathnameRef.current = currentPath;
+  }, [location.pathname, location.hash]); // Trigger on pathname or hash change
   
   // Получаем тексты баннера
   const bannerText1 = texts.find(t => t.key === 'banner.text1')?.value || '🎁 Безкоштовна доставка від 1500 грн';
