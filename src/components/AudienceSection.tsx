@@ -10,6 +10,7 @@ export const AudienceSection: React.FC = () => {
   // Получаем тексты из базы данных
   const title = texts.find(t => t.key === 'audience.title')?.value || 'Кому підійде?';
   const subtitle = texts.find(t => t.key === 'audience.subtitle')?.value || 'Один набір – роки творчості. Від очікування малюка до шкільних проектів.';
+  const description = texts.find(t => t.key === 'audience.description')?.value;
   
   // Тексты для первой карточки
   const card1Title = texts.find(t => t.key === 'audience.card1.title')?.value || 'Майбутнім мамам';
@@ -44,9 +45,14 @@ export const AudienceSection: React.FC = () => {
           <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
             {title}
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
             {subtitle}
           </p>
+          {description && (
+            <p className="text-base text-muted-foreground max-w-3xl mx-auto">
+              {description}
+            </p>
+          )}
         </div>
         
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
