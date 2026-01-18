@@ -306,12 +306,14 @@ export const faqsAPI = {
 export const reviewsAPI = {
   getAll: () => fetchAPI<any[]>('/reviews'),
   getStats: () => fetchAPI<{ total: number; averageRating: number; byRating: Record<number, number> }>('/reviews/stats'),
-  getAllWithFilters: (params?: { rating?: number; sort?: string }) => {
+  getAllWithFilters: (params?: { rating?: number; sort?: string; page?: number; limit?: number }) => {
     const searchParams = new URLSearchParams();
     if (params?.rating) searchParams.append('rating', params.rating.toString());
     if (params?.sort) searchParams.append('sort', params.sort);
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
     const queryString = searchParams.toString();
-    return fetchAPI<{ reviews: any[]; stats: any }>(`/reviews/all-public${queryString ? `?${queryString}` : ''}`);
+    return fetchAPI<{ reviews: any[]; stats: any; pagination?: any }>(`/reviews/all-public${queryString ? `?${queryString}` : ''}`);
   },
   getById: (id: number) => fetchAPI<any>(`/reviews/${id}`),
   create: (data: any) => fetchAPI<any>('/reviews', {

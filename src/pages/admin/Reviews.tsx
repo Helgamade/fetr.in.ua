@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Search, Check, X as XIcon, Trash2, Eye, EyeOff, Plus, Edit, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Check, X as XIcon, Trash2, Eye, EyeOff, Plus, Edit, Star } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -434,28 +443,91 @@ export function Reviews() {
       {filteredReviews.length > 0 && totalPages > 1 && (
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Назад
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Сторінка {currentPage} з {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage(p => p + 1)}
-              >
-                Вперед
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Показувати на сторінці:</span>
+                <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) {
+                          setCurrentPage(currentPage - 1);
+                        }
+                      }}
+                      className={currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    // Show first page, last page, current page, and pages around current
+                    const shouldShow = 
+                      page === 1 || 
+                      page === totalPages || 
+                      (page >= currentPage - 1 && page <= currentPage + 1);
+                    
+                    if (!shouldShow) {
+                      // Show ellipsis
+                      const showEllipsisBefore = page === currentPage - 2 && currentPage > 3;
+                      const showEllipsisAfter = page === currentPage + 2 && currentPage < totalPages - 2;
+                      
+                      if (showEllipsisBefore || showEllipsisAfter) {
+                        return (
+                          <PaginationItem key={page}>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+                      return null;
+                    }
+                    
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(page);
+                          }}
+                          isActive={page === currentPage}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) {
+                          setCurrentPage(currentPage + 1);
+                        }
+                      }}
+                      className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+              
+              <div className="text-sm text-muted-foreground">
+                Показано {startIndex + 1}-{Math.min(endIndex, filteredReviews.length)} з {filteredReviews.length}
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -59,14 +59,17 @@ router.get('/', async (req, res, next) => {
 // Get all reviews with filters (for public page)
 router.get('/all-public', async (req, res, next) => {
   try {
-    const { rating, sort = 'newest' } = req.query;
+    const { rating, sort = 'newest', page = 1, limit = 20 } = req.query;
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 20;
+    const offset = (pageNum - 1) * limitNum;
     
     let whereConditions = ['is_approved = TRUE'];
     let params = [];
     
     if (rating) {
       whereConditions.push('rating = ?');
-      params.push(parseInt(rating));
+      params.push(parseInt(rating as string));
     }
     
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
@@ -80,6 +83,20 @@ router.get('/all-public', async (req, res, next) => {
       orderBy = 'rating ASC, created_at DESC';
     }
     
+    // Get total count
+    let totalCount = 0;
+    try {
+      const [countResult] = await pool.execute(`
+        SELECT COUNT(*) as total
+        FROM reviews
+        ${whereClause}
+      `, params);
+      totalCount = parseInt(countResult[0]?.total || 0);
+    } catch (error) {
+      // Ignore count error
+    }
+    
+    // Get paginated reviews
     let reviews;
     try {
       const [result] = await pool.execute(`
@@ -87,7 +104,8 @@ router.get('/all-public', async (req, res, next) => {
         FROM reviews
         ${whereClause}
         ORDER BY ${orderBy}
-      `, params);
+        LIMIT ? OFFSET ?
+      `, [...params, limitNum, offset]);
       reviews = result;
     } catch (error) {
       const [result] = await pool.execute(`
@@ -95,7 +113,8 @@ router.get('/all-public', async (req, res, next) => {
         FROM reviews
         ${whereClause}
         ORDER BY ${orderBy}
-      `, params);
+        LIMIT ? OFFSET ?
+      `, [...params, limitNum, offset]);
       reviews = result.map(r => ({ ...r, featured: false }));
     }
     
@@ -144,6 +163,12 @@ router.get('/all-public', async (req, res, next) => {
           2: parseInt(stats.rating_2) || 0,
           1: parseInt(stats.rating_1) || 0
         }
+      },
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limitNum)
       }
     });
   } catch (error) {

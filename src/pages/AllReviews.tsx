@@ -19,6 +19,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Star, MessageSquarePlus, X, Send, Quote } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { sanitizeName, sanitizeString, validateRating } from '@/utils/sanitize';
@@ -30,24 +39,33 @@ export default function AllReviews() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [ratingFilter, setRatingFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('newest');
+  const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', text: '', rating: 5 });
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['reviews-all', ratingFilter, sortBy],
+    queryKey: ['reviews-all', ratingFilter, sortBy, currentPage],
     queryFn: () => reviewsAPI.getAllWithFilters({
       rating: ratingFilter !== 'all' ? parseInt(ratingFilter) : undefined,
-      sort: sortBy
+      sort: sortBy,
+      page: currentPage,
+      limit: 20
     }),
   });
 
   const reviews = data?.reviews || [];
   const stats = data?.stats || { total: 0, averageRating: 0, byRating: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } };
+  const pagination = data?.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 };
 
-  // Scroll to top on mount
+  // Scroll to top on mount and when page changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, []);
+  }, [currentPage]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [ratingFilter, sortBy]);
 
   // Auto-open modal if ?add in URL
   useEffect(() => {
@@ -209,43 +227,114 @@ export default function AllReviews() {
                   Відгуків не знайдено
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 gap-6">
-                  {reviews.map((review: Review, index: number) => (
-                    <div
-                      key={review.id}
-                      className="glass-card p-6 hover-lift animate-fade-in"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <span className="text-lg font-bold text-primary">{review.name[0]}</span>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-heading font-bold">{review.name}</span>
-                            {review.rating && review.rating > 0 && (
-                              <div className="flex items-center gap-1">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={cn(
-                                      'w-4 h-4',
-                                      i < review.rating! ? 'text-accent fill-accent' : 'text-muted'
-                                    )}
-                                  />
-                                ))}
-                              </div>
-                            )}
+                <>
+                  <div className="grid md:grid-cols-2 gap-6 mb-8">
+                    {reviews.map((review: Review, index: number) => (
+                      <div
+                        key={review.id}
+                        className="glass-card p-6 hover-lift animate-fade-in"
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                            <span className="text-lg font-bold text-primary">{review.name[0]}</span>
                           </div>
-                          <p className="text-muted-foreground">{review.text}</p>
-                          <p className="text-sm text-muted-foreground/60 mt-2">
-                            {formatRelativeTime(review.createdAt)}
-                          </p>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-heading font-bold">{review.name}</span>
+                              {review.rating && review.rating > 0 && (
+                                <div className="flex items-center gap-1">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={cn(
+                                        'w-4 h-4',
+                                        i < review.rating! ? 'text-accent fill-accent' : 'text-muted'
+                                      )}
+                                    />
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-muted-foreground">{review.text}</p>
+                            <p className="text-sm text-muted-foreground/60 mt-2">
+                              {formatRelativeTime(review.createdAt)}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {pagination.totalPages > 1 && (
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (currentPage > 1) {
+                                setCurrentPage(currentPage - 1);
+                              }
+                            }}
+                            className={currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                        
+                        {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => {
+                          // Show first page, last page, current page, and pages around current
+                          const shouldShow = 
+                            page === 1 || 
+                            page === pagination.totalPages || 
+                            (page >= currentPage - 1 && page <= currentPage + 1);
+                          
+                          if (!shouldShow) {
+                            // Show ellipsis
+                            const showEllipsisBefore = page === currentPage - 2 && currentPage > 3;
+                            const showEllipsisAfter = page === currentPage + 2 && currentPage < pagination.totalPages - 2;
+                            
+                            if (showEllipsisBefore || showEllipsisAfter) {
+                              return (
+                                <PaginationItem key={page}>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
+                              );
+                            }
+                            return null;
+                          }
+                          
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setCurrentPage(page);
+                                }}
+                                isActive={page === currentPage}
+                                className="cursor-pointer"
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (currentPage < pagination.totalPages) {
+                                setCurrentPage(currentPage + 1);
+                              }
+                            }}
+                            className={currentPage >= pagination.totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
+                </>
               )}
             </div>
           </section>
