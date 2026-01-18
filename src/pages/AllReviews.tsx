@@ -268,8 +268,9 @@ export default function AllReviews() {
 
                   {/* Pagination */}
                   {pagination.totalPages > 1 && (
-                    <Pagination>
-                      <PaginationContent>
+                    <div className="w-full px-4 overflow-x-auto">
+                      <Pagination className="w-full">
+                        <PaginationContent className="w-full">
                         <PaginationItem>
                           <PaginationPrevious
                             onClick={(e) => {
@@ -333,6 +334,7 @@ export default function AllReviews() {
                         </PaginationItem>
                       </PaginationContent>
                     </Pagination>
+                    </div>
                   )}
                 </>
               )}
