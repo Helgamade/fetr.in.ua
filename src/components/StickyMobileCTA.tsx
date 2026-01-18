@@ -28,10 +28,10 @@ export const StickyMobileCTA: React.FC = () => {
   const scrollToProducts = () => {
     if (location.pathname === '/') {
       // На главной - просто скроллим к якорю
-      document.querySelector('#products')?.scrollIntoView({ behavior: 'smooth' });
+      window.location.href = '#products';
     } else {
       // На другой странице - переходим на главную с якорем
-      navigate('/#products');
+      window.location.href = '/#products';
     }
   };
 

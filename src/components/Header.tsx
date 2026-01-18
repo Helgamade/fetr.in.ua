@@ -68,11 +68,8 @@ export const Header: React.FC = () => {
   const handleNavClick = (href: string) => {
     setIsMobileMenuOpen(false);
     if (isHomePage) {
-      // На главной странице - скроллим к секции
-      const element = document.querySelector(href);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
+      // На главной - скроллим к якорю
+      window.location.href = href;
     } else {
       // На других страницах - переходим на главную с якорем
       window.location.href = `/${href}`;

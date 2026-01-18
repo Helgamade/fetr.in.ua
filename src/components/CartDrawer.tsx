@@ -171,10 +171,7 @@ export const CartDrawer: React.FC = () => {
                   window.location.href = '#products';
                 } else {
                   // На другой странице - переходим на главную с якорем
-                  navigate('/');
-                  setTimeout(() => {
-                    window.location.href = '#products';
-                  }, 100);
+                  window.location.href = '/#products';
                 }
               }}>
                 Перейти до наборів
