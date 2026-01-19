@@ -103,6 +103,7 @@ export function getNextShippingDate(): {
   date: Date;
   dayName: string;
   isToday: boolean;
+  isTomorrow: boolean;
   deadlineDate: Date | null; // Дата/время дедлайна для оплаты (16:00 сегодня), если отправка возможна сегодня
 } {
   const { hour, dayOfWeek, isWeekday } = getKyivDateTime();
@@ -132,6 +133,7 @@ export function getNextShippingDate(): {
       date: now,
       dayName: dayNames[dayOfWeek],
       isToday: true,
+      isTomorrow: false,
       deadlineDate: deadlineKyiv
     };
   }
@@ -156,10 +158,24 @@ export function getNextShippingDate(): {
   // Убеждаемся, что это рабочий день
   const shippingDayOfWeek = (dayOfWeek + daysToAdd) % 7;
   
+  // Определяем, является ли дата отправки завтрашним днем
+  const now = new Date();
+  const todayKyiv = now.toLocaleDateString('en-CA', { timeZone: 'Europe/Kyiv' });
+  const shippingDateKyiv = shippingDate.toLocaleDateString('en-CA', { timeZone: 'Europe/Kyiv' });
+  
+  // Вычисляем разницу в днях
+  const todayParts = todayKyiv.split('-').map(Number);
+  const shippingParts = shippingDateKyiv.split('-').map(Number);
+  const todayDate = new Date(todayParts[0], todayParts[1] - 1, todayParts[2]);
+  const shippingDateOnly = new Date(shippingParts[0], shippingParts[1] - 1, shippingParts[2]);
+  const diffTime = shippingDateOnly.getTime() - todayDate.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+  
   return {
     date: shippingDate,
     dayName: dayNames[shippingDayOfWeek],
     isToday: false,
+    isTomorrow: diffDays === 1,
     deadlineDate: null
   };
 }

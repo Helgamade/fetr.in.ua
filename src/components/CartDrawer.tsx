@@ -3,7 +3,7 @@ import { useCart } from '@/context/CartContext';
 import { useProducts } from '@/hooks/useProducts';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
-import { X, Plus, Minus, Trash2, ShoppingBag, Truck, ArrowRight, Clock } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ShoppingBag, Truck, ArrowRight, Clock, Zap } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn, getNextShippingDate } from '@/lib/utils';
 import { analytics } from '@/lib/analytics';
@@ -44,28 +44,70 @@ export const CartDrawer: React.FC = () => {
 
   // Shipping info
   const shippingInfo = useMemo(() => getNextShippingDate(), []);
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0 });
+  const [timeLeftForNext, setTimeLeftForNext] = useState({ hours: 0, minutes: 0 });
 
+  // Таймер для сегодняшней отправки (до 16:00)
   useEffect(() => {
     if (!shippingInfo.deadlineDate) return;
     
     const calculateTimeLeft = () => {
       const difference = shippingInfo.deadlineDate!.getTime() - new Date().getTime();
       if (difference > 0) {
+        const totalMinutes = Math.floor(difference / (1000 * 60));
         setTimeLeft({
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60),
+          hours: Math.floor(totalMinutes / 60),
+          minutes: totalMinutes % 60,
         });
       } else {
-        setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+        setTimeLeft({ hours: 0, minutes: 0 });
       }
     };
     
     calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
+    const timer = setInterval(calculateTimeLeft, 60000); // Обновляем каждую минуту
     return () => clearInterval(timer);
   }, [shippingInfo.deadlineDate]);
+
+  // Таймер для завтрашней/будущей отправки (до 16:00 следующего рабочего дня)
+  useEffect(() => {
+    if (shippingInfo.isToday || !shippingInfo.date) return;
+    
+    const calculateTimeLeftForNext = () => {
+      const now = new Date();
+      const shippingDate = shippingInfo.date;
+      
+      // Вычисляем 16:00 дня отправки в киевском времени
+      const shippingDateKyiv = shippingDate.toLocaleDateString('en-CA', { timeZone: 'Europe/Kyiv' });
+      const [year, month, day] = shippingDateKyiv.split('-').map(Number);
+      
+      const testDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+      const kyivNoonParts = new Intl.DateTimeFormat('en', {
+        timeZone: 'Europe/Kyiv',
+        hour: '2-digit',
+        hour12: false
+      }).formatToParts(testDate);
+      const kyivHour = parseInt(kyivNoonParts.find(p => p.type === 'hour')!.value);
+      const offsetHours = kyivHour - 12;
+      
+      const deadlineNext = new Date(Date.UTC(year, month - 1, day, 16 - offsetHours, 0, 0, 0));
+      
+      const difference = deadlineNext.getTime() - now.getTime();
+      if (difference > 0) {
+        const totalMinutes = Math.floor(difference / (1000 * 60));
+        setTimeLeftForNext({
+          hours: Math.floor(totalMinutes / 60),
+          minutes: totalMinutes % 60,
+        });
+      } else {
+        setTimeLeftForNext({ hours: 0, minutes: 0 });
+      }
+    };
+    
+    calculateTimeLeftForNext();
+    const timer = setInterval(calculateTimeLeftForNext, 60000); // Обновляем каждую минуту
+    return () => clearInterval(timer);
+  }, [shippingInfo.isToday, shippingInfo.date]);
 
   // Отслеживаем, была ли корзина открыта ранее (чтобы не логировать при первой загрузке)
   const wasOpenRef = useRef<boolean>(false);
@@ -372,24 +414,38 @@ export const CartDrawer: React.FC = () => {
 
               {/* Shipping info - отдельный блок после кнопки, внутри скроллируемой области */}
               <div className="px-3 pt-4 pb-4">
-                <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                  <div className="flex items-center gap-2 text-sm mb-1">
-                    <Clock className="w-4 h-4 text-primary" />
-                    <span className="text-muted-foreground">
-                      Найближча відправка – у {shippingInfo.dayName}
-                    </span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mb-2">
-                    📦 Відправляємо Пн–Пт о 18:00
-                  </div>
-                  {shippingInfo.isToday && shippingInfo.deadlineDate && (() => {
-                    const timeString = `${String(timeLeft.hours).padStart(2, '0')}:${String(timeLeft.minutes).padStart(2, '0')}:${String(timeLeft.seconds).padStart(2, '0')}`;
-                    return timeString ? (
-                      <div className="text-xs text-muted-foreground">
-                        При оплаті протягом {timeString} – відправимо ще сьогодні
+                <div className="p-3 rounded-xl bg-secondary/10 text-secondary text-sm">
+                  {shippingInfo.isToday ? (
+                    <>
+                      <div className="flex items-center gap-2 font-semibold">
+                        <Truck className="w-4 h-4" />
+                        <span>Ваше замовлення може поїхати ще сьогодні</span>
                       </div>
-                    ) : null;
-                  })()}
+                      <p className="mt-1 text-secondary/80">
+                        ⚡ Встигніть оплатити протягом {timeLeft.hours > 0 ? `${timeLeft.hours} год ` : ''}{timeLeft.minutes} хв
+                      </p>
+                    </>
+                  ) : shippingInfo.isTomorrow ? (
+                    <>
+                      <div className="flex items-center gap-2 font-semibold">
+                        <Truck className="w-4 h-4" />
+                        <span>Замовлення може поїхати завтра</span>
+                      </div>
+                      <p className="mt-1 text-secondary/80">
+                        ⏳ Залишилось {timeLeftForNext.hours} год {timeLeftForNext.minutes} хв для оплати
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2 font-semibold">
+                        <Truck className="w-4 h-4" />
+                        <span>Найближча відправка – у {shippingInfo.dayName}</span>
+                      </div>
+                      <p className="mt-1 text-secondary/80">
+                        ⏳ Залишилось {timeLeftForNext.hours} год {timeLeftForNext.minutes} хв для оплати
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
               </div>
