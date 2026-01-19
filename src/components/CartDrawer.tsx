@@ -44,28 +44,30 @@ export const CartDrawer: React.FC = () => {
 
   // Shipping info
   const shippingInfo = useMemo(() => getNextShippingDate(), []);
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0 });
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [timeLeftForNext, setTimeLeftForNext] = useState({ hours: 0, minutes: 0 });
 
-  // Таймер для сегодняшней отправки (до 16:00)
+  // Таймер для сегодняшней отправки (до 16:00) - обновляется каждую секунду
   useEffect(() => {
     if (!shippingInfo.deadlineDate) return;
     
     const calculateTimeLeft = () => {
       const difference = shippingInfo.deadlineDate!.getTime() - new Date().getTime();
       if (difference > 0) {
-        const totalMinutes = Math.floor(difference / (1000 * 60));
+        const totalSeconds = Math.floor(difference / 1000);
+        const totalMinutes = Math.floor(totalSeconds / 60);
         setTimeLeft({
           hours: Math.floor(totalMinutes / 60),
           minutes: totalMinutes % 60,
+          seconds: totalSeconds % 60,
         });
       } else {
-        setTimeLeft({ hours: 0, minutes: 0 });
+        setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
       }
     };
     
     calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 60000); // Обновляем каждую минуту
+    const timer = setInterval(calculateTimeLeft, 1000); // Обновляем каждую секунду
     return () => clearInterval(timer);
   }, [shippingInfo.deadlineDate]);
 
@@ -422,7 +424,7 @@ export const CartDrawer: React.FC = () => {
                         <span>Ваше замовлення може поїхати ще сьогодні</span>
                       </div>
                       <p className="mt-1 text-secondary/80">
-                        ⚡ Встигніть оплатити протягом {timeLeft.hours > 0 ? `${timeLeft.hours} год ` : ''}{timeLeft.minutes} хв
+                        ⚡ Встигніть оплатити за {timeLeft.hours > 0 ? `${timeLeft.hours} год ` : ''}{timeLeft.minutes} хв {timeLeft.seconds} с
                       </p>
                     </>
                   ) : shippingInfo.isTomorrow ? (
