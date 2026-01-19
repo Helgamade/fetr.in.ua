@@ -197,7 +197,7 @@ export const NovaPoshtaDelivery = ({
       </div>
 
       {/* Выбор города */}
-      <fieldset className="space-y-2">
+      <fieldset className="space-y-2 -ml-[44px] w-[calc(100%+44px)] pl-4 pr-4">
         <legend className="flex items-center gap-1 text-sm font-medium">
           <span>Населений пункт</span>
           <span className="text-red-500">*</span>
@@ -391,7 +391,7 @@ export const NovaPoshtaDelivery = ({
 
       {/* Кнопка Продовжити */}
       {isExpanded && onContinue && (
-        <div className="pt-4">
+        <div className="pt-4 -ml-[44px] w-[calc(100%+44px)] pl-4 pr-4">
           <Button
             type="button"
             onClick={onContinue}

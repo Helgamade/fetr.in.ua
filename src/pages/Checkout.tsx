@@ -1629,7 +1629,7 @@ const Checkout = () => {
                         }
                       }}
                     >
-                      <label className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors">
+                      <label className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors w-full">
                         <div className="flex items-center gap-3">
                         <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
                           <div className="font-medium flex items-center gap-2 flex-1">
@@ -1640,7 +1640,7 @@ const Checkout = () => {
                             {orderTotal >= FREE_DELIVERY_THRESHOLD ? <span className="text-green-600">Безкоштовно</span> : "від 45 грн"}
                           </div>
                         </div>
-                        <div className="ml-[28px]">
+                        <div className="ml-[28px] w-full">
                           {(() => {
                             const savedData = getSavedDeliveryData("ukr_poshta");
                             const isCollapsed = formData.deliveryMethod === "ukr_poshta" && formData.ukrPoshtaExpanded === false;
