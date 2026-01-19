@@ -419,7 +419,7 @@ export const CartDrawer: React.FC = () => {
                 <div className="p-3 rounded-xl bg-secondary/10 text-secondary text-sm">
                   {shippingInfo.isToday ? (
                     <>
-                      <div className="flex items-center gap-2 font-semibold">
+                      <div className="flex items-center gap-2 font-semibold text-secondary">
                         <Truck className="w-4 h-4" />
                         <span>Ваше замовлення може поїхати ще сьогодні</span>
                       </div>
@@ -429,7 +429,7 @@ export const CartDrawer: React.FC = () => {
                     </>
                   ) : shippingInfo.isTomorrow ? (
                     <>
-                      <div className="flex items-center gap-2 font-semibold">
+                      <div className="flex items-center gap-2 font-semibold text-secondary">
                         <Truck className="w-4 h-4" />
                         <span>Замовлення може поїхати завтра</span>
                       </div>
@@ -439,7 +439,7 @@ export const CartDrawer: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center gap-2 font-semibold">
+                      <div className="flex items-center gap-2 font-semibold text-secondary">
                         <Truck className="w-4 h-4" />
                         <span>Найближча відправка – у {shippingInfo.dayName}</span>
                       </div>
