@@ -49,6 +49,15 @@ if [ -f "dist/robots.txt" ]; then
   cp -f dist/robots.txt robots.txt 2>/dev/null || true
 fi
 
+# Копируем папку animations (для Lottie анимаций)
+if [ -d "dist/animations" ]; then
+  echo "Copying animations..."
+  mkdir -p animations
+  cp -r dist/animations/* animations/ 2>/dev/null || true
+  chmod 755 animations 2>/dev/null || true
+  chmod 644 animations/* 2>/dev/null || true
+fi
+
 # КРИТИЧНО: Копируем .htaccess для правильных MIME типов
 if [ -f "public/.htaccess" ]; then
   cp -f public/.htaccess .htaccess 2>/dev/null || true
