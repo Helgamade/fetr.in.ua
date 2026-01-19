@@ -8,6 +8,7 @@ import { ordersAPI } from "@/lib/api";
 import { usePublicSettings } from "@/hooks/usePublicSettings";
 import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from "@/components/DeliveryLogos";
 import { CODPaymentLogo, WayForPayLogo, FOPPaymentLogo } from "@/components/PaymentLogos";
+import { LottieAnimation } from "@/components/LottieAnimation";
 
 interface TimelineStep {
   id: string;
@@ -212,12 +213,13 @@ const ThankYou = () => {
         {/* Header - зеленый для успешной оплаты, желтый для ожидающей */}
         <div className={`bg-gradient-to-r ${isPaymentPending ? 'from-yellow-500 to-yellow-600' : 'from-green-500 to-green-600'} text-white py-12`}>
           <div className="container mx-auto px-4 text-center">
-            <div className={`w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-scale-in`}>
-              {isPaymentPending ? (
-                <CreditCard className="w-10 h-10" />
-              ) : (
-                <CheckCircle className="w-10 h-10" />
-              )}
+            <div className="w-20 h-20 mx-auto mb-4 animate-scale-in">
+              <LottieAnimation
+                jsonPath="/animations/loading.json"
+                className="w-full h-full"
+                loop={true}
+                autoplay={true}
+              />
             </div>
             {isPaymentPending ? (
               <>
