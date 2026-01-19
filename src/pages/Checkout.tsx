@@ -1544,7 +1544,7 @@ const Checkout = () => {
                         </div>
                       </label>
                       {formData.deliveryMethod === "nova_poshta" && formData.novaPoshtaExpanded !== false && (
-                        <div className="pl-4 pr-4 pb-4 ml-[28px]">
+                        <div className="pl-4 pr-4 pb-4">
                           <NovaPoshtaDelivery
                             cityRef={formData.novaPoshtaCityRef}
                             warehouseRef={formData.novaPoshtaDeliveryType === "PostOffice" 
@@ -1676,7 +1676,7 @@ const Checkout = () => {
                         </div>
                       </label>
                       {formData.deliveryMethod === "ukr_poshta" && formData.ukrPoshtaExpanded !== false && (
-                        <div className="pl-4 pr-4 pb-4 ml-[28px]">
+                        <div className="pl-4 pr-4 pb-4">
                           <UkrPoshtaDelivery
                             cityId={formData.ukrPoshtaCityId}
                             branchId={formData.ukrPoshtaBranchId}
