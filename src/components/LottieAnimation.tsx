@@ -35,7 +35,7 @@ export const LottieAnimation = ({
   // Если указан .lottie файл (бинарный формат)
   if (lottiePath) {
     return (
-      <div className={className} style={{ width, height }}>
+      <div className={cn(className, "drop-shadow-none shadow-none")} style={{ width, height }}>
         <DotLottieReact
           src={lottiePath}
           loop={loop}
@@ -49,7 +49,7 @@ export const LottieAnimation = ({
   // Если указан JSON путь или данные
   if (jsonPath || animationData) {
     return (
-      <div className={className} style={{ width, height }}>
+      <div className={cn(className, "drop-shadow-none shadow-none")} style={{ width, height }}>
         <Lottie
           animationData={animationData}
           path={jsonPath}

@@ -213,11 +213,11 @@ const ThankYou = () => {
         {/* Header - зеленый для успешной оплаты, желтый для ожидающей */}
         <div className={`bg-gradient-to-r ${isPaymentPending ? 'from-yellow-500 to-yellow-600' : 'from-green-500 to-green-600'} text-white py-12`}>
           <div className="container mx-auto px-4 text-center">
-            <div className="w-20 h-20 mx-auto mb-4 animate-scale-in">
+            <div className="w-32 h-32 mx-auto mb-4 animate-scale-in drop-shadow-none shadow-none">
               <LottieAnimation
                 jsonPath="/animations/loading.json"
                 className="w-full h-full"
-                loop={true}
+                loop={false}
                 autoplay={true}
               />
             </div>
