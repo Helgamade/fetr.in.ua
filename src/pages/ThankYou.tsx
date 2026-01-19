@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Package, CreditCard, Cog, Box, Truck, MapPin, Home, Star, ArrowRight, User, Phone } from "lucide-react";
+import { CheckCircle, Package, CreditCard, Cog, Box, Truck, MapPin, Home, Star, ArrowRight, User, Phone, MessageCircle, Send, Instagram } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { ordersAPI } from "@/lib/api";
@@ -9,6 +9,7 @@ import { usePublicSettings } from "@/hooks/usePublicSettings";
 import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from "@/components/DeliveryLogos";
 import { CODPaymentLogo, WayForPayLogo, FOPPaymentLogo } from "@/components/PaymentLogos";
 import { LottieAnimation } from "@/components/LottieAnimation";
+import { getViberLink, getTelegramLink, getWhatsAppLink } from "@/lib/messengerLinks";
 
 interface TimelineStep {
   id: string;
@@ -88,6 +89,11 @@ const ThankYou = () => {
       console.log('[ThankYou] Is payment pending:', isPaymentPending);
     }
   }, [order, isPaymentPending]);
+
+  // Моментальный скролл наверх при открытии страницы
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   const timelineSteps: TimelineStep[] = [
     {
@@ -469,7 +475,13 @@ const ThankYou = () => {
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
-                <span className="text-sm">Оплатіть замовлення (якщо обрали передоплату)</span>
+                <span className="text-sm">
+                  {order?.payment?.method === 'wayforpay' && 'Оплатіть замовлення онлайн через WayForPay'}
+                  {order?.payment?.method === 'nalojka' && 'Оплатіть замовлення при отриманні на відділенні'}
+                  {order?.payment?.method === 'fopiban' && 'Оплатіть замовлення на рахунок ФОП (реквізити нижче)'}
+                  {order?.payment?.method && !['wayforpay', 'nalojka', 'fopiban'].includes(order.payment.method) && 'Оплатіть замовлення (якщо обрали передоплату)'}
+                  {!order?.payment?.method && 'Оплатіть замовлення (якщо обрали передоплату)'}
+                </span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
@@ -492,20 +504,60 @@ const ThankYou = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Зв'яжіться з нами у зручний спосіб
             </p>
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap justify-center gap-3 mb-4">
               {storeSettings?.store_phone && (
-                <Button variant="outline" size="sm" className="rounded-full" asChild>
-                  <a href={`tel:${storeSettings.store_phone}`}>
-                    📞 {storeSettings.store_phone}
-                  </a>
-                </Button>
-              )}
-              {storeSettings?.store_email && (
-                <Button variant="outline" size="sm" className="rounded-full" asChild>
-                  <a href={`mailto:${storeSettings.store_email}`}>
-                    ✉️ {storeSettings.store_email}
-                  </a>
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" className="rounded-full" asChild>
+                    <a href={`tel:${storeSettings.store_phone}`}>
+                      <Phone className="w-4 h-4" />
+                      {storeSettings.store_phone}
+                    </a>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="rounded-full bg-[#7360f2]/10 hover:bg-[#7360f2]/20 border-[#7360f2]/30 text-[#7360f2] hover:text-[#7360f2]" 
+                    asChild
+                  >
+                    <a href={getViberLink(storeSettings.store_phone)} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="w-4 h-4" />
+                      Viber
+                    </a>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="rounded-full bg-[#0088cc]/10 hover:bg-[#0088cc]/20 border-[#0088cc]/30 text-[#0088cc] hover:text-[#0088cc]" 
+                    asChild
+                  >
+                    <a href={getTelegramLink(storeSettings.store_phone)} target="_blank" rel="noopener noreferrer">
+                      <Send className="w-4 h-4" />
+                      Telegram
+                    </a>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="rounded-full bg-[#25D366]/10 hover:bg-[#25D366]/20 border-[#25D366]/30 text-[#25D366] hover:text-[#25D366]" 
+                    asChild
+                  >
+                    <a href={getWhatsAppLink(storeSettings.store_phone)} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="w-4 h-4" />
+                      WhatsApp
+                    </a>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500/10 hover:from-purple-600 hover:to-pink-600/20 border-purple-500/30 text-purple-600 hover:text-purple-700" 
+                    asChild
+                  >
+                    <a href="https://instagram.com/helgamade_ua" target="_blank" rel="noopener noreferrer">
+                      <Instagram className="w-4 h-4" />
+                      Instagram
+                    </a>
+                  </Button>
+                </>
               )}
             </div>
             {storeSettings?.store_address && (
