@@ -416,34 +416,34 @@ export const CartDrawer: React.FC = () => {
 
               {/* Shipping info - отдельный блок после кнопки, внутри скроллируемой области */}
               <div className="px-3 pt-4 pb-4">
-                <div className="p-3 rounded-xl bg-secondary/10 text-secondary text-sm">
+                <div className="p-3 rounded-xl bg-secondary/10 text-sm">
                   {shippingInfo.isToday ? (
                     <>
-                      <div className="flex items-center gap-2 font-semibold text-secondary">
+                      <div className="flex items-center gap-2 font-semibold" style={{ color: 'hsl(var(--success))' }}>
                         <Truck className="w-4 h-4" />
                         <span>Ваше замовлення може поїхати ще сьогодні</span>
                       </div>
-                      <p className="mt-1 text-secondary/80">
+                      <p className="mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                         ⚡ Встигніть оплатити за {timeLeft.hours > 0 ? `${timeLeft.hours} год ` : ''}{timeLeft.minutes} хв {timeLeft.seconds} с
                       </p>
                     </>
                   ) : shippingInfo.isTomorrow ? (
                     <>
-                      <div className="flex items-center gap-2 font-semibold text-secondary">
+                      <div className="flex items-center gap-2 font-semibold" style={{ color: 'hsl(var(--success))' }}>
                         <Truck className="w-4 h-4" />
                         <span>Замовлення може поїхати завтра</span>
                       </div>
-                      <p className="mt-1 text-secondary/80">
+                      <p className="mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                         ⏳ Залишилось {timeLeftForNext.hours} год {timeLeftForNext.minutes} хв для оплати
                       </p>
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center gap-2 font-semibold text-secondary">
+                      <div className="flex items-center gap-2 font-semibold" style={{ color: 'hsl(var(--success))' }}>
                         <Truck className="w-4 h-4" />
                         <span>Найближча відправка – у {shippingInfo.dayName}</span>
                       </div>
-                      <p className="mt-1 text-secondary/80">
+                      <p className="mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                         ⏳ Залишилось {timeLeftForNext.hours} год {timeLeftForNext.minutes} хв для оплати
                       </p>
                     </>
