@@ -249,7 +249,24 @@ const ThankYou = () => {
             <div className="flex flex-row justify-between items-center gap-4">
               <div>
                 <div className="text-sm text-muted-foreground">Номер замовлення</div>
-                <div className="text-xl font-bold font-mono">{order?.id || orderId || ''}</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-xl font-bold font-mono">{order?.id || orderId || ''}</div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const orderNumber = order?.id || orderId || '';
+                        await navigator.clipboard.writeText(orderNumber);
+                        toast({ title: 'Скопійовано!', description: 'Номер замовлення скопійовано в буфер обміну' });
+                      } catch (error) {
+                        toast({ title: 'Помилка', description: 'Не вдалося скопіювати', variant: 'destructive' });
+                      }
+                    }}
+                    className="p-1.5 rounded-lg transition-all duration-200 hover:bg-muted text-muted-foreground hover:text-foreground"
+                    title="Копіювати номер замовлення"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
               <div className="text-right">
                 <div className="text-sm text-muted-foreground">Статус</div>
@@ -498,11 +515,14 @@ const ThankYou = () => {
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Призначення платежу</label>
                       <div className="flex items-center gap-2 mt-1.5 border border-border rounded-lg px-4 py-2.5 bg-muted/30">
-                        <span className="flex-1 text-sm">оплата за товар</span>
+                        <span className="flex-1 text-sm">
+                          Оплата за замовлення {order?.id || orderId || ''}
+                        </span>
                         <button
                           onClick={async () => {
                             try {
-                              await navigator.clipboard.writeText('оплата за товар');
+                              const paymentPurpose = `Оплата за замовлення ${order?.id || orderId || ''}`;
+                              await navigator.clipboard.writeText(paymentPurpose);
                               toast({ title: 'Скопійовано!', description: 'Призначення скопійовано в буфер обміну' });
                             } catch (error) {
                               toast({ title: 'Помилка', description: 'Не вдалося скопіювати', variant: 'destructive' });
