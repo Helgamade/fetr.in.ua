@@ -35,7 +35,7 @@ export const AudienceSection: React.FC = () => {
   return (
     <section 
       id="audience" 
-      className="py-16 px-4 bg-gradient-to-br from-peach via-cream to-mint"
+      className="py-16 px-4 bg-gradient-to-br from-audience-peach via-audience-cream to-audience-mint"
     >
       <div className="max-w-4xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-heading font-bold text-center text-foreground mb-4">
@@ -52,7 +52,7 @@ export const AudienceSection: React.FC = () => {
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Первая карточка - Майбутнім мамам */}
-          <div className="bg-card/90 backdrop-blur-sm rounded-3xl p-8 shadow-lg">
+          <div className="glass-card p-8">
             <div className="flex items-center gap-3 mb-6">
               <span className="text-3xl">🤰</span>
               <h3 className="text-xl font-heading font-bold text-foreground">{card1Title}</h3>
@@ -68,7 +68,7 @@ export const AudienceSection: React.FC = () => {
           </div>
 
           {/* Вторая карточка - Батькам з дітьми */}
-          <div className="bg-card/90 backdrop-blur-sm rounded-3xl p-8 shadow-lg">
+          <div className="glass-card p-8">
             <div className="flex items-center gap-3 mb-6">
               <span className="text-3xl">👶</span>
               <h3 className="text-xl font-heading font-bold text-foreground">{card2Title}</h3>

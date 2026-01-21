@@ -69,6 +69,11 @@
     --sage: 145 20% 90%;
     --coral-light: 15 85% 95%;
     
+    /* Unique colors for audience section gradient (from hm-19) */
+    --audience-peach: 24 90% 92%;
+    --audience-cream: 40 50% 96%;
+    --audience-mint: 160 45% 90%;
+    
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(15 85% 60% / 0.1), hsl(145 25% 50% / 0.1));
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(30 25% 98%));

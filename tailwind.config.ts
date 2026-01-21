@@ -64,6 +64,9 @@ export default {
         peach: "hsl(var(--peach))",
         sage: "hsl(var(--sage))",
         "coral-light": "hsl(var(--coral-light))",
+        "audience-peach": "hsl(var(--audience-peach))",
+        "audience-cream": "hsl(var(--audience-cream))",
+        "audience-mint": "hsl(var(--audience-mint))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
