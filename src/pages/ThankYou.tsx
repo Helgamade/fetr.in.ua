@@ -519,57 +519,51 @@ const ThankYou = () => {
                   <>
                     <a
                       href={`tel:${storeSettings.store_phone}`}
-                      className="flex items-center gap-2 rounded-full border border-contact-orange bg-card/60 px-5 py-3 font-medium text-contact-orange backdrop-blur-md transition-all hover:bg-contact-orange hover:text-primary-foreground"
+                      className="flex items-center gap-2 rounded-full border border-contact-orange bg-card/60 px-4 py-2 text-sm font-medium text-contact-orange backdrop-blur-md transition-all hover:bg-contact-orange hover:text-primary-foreground"
                     >
-                      <Phone className="h-4 w-4" />
+                      <Phone className="h-3.5 w-3.5" />
                       {storeSettings.store_phone}
                     </a>
                     <a
                       href={getViberLink(storeSettings.store_phone)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 rounded-full border border-contact-viber bg-card/60 px-5 py-3 font-medium text-contact-viber backdrop-blur-md transition-all hover:bg-contact-viber hover:text-primary-foreground"
+                      className="flex items-center gap-2 rounded-full border border-contact-viber bg-card/60 px-4 py-2 text-sm font-medium text-contact-viber backdrop-blur-md transition-all hover:bg-contact-viber hover:text-primary-foreground"
                     >
-                      <MessageCircle className="h-4 w-4" />
+                      <MessageCircle className="h-3.5 w-3.5" />
                       Viber
                     </a>
                     <a
                       href={getTelegramLink(storeSettings.store_phone)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 rounded-full border border-contact-telegram bg-card/60 px-5 py-3 font-medium text-contact-telegram backdrop-blur-md transition-all hover:bg-contact-telegram hover:text-primary-foreground"
+                      className="flex items-center gap-2 rounded-full border border-contact-telegram bg-card/60 px-4 py-2 text-sm font-medium text-contact-telegram backdrop-blur-md transition-all hover:bg-contact-telegram hover:text-primary-foreground"
                     >
-                      <Send className="h-4 w-4" />
+                      <Send className="h-3.5 w-3.5" />
                       Telegram
                     </a>
                     <a
                       href={getWhatsAppLink(storeSettings.store_phone)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 rounded-full border border-contact-whatsapp bg-card/60 px-5 py-3 font-medium text-contact-whatsapp backdrop-blur-md transition-all hover:bg-contact-whatsapp hover:text-primary-foreground"
+                      className="flex items-center gap-2 rounded-full border border-contact-whatsapp bg-card/60 px-4 py-2 text-sm font-medium text-contact-whatsapp backdrop-blur-md transition-all hover:bg-contact-whatsapp hover:text-primary-foreground"
                     >
-                      <MessageCircle className="h-4 w-4" />
+                      <MessageCircle className="h-3.5 w-3.5" />
                       WhatsApp
                     </a>
                     <a
                       href="https://instagram.com/helgamade_ua"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 rounded-full border border-contact-instagram-pink bg-card/60 px-5 py-3 font-medium text-contact-instagram-pink backdrop-blur-md transition-all hover:bg-gradient-to-r hover:from-contact-instagram-purple hover:via-contact-instagram-pink hover:to-contact-instagram-orange hover:text-primary-foreground"
+                      className="flex items-center gap-2 rounded-full border border-contact-instagram-pink bg-card/60 px-4 py-2 text-sm font-medium text-contact-instagram-pink backdrop-blur-md transition-all hover:bg-gradient-to-r hover:from-contact-instagram-purple hover:via-contact-instagram-pink hover:to-contact-instagram-orange hover:text-primary-foreground"
                     >
-                      <span className="text-sm">📷</span>
+                      <span className="text-xs">📷</span>
                       Instagram
                     </a>
                   </>
                 )}
               </div>
 
-              {storeSettings?.store_address && (
-                <div className="mt-8 flex items-center justify-center gap-2 text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  <span>{storeSettings.store_address}</span>
-                </div>
-              )}
             </div>
           </div>
 
