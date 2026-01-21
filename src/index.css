@@ -74,6 +74,17 @@
     --audience-cream: 40 50% 96%;
     --audience-mint: 160 45% 90%;
     
+    /* Unique colors for contact section (from hm-20) */
+    --contact-mint: 150 30% 90%;
+    --contact-mint-dark: 150 35% 80%;
+    --contact-orange: 32 95% 55%;
+    --contact-viber: 270 60% 55%;
+    --contact-telegram: 200 80% 50%;
+    --contact-whatsapp: 142 70% 45%;
+    --contact-instagram-pink: 340 75% 55%;
+    --contact-instagram-orange: 25 95% 55%;
+    --contact-instagram-purple: 280 70% 50%;
+    
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(15 85% 60% / 0.1), hsl(145 25% 50% / 0.1));
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(30 25% 98%));

@@ -67,6 +67,19 @@ export default {
         "audience-peach": "hsl(var(--audience-peach))",
         "audience-cream": "hsl(var(--audience-cream))",
         "audience-mint": "hsl(var(--audience-mint))",
+        "contact-mint": {
+          DEFAULT: "hsl(var(--contact-mint))",
+          dark: "hsl(var(--contact-mint-dark))",
+        },
+        "contact-orange": "hsl(var(--contact-orange))",
+        "contact-viber": "hsl(var(--contact-viber))",
+        "contact-telegram": "hsl(var(--contact-telegram))",
+        "contact-whatsapp": "hsl(var(--contact-whatsapp))",
+        "contact-instagram": {
+          pink: "hsl(var(--contact-instagram-pink))",
+          orange: "hsl(var(--contact-instagram-orange))",
+          purple: "hsl(var(--contact-instagram-purple))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

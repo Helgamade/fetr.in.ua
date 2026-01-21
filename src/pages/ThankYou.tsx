@@ -499,73 +499,78 @@ const ThankYou = () => {
           </div>
 
           {/* Contact */}
-          <div className="bg-secondary/30 rounded-2xl p-6 text-center mb-8">
-            <h3 className="font-bold mb-2">Маєте питання?</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Зв'яжіться з нами у зручний спосіб
-            </p>
-            <div className="flex flex-wrap justify-center gap-3 mb-4">
-              {storeSettings?.store_phone && (
-                <>
-                  <Button variant="outline" size="sm" className="rounded-full" asChild>
-                    <a href={`tel:${storeSettings.store_phone}`}>
-                      <Phone className="w-4 h-4" />
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-contact-mint to-contact-mint-dark p-8 md:p-12 mb-8">
+            {/* Glass blur circles */}
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-contact-orange/20 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-contact-telegram/20 blur-3xl" />
+            
+            <div className="relative backdrop-blur-sm">
+              <div className="text-center">
+                <h3 className="mb-2 text-2xl font-heading font-bold text-foreground md:text-3xl">
+                  Маєте питання?
+                </h3>
+                <p className="mb-8 text-muted-foreground">
+                  Зв'яжіться з нами у зручний спосіб
+                </p>
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-3">
+                {storeSettings?.store_phone && (
+                  <>
+                    <a
+                      href={`tel:${storeSettings.store_phone}`}
+                      className="flex items-center gap-2 rounded-full border border-contact-orange bg-card/60 px-5 py-3 font-medium text-contact-orange backdrop-blur-md transition-all hover:bg-contact-orange hover:text-primary-foreground"
+                    >
+                      <Phone className="h-4 w-4" />
                       {storeSettings.store_phone}
                     </a>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-full bg-[#7360f2]/10 hover:bg-[#7360f2]/20 border-[#7360f2]/30 text-[#7360f2] hover:text-[#7360f2]" 
-                    asChild
-                  >
-                    <a href={getViberLink(storeSettings.store_phone)} target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="w-4 h-4" />
+                    <a
+                      href={getViberLink(storeSettings.store_phone)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 rounded-full border border-contact-viber bg-card/60 px-5 py-3 font-medium text-contact-viber backdrop-blur-md transition-all hover:bg-contact-viber hover:text-primary-foreground"
+                    >
+                      <MessageCircle className="h-4 w-4" />
                       Viber
                     </a>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-full bg-[#0088cc]/10 hover:bg-[#0088cc]/20 border-[#0088cc]/30 text-[#0088cc] hover:text-[#0088cc]" 
-                    asChild
-                  >
-                    <a href={getTelegramLink(storeSettings.store_phone)} target="_blank" rel="noopener noreferrer">
-                      <Send className="w-4 h-4" />
+                    <a
+                      href={getTelegramLink(storeSettings.store_phone)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 rounded-full border border-contact-telegram bg-card/60 px-5 py-3 font-medium text-contact-telegram backdrop-blur-md transition-all hover:bg-contact-telegram hover:text-primary-foreground"
+                    >
+                      <Send className="h-4 w-4" />
                       Telegram
                     </a>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-full bg-[#25D366]/10 hover:bg-[#25D366]/20 border-[#25D366]/30 text-[#25D366] hover:text-[#25D366]" 
-                    asChild
-                  >
-                    <a href={getWhatsAppLink(storeSettings.store_phone)} target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="w-4 h-4" />
+                    <a
+                      href={getWhatsAppLink(storeSettings.store_phone)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 rounded-full border border-contact-whatsapp bg-card/60 px-5 py-3 font-medium text-contact-whatsapp backdrop-blur-md transition-all hover:bg-contact-whatsapp hover:text-primary-foreground"
+                    >
+                      <MessageCircle className="h-4 w-4" />
                       WhatsApp
                     </a>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500/10 hover:from-purple-600 hover:to-pink-600/20 border-purple-500/30 text-purple-600 hover:text-purple-700" 
-                    asChild
-                  >
-                    <a href="https://instagram.com/helgamade_ua" target="_blank" rel="noopener noreferrer">
-                      <Instagram className="w-4 h-4" />
+                    <a
+                      href="https://instagram.com/helgamade_ua"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 rounded-full border border-contact-instagram-pink bg-card/60 px-5 py-3 font-medium text-contact-instagram-pink backdrop-blur-md transition-all hover:bg-gradient-to-r hover:from-contact-instagram-purple hover:via-contact-instagram-pink hover:to-contact-instagram-orange hover:text-primary-foreground"
+                    >
+                      <span className="text-sm">📷</span>
                       Instagram
                     </a>
-                  </Button>
-                </>
+                  </>
+                )}
+              </div>
+
+              {storeSettings?.store_address && (
+                <div className="mt-8 flex items-center justify-center gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  <span>{storeSettings.store_address}</span>
+                </div>
               )}
             </div>
-            {storeSettings?.store_address && (
-              <div className="mt-4 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4 inline mr-1" />
-                {storeSettings.store_address}
-              </div>
-            )}
           </div>
 
           {/* Back to Shop */}
