@@ -1919,7 +1919,7 @@ const Checkout = () => {
                           <div className="flex items-center justify-between">
                             <div className="text-sm font-medium flex items-center gap-2">
                               <WayForPayLogo className="w-5 h-5" />
-                              Онлайн оплата
+                              {paymentWayForPayTitle}
                             </div>
                             <button
                               type="button"
@@ -1934,7 +1934,7 @@ const Checkout = () => {
                               <Pencil className="w-4 h-4" />
                             </button>
                           </div>
-                          <div className="text-sm text-muted-foreground">Безпечна оплата карткою через WayForPay</div>
+                          <div className="text-sm text-muted-foreground">{paymentWayForPayDescription}</div>
                         </>
                       )}
                       {formData.paymentMethod === "nalojka" && (
@@ -1942,7 +1942,7 @@ const Checkout = () => {
                           <div className="flex items-center justify-between">
                             <div className="text-sm font-medium flex items-center gap-2">
                               <CODPaymentLogo className="w-5 h-5" />
-                              Накладений платіж
+                              {paymentNalojkaTitle}
                             </div>
                             <button
                               type="button"
@@ -1957,7 +1957,7 @@ const Checkout = () => {
                               <Pencil className="w-4 h-4" />
                             </button>
                           </div>
-                          <div className="text-sm text-muted-foreground">Оплата при отриманні (+20 грн комісія)</div>
+                          <div className="text-sm text-muted-foreground">{paymentNalojkaDescription}</div>
                         </>
                       )}
                       {formData.paymentMethod === "fopiban" && (
@@ -1965,7 +1965,7 @@ const Checkout = () => {
                           <div className="flex items-center justify-between">
                             <div className="text-sm font-medium flex items-center gap-2">
                               <FOPPaymentLogo className="w-5 h-5" />
-                              Оплата на рахунок ФОП
+                              {paymentFopTitle}
                             </div>
                             <button
                               type="button"
@@ -1980,7 +1980,7 @@ const Checkout = () => {
                               <Pencil className="w-4 h-4" />
                             </button>
                           </div>
-                          <div className="text-sm text-muted-foreground">Оплата на банківський рахунок ФОП</div>
+                          <div className="text-sm text-muted-foreground">{paymentFopDescription}</div>
                         </>
                       )}
                     </div>
