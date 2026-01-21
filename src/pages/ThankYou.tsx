@@ -519,12 +519,12 @@ const ThankYou = () => {
                       <label className="text-sm font-medium text-muted-foreground">Сума до сплати</label>
                       <div className="flex items-center gap-2 mt-1.5 border border-border rounded-lg px-4 py-2.5 bg-muted/30">
                         <span className="flex-1 text-sm font-semibold">
-                          {order && order.total ? `${parseFloat(order.total).toFixed(2)} ₴` : '0.00 ₴'}
+                          {order && order.total ? Math.round(parseFloat(order.total)) : '0'}
                         </span>
                         <button
                           onClick={async () => {
                             try {
-                              const totalAmount = order && order.total ? parseFloat(order.total).toFixed(2) : '0.00';
+                              const totalAmount = order && order.total ? Math.round(parseFloat(order.total)).toString() : '0';
                               await navigator.clipboard.writeText(totalAmount);
                               toast({ title: 'Скопійовано!', description: 'Сума скопійовано в буфер обміну' });
                             } catch (error) {
