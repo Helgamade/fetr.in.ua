@@ -35,69 +35,52 @@ export const AudienceSection: React.FC = () => {
   return (
     <section 
       id="audience" 
-      className="py-20 relative overflow-hidden"
-      style={{
-        background: `linear-gradient(to right bottom, oklch(0.98 0.02 73.68 / 0.5), oklch(0.96 0.02 73.68 / 0.5), oklch(0.96 0.02 74.35 / 0.5))`
-      }}
+      className="py-16 px-4 bg-gradient-to-br from-peach via-cream to-mint"
     >
-      <div className="container-tight relative">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
-            {title}
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
-            {subtitle}
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-3xl md:text-4xl font-heading font-bold text-center text-foreground mb-4">
+          {title}
+        </h2>
+        <p className="text-center text-foreground/70 mb-12">
+          {subtitle}
+        </p>
+        {description && (
+          <p className="text-center text-foreground/70 mb-12">
+            {description}
           </p>
-          {description && (
-            <p className="text-base text-muted-foreground max-w-3xl mx-auto">
-              {description}
-            </p>
-          )}
-        </div>
-        
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        )}
+
+        <div className="grid md:grid-cols-2 gap-6">
           {/* Первая карточка - Майбутнім мамам */}
-          <div className="rounded-lg text-card-foreground shadow-sm glass-card border-0 overflow-hidden bg-peach/50">
-            <div className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="rounded-xl bg-background/80 flex items-center justify-center shadow-sm" style={{ width: '3rem', height: '3rem' }}>
-                  <span style={{ fontSize: '1.5rem', lineHeight: '2.25rem' }}>🤰</span>
-                </div>
-                <h3 className="font-heading text-2xl font-bold text-foreground">
-                  {card1Title}
-                </h3>
-              </div>
-                  <ul className="space-y-3">
-                    {card1Items.map((item, index) => (
-                      <li key={index} className="flex items-start gap-3 text-foreground/80">
-                        <span className="text-primary">✦</span>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
+          <div className="bg-card/90 backdrop-blur-sm rounded-3xl p-8 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="text-3xl">🤰</span>
+              <h3 className="text-xl font-heading font-bold text-foreground">{card1Title}</h3>
             </div>
+            <ul className="space-y-4">
+              {card1Items.map((item, index) => (
+                <li key={index} className="flex items-start gap-3 text-foreground/80">
+                  <span className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0"></span>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Вторая карточка - Батькам з дітьми */}
-          <div className="rounded-lg text-card-foreground shadow-sm glass-card border-0 overflow-hidden bg-sage/50">
-            <div className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="rounded-xl bg-background/80 flex items-center justify-center shadow-sm" style={{ width: '3rem', height: '3rem' }}>
-                  <span style={{ fontSize: '1.5rem', lineHeight: '2.25rem' }}>👶</span>
-                </div>
-                <h3 className="font-heading text-2xl font-bold text-foreground">
-                  {card2Title}
-                </h3>
-              </div>
-                  <ul className="space-y-3">
-                    {card2Items.map((item, index) => (
-                      <li key={index} className="flex items-start gap-3 text-foreground/80">
-                        <span className="text-primary">✦</span>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
+          <div className="bg-card/90 backdrop-blur-sm rounded-3xl p-8 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="text-3xl">👶</span>
+              <h3 className="text-xl font-heading font-bold text-foreground">{card2Title}</h3>
             </div>
+            <ul className="space-y-4">
+              {card2Items.map((item, index) => (
+                <li key={index} className="flex items-start gap-3 text-foreground/80">
+                  <span className="w-2 h-2 rounded-full bg-secondary mt-2 shrink-0"></span>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
