@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Package, CreditCard, Cog, Box, Truck, MapPin, Home, Star, ArrowRight, User, Phone, MessageCircle, Send, Instagram } from "lucide-react";
+import { CheckCircle, Package, CreditCard, Cog, Box, Truck, MapPin, Home, Star, ArrowRight, User, Phone, MessageCircle, Send, Instagram, Copy } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { ordersAPI } from "@/lib/api";
@@ -10,6 +10,7 @@ import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from "@/components/Delivery
 import { CODPaymentLogo, WayForPayLogo, FOPPaymentLogo } from "@/components/PaymentLogos";
 import { LottieAnimation } from "@/components/LottieAnimation";
 import { getViberLink, getTelegramLink, getWhatsAppLink } from "@/lib/messengerLinks";
+import { useToast } from "@/hooks/use-toast";
 
 interface TimelineStep {
   id: string;
@@ -364,11 +365,6 @@ const ThankYou = () => {
                           {!['wayforpay', 'nalojka', 'fopiban'].includes(order.payment.method) && `Спосіб оплати: ${order.payment.method}`}
                         </span>
                       </div>
-                      {order.payment.method === 'fopiban' && (
-                        <div className="mt-3 pt-3 border-t text-sm text-muted-foreground">
-                          Реквізити для оплати будуть надіслані вам на email або SMS
-                        </div>
-                      )}
                       {isPaymentPending && order.payment.method === 'wayforpay' && (
                         <div className="mt-4 pt-4 border-t">
                           <Button
@@ -427,16 +423,104 @@ const ThankYou = () => {
             </div>
           )}
 
-          {/* Payment Info for FOP */}
+          {/* Payment Details for FOP */}
           {order && order.payment && order.payment.method === 'fopiban' && (
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8">
-              <h2 className="font-bold text-amber-800 mb-2 flex items-center gap-2">
-                <CreditCard className="w-5 h-5" />
-                Інформація про оплату
-              </h2>
-              <p className="text-amber-700 text-sm mb-4">
-                Для завершення замовлення переведіть суму на рахунок ФОП. Реквізити будуть надіслані вам на email або SMS.
-              </p>
+            <div className="bg-card rounded-2xl shadow-soft mb-8 overflow-hidden">
+              <div className="flex">
+                <div className="w-2 bg-gradient-to-b from-green-400 to-emerald-600"></div>
+                <div className="flex-1 p-6">
+                  <h2 className="text-lg font-bold flex items-center gap-2 mb-5">
+                    <CreditCard className="w-5 h-5 text-green-600" />
+                    Платіжні реквізити
+                  </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Номер рахунку у форматі IBAN</label>
+                      <div className="flex items-center gap-2 mt-1.5 border border-border rounded-lg px-4 py-2.5 bg-muted/30">
+                        <span className="flex-1 font-mono text-sm break-all">UA383052990000026008046715224</span>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText('UA383052990000026008046715224');
+                              toast({ title: 'Скопійовано!', description: 'IBAN скопійовано в буфер обміну' });
+                            } catch (error) {
+                              toast({ title: 'Помилка', description: 'Не вдалося скопіювати', variant: 'destructive' });
+                            }
+                          }}
+                          className="p-2 rounded-lg transition-all duration-200 flex-shrink-0 hover:bg-muted text-muted-foreground hover:text-foreground"
+                          title="Копіювати"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">ЄДРПОУ, ІНН</label>
+                      <div className="flex items-center gap-2 mt-1.5 border border-border rounded-lg px-4 py-2.5 bg-muted/30">
+                        <span className="flex-1 font-mono text-sm">3078718311</span>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText('3078718311');
+                              toast({ title: 'Скопійовано!', description: 'ІНН скопійовано в буфер обміну' });
+                            } catch (error) {
+                              toast({ title: 'Помилка', description: 'Не вдалося скопіювати', variant: 'destructive' });
+                            }
+                          }}
+                          className="p-2 rounded-lg transition-all duration-200 flex-shrink-0 hover:bg-muted text-muted-foreground hover:text-foreground"
+                          title="Копіювати"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Отримувач платежу</label>
+                      <div className="flex items-center gap-2 mt-1.5 border border-border rounded-lg px-4 py-2.5 bg-muted/30">
+                        <span className="flex-1 text-sm">ФОП Пітальов О.М</span>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText('ФОП Пітальов О.М');
+                              toast({ title: 'Скопійовано!', description: 'Отримувач скопійовано в буфер обміну' });
+                            } catch (error) {
+                              toast({ title: 'Помилка', description: 'Не вдалося скопіювати', variant: 'destructive' });
+                            }
+                          }}
+                          className="p-2 rounded-lg transition-all duration-200 flex-shrink-0 hover:bg-muted text-muted-foreground hover:text-foreground"
+                          title="Копіювати"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Призначення платежу</label>
+                      <div className="flex items-center gap-2 mt-1.5 border border-border rounded-lg px-4 py-2.5 bg-muted/30">
+                        <span className="flex-1 text-sm">оплата за товар</span>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText('оплата за товар');
+                              toast({ title: 'Скопійовано!', description: 'Призначення скопійовано в буфер обміну' });
+                            } catch (error) {
+                              toast({ title: 'Помилка', description: 'Не вдалося скопіювати', variant: 'destructive' });
+                            }
+                          }}
+                          className="p-2 rounded-lg transition-all duration-200 flex-shrink-0 hover:bg-muted text-muted-foreground hover:text-foreground"
+                          title="Копіювати"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-5 p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                    <p className="text-green-800 dark:text-green-200 text-sm font-medium">🏦 Банк: ПриватБанк</p>
+                    <p className="text-green-600 dark:text-green-300 text-xs mt-1">Повідомте, будь ласка, про оплату</p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
