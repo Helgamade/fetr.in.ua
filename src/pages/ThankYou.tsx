@@ -25,6 +25,7 @@ const ThankYou = () => {
   const orderIdParam = searchParams.get("order"); // Старый способ (для обратной совместимости)
   const trackingTokenParam = searchParams.get("track"); // Безопасная ссылка отслеживания (tracking_token)
   const { data: storeSettings } = usePublicSettings();
+  const { toast } = useToast();
   
   // searchParams.get() возвращает null, если параметра нет - нормализуем в undefined
   // Также проверяем, что параметр не равен строке 'undefined' или 'null'
