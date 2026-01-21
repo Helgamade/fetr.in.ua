@@ -12,6 +12,7 @@ import { ArrowLeft, Package, CreditCard, Truck, MapPin, Phone, Mail, User, Check
 import { Helmet } from "react-helmet-async";
 import { toast } from "@/hooks/use-toast";
 import { usePublicSettings } from "@/hooks/usePublicSettings";
+import { useTexts, SiteText } from "@/hooks/useTexts";
 import { NovaPoshtaDelivery } from "@/components/NovaPoshtaDelivery";
 import { UkrPoshtaDelivery } from "@/components/UkrPoshtaDelivery";
 import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from "@/components/DeliveryLogos";
@@ -24,7 +25,24 @@ const Checkout = () => {
   const { items, getSubtotal, getDiscount, getDeliveryCost, getTotal, clearCart } = useCart();
   const { data: products = [] } = useProducts();
   const { data: storeSettings = {} } = usePublicSettings();
+  const { data: textsData } = useTexts();
+  const texts: SiteText[] = Array.isArray(textsData) ? textsData : [];
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Получаем тексты способов доставки из базы данных
+  const deliveryNovaPoshtaTitle = texts.find(t => t.key === 'checkout.delivery.nova_poshta.title')?.value || 'Нова Пошта';
+  const deliveryNovaPoshtaDescription = texts.find(t => t.key === 'checkout.delivery.nova_poshta.description')?.value || '1-2 дні по Україні';
+  const deliveryUkrposhtaTitle = texts.find(t => t.key === 'checkout.delivery.ukrposhta.title')?.value || 'Укрпошта';
+  const deliveryUkrposhtaDescription = texts.find(t => t.key === 'checkout.delivery.ukrposhta.description')?.value || '3-5 днів по Україні';
+  const deliveryPickupTitle = texts.find(t => t.key === 'checkout.delivery.pickup.title')?.value || 'Самовивіз';
+
+  // Получаем тексты способов оплаты из базы данных
+  const paymentWayForPayTitle = texts.find(t => t.key === 'checkout.payment.wayforpay.title')?.value || 'Онлайн оплата';
+  const paymentWayForPayDescription = texts.find(t => t.key === 'checkout.payment.wayforpay.description')?.value || 'Безпечна оплата карткою через WayForPay';
+  const paymentNalojkaTitle = texts.find(t => t.key === 'checkout.payment.nalojka.title')?.value || 'Накладений платіж';
+  const paymentNalojkaDescription = texts.find(t => t.key === 'checkout.payment.nalojka.description')?.value || 'Оплата при отриманні (+20 грн комісія)';
+  const paymentFopTitle = texts.find(t => t.key === 'checkout.payment.fop.title')?.value || 'Оплата на рахунок ФОП';
+  const paymentFopDescription = texts.find(t => t.key === 'checkout.payment.fop.description')?.value || 'Оплата на банківський рахунок ФОП';
 
   // Scroll to top on mount and track checkout start
   useEffect(() => {
@@ -1518,7 +1536,7 @@ const Checkout = () => {
                         <RadioGroupItem value="nova_poshta" id="nova_poshta" />
                           <div className="font-medium flex items-center gap-2 flex-1">
                             <NovaPoshtaLogo className="w-5 h-5" />
-                            Нова Пошта
+                            {deliveryNovaPoshtaTitle}
                           </div>
                           <div className="text-sm font-medium">
                             {orderTotal >= FREE_DELIVERY_THRESHOLD ? <span className="text-green-600">Безкоштовно</span> : "від 60 ₴"}
@@ -1539,7 +1557,7 @@ const Checkout = () => {
                                 </div>
                               );
                             }
-                            return <div className="text-sm text-muted-foreground">1-2 дні по Україні</div>;
+                            return <div className="text-sm text-muted-foreground">{deliveryNovaPoshtaDescription}</div>;
                           })()}
                         </div>
                       </label>
@@ -1634,7 +1652,7 @@ const Checkout = () => {
                         <RadioGroupItem value="ukr_poshta" id="ukr_poshta" />
                           <div className="font-medium flex items-center gap-2 flex-1">
                             <UkrposhtaLogo className="w-5 h-5" />
-                            Укрпошта
+                            {deliveryUkrposhtaTitle}
                           </div>
                           <div className="text-sm font-medium">
                             {orderTotal >= FREE_DELIVERY_THRESHOLD ? <span className="text-green-600">Безкоштовно</span> : "від 45 грн"}
@@ -1671,7 +1689,7 @@ const Checkout = () => {
                                 </div>
                               );
                             }
-                            return <div className="text-sm text-muted-foreground">3-5 днів по Україні</div>;
+                            return <div className="text-sm text-muted-foreground">{deliveryUkrposhtaDescription}</div>;
                           })()}
                         </div>
                       </label>
@@ -1737,7 +1755,7 @@ const Checkout = () => {
                         <RadioGroupItem value="pickup" id="pickup" />
                           <div className="font-medium flex items-center gap-2 flex-1">
                             <PickupLogo className="w-5 h-5" />
-                            Самовивіз
+                            {deliveryPickupTitle}
                         </div>
                         <div className="text-sm font-medium">
                           {(() => {
@@ -1779,10 +1797,10 @@ const Checkout = () => {
                           return (
                             <>
                               <div className="flex items-center justify-between">
-                                <div className="text-sm font-medium flex items-center gap-2">
-                                  <NovaPoshtaLogo className="w-5 h-5" />
-                                  Нова Пошта
-                                </div>
+                            <div className="text-sm font-medium flex items-center gap-2">
+                              <NovaPoshtaLogo className="w-5 h-5" />
+                              {deliveryNovaPoshtaTitle}
+                            </div>
                                 <button
                                   type="button"
                                   onClick={(e) => {
@@ -1821,7 +1839,7 @@ const Checkout = () => {
                               <div className="flex items-center justify-between">
                                 <div className="text-sm font-medium flex items-center gap-2">
                                   <UkrposhtaLogo className="w-5 h-5" />
-                                  Укрпошта
+                                  {deliveryUkrposhtaTitle}
                                 </div>
                                 <button
                                   type="button"
@@ -1849,7 +1867,7 @@ const Checkout = () => {
                               <div className="flex items-center justify-between">
                                 <div className="text-sm font-medium flex items-center gap-2">
                                   <PickupLogo className="w-5 h-5" />
-                                  Самовивіз
+                                  {deliveryPickupTitle}
                                 </div>
                                 <button
                                   type="button"
@@ -1990,9 +2008,9 @@ const Checkout = () => {
                         <div>
                           <div className="font-medium flex items-center gap-2">
                             <WayForPayLogo className="w-5 h-5" />
-                            Онлайн оплата
+                            {paymentWayForPayTitle}
                           </div>
-                          <div className="text-sm text-muted-foreground">Безпечна оплата карткою через WayForPay</div>
+                          <div className="text-sm text-muted-foreground">{paymentWayForPayDescription}</div>
                         </div>
                       </label>
                       <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
@@ -2000,9 +2018,9 @@ const Checkout = () => {
                         <div>
                           <div className="font-medium flex items-center gap-2">
                             <CODPaymentLogo className="w-5 h-5" />
-                            Накладений платіж
+                            {paymentNalojkaTitle}
                           </div>
-                          <div className="text-sm text-muted-foreground">Оплата при отриманні (+20 грн комісія)</div>
+                          <div className="text-sm text-muted-foreground">{paymentNalojkaDescription}</div>
                         </div>
                       </label>
                       <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
@@ -2010,9 +2028,9 @@ const Checkout = () => {
                         <div>
                           <div className="font-medium flex items-center gap-2">
                             <FOPPaymentLogo className="w-5 h-5" />
-                            Оплата на рахунок ФОП
+                            {paymentFopTitle}
                           </div>
-                          <div className="text-sm text-muted-foreground">Оплата на банківський рахунок ФОП</div>
+                          <div className="text-sm text-muted-foreground">{paymentFopDescription}</div>
                         </div>
                       </label>
                     </RadioGroup>

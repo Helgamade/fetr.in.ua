@@ -10,12 +10,17 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSettings, useUpdateSettings } from '@/hooks/useSettings';
+import { useTexts, useUpdateText, useCreateText, SiteText } from '@/hooks/useTexts';
 import { settingsAPI } from '@/lib/api';
 
 export function Settings() {
   const { toast } = useToast();
   const { data: settings = {}, isLoading } = useSettings();
   const updateSettings = useUpdateSettings();
+  const { data: textsData = [], isLoading: textsLoading } = useTexts();
+  const texts: SiteText[] = Array.isArray(textsData) ? textsData : [];
+  const updateText = useUpdateText();
+  const createText = useCreateText();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
   const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null);
@@ -461,6 +466,164 @@ export function Settings() {
               <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
                 <strong>Примітка:</strong> Всі способи оплати активні за замовчуванням. 
                 Відключення способів оплати доступне через налаштування системи.
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h4 className="font-medium">Тексти способів оплати</h4>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="wayforpay_title">WayForPay - Назва</Label>
+                    <Input
+                      id="wayforpay_title"
+                      value={texts.find(t => t.key === 'checkout.payment.wayforpay.title')?.value || 'Онлайн оплата'}
+                      onChange={async (e) => {
+                        const text = texts.find(t => t.key === 'checkout.payment.wayforpay.title');
+                        try {
+                          if (text) {
+                            await updateText.mutateAsync({ id: text.id, value: e.target.value });
+                          } else {
+                            await createText.mutateAsync({
+                              key: 'checkout.payment.wayforpay.title',
+                              value: e.target.value,
+                              namespace: 'checkout',
+                              description: 'Назва способу оплати "WayForPay"'
+                            });
+                          }
+                          toast({ title: 'Збережено', description: 'Текст успішно оновлено' });
+                        } catch (error: any) {
+                          toast({ title: 'Помилка', description: error.message || 'Не вдалося зберегти текст', variant: 'destructive' });
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="wayforpay_description">WayForPay - Опис</Label>
+                    <Input
+                      id="wayforpay_description"
+                      value={texts.find(t => t.key === 'checkout.payment.wayforpay.description')?.value || 'Безпечна оплата карткою через WayForPay'}
+                      onChange={async (e) => {
+                        const text = texts.find(t => t.key === 'checkout.payment.wayforpay.description');
+                        try {
+                          if (text) {
+                            await updateText.mutateAsync({ id: text.id, value: e.target.value });
+                          } else {
+                            await createText.mutateAsync({
+                              key: 'checkout.payment.wayforpay.description',
+                              value: e.target.value,
+                              namespace: 'checkout',
+                              description: 'Опис способу оплати "WayForPay"'
+                            });
+                          }
+                          toast({ title: 'Збережено', description: 'Текст успішно оновлено' });
+                        } catch (error: any) {
+                          toast({ title: 'Помилка', description: error.message || 'Не вдалося зберегти текст', variant: 'destructive' });
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nalojka_title">Накладений платіж - Назва</Label>
+                    <Input
+                      id="nalojka_title"
+                      value={texts.find(t => t.key === 'checkout.payment.nalojka.title')?.value || 'Накладений платіж'}
+                      onChange={async (e) => {
+                        const text = texts.find(t => t.key === 'checkout.payment.nalojka.title');
+                        try {
+                          if (text) {
+                            await updateText.mutateAsync({ id: text.id, value: e.target.value });
+                          } else {
+                            await createText.mutateAsync({
+                              key: 'checkout.payment.nalojka.title',
+                              value: e.target.value,
+                              namespace: 'checkout',
+                              description: 'Назва способу оплати "Накладений платіж"'
+                            });
+                          }
+                          toast({ title: 'Збережено', description: 'Текст успішно оновлено' });
+                        } catch (error: any) {
+                          toast({ title: 'Помилка', description: error.message || 'Не вдалося зберегти текст', variant: 'destructive' });
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nalojka_description">Накладений платіж - Опис</Label>
+                    <Input
+                      id="nalojka_description"
+                      value={texts.find(t => t.key === 'checkout.payment.nalojka.description')?.value || 'Оплата при отриманні (+20 грн комісія)'}
+                      onChange={async (e) => {
+                        const text = texts.find(t => t.key === 'checkout.payment.nalojka.description');
+                        try {
+                          if (text) {
+                            await updateText.mutateAsync({ id: text.id, value: e.target.value });
+                          } else {
+                            await createText.mutateAsync({
+                              key: 'checkout.payment.nalojka.description',
+                              value: e.target.value,
+                              namespace: 'checkout',
+                              description: 'Опис способу оплати "Накладений платіж"'
+                            });
+                          }
+                          toast({ title: 'Збережено', description: 'Текст успішно оновлено' });
+                        } catch (error: any) {
+                          toast({ title: 'Помилка', description: error.message || 'Не вдалося зберегти текст', variant: 'destructive' });
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="fop_title">Оплата на рахунок ФОП - Назва</Label>
+                    <Input
+                      id="fop_title"
+                      value={texts.find(t => t.key === 'checkout.payment.fop.title')?.value || 'Оплата на рахунок ФОП'}
+                      onChange={async (e) => {
+                        const text = texts.find(t => t.key === 'checkout.payment.fop.title');
+                        try {
+                          if (text) {
+                            await updateText.mutateAsync({ id: text.id, value: e.target.value });
+                          } else {
+                            await createText.mutateAsync({
+                              key: 'checkout.payment.fop.title',
+                              value: e.target.value,
+                              namespace: 'checkout',
+                              description: 'Назва способу оплати "Оплата на рахунок ФОП"'
+                            });
+                          }
+                          toast({ title: 'Збережено', description: 'Текст успішно оновлено' });
+                        } catch (error: any) {
+                          toast({ title: 'Помилка', description: error.message || 'Не вдалося зберегти текст', variant: 'destructive' });
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="fop_description">Оплата на рахунок ФОП - Опис</Label>
+                    <Input
+                      id="fop_description"
+                      value={texts.find(t => t.key === 'checkout.payment.fop.description')?.value || 'Оплата на банківський рахунок ФОП'}
+                      onChange={async (e) => {
+                        const text = texts.find(t => t.key === 'checkout.payment.fop.description');
+                        try {
+                          if (text) {
+                            await updateText.mutateAsync({ id: text.id, value: e.target.value });
+                          } else {
+                            await createText.mutateAsync({
+                              key: 'checkout.payment.fop.description',
+                              value: e.target.value,
+                              namespace: 'checkout',
+                              description: 'Опис способу оплати "Оплата на рахунок ФОП"'
+                            });
+                          }
+                          toast({ title: 'Збережено', description: 'Текст успішно оновлено' });
+                        } catch (error: any) {
+                          toast({ title: 'Помилка', description: error.message || 'Не вдалося зберегти текст', variant: 'destructive' });
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
