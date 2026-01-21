@@ -515,6 +515,29 @@ const ThankYou = () => {
                         </button>
                       </div>
                     </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Сума до сплати</label>
+                      <div className="flex items-center gap-2 mt-1.5 border border-border rounded-lg px-4 py-2.5 bg-muted/30">
+                        <span className="flex-1 text-sm font-semibold">
+                          {order && order.total ? `${parseFloat(order.total).toFixed(2)} ₴` : '0.00 ₴'}
+                        </span>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const totalAmount = order && order.total ? parseFloat(order.total).toFixed(2) : '0.00';
+                              await navigator.clipboard.writeText(totalAmount);
+                              toast({ title: 'Скопійовано!', description: 'Сума скопійовано в буфер обміну' });
+                            } catch (error) {
+                              toast({ title: 'Помилка', description: 'Не вдалося скопіювати', variant: 'destructive' });
+                            }
+                          }}
+                          className="p-2 rounded-lg transition-all duration-200 flex-shrink-0 hover:bg-muted text-muted-foreground hover:text-foreground"
+                          title="Копіювати"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   <div className="mt-5 p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
                     <p className="text-green-800 dark:text-green-200 text-sm font-medium">🏦 Банк: ПриватБанк</p>
