@@ -86,6 +86,9 @@ export function Dashboard() {
     return acc;
   }, {} as Record<string, number>);
   
+  // Сортируем статусы в правильном порядке
+  const sortedStatuses = activeStatuses.filter(status => ordersByStatus[status] !== undefined);
+  
   // Group orders by payment method
   const ordersByPayment = orders.reduce((acc, order) => {
     const method = order.payment?.method || 'unknown';
@@ -119,24 +122,21 @@ export function Dashboard() {
     unknown: 'Невідомо',
   };
   
-  // Get top products from orders
-  const productStats = new Map<string, { name: string; count: number; revenue: number }>();
+  // Get top products from orders (только фактическое количество продаж)
+  const productStats = new Map<string, { name: string; count: number }>();
   
   orders.forEach(order => {
     order.items?.forEach(item => {
       const product = products.find(p => p.code === item.productId);
       const productName = product?.name || item.productId;
-      const itemRevenue = (Number(item.price) || 0) * item.quantity;
       
       if (productStats.has(item.productId)) {
         const stats = productStats.get(item.productId)!;
         stats.count += item.quantity;
-        stats.revenue += itemRevenue;
       } else {
         productStats.set(item.productId, {
           name: productName,
           count: item.quantity,
-          revenue: itemRevenue,
         });
       }
     });
@@ -262,7 +262,7 @@ export function Dashboard() {
       </div>
 
       {/* Bottom row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top products */}
         <Card>
           <CardHeader>
@@ -282,7 +282,7 @@ export function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold">₴{Number(product.revenue).toFixed(2)}</div>
+                    <div className="font-semibold">{product.count} шт.</div>
                   </div>
                 </div>
               )) : (
@@ -301,23 +301,26 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {Object.entries(ordersByStatus).map(([status, count]) => (
-                <div key={status} className="flex items-center gap-4">
-                  <Package className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <div className="text-sm">{statusLabels[status] || status}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-primary rounded-full"
-                        style={{ width: `${totalOrders > 0 ? (count / totalOrders) * 100 : 0}%` }}
-                      />
+              {sortedStatuses.map((status) => {
+                const count = ordersByStatus[status] || 0;
+                return (
+                  <div key={status} className="flex items-center gap-4">
+                    <Package className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <div className="text-sm">{statusLabels[status] || status}</div>
                     </div>
-                    <span className="text-sm font-medium w-8 text-right">{count}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-primary rounded-full"
+                          style={{ width: `${totalOrders > 0 ? (count / totalOrders) * 100 : 0}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium w-8 text-right">{count}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
