@@ -247,15 +247,15 @@ router.post('/callback', async (req, res, next) => {
     });
     
     // Обновление статуса в БД
-    let orderStatus = 'created';
+    let orderStatus = 'accepted'; // По умолчанию "Прийнято"
     if (data.transactionStatus === 'Approved') {
       // Платеж успешный
       orderStatus = 'paid';
       console.log('[WayForPay] Payment approved:', data.orderReference);
     } else if (data.transactionStatus === 'Declined' || data.transactionStatus === 'Expired') {
-      // Платеж отклонен
-      orderStatus = 'awaiting_payment';
-      console.log('[WayForPay] Payment declined/expired:', data.orderReference, data.reason);
+      // Платеж отклонен - статус остается "Прийнято"
+      orderStatus = 'accepted';
+      console.log('[WayForPay] Payment declined/expired, status set to accepted:', data.orderReference, data.reason);
     } else {
       console.log('[WayForPay] Unknown transaction status:', data.transactionStatus);
     }

@@ -150,15 +150,24 @@ const ThankYou = () => {
       }
     ];
 
-    // Если статус awaiting_payment и оплата не прошла (WayForPay), показываем только создание заказа
+    // Если статус awaiting_payment и оплата не прошла (WayForPay), показываем "Прийнято"
     if (order.status === 'awaiting_payment' && order.payment?.method === 'wayforpay' && isPaymentPending) {
-      return [{
-        id: "created",
-        title: "Замовлення оформлено",
-        description: "Ваше замовлення успішно створено",
-        icon: <CheckCircle className="w-5 h-5" />,
-        status: "completed"
-      }];
+      return [
+        {
+          id: "created",
+          title: "Замовлення оформлено",
+          description: "Ваше замовлення успішно створено",
+          icon: <CheckCircle className="w-5 h-5" />,
+          status: "completed"
+        },
+        {
+          id: "accepted",
+          title: "Прийнято",
+          description: "Замовлення прийнято в обробку",
+          icon: <Package className="w-5 h-5" />,
+          status: "current"
+        }
+      ];
     }
 
     // Для других способов оплаты awaiting_payment означает, что заказ создан, но оплата ожидается
@@ -309,17 +318,41 @@ const ThankYou = () => {
               </div>
               <div className="text-right">
                 <div className="text-sm text-muted-foreground">Статус</div>
-                {isPaymentPending ? (
-                  <div className="inline-flex items-center gap-2 bg-yellow-500/10 text-yellow-600 px-3 py-1 rounded-full text-sm font-medium">
-                    <span className="w-2 h-2 bg-yellow-600 rounded-full animate-pulse" />
-                    Очікує оплату
-                  </div>
-                ) : (
-                  <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-                    <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                    Обробляється
-                  </div>
-                )}
+                {order && (() => {
+                  const statusLabels: Record<OrderStatus, string> = {
+                    created: 'Замовлення оформлено',
+                    accepted: 'Прийнято',
+                    processing: 'В обробці',
+                    awaiting_payment: 'Очікує оплату',
+                    paid: 'Оплачено',
+                    assembled: 'Зібрано',
+                    packed: 'Спаковано',
+                    shipped: 'Відправлено',
+                    in_transit: 'В дорозі',
+                    arrived: 'Прибуло',
+                    completed: 'Залишити відгук',
+                  };
+                  
+                  const statusLabel = statusLabels[order.status] || 'Обробляється';
+                  const isPending = order.status === 'awaiting_payment' || order.status === 'processing' || order.status === 'accepted';
+                  
+                  return (
+                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                      order.status === 'awaiting_payment' 
+                        ? 'bg-yellow-500/10 text-yellow-600' 
+                        : isPending
+                        ? 'bg-primary/10 text-primary'
+                        : order.status === 'paid'
+                        ? 'bg-green-500/10 text-green-600'
+                        : 'bg-primary/10 text-primary'
+                    }`}>
+                      {isPending && <span className={`w-2 h-2 rounded-full animate-pulse ${
+                        order.status === 'awaiting_payment' ? 'bg-yellow-600' : 'bg-primary'
+                      }`} />}
+                      {statusLabel}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>

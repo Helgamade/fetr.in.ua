@@ -514,8 +514,8 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
       
       // Determine initial order status based on payment method
       // For wayforpay payment, status is 'awaiting_payment' until WayForPay confirms payment
-      // For nalojka, status is 'created'
-      const initialStatus = payment.method === 'wayforpay' ? 'awaiting_payment' : 'created';
+      // For other payment methods, status is 'accepted' (замовлення прийнято)
+      const initialStatus = payment.method === 'wayforpay' ? 'awaiting_payment' : 'accepted';
       
       // Convert payment method: 'wayforpay' -> 'wayforpay' for database
       // Маппинг способов оплаты: 'wayforpay' -> 'wayforpay', 'nalojka' -> 'nalojka', 'fopiban' -> 'fopiban'
