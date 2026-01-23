@@ -1,11 +1,12 @@
 import { useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Package, CreditCard, Cog, Box, Truck, MapPin, Home, Star, ArrowRight, User, Phone, MessageCircle, Send, Instagram, Copy } from "lucide-react";
+import { CheckCircle, Package, CreditCard, Cog, Box, Truck, MapPin, Home, Star, ArrowRight, User, Phone, MessageCircle, Send, Instagram, Copy, XCircle } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { ordersAPI } from "@/lib/api";
 import { usePublicSettings } from "@/hooks/usePublicSettings";
+import { OrderStatus } from "@/types/store";
 import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from "@/components/DeliveryLogos";
 import { CODPaymentLogo, WayForPayLogo, FOPPaymentLogo } from "@/components/PaymentLogos";
 import { LottieAnimation } from "@/components/LottieAnimation";
@@ -97,71 +98,103 @@ const ThankYou = () => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
-  const timelineSteps: TimelineStep[] = [
-    {
-      id: "ordered",
-      title: "Замовлення оформлено",
-      description: "Ваше замовлення успішно створено",
-      icon: <CheckCircle className="w-5 h-5" />,
-      status: "completed"
-    },
-    {
-      id: "accepted",
-      title: "Прийнято",
-      description: "Замовлення прийнято в обробку",
-      icon: <Package className="w-5 h-5" />,
-      status: "current"
-    },
-    {
-      id: "payment",
-      title: "Очікує оплату",
-      description: "Очікуємо підтвердження оплати",
-      icon: <CreditCard className="w-5 h-5" />,
-      status: "pending"
-    },
-    {
-      id: "processing",
-      title: "Опрацювання",
-      description: "Збираємо ваше замовлення",
-      icon: <Cog className="w-5 h-5" />,
-      status: "pending"
-    },
-    {
-      id: "packed",
-      title: "Упаковано",
-      description: "Замовлення готове до відправки",
-      icon: <Box className="w-5 h-5" />,
-      status: "pending"
-    },
-    {
-      id: "shipped",
-      title: "Відправлено",
-      description: "Передано перевізнику",
-      icon: <Truck className="w-5 h-5" />,
-      status: "pending"
-    },
-    {
-      id: "in_transit",
-      title: "В дорозі",
-      description: "Прямує до вашого міста",
-      icon: <MapPin className="w-5 h-5" />,
-      status: "pending"
-    },
-    {
-      id: "delivered",
-      title: "Прибуло",
-      description: "Очікує у відділенні",
-      icon: <Home className="w-5 h-5" />,
-      status: "pending"
-    },
-    {
-      id: "review",
-      title: "Залишити відгук",
-      description: "Поділіться враженнями",
-      icon: <Star className="w-5 h-5" />,
-      status: "pending"
+  // Определяем статусы на основе текущего статуса заказа
+  const getTimelineSteps = (): TimelineStep[] => {
+    if (!order) return [];
+
+    const statusOrder: OrderStatus[] = ['created', 'accepted', 'paid', 'packed', 'shipped', 'arrived', 'completed'];
+    const currentStatusIndex = statusOrder.indexOf(order.status);
+    
+    const allSteps: Omit<TimelineStep, 'status'>[] = [
+      {
+        id: "created",
+        title: "Замовлення оформлено",
+        description: "Ваше замовлення успішно створено",
+        icon: <CheckCircle className="w-5 h-5" />
+      },
+      {
+        id: "accepted",
+        title: "Прийнято",
+        description: "Замовлення прийнято в обробку",
+        icon: <Package className="w-5 h-5" />
+      },
+      {
+        id: "paid",
+        title: "Оплачено",
+        description: "Оплату успішно отримано, дякуємо!",
+        icon: <CreditCard className="w-5 h-5" />
+      },
+      {
+        id: "packed",
+        title: "Спаковано",
+        description: "Замовлення зібране та очікує відправлення",
+        icon: <Box className="w-5 h-5" />
+      },
+      {
+        id: "shipped",
+        title: "Відправлено",
+        description: "Посилка вже в дорозі до вас",
+        icon: <Truck className="w-5 h-5" />
+      },
+      {
+        id: "arrived",
+        title: "Прибуло",
+        description: "Посилка чекає на отримання",
+        icon: <MapPin className="w-5 h-5" />
+      },
+      {
+        id: "completed",
+        title: "Залишити відгук",
+        description: "Нам важлива ваша думка 💛",
+        icon: <Star className="w-5 h-5" />
+      }
+    ];
+
+    // Если статус awaiting_payment и оплата не прошла (WayForPay), показываем только создание заказа
+    if (order.status === 'awaiting_payment' && order.payment?.method === 'wayforpay' && isPaymentPending) {
+      return [{
+        id: "created",
+        title: "Замовлення оформлено",
+        description: "Ваше замовлення успішно створено",
+        icon: <CheckCircle className="w-5 h-5" />,
+        status: "completed"
+      }];
     }
-  ];
+
+    // Для других способов оплаты awaiting_payment означает, что заказ создан, но оплата ожидается
+    // В этом случае показываем created как completed
+    if (order.status === 'awaiting_payment' && order.payment?.method !== 'wayforpay') {
+      const createdIndex = statusOrder.indexOf('created');
+      return allSteps.map((step, index) => {
+        let status: "completed" | "current" | "pending" = "pending";
+        if (index === createdIndex) {
+          status = "completed";
+        } else if (index === statusOrder.indexOf('paid')) {
+          status = "current";
+        }
+        return { ...step, status };
+      });
+    }
+
+    return allSteps.map((step, index) => {
+      let status: "completed" | "current" | "pending" = "pending";
+      
+      if (index < currentStatusIndex) {
+        status = "completed";
+      } else if (index === currentStatusIndex) {
+        status = "current";
+      } else {
+        status = "pending";
+      }
+
+      return {
+        ...step,
+        status
+      };
+    });
+  };
+
+  const timelineSteps = getTimelineSteps();
 
   const getStatusColor = (status: TimelineStep["status"]) => {
     switch (status) {
@@ -222,12 +255,18 @@ const ThankYou = () => {
         <div className={`bg-gradient-to-r ${isPaymentPending ? 'from-yellow-500 to-yellow-600' : 'from-green-500 to-green-600'} text-white py-12`}>
           <div className="container mx-auto px-4 text-center">
             <div className="w-32 h-32 mx-auto mb-4 animate-scale-in drop-shadow-none shadow-none">
-              <LottieAnimation
-                jsonPath="/animations/loading.json"
-                className="w-full h-full"
-                loop={false}
-                autoplay={true}
-              />
+              {isPaymentPending ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <XCircle className="w-32 h-32 text-white" />
+                </div>
+              ) : (
+                <LottieAnimation
+                  jsonPath="/animations/loading.json"
+                  className="w-full h-full"
+                  loop={false}
+                  autoplay={true}
+                />
+              )}
             </div>
             {isPaymentPending ? (
               <>

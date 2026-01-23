@@ -28,17 +28,17 @@ import { useOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 
 const statusLabels: Record<OrderStatus, string> = {
-  created: 'Новий',
+  created: 'Замовлення оформлено',
   accepted: 'Прийнято',
   processing: 'В обробці',
   awaiting_payment: 'Очікує оплату',
   paid: 'Оплачено',
   assembled: 'Зібрано',
-  packed: 'Запаковано',
+  packed: 'Спаковано',
   shipped: 'Відправлено',
   in_transit: 'В дорозі',
   arrived: 'Прибуло',
-  completed: 'Виконано',
+  completed: 'Залишити відгук',
 };
 
 const statusColors: Record<OrderStatus, string> = {
