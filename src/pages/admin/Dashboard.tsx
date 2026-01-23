@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useOrders } from '@/hooks/useOrders';
+import { useTexts } from '@/hooks/useTexts';
+import { useProducts } from '@/hooks/useProducts';
 import {
   BarChart,
   Bar,
@@ -33,6 +35,8 @@ const statusLabels: Record<string, string> = {
 
 export function Dashboard() {
   const { data: orders = [], isLoading } = useOrders();
+  const { data: products = [] } = useProducts();
+  const { data: texts = [] } = useTexts();
   
   // Calculate stats from real orders
   const totalOrders = orders.length;
@@ -72,9 +76,13 @@ export function Dashboard() {
     },
   ];
   
-  // Group orders by status
+  // Group orders by status (только активные статусы)
+  const activeStatuses = ['created', 'accepted', 'paid', 'packed', 'shipped', 'arrived', 'completed'];
   const ordersByStatus = orders.reduce((acc, order) => {
-    acc[order.status] = (acc[order.status] || 0) + 1;
+    // Показываем только активные статусы
+    if (activeStatuses.includes(order.status)) {
+      acc[order.status] = (acc[order.status] || 0) + 1;
+    }
     return acc;
   }, {} as Record<string, number>);
   
@@ -85,15 +93,58 @@ export function Dashboard() {
     return acc;
   }, {} as Record<string, number>);
   
-  const paymentLabels: Record<string, string> = {
-    wayforpay: 'Онлайн оплата (WayForPay)',
-    nalojka: 'Накладений платіж',
-    fopiban: 'Оплата на рахунок ФОП',
+  // Group orders by delivery method
+  const ordersByDelivery = orders.reduce((acc, order) => {
+    const method = order.delivery?.method || 'unknown';
+    acc[method] = (acc[method] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const deliveryLabels: Record<string, string> = {
+    nova_poshta: 'Нова Пошта',
+    ukrposhta: 'Укрпошта',
+    pickup: 'Самовивіз',
     unknown: 'Невідомо',
   };
   
-  // Get top products (simplified - would need product data)
-  const topProducts: { name: string; count: number; revenue: number }[] = [];
+  // Получаем названия способов оплаты из базы данных
+  const paymentWayForPayTitle = texts.find(t => t.key === 'checkout.payment.wayforpay.title')?.value || 'Онлайн оплата';
+  const paymentNalojkaTitle = texts.find(t => t.key === 'checkout.payment.nalojka.title')?.value || 'Накладений платіж';
+  const paymentFopTitle = texts.find(t => t.key === 'checkout.payment.fop.title')?.value || 'Оплата на рахунок ФОП';
+  
+  const paymentLabels: Record<string, string> = {
+    wayforpay: paymentWayForPayTitle,
+    nalojka: paymentNalojkaTitle,
+    fopiban: paymentFopTitle,
+    unknown: 'Невідомо',
+  };
+  
+  // Get top products from orders
+  const productStats = new Map<string, { name: string; count: number; revenue: number }>();
+  
+  orders.forEach(order => {
+    order.items?.forEach(item => {
+      const product = products.find(p => p.code === item.productId);
+      const productName = product?.name || item.productId;
+      const itemRevenue = (Number(item.price) || 0) * item.quantity;
+      
+      if (productStats.has(item.productId)) {
+        const stats = productStats.get(item.productId)!;
+        stats.count += item.quantity;
+        stats.revenue += itemRevenue;
+      } else {
+        productStats.set(item.productId, {
+          name: productName,
+          count: item.quantity,
+          revenue: itemRevenue,
+        });
+      }
+    });
+  });
+  
+  const topProducts = Array.from(productStats.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
   
   // Daily revenue (last 7 days)
   const dailyRevenue = Array.from({ length: 7 }, (_, i) => {
@@ -211,7 +262,7 @@ export function Dashboard() {
       </div>
 
       {/* Bottom row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Top products */}
         <Card>
           <CardHeader>
@@ -283,6 +334,34 @@ export function Dashboard() {
                   <Package className="h-4 w-4 text-muted-foreground" />
                   <div className="flex-1">
                     <div className="text-sm">{paymentLabels[method] || method}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary rounded-full"
+                        style={{ width: `${totalOrders > 0 ? (count / totalOrders) * 100 : 0}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium w-8 text-right">{count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Orders by delivery method */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Замовлення за способом доставки</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {Object.entries(ordersByDelivery).map(([method, count]) => (
+                <div key={method} className="flex items-center gap-4">
+                  <Package className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1">
+                    <div className="text-sm">{deliveryLabels[method] || method}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
