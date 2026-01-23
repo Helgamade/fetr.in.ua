@@ -150,24 +150,22 @@ const ThankYou = () => {
       }
     ];
 
-    // Если статус awaiting_payment и оплата не прошла (WayForPay), показываем "Прийнято"
+    // Если статус awaiting_payment и оплата не прошла (WayForPay), показываем полный список с "Прийнято" как текущим
     if (order.status === 'awaiting_payment' && order.payment?.method === 'wayforpay' && isPaymentPending) {
-      return [
-        {
-          id: "created",
-          title: "Замовлення оформлено",
-          description: "Ваше замовлення успішно створено",
-          icon: <CheckCircle className="w-5 h-5" />,
-          status: "completed"
-        },
-        {
-          id: "accepted",
-          title: "Прийнято",
-          description: "Замовлення прийнято в обробку",
-          icon: <Package className="w-5 h-5" />,
-          status: "current"
+      return allSteps.map((step, index) => {
+        let status: "completed" | "current" | "pending" = "pending";
+        const stepId = step.id;
+        
+        if (stepId === 'created') {
+          status = "completed";
+        } else if (stepId === 'accepted') {
+          status = "current";
+        } else {
+          status = "pending";
         }
-      ];
+        
+        return { ...step, status };
+      });
     }
 
     // Для других способов оплаты awaiting_payment означает, что заказ создан, но оплата ожидается
@@ -333,23 +331,31 @@ const ThankYou = () => {
                     completed: 'Залишити відгук',
                   };
                   
-                  const statusLabel = statusLabels[order.status] || 'Обробляється';
-                  const isPending = order.status === 'awaiting_payment' || order.status === 'processing' || order.status === 'accepted';
+                  // Для неуспешной оплаты WayForPay показываем "Прийнято" вместо "Очікує оплату"
+                  let displayStatus = order.status;
+                  let displayLabel = statusLabels[order.status] || 'Обробляється';
+                  
+                  if (order.status === 'awaiting_payment' && order.payment?.method === 'wayforpay' && isPaymentPending) {
+                    displayStatus = 'accepted';
+                    displayLabel = 'Прийнято';
+                  }
+                  
+                  const isPending = displayStatus === 'awaiting_payment' || displayStatus === 'processing' || displayStatus === 'accepted';
                   
                   return (
                     <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-                      order.status === 'awaiting_payment' 
+                      displayStatus === 'awaiting_payment' 
                         ? 'bg-yellow-500/10 text-yellow-600' 
                         : isPending
                         ? 'bg-primary/10 text-primary'
-                        : order.status === 'paid'
+                        : displayStatus === 'paid'
                         ? 'bg-green-500/10 text-green-600'
                         : 'bg-primary/10 text-primary'
                     }`}>
                       {isPending && <span className={`w-2 h-2 rounded-full animate-pulse ${
-                        order.status === 'awaiting_payment' ? 'bg-yellow-600' : 'bg-primary'
+                        displayStatus === 'awaiting_payment' ? 'bg-yellow-600' : 'bg-primary'
                       }`} />}
-                      {statusLabel}
+                      {displayLabel}
                     </div>
                   );
                 })()}
