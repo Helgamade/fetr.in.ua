@@ -22,12 +22,13 @@ import {
 } from 'recharts';
 
 const statusLabels: Record<string, string> = {
-  created: 'Нові',
-  processing: 'В обробці',
-  paid: 'Оплачені',
-  shipped: 'Відправлені',
-  in_transit: 'В дорозі',
-  completed: 'Виконані',
+  created: 'Замовлення оформлено',
+  accepted: 'Прийнято',
+  paid: 'Оплачено',
+  packed: 'Спаковано',
+  shipped: 'Відправлено',
+  arrived: 'Прибуло',
+  completed: 'Залишити відгук',
 };
 
 export function Dashboard() {
