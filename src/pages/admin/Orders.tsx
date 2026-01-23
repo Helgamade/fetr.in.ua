@@ -280,8 +280,8 @@ export function Orders() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {Object.entries(statusLabels).map(([value, label]) => (
-                                <SelectItem key={value} value={value}>{label}</SelectItem>
+                              {activeStatuses.map((status) => (
+                                <SelectItem key={status} value={status}>{statusLabels[status]}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>

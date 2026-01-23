@@ -158,7 +158,7 @@ export function EmailTemplates() {
       customerPhone: '+380501234567',
       customerEmail: testEmail,
       total: '1500.00',
-      status: 'Створено',
+      status: 'Замовлення оформлено',
       deliveryMethod: 'Нова Пошта',
       deliveryCity: 'Київ',
       deliveryWarehouse: 'Відділення №1',

@@ -275,17 +275,18 @@ router.get('/:id/history', optionalAuthenticate, async (req, res, next) => {
       
       if (log.action === 'ORDER_STATUS_CHANGED' && oldValues?.status && newValues?.status) {
         const statusMap = {
-          'created': 'Новый',
-          'accepted': 'Принят',
-          'processing': 'В обработке',
-          'awaiting_payment': 'Ожидает оплаты',
-          'paid': 'Оплаченный',
-          'assembled': 'Собран',
-          'packed': 'Упакован',
-          'shipped': 'Отправлен',
-          'in_transit': 'В дороге',
-          'arrived': 'Прибыл',
-          'completed': 'Выполнен'
+          'created': 'Замовлення оформлено',
+          'accepted': 'Прийнято',
+          'paid': 'Оплачено',
+          'packed': 'Спаковано',
+          'shipped': 'Відправлено',
+          'arrived': 'Прибуло',
+          'completed': 'Залишити відгук',
+          // Старые статусы (для обратной совместимости)
+          'processing': 'В обробці',
+          'awaiting_payment': 'Очікує оплату',
+          'assembled': 'Зібрано',
+          'in_transit': 'В дорозі',
         };
         
         text = `Статус изменен: с ${statusMap[oldValues.status] || oldValues.status} на ${statusMap[newValues.status] || newValues.status}`;
@@ -640,17 +641,18 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
             
             // Маппинг статусов на украинский
             const statusMap = {
-              'created': 'Новий',
+              'created': 'Замовлення оформлено',
               'accepted': 'Прийнято',
+              'paid': 'Оплачено',
+              'packed': 'Спаковано',
+              'shipped': 'Відправлено',
+              'arrived': 'Прибуло',
+              'completed': 'Залишити відгук',
+              // Старые статусы (для обратной совместимости)
               'processing': 'В обробці',
               'awaiting_payment': 'Очікує оплату',
-              'paid': 'Оплачено',
               'assembled': 'Зібрано',
-              'packed': 'Запаковано',
-              'shipped': 'Відправлено',
               'in_transit': 'В дорозі',
-              'arrived': 'Прибуло',
-              'completed': 'Виконано'
             };
             
             // Маппинг способов доставки на украинский
@@ -790,17 +792,18 @@ router.patch('/:id/status', async (req, res, next) => {
           
           // Статусы на украинском
           const statusMap = {
-            'created': 'Новий',
+            'created': 'Замовлення оформлено',
             'accepted': 'Прийнято',
+            'paid': 'Оплачено',
+            'packed': 'Спаковано',
+            'shipped': 'Відправлено',
+            'arrived': 'Прибуло',
+            'completed': 'Залишити відгук',
+            // Старые статусы (для обратной совместимости)
             'processing': 'В обробці',
             'awaiting_payment': 'Очікує оплату',
-            'paid': 'Оплачено',
             'assembled': 'Зібрано',
-            'packed': 'Запаковано',
-            'shipped': 'Відправлено',
             'in_transit': 'В дорозі',
-            'arrived': 'Прибуло',
-            'completed': 'Виконано'
           };
           
           const templateData = {

@@ -10,17 +10,18 @@ import { formatPrice } from '@/lib/utils';
 import { Helmet } from 'react-helmet-async';
 
 const statusMap: Record<string, { label: string; variant: any }> = {
-  created: { label: 'Новий', variant: 'default' },
+  created: { label: 'Замовлення оформлено', variant: 'default' },
   accepted: { label: 'Прийнято', variant: 'secondary' },
+  paid: { label: 'Оплачено', variant: 'success' },
+  packed: { label: 'Спаковано', variant: 'secondary' },
+  shipped: { label: 'Відправлено', variant: 'default' },
+  arrived: { label: 'Прибуло', variant: 'default' },
+  completed: { label: 'Залишити відгук', variant: 'success' },
+  // Старые статусы (для обратной совместимости)
   processing: { label: 'В обробці', variant: 'secondary' },
   awaiting_payment: { label: 'Очікує оплату', variant: 'warning' },
-  paid: { label: 'Оплачено', variant: 'success' },
   assembled: { label: 'Зібрано', variant: 'secondary' },
-  packed: { label: 'Запаковано', variant: 'secondary' },
-  shipped: { label: 'Відправлено', variant: 'default' },
   in_transit: { label: 'В дорозі', variant: 'default' },
-  arrived: { label: 'Прибуло', variant: 'default' },
-  completed: { label: 'Виконано', variant: 'success' },
 };
 
 export default function UserOrders() {

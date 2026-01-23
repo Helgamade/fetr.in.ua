@@ -25,31 +25,33 @@ import { useAuth } from '@/context/AuthContext';
 import { Helmet } from 'react-helmet-async';
 
 const statusLabels: Record<OrderStatus, string> = {
-  created: 'Новий',
+  created: 'Замовлення оформлено',
   accepted: 'Прийнято',
+  paid: 'Оплачено',
+  packed: 'Спаковано',
+  shipped: 'Відправлено',
+  arrived: 'Прибуло',
+  completed: 'Залишити відгук',
+  // Старые статусы (для обратной совместимости)
   processing: 'В обробці',
   awaiting_payment: 'Очікує оплату',
-  paid: 'Оплачено',
   assembled: 'Зібрано',
-  packed: 'Запаковано',
-  shipped: 'Відправлено',
   in_transit: 'В дорозі',
-  arrived: 'Прибуло',
-  completed: 'Виконано',
 };
 
 const statusColors: Record<OrderStatus, string> = {
   created: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   accepted: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-  processing: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  awaiting_payment: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
   paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  assembled: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
   packed: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
   shipped: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
-  in_transit: 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
   arrived: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
   completed: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+  // Старые статусы (для обратной совместимости)
+  processing: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  awaiting_payment: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+  assembled: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+  in_transit: 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
 };
 
 const deliveryLabels = {
