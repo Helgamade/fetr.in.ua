@@ -155,21 +155,62 @@ router.post('/create-payment', async (req, res, next) => {
     }
 
     // Создаем новый платеж только если нет сохраненного
-    // Используем оригинальный orderReference (WayForPay позволяет повторные платежи с тем же orderReference если предыдущий не прошел)
-    const paymentData = buildWayForPayData(orderData, configWithReturnUrl);
+    // Определяем уникальный orderReference для избежания Duplicate Order ID
+    // Если это первый платеж - используем оригинальный orderReference
+    // Если нужно создать новый - используем orderReference с суффиксом -2, -3 и т.д.
+    let orderReference = order.order_number;
+    let paymentAttempt = 1;
+    
+    // Проверяем, сколько раз уже создавался платеж для этого заказа
+    // Анализируем сохраненные данные или используем счетчик
+    if (order.payment_url) {
+      try {
+        const savedData = JSON.parse(order.payment_url);
+        const savedOrderRef = savedData.paymentData?.orderReference;
+        if (savedOrderRef) {
+          // Извлекаем номер попытки из orderReference (например, "305317-2" -> 2)
+          const match = savedOrderRef.match(/^(.+)-(\d+)$/);
+          if (match) {
+            paymentAttempt = parseInt(match[2], 10) + 1;
+            orderReference = `${order.order_number}-${paymentAttempt}`;
+            console.log('[WayForPay] Previous payment attempt found:', match[2], 'Creating attempt:', paymentAttempt);
+          } else {
+            // Первая попытка была без суффикса, следующая будет -2
+            paymentAttempt = 2;
+            orderReference = `${order.order_number}-${paymentAttempt}`;
+            console.log('[WayForPay] First payment was without suffix, creating second attempt with -2');
+          }
+        }
+      } catch (e) {
+        // Если не удалось распарсить, используем оригинальный orderReference
+        console.log('[WayForPay] Could not parse payment_url, using original orderReference');
+      }
+    }
+    
+    // Создаем orderData с уникальным orderReference
+    const orderDataWithRef = {
+      ...orderData,
+      id: orderReference
+    };
+    
+    const paymentData = buildWayForPayData(orderDataWithRef, configWithReturnUrl);
     const paymentUrl = 'https://secure.wayforpay.com/pay';
     
     console.log('[WayForPay] Creating new payment with orderReference:', paymentData.orderReference);
+    console.log('[WayForPay] Payment attempt number:', paymentAttempt);
 
     console.log('[WayForPay] Payment data created (full):', JSON.stringify(paymentData, null, 2));
     console.log('[WayForPay] Payment data returnUrl:', paymentData.returnUrl);
     console.log('[WayForPay] Payment data serviceUrl:', paymentData.serviceUrl);
     console.log('[WayForPay] Payment data orderReference:', paymentData.orderReference);
+    console.log('[WayForPay] Payment attempt:', paymentAttempt);
     
     // Сохраняем paymentUrl и paymentData в БД для повторного использования
+    // Сохраняем последнюю попытку (она будет использоваться для повторной оплаты)
     const paymentDataToSave = JSON.stringify({
       paymentUrl,
-      paymentData
+      paymentData,
+      paymentAttempt
     });
     
     await pool.execute(
@@ -180,6 +221,7 @@ router.post('/create-payment', async (req, res, next) => {
     );
     
     console.log('[WayForPay] Payment URL and data saved to database for reuse');
+    console.log('[WayForPay] Saved with orderReference:', paymentData.orderReference);
     console.log('[WayForPay] ===== CREATE PAYMENT END =====');
     console.log('========================================');
 
