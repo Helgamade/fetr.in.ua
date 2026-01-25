@@ -473,8 +473,24 @@ const ThankYou = () => {
                                   return;
                                 }
                                 
+                                // Если repayUrl нет, проверяем статус платежа через API
+                                // (может быть, callback еще не пришел или был пропущен)
+                                console.log('[ThankYou] repayUrl not found, checking payment status...');
+                                try {
+                                  const { wayforpayAPI } = await import("@/lib/api");
+                                  const statusResponse = await wayforpayAPI.checkPaymentStatus(order.id);
+                                  
+                                  if (statusResponse.repayUrl) {
+                                    console.log('[ThankYou] RepayUrl found via status check:', statusResponse.repayUrl);
+                                    window.location.href = statusResponse.repayUrl;
+                                    return;
+                                  }
+                                } catch (statusError) {
+                                  console.log('[ThankYou] Status check failed, will create new payment:', statusError);
+                                }
+                                
                                 // Fallback: создаем новый платеж если repayUrl нет
-                                console.log('[ThankYou] repayUrl not found, creating new payment');
+                                console.log('[ThankYou] Creating new payment (repayUrl not available)');
                                 const { wayforpayAPI } = await import("@/lib/api");
                                 const paymentResponse = await wayforpayAPI.createPayment(order.id);
                                 

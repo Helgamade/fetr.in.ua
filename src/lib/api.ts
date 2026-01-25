@@ -592,6 +592,10 @@ export const wayforpayAPI = {
     method: 'POST',
     body: JSON.stringify({ orderId }),
   }),
+  checkPaymentStatus: (orderId: string) => fetchAPI<{ repayUrl: string | null; status: string; message?: string }>('/wayforpay/check-status', {
+    method: 'POST',
+    body: JSON.stringify({ orderId }),
+  }),
 };
 
 // Promo Code API

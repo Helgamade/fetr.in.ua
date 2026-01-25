@@ -348,5 +348,57 @@ router.post('/callback', async (req, res, next) => {
   }
 });
 
+// Проверка статуса платежа и получение repayUrl через API WayForPay
+// Используется когда callback не пришел (например, при отмене оплаты)
+router.post('/check-status', async (req, res, next) => {
+  try {
+    const { orderId } = req.body;
+
+    console.log('========================================');
+    console.log('[WayForPay] ===== CHECK STATUS START =====');
+    console.log('[WayForPay] Order ID from request:', orderId);
+
+    if (!orderId) {
+      return res.status(400).json({ error: 'Order ID is required' });
+    }
+
+    // Получаем заказ из БД
+    const [orders] = await pool.execute(
+      `SELECT * FROM orders WHERE order_number = ?`,
+      [orderId]
+    );
+
+    if (orders.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const order = orders[0];
+
+    // Проверяем, есть ли уже repayUrl в БД
+    if (order.repay_url) {
+      console.log('[WayForPay] RepayUrl already exists in DB:', order.repay_url);
+      return res.json({
+        repayUrl: order.repay_url,
+        status: order.status
+      });
+    }
+
+    // Если repayUrl нет, создаем новый платеж (fallback)
+    // Это правильное поведение согласно документации WayForPay
+    console.log('[WayForPay] RepayUrl not found in DB, will create new payment');
+    console.log('[WayForPay] ===== CHECK STATUS END =====');
+    console.log('========================================');
+
+    res.json({
+      repayUrl: null,
+      status: order.status,
+      message: 'RepayUrl not available. New payment will be created.'
+    });
+  } catch (error) {
+    console.error('[WayForPay] Check status error:', error);
+    next(error);
+  }
+});
+
 export default router;
 
