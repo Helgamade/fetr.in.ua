@@ -131,38 +131,11 @@ router.post('/create-payment', async (req, res, next) => {
       returnUrl: configWithReturnUrl.returnUrl
     });
 
-    // Проверяем, есть ли уже сохраненный payment_url для этого заказа
-    // Если есть - используем его (чтобы избежать Duplicate Order ID)
-    // Проверяем наличие поля (может не существовать, если миграция не выполнена)
-    const hasPaymentUrl = order.hasOwnProperty('payment_url') && order.payment_url !== null && order.payment_url !== undefined;
-    
-    if (hasPaymentUrl) {
-      console.log('[WayForPay] Found existing payment_url in DB, using it to avoid Duplicate Order ID');
-      console.log('[WayForPay] Existing payment_url:', order.payment_url.substring(0, 100) + '...');
-      
-      try {
-        // Парсим сохраненные данные платежа
-        const savedPaymentData = JSON.parse(order.payment_url);
-        console.log('[WayForPay] Parsed saved payment data, orderReference:', savedPaymentData.paymentData?.orderReference);
-        
-        res.json({
-          paymentUrl: savedPaymentData.paymentUrl || 'https://secure.wayforpay.com/pay',
-          paymentData: savedPaymentData.paymentData,
-          fromCache: true
-        });
-        return;
-      } catch (e) {
-        console.error('[WayForPay] Error parsing saved payment_url, will create new payment:', e);
-        // Продолжаем создание нового платежа
-      }
-    } else {
-      console.log('[WayForPay] payment_url field not found or empty (migration may not be executed)');
-    }
-
-    // Создаем новый платеж только если нет сохраненного
+    // ВАЖНО: WayForPay НЕ позволяет повторно использовать тот же orderReference
+    // Даже если сохранен paymentData, нужно ВСЕГДА создавать новый платеж с уникальным orderReference
     // Определяем уникальный orderReference для избежания Duplicate Order ID
     // Если это первый платеж - используем оригинальный orderReference
-    // Если нужно создать новый - используем orderReference с суффиксом -2, -3 и т.д.
+    // Если повторная попытка - используем orderReference с суффиксом -2, -3 и т.д.
     let orderReference = order.order_number;
     let paymentAttempt = 1;
     

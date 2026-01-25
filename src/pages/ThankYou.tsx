@@ -473,55 +473,13 @@ const ThankYou = () => {
                                   return;
                                 }
                                 
-                                // Приоритет 2: Используем сохраненный paymentUrl и paymentData (первая ссылка на оплату)
-                                if (order.payment.paymentUrl && order.payment.paymentData) {
-                                  console.log('[ThankYou] Using saved paymentUrl and paymentData from first payment');
-                                  console.log('[ThankYou] PaymentUrl:', order.payment.paymentUrl);
-                                  
-                                  const form = document.createElement('form');
-                                  form.method = 'POST';
-                                  form.action = order.payment.paymentUrl;
-                                  
-                                  Object.entries(order.payment.paymentData).forEach(([key, value]) => {
-                                    if (Array.isArray(value)) {
-                                      value.forEach((item, index) => {
-                                        const input = document.createElement('input');
-                                        input.type = 'hidden';
-                                        input.name = `${key}[]`;
-                                        input.value = String(item);
-                                        form.appendChild(input);
-                                      });
-                                    } else {
-                                      const input = document.createElement('input');
-                                      input.type = 'hidden';
-                                      input.name = key;
-                                      input.value = String(value);
-                                      form.appendChild(input);
-                                    }
-                                  });
-                                  
-                                  document.body.appendChild(form);
-                                  form.submit();
-                                  return;
-                                }
+                                // ВАЖНО: WayForPay НЕ позволяет повторно использовать тот же orderReference
+                                // Даже если сохранен paymentData, нужно создавать новый платеж с уникальным orderReference
+                                // Поэтому НЕ используем сохраненный paymentData, а всегда создаем новый платеж
                                 
-                                // Приоритет 3: Проверяем статус платежа через API
-                                console.log('[ThankYou] No saved payment data, checking payment status...');
-                                try {
-                                  const { wayforpayAPI } = await import("@/lib/api");
-                                  const statusResponse = await wayforpayAPI.checkPaymentStatus(order.id);
-                                  
-                                  if (statusResponse.repayUrl) {
-                                    console.log('[ThankYou] RepayUrl found via status check:', statusResponse.repayUrl);
-                                    window.location.href = statusResponse.repayUrl;
-                                    return;
-                                  }
-                                } catch (statusError) {
-                                  console.log('[ThankYou] Status check failed, will create new payment:', statusError);
-                                }
-                                
-                                // Приоритет 4: Создаем новый платеж (будет использован сохраненный или создан новый с уникальным orderReference)
-                                console.log('[ThankYou] Creating new payment (no saved payment data available)');
+                                // Создаем новый платеж с уникальным orderReference
+                                // Сервер автоматически добавит суффикс -2, -3 и т.д. при необходимости
+                                console.log('[ThankYou] Creating new payment with unique orderReference');
                                 const { wayforpayAPI } = await import("@/lib/api");
                                 const paymentResponse = await wayforpayAPI.createPayment(order.id);
                                 
