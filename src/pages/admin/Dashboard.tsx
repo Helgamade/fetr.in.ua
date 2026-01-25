@@ -112,7 +112,7 @@ export function Dashboard() {
   
   // Получаем названия способов оплаты из базы данных
   const paymentWayForPayTitle = texts.find(t => t.key === 'checkout.payment.wayforpay.title')?.value || 'Онлайн оплата';
-  const paymentNalojkaTitle = texts.find(t => t.key === 'checkout.payment.nalojka.title')?.value || 'Накладений платіж';
+  const paymentNalojkaTitle = texts.find(t => t.key === 'checkout.payment.nalojka.title')?.value || 'Оплата при отриманні';
   const paymentFopTitle = texts.find(t => t.key === 'checkout.payment.fop.title')?.value || 'Оплата на рахунок ФОП';
   
   const paymentLabels: Record<string, string> = {

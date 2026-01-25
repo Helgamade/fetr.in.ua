@@ -453,7 +453,7 @@ export function OrderDetail() {
             </h2>
             <div className="text-sm">
               {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
-              {order.payment.method === 'nalojka' && 'Накладений платіж'}
+              {order.payment.method === 'nalojka' && 'Оплата при отриманні'}
               {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
             </div>
           </div>

@@ -414,7 +414,7 @@ const ThankYou = () => {
                         {order.payment.method === 'fopiban' && <FOPPaymentLogo className="w-5 h-5" />}
                         <span className="font-medium">
                           {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
-                          {order.payment.method === 'nalojka' && 'Накладений платіж'}
+                          {order.payment.method === 'nalojka' && 'Оплата при отриманні'}
                           {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
                           {!['wayforpay', 'nalojka', 'fopiban'].includes(order.payment.method) && `Спосіб оплати: ${order.payment.method}`}
                         </span>

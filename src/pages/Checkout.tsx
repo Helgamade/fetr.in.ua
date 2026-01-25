@@ -39,7 +39,7 @@ const Checkout = () => {
   // Получаем тексты способов оплаты из базы данных
   const paymentWayForPayTitle = texts.find(t => t.key === 'checkout.payment.wayforpay.title')?.value || 'Онлайн оплата';
   const paymentWayForPayDescription = texts.find(t => t.key === 'checkout.payment.wayforpay.description')?.value || 'Безпечна оплата карткою через WayForPay';
-  const paymentNalojkaTitle = texts.find(t => t.key === 'checkout.payment.nalojka.title')?.value || 'Накладений платіж';
+  const paymentNalojkaTitle = texts.find(t => t.key === 'checkout.payment.nalojka.title')?.value || 'Оплата при отриманні';
   const paymentNalojkaDescription = texts.find(t => t.key === 'checkout.payment.nalojka.description')?.value || 'Оплата при отриманні (+20 грн комісія)';
   const paymentFopTitle = texts.find(t => t.key === 'checkout.payment.fop.title')?.value || 'Оплата на рахунок ФОП';
   const paymentFopDescription = texts.find(t => t.key === 'checkout.payment.fop.description')?.value || 'Оплата на банківський рахунок ФОП';

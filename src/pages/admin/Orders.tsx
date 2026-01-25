@@ -258,7 +258,7 @@ export function Orders() {
                             <CreditCard className="h-4 w-4 mt-0.5 flex-shrink-0" />
                             <div>
                               {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
-                              {order.payment.method === 'nalojka' && 'Накладений платіж'}
+                              {order.payment.method === 'nalojka' && 'Оплата при отриманні'}
                               {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
                             </div>
                           </div>

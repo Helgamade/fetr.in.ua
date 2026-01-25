@@ -440,7 +440,7 @@ export function Settings() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label>{texts.find(t => t.key === 'checkout.payment.nalojka.title')?.value || 'Накладений платіж'}</Label>
+                      <Label>{texts.find(t => t.key === 'checkout.payment.nalojka.title')?.value || 'Оплата при отриманні'}</Label>
                       <p className="text-sm text-muted-foreground">{texts.find(t => t.key === 'checkout.payment.nalojka.description')?.value || 'Оплата при отриманні'}</p>
                     </div>
                     <Switch
