@@ -34,7 +34,6 @@ const statusLabels: Record<OrderStatus, string> = {
   completed: 'Залишити відгук',
   // Старые статусы (для обратной совместимости)
   processing: 'В обробці',
-  awaiting_payment: 'Очікує оплату',
   assembled: 'Зібрано',
   in_transit: 'В дорозі',
 };
@@ -49,7 +48,6 @@ const statusColors: Record<OrderStatus, string> = {
   completed: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
   // Старые статусы (для обратной совместимости)
   processing: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  awaiting_payment: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
   assembled: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
   in_transit: 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
 };

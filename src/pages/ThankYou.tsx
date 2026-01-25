@@ -50,18 +50,19 @@ const ThankYou = () => {
     // Обновляем данные каждые 5 секунд, если оплата не прошла (для WayForPay)
     refetchInterval: (query) => {
       const orderData = query.state.data;
-      if (orderData?.status === 'awaiting_payment' && orderData?.payment?.method === 'wayforpay') {
+      // Обновляем, если WayForPay и payment_status не 'paid'
+      if (orderData?.payment?.method === 'wayforpay' && orderData?.payment?.status !== 'paid') {
         return 5000; // Обновляем каждые 5 секунд
       }
       return false;
     },
   });
 
-  // Определяем статус оплаты
-  // Для WayForPay: если статус awaiting_payment - оплата не прошла
-  // Для других способов оплаты: если статус не awaiting_payment - все ок
-  const isPaymentPending = order?.status === 'awaiting_payment' && order?.payment?.method === 'wayforpay';
-  const isPaymentPaid = order?.status === 'paid' || (order?.status !== 'awaiting_payment' && order?.payment?.method !== 'wayforpay');
+  // Определяем статус оплаты на основе payment_status
+  // Если payment_status = 'paid' - оплата прошла
+  // Если payment_status = 'not_paid' или отсутствует - оплата не прошла
+  const isPaymentPending = order?.payment?.method === 'wayforpay' && order?.payment?.status !== 'paid';
+  const isPaymentPaid = order?.payment?.status === 'paid' || (order?.payment?.method !== 'wayforpay' && order?.status === 'paid');
   
   // Если заказ найден, но нет trackingToken в URL - это может быть возврат от WayForPay
   // В этом случае показываем статус на основе данных заказа
@@ -150,8 +151,8 @@ const ThankYou = () => {
       }
     ];
 
-    // Если статус awaiting_payment и оплата не прошла (WayForPay), показываем полный список с "Прийнято" как текущим
-    if (order.status === 'awaiting_payment' && order.payment?.method === 'wayforpay' && isPaymentPending) {
+    // Если WayForPay и оплата не прошла, показываем полный список с "Прийнято" как текущим
+    if (order.payment?.method === 'wayforpay' && isPaymentPending) {
       return allSteps.map((step, index) => {
         let status: "completed" | "current" | "pending" = "pending";
         const stepId = step.id;
@@ -168,9 +169,9 @@ const ThankYou = () => {
       });
     }
 
-    // Для других способов оплаты awaiting_payment означает, что заказ создан, но оплата ожидается
+    // Для других способов оплаты, если заказ создан, но оплата ожидается
     // В этом случае показываем created как completed
-    if (order.status === 'awaiting_payment' && order.payment?.method !== 'wayforpay') {
+    if (order.payment?.method !== 'wayforpay' && order.status === 'created') {
       const createdIndex = statusOrder.indexOf('created');
       return allSteps.map((step, index) => {
         let status: "completed" | "current" | "pending" = "pending";

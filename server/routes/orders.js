@@ -355,7 +355,6 @@ router.get('/:id/history', optionalAuthenticate, async (req, res, next) => {
           'completed': 'Залишити відгук',
           // Старые статусы (для обратной совместимости)
           'processing': 'В обробці',
-          'awaiting_payment': 'Очікує оплату',
           'assembled': 'Зібрано',
           'in_transit': 'В дорозі',
         };

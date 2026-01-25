@@ -110,7 +110,6 @@ export type OrderStatus =
   | 'created'
   | 'accepted'
   | 'processing'
-  | 'awaiting_payment'
   | 'paid'
   | 'assembled'
   | 'packed'

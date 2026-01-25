@@ -19,7 +19,6 @@ const statusMap: Record<string, { label: string; variant: any }> = {
   completed: { label: 'Залишити відгук', variant: 'success' },
   // Старые статусы (для обратной совместимости)
   processing: { label: 'В обробці', variant: 'secondary' },
-  awaiting_payment: { label: 'Очікує оплату', variant: 'warning' },
   assembled: { label: 'Зібрано', variant: 'secondary' },
   in_transit: { label: 'В дорозі', variant: 'default' },
 };
