@@ -315,46 +315,30 @@ const ThankYou = () => {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-muted-foreground">Статус</div>
+                <div className="text-sm text-muted-foreground">Статус оплати</div>
                 {order && (() => {
-                  const statusLabels: Record<OrderStatus, string> = {
-                    created: 'Замовлення оформлено',
-                    accepted: 'Прийнято',
-                    processing: 'В обробці',
-                    awaiting_payment: 'Очікує оплату',
-                    paid: 'Оплачено',
-                    assembled: 'Зібрано',
-                    packed: 'Спаковано',
-                    shipped: 'Відправлено',
-                    in_transit: 'В дорозі',
-                    arrived: 'Прибуло',
-                    completed: 'Залишити відгук',
+                  const paymentStatusLabels: Record<string, string> = {
+                    'not_paid': 'Не оплачено',
+                    'cash_on_delivery': 'Післяплата',
+                    'paid': 'Оплачено',
                   };
                   
-                  // Для неуспешной оплаты WayForPay показываем "Прийнято" вместо "Очікує оплату"
-                  let displayStatus = order.status;
-                  let displayLabel = statusLabels[order.status] || 'Обробляється';
+                  // Используем payment_status если есть, иначе определяем по order.status
+                  const paymentStatus = order.payment?.status;
+                  let displayLabel = paymentStatus 
+                    ? (paymentStatusLabels[paymentStatus] || 'Не оплачено')
+                    : (order.status === 'paid' ? 'Оплачено' : 'Не оплачено');
                   
-                  if (order.status === 'awaiting_payment' && order.payment?.method === 'wayforpay' && isPaymentPending) {
-                    displayStatus = 'accepted';
-                    displayLabel = 'Прийнято';
-                  }
-                  
-                  const isPending = displayStatus === 'awaiting_payment' || displayStatus === 'processing' || displayStatus === 'accepted';
+                  const isPaid = paymentStatus === 'paid' || (!paymentStatus && order.status === 'paid');
                   
                   return (
                     <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-                      displayStatus === 'awaiting_payment' 
-                        ? 'bg-yellow-500/10 text-yellow-600' 
-                        : isPending
-                        ? 'bg-primary/10 text-primary'
-                        : displayStatus === 'paid'
-                        ? 'bg-green-500/10 text-green-600'
-                        : 'bg-primary/10 text-primary'
+                      isPaid
+                        ? 'bg-green-100 text-green-800'
+                        : paymentStatus === 'cash_on_delivery'
+                        ? 'bg-orange-100 text-orange-800'
+                        : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {isPending && <span className={`w-2 h-2 rounded-full animate-pulse ${
-                        displayStatus === 'awaiting_payment' ? 'bg-yellow-600' : 'bg-primary'
-                      }`} />}
                       {displayLabel}
                     </div>
                   );

@@ -594,10 +594,9 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
       // Helper function to convert undefined/empty to null
       const toNull = (val) => (val === undefined || val === null || val === '') ? null : val;
       
-      // Determine initial order status based on payment method
-      // For wayforpay payment, status is 'awaiting_payment' until WayForPay confirms payment
-      // For other payment methods, status is 'accepted' (замовлення прийнято)
-      const initialStatus = payment.method === 'wayforpay' ? 'awaiting_payment' : 'accepted';
+      // Determine initial order status
+      // Все заказы создаются со статусом 'created' (замовлення оформлено)
+      const initialStatus = 'created';
       
       // Convert payment method: 'wayforpay' -> 'wayforpay' for database
       // Маппинг способов оплаты: 'wayforpay' -> 'wayforpay', 'nalojka' -> 'nalojka', 'fopiban' -> 'fopiban'

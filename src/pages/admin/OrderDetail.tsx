@@ -23,6 +23,7 @@ import { Order, OrderStatus } from '@/types/store';
 import { useUpdateOrderStatus, useUpdateOrder } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { ordersAPI } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 // Только рабочие статусы
 const statusLabels: Record<OrderStatus, string> = {
@@ -81,6 +82,7 @@ export function OrderDetail() {
   const { data: products = [] } = useProducts();
   const updateStatus = useUpdateOrderStatus();
   const updateOrder = useUpdateOrder();
+  const { toast } = useToast();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deliveryTtn, setDeliveryTtn] = useState('');
@@ -444,98 +446,6 @@ export function OrderDetail() {
             </div>
           </div>
 
-          {/* Payment */}
-          <div className="bg-card rounded-lg border p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Оплата
-            </h2>
-            <div className="space-y-4">
-              <div className="text-sm">
-                {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
-                {order.payment.method === 'nalojka' && 'Накладений платіж'}
-                {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
-              </div>
-              
-              {/* Статус оплаты */}
-              <div className="pt-4 border-t">
-                <label className="text-sm font-medium mb-2 block">Статус оплати</label>
-                <Select
-                  value={paymentStatus}
-                  onValueChange={(value) => setPaymentStatus(value as 'not_paid' | 'cash_on_delivery' | 'paid')}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="not_paid">Не оплачено</SelectItem>
-                    <SelectItem value="cash_on_delivery">Післяплата</SelectItem>
-                    <SelectItem value="paid">Оплачено</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {/* Сумма оплаты */}
-              <div className="pt-2">
-                <label className="text-sm font-medium mb-2 block">Сума оплати (₴)</label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={paidAmount}
-                  onChange={(e) => setPaidAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full"
-                />
-              </div>
-              
-              {/* Кнопка сохранения */}
-              <div className="pt-2">
-                <Button
-                  onClick={() => {
-                    if (!order) return;
-                    updateOrder.mutate(
-                      {
-                        id: order.id,
-                        data: {
-                          customer: order.customer,
-                          delivery: order.delivery,
-                          payment: {
-                            ...order.payment,
-                            status: paymentStatus,
-                            paidAmount: paidAmount ? parseFloat(paidAmount) : null
-                          },
-                          status: order.status,
-                          subtotal: order.subtotal,
-                          discount: order.discount,
-                          deliveryCost: order.deliveryCost,
-                          total: order.total,
-                          deliveryTtn: order.deliveryTtn,
-                        },
-                      },
-                      {
-                        onSuccess: () => {
-                          setOrder(prev => prev ? {
-                            ...prev,
-                            payment: {
-                              ...prev.payment,
-                              status: paymentStatus,
-                              paidAmount: paidAmount ? parseFloat(paidAmount) : null
-                            }
-                          } : null);
-                        },
-                      }
-                    );
-                  }}
-                  variant="outline"
-                  size="default"
-                  className="w-full"
-                >
-                  Зберегти зміни оплати
-                </Button>
-              </div>
-            </div>
-          </div>
 
           {/* Comment */}
           {order.comment && (
@@ -692,6 +602,110 @@ export function OrderDetail() {
               <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                 <span>Всього</span>
                 <span>₴{order.total}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment */}
+          <div className="bg-card rounded-lg border p-6">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Оплата
+            </h2>
+            <div className="space-y-4">
+              <div className="text-sm">
+                {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
+                {order.payment.method === 'nalojka' && 'Накладений платіж'}
+                {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
+              </div>
+              
+              {/* Статус оплаты */}
+              <div className="pt-4 border-t">
+                <label className="text-sm font-medium mb-2 block">Статус оплати</label>
+                <Select
+                  value={paymentStatus}
+                  onValueChange={(value) => setPaymentStatus(value as 'not_paid' | 'cash_on_delivery' | 'paid')}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="not_paid">Не оплачено</SelectItem>
+                    <SelectItem value="cash_on_delivery">Післяплата</SelectItem>
+                    <SelectItem value="paid">Оплачено</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Сумма оплаты */}
+              <div className="pt-2">
+                <label className="text-sm font-medium mb-2 block">Сума оплати (₴)</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={paidAmount}
+                  onChange={(e) => setPaidAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full"
+                />
+              </div>
+              
+              {/* Кнопка сохранения */}
+              <div className="pt-2">
+                <Button
+                  onClick={() => {
+                    if (!order) return;
+                    updateOrder.mutate(
+                      {
+                        id: order.id,
+                        data: {
+                          customer: order.customer,
+                          delivery: order.delivery,
+                          payment: {
+                            ...order.payment,
+                            status: paymentStatus,
+                            paidAmount: paidAmount ? parseFloat(paidAmount) : null
+                          },
+                          status: order.status,
+                          subtotal: order.subtotal,
+                          discount: order.discount,
+                          deliveryCost: order.deliveryCost,
+                          total: order.total,
+                          deliveryTtn: order.deliveryTtn,
+                        },
+                      },
+                      {
+                        onSuccess: () => {
+                          setOrder(prev => prev ? {
+                            ...prev,
+                            payment: {
+                              ...prev.payment,
+                              status: paymentStatus,
+                              paidAmount: paidAmount ? parseFloat(paidAmount) : null
+                            }
+                          } : null);
+                          toast({
+                            title: 'Збережено',
+                            description: 'Дані оплати оновлено',
+                          });
+                        },
+                        onError: (error: Error) => {
+                          toast({
+                            title: 'Помилка',
+                            description: error.message || 'Не вдалося зберегти дані оплати',
+                            variant: 'destructive',
+                          });
+                        },
+                      }
+                    );
+                  }}
+                  variant="outline"
+                  size="default"
+                  className="w-full"
+                >
+                  Зберегти зміни оплати
+                </Button>
               </div>
             </div>
           </div>
