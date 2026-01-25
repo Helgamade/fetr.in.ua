@@ -243,7 +243,8 @@ router.post('/callback', async (req, res, next) => {
       status: data.transactionStatus,
       amount: data.amount,
       reason: data.reason,
-      reasonCode: data.reasonCode
+      reasonCode: data.reasonCode,
+      repayUrl: data.repayUrl
     });
     
     // Обновление статуса в БД
@@ -260,15 +261,25 @@ router.post('/callback', async (req, res, next) => {
       console.log('[WayForPay] Unknown transaction status:', data.transactionStatus);
     }
     
-    // Обновляем заказ в БД
+    // Сохраняем repayUrl если он есть (при неуспешной оплате)
+    // Согласно документации: repayUrl передается при неуспешной оплате
+    const repayUrl = data.repayUrl || null;
+    if (repayUrl) {
+      console.log('[WayForPay] RepayUrl received:', repayUrl);
+    }
+    
+    // Обновляем заказ в БД (включая repayUrl)
     const [updateResult] = await pool.execute(
       `UPDATE orders 
-       SET status = ?, updated_at = CURRENT_TIMESTAMP 
+       SET status = ?, repay_url = ?, updated_at = CURRENT_TIMESTAMP 
        WHERE order_number = ?`,
-      [orderStatus, data.orderReference]
+      [orderStatus, repayUrl, data.orderReference]
     );
     
     console.log('[WayForPay] Order status updated:', data.orderReference, 'to', orderStatus, 'Rows affected:', updateResult.affectedRows);
+    if (repayUrl) {
+      console.log('[WayForPay] RepayUrl saved to database');
+    }
     
     // ВАЖНО: Ответ мерчанта (из документации)
     // orderReference;status;time

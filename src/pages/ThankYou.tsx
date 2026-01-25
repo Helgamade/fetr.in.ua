@@ -466,6 +466,15 @@ const ThankYou = () => {
                           <Button
                             onClick={async () => {
                               try {
+                                // Используем repayUrl если он есть (от WayForPay при неуспешной оплате)
+                                if (order.payment.repayUrl) {
+                                  console.log('[ThankYou] Using repayUrl from WayForPay:', order.payment.repayUrl);
+                                  window.location.href = order.payment.repayUrl;
+                                  return;
+                                }
+                                
+                                // Fallback: создаем новый платеж если repayUrl нет
+                                console.log('[ThankYou] repayUrl not found, creating new payment');
                                 const { wayforpayAPI } = await import("@/lib/api");
                                 const paymentResponse = await wayforpayAPI.createPayment(order.id);
                                 

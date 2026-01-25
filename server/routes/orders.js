@@ -68,7 +68,8 @@ router.get('/', async (req, res, next) => {
       };
 
       order.payment = {
-        method: order.payment_method
+        method: order.payment_method,
+        repayUrl: order.repay_url || undefined
       };
 
       // Include comment if it exists
@@ -96,6 +97,7 @@ router.get('/', async (req, res, next) => {
       delete order.delivery_post_index;
       delete order.delivery_address;
       delete order.payment_method;
+      delete order.repay_url;
 
       // Convert dates
       order.createdAt = new Date(order.created_at);
@@ -195,7 +197,8 @@ router.get('/track/:token', async (req, res, next) => {
     };
     
     order.payment = {
-      method: order.payment_method
+      method: order.payment_method,
+      repayUrl: order.repay_url || undefined
     };
 
     if (order.promo_code) {
@@ -216,6 +219,7 @@ router.get('/track/:token', async (req, res, next) => {
     delete order.delivery_post_index;
     delete order.delivery_address;
     delete order.payment_method;
+    delete order.repay_url;
 
     // Сохраняем tracking_token для безопасной ссылки отслеживания
     if (order.tracking_token) {
@@ -407,7 +411,8 @@ router.get('/:id', async (req, res, next) => {
       address: order.delivery_address || undefined
     };
     order.payment = {
-      method: order.payment_method
+      method: order.payment_method,
+      repayUrl: order.repay_url || undefined
     };
     console.log('[Get Order] Payment method from DB:', order.payment_method, '-> Response:', order.payment.method);
 
