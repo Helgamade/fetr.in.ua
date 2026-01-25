@@ -29,7 +29,6 @@ import { useProducts } from '@/hooks/useProducts';
 
 // Только рабочие статусы
 const statusLabels: Record<OrderStatus, string> = {
-  created: 'Замовлення оформлено',
   accepted: 'Прийнято',
   paid: 'Оплачено',
   packed: 'Спаковано',
@@ -37,13 +36,13 @@ const statusLabels: Record<OrderStatus, string> = {
   arrived: 'Прибуло',
   completed: 'Залишити відгук',
   // Старые статусы (для обратной совместимости, но не отображаются в UI)
+  created: 'Замовлення оформлено',
   processing: 'В обробці',
   assembled: 'Зібрано',
   in_transit: 'В дорозі',
 };
 
 const statusColors: Record<OrderStatus, string> = {
-  created: 'bg-blue-100 text-blue-800',
   accepted: 'bg-purple-100 text-purple-800',
   paid: 'bg-green-100 text-green-800',
   packed: 'bg-teal-100 text-teal-800',
@@ -51,13 +50,14 @@ const statusColors: Record<OrderStatus, string> = {
   arrived: 'bg-emerald-100 text-emerald-800',
   completed: 'bg-gray-100 text-gray-800',
   // Старые статусы (для обратной совместимости)
+  created: 'bg-blue-100 text-blue-800',
   processing: 'bg-yellow-100 text-yellow-800',
   assembled: 'bg-cyan-100 text-cyan-800',
   in_transit: 'bg-violet-100 text-violet-800',
 };
 
-// Только рабочие статусы для отображения
-const activeStatuses: OrderStatus[] = ['created', 'accepted', 'paid', 'packed', 'shipped', 'arrived', 'completed'];
+// Только рабочие статусы для отображения (автоматические статусы из orders.status)
+const activeStatuses: OrderStatus[] = ['accepted', 'paid', 'packed', 'shipped', 'arrived', 'completed'];
 
 const deliveryLabels = {
   nova_poshta: 'Нова Пошта',

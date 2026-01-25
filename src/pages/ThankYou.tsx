@@ -103,16 +103,10 @@ const ThankYou = () => {
   const getTimelineSteps = (): TimelineStep[] => {
     if (!order) return [];
 
-    const statusOrder: OrderStatus[] = ['created', 'accepted', 'paid', 'packed', 'shipped', 'arrived', 'completed'];
+    const statusOrder: OrderStatus[] = ['accepted', 'paid', 'packed', 'shipped', 'arrived', 'completed'];
     const currentStatusIndex = statusOrder.indexOf(order.status);
     
     const allSteps: Omit<TimelineStep, 'status'>[] = [
-      {
-        id: "created",
-        title: "Замовлення оформлено",
-        description: "Ваше замовлення успішно створено",
-        icon: <CheckCircle className="w-5 h-5" />
-      },
       {
         id: "accepted",
         title: "Прийнято",
@@ -157,9 +151,7 @@ const ThankYou = () => {
         let status: "completed" | "current" | "pending" = "pending";
         const stepId = step.id;
         
-        if (stepId === 'created') {
-          status = "completed";
-        } else if (stepId === 'accepted') {
+        if (stepId === 'accepted') {
           status = "current";
         } else {
           status = "pending";
@@ -169,13 +161,13 @@ const ThankYou = () => {
       });
     }
 
-    // Для других способов оплаты, если заказ создан, но оплата ожидается
-    // В этом случае показываем created как completed
-    if (order.payment?.method !== 'wayforpay' && order.status === 'created') {
-      const createdIndex = statusOrder.indexOf('created');
+    // Для других способов оплаты, если заказ принят, но оплата ожидается
+    // В этом случае показываем accepted как completed
+    if (order.payment?.method !== 'wayforpay' && order.status === 'accepted') {
+      const acceptedIndex = statusOrder.indexOf('accepted');
       return allSteps.map((step, index) => {
         let status: "completed" | "current" | "pending" = "pending";
-        if (index === createdIndex) {
+        if (index === acceptedIndex) {
           status = "completed";
         } else if (index === statusOrder.indexOf('paid')) {
           status = "current";
