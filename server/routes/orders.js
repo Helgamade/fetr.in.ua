@@ -71,6 +71,12 @@ router.get('/', async (req, res, next) => {
         method: order.payment_method,
         repayUrl: order.repay_url || undefined
       };
+      
+      // Логирование repay_url для отладки (только для WayForPay заказов)
+      if (order.payment_method === 'wayforpay') {
+        console.log('[Get Orders] Order', order.order_number, '- repay_url from DB:', order.repay_url);
+        console.log('[Get Orders] Order', order.order_number, '- repayUrl in response:', order.payment.repayUrl);
+      }
 
       // Include comment if it exists
       if (order.comment) {
@@ -200,6 +206,14 @@ router.get('/track/:token', async (req, res, next) => {
       method: order.payment_method,
       repayUrl: order.repay_url || undefined
     };
+    
+    // Логирование repay_url для отладки
+    console.log('[Get Order] Payment data loaded:');
+    console.log('[Get Order]   - payment_method:', order.payment_method);
+    console.log('[Get Order]   - repay_url from DB:', order.repay_url);
+    console.log('[Get Order]   - repayUrl in response:', order.payment.repayUrl);
+    console.log('[Get Order]   - repay_url is NULL?', order.repay_url === null);
+    console.log('[Get Order]   - repay_url is undefined?', order.repay_url === undefined);
 
     if (order.promo_code) {
       order.promoCode = order.promo_code;

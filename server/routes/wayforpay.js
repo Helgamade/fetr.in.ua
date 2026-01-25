@@ -167,12 +167,14 @@ router.post('/callback', async (req, res, next) => {
       return res.status(400).json({ error: 'Empty body' });
     }
     
-    // Парсим JSON из ключа
+    // Парсим JSON из ключа или используем req.body напрямую
     let data;
     const firstKey = keys[0];
     
     console.log('[WayForPay] First key:', firstKey.substring(0, 200));
     console.log('[WayForPay] First key starts with {?:', firstKey.startsWith('{'));
+    console.log('[WayForPay] req.body keys:', Object.keys(req.body));
+    console.log('[WayForPay] req.body has repayUrl?', 'repayUrl' in req.body);
     
     if (firstKey.startsWith('{')) {
       try {
@@ -187,6 +189,21 @@ router.post('/callback', async (req, res, next) => {
       // Если это не JSON-строка, используем req.body как есть
       console.log('[WayForPay] First key is not JSON string, using req.body as is');
       data = req.body;
+      console.log('[WayForPay] Using req.body directly, keys:', Object.keys(data));
+    }
+    
+    // Дополнительная проверка: если data это объект с одним ключом, который содержит JSON
+    if (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 1) {
+      const singleKey = Object.keys(data)[0];
+      if (typeof data[singleKey] === 'string' && data[singleKey].startsWith('{')) {
+        try {
+          console.log('[WayForPay] Found nested JSON in key, parsing...');
+          data = JSON.parse(data[singleKey]);
+          console.log('[WayForPay] Successfully parsed nested JSON!');
+        } catch (e) {
+          console.log('[WayForPay] Failed to parse nested JSON, using original data');
+        }
+      }
     }
     
     // КРИТИЧНО: Проверка что все поля есть
@@ -196,6 +213,11 @@ router.post('/callback', async (req, res, next) => {
     console.log('[WayForPay] amount:', data.amount);
     console.log('[WayForPay] currency:', data.currency);
     console.log('[WayForPay] merchantSignature:', data.merchantSignature);
+    console.log('[WayForPay] transactionStatus:', data.transactionStatus);
+    console.log('[WayForPay] repayUrl (raw):', data.repayUrl);
+    console.log('[WayForPay] repayUrl type:', typeof data.repayUrl);
+    console.log('[WayForPay] repayUrl is undefined?', data.repayUrl === undefined);
+    console.log('[WayForPay] repayUrl is null?', data.repayUrl === null);
     
     if (!data.merchantAccount || !data.orderReference || !data.amount) {
       console.error('[WayForPay] Missing required fields:', data);
@@ -263,9 +285,22 @@ router.post('/callback', async (req, res, next) => {
     
     // Сохраняем repayUrl если он есть (при неуспешной оплате)
     // Согласно документации: repayUrl передается при неуспешной оплате
-    const repayUrl = data.repayUrl || null;
+    // repayUrl передается только при неуспешной оплате (Declined, Expired и т.д.)
+    const repayUrl = (data.repayUrl && typeof data.repayUrl === 'string' && data.repayUrl.trim() !== '') 
+      ? data.repayUrl.trim() 
+      : null;
+    
+    console.log('[WayForPay] RepayUrl processing:');
+    console.log('[WayForPay]   - Original value:', data.repayUrl);
+    console.log('[WayForPay]   - Processed value:', repayUrl);
+    console.log('[WayForPay]   - Transaction status:', data.transactionStatus);
+    console.log('[WayForPay]   - Will save repayUrl?', repayUrl !== null);
+    
     if (repayUrl) {
-      console.log('[WayForPay] RepayUrl received:', repayUrl);
+      console.log('[WayForPay] ✅ RepayUrl received and will be saved:', repayUrl);
+    } else {
+      console.log('[WayForPay] ⚠️ RepayUrl is missing or empty. Transaction status:', data.transactionStatus);
+      console.log('[WayForPay] ⚠️ Note: repayUrl is only sent by WayForPay for failed payments');
     }
     
     // Обновляем заказ в БД (включая repayUrl)
@@ -278,7 +313,9 @@ router.post('/callback', async (req, res, next) => {
     
     console.log('[WayForPay] Order status updated:', data.orderReference, 'to', orderStatus, 'Rows affected:', updateResult.affectedRows);
     if (repayUrl) {
-      console.log('[WayForPay] RepayUrl saved to database');
+      console.log('[WayForPay] ✅ RepayUrl saved to database:', repayUrl);
+    } else {
+      console.log('[WayForPay] ℹ️ RepayUrl was NULL (not provided by WayForPay or payment was successful)');
     }
     
     // ВАЖНО: Ответ мерчанта (из документации)
