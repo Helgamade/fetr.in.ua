@@ -354,13 +354,20 @@ router.post('/callback', async (req, res, next) => {
     
     // Обновление статуса в БД
     let orderStatus = 'accepted'; // По умолчанию "Прийнято"
+    let paymentStatus = 'not_paid'; // Статус оплаты
+    let paidAmount = null; // Сумма оплаты
+    
     if (data.transactionStatus === 'Approved') {
       // Платеж успешный
       orderStatus = 'paid';
-      console.log('[WayForPay] Payment approved:', data.orderReference);
+      paymentStatus = 'paid';
+      paidAmount = parseFloat(data.amount) || null;
+      console.log('[WayForPay] Payment approved:', data.orderReference, 'Amount:', paidAmount);
     } else if (data.transactionStatus === 'Declined' || data.transactionStatus === 'Expired') {
-      // Платеж отклонен - статус остается "Прийнято"
+      // Платеж отклонен - статус остается "Прийнято", оплата не оплачена
       orderStatus = 'accepted';
+      paymentStatus = 'not_paid';
+      paidAmount = null;
       console.log('[WayForPay] Payment declined/expired, status set to accepted:', data.orderReference, data.reason);
     } else {
       console.log('[WayForPay] Unknown transaction status:', data.transactionStatus);
@@ -378,6 +385,8 @@ router.post('/callback', async (req, res, next) => {
     console.log('[WayForPay]   - Processed value:', repayUrl);
     console.log('[WayForPay]   - Transaction status:', data.transactionStatus);
     console.log('[WayForPay]   - Will save repayUrl?', repayUrl !== null);
+    console.log('[WayForPay]   - Payment status:', paymentStatus);
+    console.log('[WayForPay]   - Paid amount:', paidAmount);
     
     if (repayUrl) {
       console.log('[WayForPay] ✅ RepayUrl received and will be saved:', repayUrl);
@@ -386,13 +395,34 @@ router.post('/callback', async (req, res, next) => {
       console.log('[WayForPay] ⚠️ Note: repayUrl is only sent by WayForPay for failed payments');
     }
     
-    // Обновляем заказ в БД (включая repayUrl)
-    const [updateResult] = await pool.execute(
-      `UPDATE orders 
-       SET status = ?, repay_url = ?, updated_at = CURRENT_TIMESTAMP 
-       WHERE order_number = ?`,
-      [orderStatus, repayUrl, data.orderReference]
-    );
+    // Обновляем заказ в БД (включая repayUrl, payment_status и paid_amount)
+    // Проверяем наличие полей перед обновлением (может не существовать, если миграция не выполнена)
+    const hasPaymentStatus = await pool.execute(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+       WHERE TABLE_SCHEMA = DATABASE() 
+       AND TABLE_NAME = 'orders' 
+       AND COLUMN_NAME = 'payment_status'`
+    ).then(([rows]) => rows.length > 0).catch(() => false);
+    
+    if (hasPaymentStatus) {
+      const [updateResult] = await pool.execute(
+        `UPDATE orders 
+         SET status = ?, repay_url = ?, payment_status = ?, paid_amount = ?, updated_at = CURRENT_TIMESTAMP 
+         WHERE order_number = ?`,
+        [orderStatus, repayUrl, paymentStatus, paidAmount, data.orderReference]
+      );
+      console.log('[WayForPay] Order updated with payment_status and paid_amount:', data.orderReference, 'Rows affected:', updateResult.affectedRows);
+    } else {
+      // Если поля не существуют, обновляем только старые поля
+      const [updateResult] = await pool.execute(
+        `UPDATE orders 
+         SET status = ?, repay_url = ?, updated_at = CURRENT_TIMESTAMP 
+         WHERE order_number = ?`,
+        [orderStatus, repayUrl, data.orderReference]
+      );
+      console.log('[WayForPay] WARNING: payment_status column does not exist. Please run migration 014_add_payment_status_and_paid_amount.sql');
+      console.log('[WayForPay] Order status updated (without payment_status):', data.orderReference, 'Rows affected:', updateResult.affectedRows);
+    }
     
     console.log('[WayForPay] Order status updated:', data.orderReference, 'to', orderStatus, 'Rows affected:', updateResult.affectedRows);
     if (repayUrl) {

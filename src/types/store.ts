@@ -83,6 +83,8 @@ export interface DeliveryInfo {
 
 export interface PaymentInfo {
   method: 'wayforpay' | 'nalojka' | 'fopiban'; // wayforpay = WayForPay, nalojka = наложенный платеж, fopiban = Оплата на рахунок ФОП
+  status?: 'not_paid' | 'cash_on_delivery' | 'paid'; // Статус оплаты (независимый от статуса заказа)
+  paidAmount?: number | null; // Фактическая сумма оплаты
 }
 
 export interface Order {

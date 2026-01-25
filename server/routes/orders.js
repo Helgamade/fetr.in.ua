@@ -78,11 +78,17 @@ router.get('/', async (req, res, next) => {
         }
       }
       
+      // Проверяем наличие полей payment_status и paid_amount
+      const hasPaymentStatus = order.hasOwnProperty('payment_status');
+      const hasPaidAmount = order.hasOwnProperty('paid_amount');
+      
       order.payment = {
         method: order.payment_method,
         repayUrl: order.repay_url || undefined,
         paymentUrl: paymentUrlData?.paymentUrl || undefined,
-        paymentData: paymentUrlData?.paymentData || undefined
+        paymentData: paymentUrlData?.paymentData || undefined,
+        ...(hasPaymentStatus && { status: order.payment_status || undefined }),
+        ...(hasPaidAmount && { paidAmount: order.paid_amount !== null ? parseFloat(order.paid_amount) : null })
       };
       
       // Логирование payment данных для отладки (только для WayForPay заказов)
@@ -233,11 +239,17 @@ router.get('/track/:token', async (req, res, next) => {
       console.log('[Get Order] payment_url field not found (migration may not be executed)');
     }
     
+    // Проверяем наличие полей payment_status и paid_amount
+    const hasPaymentStatus = order.hasOwnProperty('payment_status');
+    const hasPaidAmount = order.hasOwnProperty('paid_amount');
+    
     order.payment = {
       method: order.payment_method,
       repayUrl: order.repay_url || undefined,
       paymentUrl: paymentUrlData?.paymentUrl || undefined,
-      paymentData: paymentUrlData?.paymentData || undefined
+      paymentData: paymentUrlData?.paymentData || undefined,
+      ...(hasPaymentStatus && { status: order.payment_status || undefined }),
+      ...(hasPaidAmount && { paidAmount: order.paid_amount !== null ? parseFloat(order.paid_amount) : null })
     };
     
     // Логирование payment данных для отладки
@@ -245,9 +257,13 @@ router.get('/track/:token', async (req, res, next) => {
     console.log('[Get Order]   - payment_method:', order.payment_method);
     console.log('[Get Order]   - repay_url from DB:', order.repay_url);
     console.log('[Get Order]   - payment_url from DB:', order.payment_url ? 'PRESENT' : 'NULL');
+    console.log('[Get Order]   - payment_status from DB:', hasPaymentStatus ? order.payment_status : 'NOT FOUND');
+    console.log('[Get Order]   - paid_amount from DB:', hasPaidAmount ? order.paid_amount : 'NOT FOUND');
     console.log('[Get Order]   - repayUrl in response:', order.payment.repayUrl);
     console.log('[Get Order]   - paymentUrl in response:', order.payment.paymentUrl);
     console.log('[Get Order]   - paymentData in response:', order.payment.paymentData ? 'PRESENT' : 'NULL');
+    console.log('[Get Order]   - payment.status in response:', order.payment.status);
+    console.log('[Get Order]   - payment.paidAmount in response:', order.payment.paidAmount);
 
     if (order.promo_code) {
       order.promoCode = order.promo_code;
@@ -268,6 +284,9 @@ router.get('/track/:token', async (req, res, next) => {
     delete order.delivery_address;
     delete order.payment_method;
     delete order.repay_url;
+    delete order.payment_url; // Ensure raw field is not exposed
+    if (hasPaymentStatus) delete order.payment_status;
+    if (hasPaidAmount) delete order.paid_amount;
 
     // Сохраняем tracking_token для безопасной ссылки отслеживания
     if (order.tracking_token) {
@@ -458,11 +477,19 @@ router.get('/:id', async (req, res, next) => {
       postIndex: order.delivery_post_index || undefined,
       address: order.delivery_address || undefined
     };
+    // Проверяем наличие полей payment_status и paid_amount
+    const hasPaymentStatus = order.hasOwnProperty('payment_status');
+    const hasPaidAmount = order.hasOwnProperty('paid_amount');
+    
     order.payment = {
       method: order.payment_method,
-      repayUrl: order.repay_url || undefined
+      repayUrl: order.repay_url || undefined,
+      ...(hasPaymentStatus && { status: order.payment_status || undefined }),
+      ...(hasPaidAmount && { paidAmount: order.paid_amount !== null ? parseFloat(order.paid_amount) : null })
     };
     console.log('[Get Order] Payment method from DB:', order.payment_method, '-> Response:', order.payment.method);
+    console.log('[Get Order] Payment status from DB:', hasPaymentStatus ? order.payment_status : 'NOT FOUND');
+    console.log('[Get Order] Paid amount from DB:', hasPaidAmount ? order.paid_amount : 'NOT FOUND');
 
     // Include promo_code if it exists
     if (order.promo_code) {
@@ -925,23 +952,60 @@ router.put('/:id', async (req, res, next) => {
     const orderDiscount = discount !== undefined ? Number(discount) : null;
     const orderDeliveryCost = deliveryCost !== undefined ? Number(deliveryCost) : null;
     const orderTotal = total !== undefined ? Number(total) : null;
+    
+    // Обрабатываем payment_status и paid_amount
+    const paymentStatus = payment?.status || null;
+    const paidAmount = payment?.paidAmount !== undefined && payment?.paidAmount !== null 
+      ? Number(payment.paidAmount) 
+      : null;
+
+    // Проверяем наличие полей payment_status и paid_amount
+    const hasPaymentStatus = await pool.execute(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+       WHERE TABLE_SCHEMA = DATABASE() 
+       AND TABLE_NAME = 'orders' 
+       AND COLUMN_NAME = 'payment_status'`
+    ).then(([rows]) => rows.length > 0).catch(() => false);
 
     // id is order_number (VARCHAR), not INT id
-    await pool.execute(`
-      UPDATE orders SET
-        customer_name = ?, customer_phone = ?,
-        delivery_method = ?, delivery_city = ?, delivery_warehouse = ?,
-        delivery_post_index = ?, delivery_address = ?,
-        payment_method = ?, status = ?, subtotal = ?, discount = ?,
-        delivery_cost = ?, total = ?, delivery_ttn = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE order_number = ?
-    `, [
-      customerName, customerPhone,
-      deliveryMethod, deliveryCity, deliveryWarehouse,
-      deliveryPostIndex, deliveryAddress,
-      paymentMethod, orderStatus, orderSubtotal, orderDiscount,
-      orderDeliveryCost, orderTotal, deliveryTtnValue, id
-    ]);
+    if (hasPaymentStatus) {
+      await pool.execute(`
+        UPDATE orders SET
+          customer_name = ?, customer_phone = ?,
+          delivery_method = ?, delivery_city = ?, delivery_warehouse = ?,
+          delivery_post_index = ?, delivery_address = ?,
+          payment_method = ?, payment_status = ?, paid_amount = ?,
+          status = ?, subtotal = ?, discount = ?,
+          delivery_cost = ?, total = ?, delivery_ttn = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE order_number = ?
+      `, [
+        customerName, customerPhone,
+        deliveryMethod, deliveryCity, deliveryWarehouse,
+        deliveryPostIndex, deliveryAddress,
+        paymentMethod, paymentStatus, paidAmount,
+        orderStatus, orderSubtotal, orderDiscount,
+        orderDeliveryCost, orderTotal, deliveryTtnValue, id
+      ]);
+      console.log('[Update Order] Updated with payment_status:', paymentStatus, 'paid_amount:', paidAmount);
+    } else {
+      // Если поля не существуют, обновляем только старые поля
+      await pool.execute(`
+        UPDATE orders SET
+          customer_name = ?, customer_phone = ?,
+          delivery_method = ?, delivery_city = ?, delivery_warehouse = ?,
+          delivery_post_index = ?, delivery_address = ?,
+          payment_method = ?, status = ?, subtotal = ?, discount = ?,
+          delivery_cost = ?, total = ?, delivery_ttn = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE order_number = ?
+      `, [
+        customerName, customerPhone,
+        deliveryMethod, deliveryCity, deliveryWarehouse,
+        deliveryPostIndex, deliveryAddress,
+        paymentMethod, orderStatus, orderSubtotal, orderDiscount,
+        orderDeliveryCost, orderTotal, deliveryTtnValue, id
+      ]);
+      console.log('[Update Order] WARNING: payment_status column does not exist. Please run migration 014_add_payment_status_and_paid_amount.sql');
+    }
 
     res.json({ id, message: 'Order updated' });
   } catch (error) {

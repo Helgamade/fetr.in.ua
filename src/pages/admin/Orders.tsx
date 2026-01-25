@@ -285,7 +285,7 @@ export function Orders() {
                               ))}
                             </SelectContent>
                           </Select>
-                          {order.status === 'paid' && (
+                          {order.payment?.status === 'paid' && (
                             <Badge className="bg-green-100 text-green-800 text-xs">
                               Оплачено
                             </Badge>
