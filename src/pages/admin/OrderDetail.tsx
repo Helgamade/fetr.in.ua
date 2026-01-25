@@ -445,6 +445,18 @@ export function OrderDetail() {
             </div>
           </div>
 
+          {/* Payment */}
+          <div className="bg-card rounded-lg border p-6">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Оплата
+            </h2>
+            <div className="text-sm">
+              {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
+              {order.payment.method === 'nalojka' && 'Накладений платіж'}
+              {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
+            </div>
+          </div>
 
           {/* Comment */}
           {order.comment && (
@@ -605,21 +617,15 @@ export function OrderDetail() {
             </div>
           </div>
 
-          {/* Payment */}
+          {/* Payment Status & Amount */}
           <div className="bg-card rounded-lg border p-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
-              Оплата
+              Статус та сума оплати
             </h2>
             <div className="space-y-4">
-              <div className="text-sm">
-                {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
-                {order.payment.method === 'nalojka' && 'Накладений платіж'}
-                {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
-              </div>
-              
               {/* Статус оплаты */}
-              <div className="pt-4 border-t">
+              <div>
                 <label className="text-sm font-medium mb-2 block">Статус оплати</label>
                 <Select
                   value={paymentStatus}
@@ -637,7 +643,7 @@ export function OrderDetail() {
               </div>
               
               {/* Сумма оплаты */}
-              <div className="pt-2">
+              <div>
                 <label className="text-sm font-medium mb-2 block">Сума оплати (₴)</label>
                 <Input
                   type="number"
@@ -651,7 +657,7 @@ export function OrderDetail() {
               </div>
               
               {/* Кнопка сохранения */}
-              <div className="pt-2">
+              <div>
                 <Button
                   onClick={() => {
                     if (!order) return;
