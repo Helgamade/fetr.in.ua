@@ -133,7 +133,10 @@ router.post('/create-payment', async (req, res, next) => {
 
     // Проверяем, есть ли уже сохраненный payment_url для этого заказа
     // Если есть - используем его (чтобы избежать Duplicate Order ID)
-    if (order.payment_url) {
+    // Проверяем наличие поля (может не существовать, если миграция не выполнена)
+    const hasPaymentUrl = order.hasOwnProperty('payment_url') && order.payment_url !== null && order.payment_url !== undefined;
+    
+    if (hasPaymentUrl) {
       console.log('[WayForPay] Found existing payment_url in DB, using it to avoid Duplicate Order ID');
       console.log('[WayForPay] Existing payment_url:', order.payment_url.substring(0, 100) + '...');
       
@@ -152,6 +155,8 @@ router.post('/create-payment', async (req, res, next) => {
         console.error('[WayForPay] Error parsing saved payment_url, will create new payment:', e);
         // Продолжаем создание нового платежа
       }
+    } else {
+      console.log('[WayForPay] payment_url field not found or empty (migration may not be executed)');
     }
 
     // Создаем новый платеж только если нет сохраненного
@@ -163,7 +168,9 @@ router.post('/create-payment', async (req, res, next) => {
     
     // Проверяем, сколько раз уже создавался платеж для этого заказа
     // Анализируем сохраненные данные или используем счетчик
-    if (order.payment_url) {
+    const hasPaymentUrlForAttempt = order.hasOwnProperty('payment_url') && order.payment_url !== null && order.payment_url !== undefined;
+    
+    if (hasPaymentUrlForAttempt) {
       try {
         const savedData = JSON.parse(order.payment_url);
         const savedOrderRef = savedData.paymentData?.orderReference;
@@ -180,6 +187,11 @@ router.post('/create-payment', async (req, res, next) => {
             orderReference = `${order.order_number}-${paymentAttempt}`;
             console.log('[WayForPay] First payment was without suffix, creating second attempt with -2');
           }
+        } else if (savedData.paymentAttempt) {
+          // Используем сохраненный номер попытки
+          paymentAttempt = savedData.paymentAttempt + 1;
+          orderReference = `${order.order_number}-${paymentAttempt}`;
+          console.log('[WayForPay] Using saved paymentAttempt:', savedData.paymentAttempt, 'Creating attempt:', paymentAttempt);
         }
       } catch (e) {
         // Если не удалось распарсить, используем оригинальный orderReference
@@ -207,18 +219,30 @@ router.post('/create-payment', async (req, res, next) => {
     
     // Сохраняем paymentUrl и paymentData в БД для повторного использования
     // Сохраняем последнюю попытку (она будет использоваться для повторной оплаты)
+    // Проверяем наличие поля payment_url перед сохранением (может не существовать, если миграция не выполнена)
     const paymentDataToSave = JSON.stringify({
       paymentUrl,
       paymentData,
       paymentAttempt
     });
     
-    await pool.execute(
-      `UPDATE orders 
-       SET payment_url = ?, updated_at = CURRENT_TIMESTAMP 
-       WHERE order_number = ?`,
-      [paymentDataToSave, orderId]
-    );
+    try {
+      await pool.execute(
+        `UPDATE orders 
+         SET payment_url = ?, updated_at = CURRENT_TIMESTAMP 
+         WHERE order_number = ?`,
+        [paymentDataToSave, orderId]
+      );
+      console.log('[WayForPay] Payment URL and data saved to database for reuse');
+    } catch (error) {
+      // Если поле payment_url не существует, просто логируем ошибку, но не прерываем выполнение
+      if (error.message && error.message.includes("Unknown column 'payment_url'")) {
+        console.warn('[WayForPay] WARNING: payment_url column does not exist in database. Please run migration 013_add_payment_url_to_orders.sql');
+        console.warn('[WayForPay] Payment will work, but will not be cached for reuse');
+      } else {
+        throw error; // Если другая ошибка - пробрасываем дальше
+      }
+    }
     
     console.log('[WayForPay] Payment URL and data saved to database for reuse');
     console.log('[WayForPay] Saved with orderReference:', paymentData.orderReference);

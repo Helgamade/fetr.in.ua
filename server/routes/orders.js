@@ -67,9 +67,10 @@ router.get('/', async (req, res, next) => {
         address: order.delivery_address || undefined
       };
 
-      // Парсим payment_url если есть
+      // Парсим payment_url если есть (проверяем наличие поля)
       let paymentUrlData = null;
-      if (order.payment_url) {
+      const hasPaymentUrl = order.hasOwnProperty('payment_url') && order.payment_url !== null && order.payment_url !== undefined;
+      if (hasPaymentUrl) {
         try {
           paymentUrlData = JSON.parse(order.payment_url);
         } catch (e) {
@@ -218,14 +219,18 @@ router.get('/track/:token', async (req, res, next) => {
     };
     
     // Парсим payment_url если есть (содержит paymentUrl и paymentData)
+    // Проверяем наличие поля (может не существовать, если миграция не выполнена)
     let paymentUrlData = null;
-    if (order.payment_url) {
+    const hasPaymentUrl = order.hasOwnProperty('payment_url') && order.payment_url !== null && order.payment_url !== undefined;
+    if (hasPaymentUrl) {
       try {
         paymentUrlData = JSON.parse(order.payment_url);
         console.log('[Get Order] Parsed payment_url from DB');
       } catch (e) {
         console.error('[Get Order] Error parsing payment_url:', e);
       }
+    } else {
+      console.log('[Get Order] payment_url field not found (migration may not be executed)');
     }
     
     order.payment = {
