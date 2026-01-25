@@ -47,8 +47,6 @@ const ThankYou = () => {
       return Promise.reject(new Error('No valid order identifier'));
     },
     enabled: !!identifier && identifier !== 'undefined' && identifier !== 'null',
-    // Обновляем данные каждые 10 секунд для обновления timeline при изменении статуса в админке
-    refetchInterval: 10000,
   });
 
   // Определяем статус оплаты на основе payment_status
@@ -151,25 +149,6 @@ const ThankYou = () => {
     // Простая логика: используем order.status напрямую из базы
     // "created" всегда completed, так как он идет до "accepted" и никогда не попадает в базу
     
-    // Если WayForPay и оплата не прошла И статус еще "accepted", показываем "accepted" как текущий
-    // Но если статус уже изменился (например, на "paid" или "packed"), используем его
-    if (order.payment?.method === 'wayforpay' && isPaymentPending && order.status === 'accepted') {
-      // Для неуспешной оплаты WayForPay, если статус еще "accepted", показываем "accepted" как текущий
-      const targetStatusIndex = statusOrder.indexOf('accepted');
-      return allSteps.map((step, index) => {
-        let status: "completed" | "current" | "pending" = "pending";
-        if (index < targetStatusIndex) {
-          status = "completed";
-        } else if (index === targetStatusIndex) {
-          status = "current";
-        } else {
-          status = "pending";
-        }
-        return { ...step, status };
-      });
-    }
-
-    // Обычная логика: используем order.status напрямую из базы
     // currentStatusIndex может быть -1, если статус не найден (не должно быть, но на всякий случай)
     if (currentStatusIndex === -1) {
       console.warn('[ThankYou Timeline] Status not found in statusOrder:', order.status);
@@ -177,6 +156,7 @@ const ThankYou = () => {
       return allSteps.map((step) => ({ ...step, status: "pending" as const }));
     }
 
+    // Используем order.status напрямую из базы БЕЗ специальных условий
     return allSteps.map((step, index) => {
       let status: "completed" | "current" | "pending" = "pending";
       
