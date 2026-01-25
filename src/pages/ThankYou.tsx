@@ -47,15 +47,8 @@ const ThankYou = () => {
       return Promise.reject(new Error('No valid order identifier'));
     },
     enabled: !!identifier && identifier !== 'undefined' && identifier !== 'null',
-    // Обновляем данные каждые 5 секунд, если оплата не прошла (для WayForPay)
-    refetchInterval: (query) => {
-      const orderData = query.state.data;
-      // Обновляем, если WayForPay и payment_status не 'paid'
-      if (orderData?.payment?.method === 'wayforpay' && orderData?.payment?.status !== 'paid') {
-        return 5000; // Обновляем каждые 5 секунд
-      }
-      return false;
-    },
+    // Обновляем данные каждые 10 секунд для обновления timeline при изменении статуса в админке
+    refetchInterval: 10000,
   });
 
   // Определяем статус оплаты на основе payment_status
@@ -105,6 +98,10 @@ const ThankYou = () => {
 
     const statusOrder: OrderStatus[] = ['created', 'accepted', 'paid', 'packed', 'shipped', 'arrived', 'completed'];
     const currentStatusIndex = statusOrder.indexOf(order.status);
+    
+    // Логирование для отладки
+    console.log('[ThankYou Timeline] Order status from DB:', order.status);
+    console.log('[ThankYou Timeline] Current status index:', currentStatusIndex);
     
     const allSteps: Omit<TimelineStep, 'status'>[] = [
       {
