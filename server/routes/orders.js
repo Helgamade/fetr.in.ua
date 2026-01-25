@@ -67,15 +67,29 @@ router.get('/', async (req, res, next) => {
         address: order.delivery_address || undefined
       };
 
+      // Парсим payment_url если есть
+      let paymentUrlData = null;
+      if (order.payment_url) {
+        try {
+          paymentUrlData = JSON.parse(order.payment_url);
+        } catch (e) {
+          console.error('[Get Orders] Error parsing payment_url for order', order.order_number, ':', e);
+        }
+      }
+      
       order.payment = {
         method: order.payment_method,
-        repayUrl: order.repay_url || undefined
+        repayUrl: order.repay_url || undefined,
+        paymentUrl: paymentUrlData?.paymentUrl || undefined,
+        paymentData: paymentUrlData?.paymentData || undefined
       };
       
-      // Логирование repay_url для отладки (только для WayForPay заказов)
+      // Логирование payment данных для отладки (только для WayForPay заказов)
       if (order.payment_method === 'wayforpay') {
         console.log('[Get Orders] Order', order.order_number, '- repay_url from DB:', order.repay_url);
+        console.log('[Get Orders] Order', order.order_number, '- payment_url from DB:', order.payment_url ? 'PRESENT' : 'NULL');
         console.log('[Get Orders] Order', order.order_number, '- repayUrl in response:', order.payment.repayUrl);
+        console.log('[Get Orders] Order', order.order_number, '- paymentUrl in response:', order.payment.paymentUrl);
       }
 
       // Include comment if it exists
@@ -104,6 +118,7 @@ router.get('/', async (req, res, next) => {
       delete order.delivery_address;
       delete order.payment_method;
       delete order.repay_url;
+      delete order.payment_url;
 
       // Convert dates
       order.createdAt = new Date(order.created_at);
@@ -202,18 +217,32 @@ router.get('/track/:token', async (req, res, next) => {
       address: order.delivery_address || undefined
     };
     
+    // Парсим payment_url если есть (содержит paymentUrl и paymentData)
+    let paymentUrlData = null;
+    if (order.payment_url) {
+      try {
+        paymentUrlData = JSON.parse(order.payment_url);
+        console.log('[Get Order] Parsed payment_url from DB');
+      } catch (e) {
+        console.error('[Get Order] Error parsing payment_url:', e);
+      }
+    }
+    
     order.payment = {
       method: order.payment_method,
-      repayUrl: order.repay_url || undefined
+      repayUrl: order.repay_url || undefined,
+      paymentUrl: paymentUrlData?.paymentUrl || undefined,
+      paymentData: paymentUrlData?.paymentData || undefined
     };
     
-    // Логирование repay_url для отладки
+    // Логирование payment данных для отладки
     console.log('[Get Order] Payment data loaded:');
     console.log('[Get Order]   - payment_method:', order.payment_method);
     console.log('[Get Order]   - repay_url from DB:', order.repay_url);
+    console.log('[Get Order]   - payment_url from DB:', order.payment_url ? 'PRESENT' : 'NULL');
     console.log('[Get Order]   - repayUrl in response:', order.payment.repayUrl);
-    console.log('[Get Order]   - repay_url is NULL?', order.repay_url === null);
-    console.log('[Get Order]   - repay_url is undefined?', order.repay_url === undefined);
+    console.log('[Get Order]   - paymentUrl in response:', order.payment.paymentUrl);
+    console.log('[Get Order]   - paymentData in response:', order.payment.paymentData ? 'PRESENT' : 'NULL');
 
     if (order.promo_code) {
       order.promoCode = order.promo_code;
@@ -476,6 +505,7 @@ router.get('/:id', async (req, res, next) => {
     delete order.delivery_post_index;
     delete order.delivery_address;
     delete order.payment_method;
+    delete order.payment_url;
 
     // Сохраняем tracking_token для безопасной ссылки отслеживания
     if (order.tracking_token) {

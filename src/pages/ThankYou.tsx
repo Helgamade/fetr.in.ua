@@ -466,16 +466,47 @@ const ThankYou = () => {
                           <Button
                             onClick={async () => {
                               try {
-                                // Используем repayUrl если он есть (от WayForPay при неуспешной оплате)
+                                // Приоритет 1: Используем repayUrl если он есть (от WayForPay при неуспешной оплате)
                                 if (order.payment.repayUrl) {
                                   console.log('[ThankYou] Using repayUrl from WayForPay:', order.payment.repayUrl);
                                   window.location.href = order.payment.repayUrl;
                                   return;
                                 }
                                 
-                                // Если repayUrl нет, проверяем статус платежа через API
-                                // (может быть, callback еще не пришел или был пропущен)
-                                console.log('[ThankYou] repayUrl not found, checking payment status...');
+                                // Приоритет 2: Используем сохраненный paymentUrl и paymentData (первая ссылка на оплату)
+                                if (order.payment.paymentUrl && order.payment.paymentData) {
+                                  console.log('[ThankYou] Using saved paymentUrl and paymentData from first payment');
+                                  console.log('[ThankYou] PaymentUrl:', order.payment.paymentUrl);
+                                  
+                                  const form = document.createElement('form');
+                                  form.method = 'POST';
+                                  form.action = order.payment.paymentUrl;
+                                  
+                                  Object.entries(order.payment.paymentData).forEach(([key, value]) => {
+                                    if (Array.isArray(value)) {
+                                      value.forEach((item, index) => {
+                                        const input = document.createElement('input');
+                                        input.type = 'hidden';
+                                        input.name = `${key}[]`;
+                                        input.value = String(item);
+                                        form.appendChild(input);
+                                      });
+                                    } else {
+                                      const input = document.createElement('input');
+                                      input.type = 'hidden';
+                                      input.name = key;
+                                      input.value = String(value);
+                                      form.appendChild(input);
+                                    }
+                                  });
+                                  
+                                  document.body.appendChild(form);
+                                  form.submit();
+                                  return;
+                                }
+                                
+                                // Приоритет 3: Проверяем статус платежа через API
+                                console.log('[ThankYou] No saved payment data, checking payment status...');
                                 try {
                                   const { wayforpayAPI } = await import("@/lib/api");
                                   const statusResponse = await wayforpayAPI.checkPaymentStatus(order.id);
@@ -489,8 +520,8 @@ const ThankYou = () => {
                                   console.log('[ThankYou] Status check failed, will create new payment:', statusError);
                                 }
                                 
-                                // Fallback: создаем новый платеж если repayUrl нет
-                                console.log('[ThankYou] Creating new payment (repayUrl not available)');
+                                // Приоритет 4: Создаем новый платеж (будет использован сохраненный или создан новый с уникальным orderReference)
+                                console.log('[ThankYou] Creating new payment (no saved payment data available)');
                                 const { wayforpayAPI } = await import("@/lib/api");
                                 const paymentResponse = await wayforpayAPI.createPayment(order.id);
                                 

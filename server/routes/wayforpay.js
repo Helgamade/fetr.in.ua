@@ -131,18 +131,62 @@ router.post('/create-payment', async (req, res, next) => {
       returnUrl: configWithReturnUrl.returnUrl
     });
 
+    // Проверяем, есть ли уже сохраненный payment_url для этого заказа
+    // Если есть - используем его (чтобы избежать Duplicate Order ID)
+    if (order.payment_url) {
+      console.log('[WayForPay] Found existing payment_url in DB, using it to avoid Duplicate Order ID');
+      console.log('[WayForPay] Existing payment_url:', order.payment_url.substring(0, 100) + '...');
+      
+      try {
+        // Парсим сохраненные данные платежа
+        const savedPaymentData = JSON.parse(order.payment_url);
+        console.log('[WayForPay] Parsed saved payment data, orderReference:', savedPaymentData.paymentData?.orderReference);
+        
+        res.json({
+          paymentUrl: savedPaymentData.paymentUrl || 'https://secure.wayforpay.com/pay',
+          paymentData: savedPaymentData.paymentData,
+          fromCache: true
+        });
+        return;
+      } catch (e) {
+        console.error('[WayForPay] Error parsing saved payment_url, will create new payment:', e);
+        // Продолжаем создание нового платежа
+      }
+    }
+
+    // Создаем новый платеж только если нет сохраненного
+    // Используем оригинальный orderReference (WayForPay позволяет повторные платежи с тем же orderReference если предыдущий не прошел)
     const paymentData = buildWayForPayData(orderData, configWithReturnUrl);
+    const paymentUrl = 'https://secure.wayforpay.com/pay';
+    
+    console.log('[WayForPay] Creating new payment with orderReference:', paymentData.orderReference);
 
     console.log('[WayForPay] Payment data created (full):', JSON.stringify(paymentData, null, 2));
     console.log('[WayForPay] Payment data returnUrl:', paymentData.returnUrl);
     console.log('[WayForPay] Payment data serviceUrl:', paymentData.serviceUrl);
     console.log('[WayForPay] Payment data orderReference:', paymentData.orderReference);
+    
+    // Сохраняем paymentUrl и paymentData в БД для повторного использования
+    const paymentDataToSave = JSON.stringify({
+      paymentUrl,
+      paymentData
+    });
+    
+    await pool.execute(
+      `UPDATE orders 
+       SET payment_url = ?, updated_at = CURRENT_TIMESTAMP 
+       WHERE order_number = ?`,
+      [paymentDataToSave, orderId]
+    );
+    
+    console.log('[WayForPay] Payment URL and data saved to database for reuse');
     console.log('[WayForPay] ===== CREATE PAYMENT END =====');
     console.log('========================================');
 
     res.json({
-      paymentUrl: 'https://secure.wayforpay.com/pay',
+      paymentUrl,
       paymentData,
+      fromCache: false
     });
   } catch (error) {
     console.error('[WayForPay] Error creating payment:', error);
