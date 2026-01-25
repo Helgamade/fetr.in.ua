@@ -150,9 +150,11 @@ const ThankYou = () => {
 
     // Простая логика: используем order.status напрямую из базы
     // "created" всегда completed, так как он идет до "accepted" и никогда не попадает в базу
-    // Если WayForPay и оплата не прошла, показываем "accepted" как текущий
-    if (order.payment?.method === 'wayforpay' && isPaymentPending) {
-      // Для неуспешной оплаты WayForPay показываем "accepted" как текущий
+    
+    // Если WayForPay и оплата не прошла И статус еще "accepted", показываем "accepted" как текущий
+    // Но если статус уже изменился (например, на "paid" или "packed"), используем его
+    if (order.payment?.method === 'wayforpay' && isPaymentPending && order.status === 'accepted') {
+      // Для неуспешной оплаты WayForPay, если статус еще "accepted", показываем "accepted" как текущий
       const targetStatusIndex = statusOrder.indexOf('accepted');
       return allSteps.map((step, index) => {
         let status: "completed" | "current" | "pending" = "pending";
@@ -170,6 +172,7 @@ const ThankYou = () => {
     // Обычная логика: используем order.status напрямую из базы
     // currentStatusIndex может быть -1, если статус не найден (не должно быть, но на всякий случай)
     if (currentStatusIndex === -1) {
+      console.warn('[ThankYou Timeline] Status not found in statusOrder:', order.status);
       // Если статус не найден, показываем все как pending
       return allSteps.map((step) => ({ ...step, status: "pending" as const }));
     }
