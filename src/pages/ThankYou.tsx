@@ -151,59 +151,41 @@ const ThankYou = () => {
       }
     ];
 
-    // "created" всегда пропускается (всегда completed)
-    // При создании заказа сразу устанавливается "accepted" или "paid"
-    
-    // Если WayForPay и оплата не прошла, показываем полный список с "Прийнято" как текущим
+    // Простая логика: используем order.status напрямую из базы
+    // "created" всегда completed, так как он идет до "accepted" и никогда не попадает в базу
+    // Если WayForPay и оплата не прошла, показываем "accepted" как текущий
     if (order.payment?.method === 'wayforpay' && isPaymentPending) {
+      // Для неуспешной оплаты WayForPay показываем "accepted" как текущий
+      const targetStatusIndex = statusOrder.indexOf('accepted');
       return allSteps.map((step, index) => {
         let status: "completed" | "current" | "pending" = "pending";
-        const stepId = step.id;
-        
-        // "created" всегда completed
-        if (stepId === 'created') {
+        if (index < targetStatusIndex) {
           status = "completed";
-        } else if (stepId === 'accepted') {
+        } else if (index === targetStatusIndex) {
           status = "current";
         } else {
           status = "pending";
         }
-        
         return { ...step, status };
       });
     }
 
-    // Обычная логика: "created" всегда completed, остальные по статусу заказа
+    // Обычная логика: используем order.status напрямую из базы
+    // currentStatusIndex может быть -1, если статус не найден (не должно быть, но на всякий случай)
+    if (currentStatusIndex === -1) {
+      // Если статус не найден, показываем все как pending
+      return allSteps.map((step) => ({ ...step, status: "pending" as const }));
+    }
+
     return allSteps.map((step, index) => {
       let status: "completed" | "current" | "pending" = "pending";
-      const stepId = step.id;
       
-      // "created" всегда completed (пропускается)
-      if (stepId === 'created') {
+      if (index < currentStatusIndex) {
         status = "completed";
+      } else if (index === currentStatusIndex) {
+        status = "current";
       } else {
-        // Для остальных статусов используем обычную логику
-        // currentStatusIndex учитывает все статусы, включая "created"
-        // Но "created" всегда completed, поэтому для остальных вычитаем 1 из индекса
-        const adjustedIndex = index - 1; // Вычитаем 1, так как "created" всегда completed
-        
-        // Если currentStatusIndex = 0 (статус "created"), то текущий статус = "accepted" (index 1)
-        // Иначе вычитаем 1 из currentStatusIndex, так как "created" пропускается
-        let adjustedCurrentIndex;
-        if (currentStatusIndex === 0) {
-          // Если статус "created" в order.status (не должно быть, но на всякий случай)
-          adjustedCurrentIndex = 0;
-        } else {
-          adjustedCurrentIndex = currentStatusIndex - 1;
-        }
-        
-        if (adjustedIndex < adjustedCurrentIndex) {
-          status = "completed";
-        } else if (adjustedIndex === adjustedCurrentIndex) {
-          status = "current";
-        } else {
-          status = "pending";
-        }
+        status = "pending";
       }
 
       return {
