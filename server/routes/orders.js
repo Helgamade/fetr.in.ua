@@ -44,10 +44,10 @@ router.get('/', async (req, res, next) => {
       order.items = Array.from(itemsMap.values());
 
       // Format customer, delivery, payment
-      // Формируем name из firstName и lastName, если они есть, иначе используем customer_name
+      // Формируем name из firstName и lastName
       const customerName = (order.customer_first_name && order.customer_last_name) 
         ? `${order.customer_last_name} ${order.customer_first_name}`.trim()
-        : (order.customer_name || '');
+        : '';
       order.customer = {
         name: customerName,
         firstName: order.customer_first_name || undefined,
@@ -56,9 +56,12 @@ router.get('/', async (req, res, next) => {
       };
 
       // Добавляем данные получателя, если они есть
-      if (order.recipient_name || order.recipient_phone) {
+      if (order.recipient_first_name || order.recipient_last_name || order.recipient_phone) {
+        const recipientName = (order.recipient_first_name && order.recipient_last_name) 
+          ? `${order.recipient_last_name} ${order.recipient_first_name}`.trim()
+          : '';
         order.recipient = {
-          name: order.recipient_name || undefined,
+          name: recipientName,
           phone: order.recipient_phone || undefined,
           firstName: order.recipient_first_name || undefined,
           lastName: order.recipient_last_name || undefined,
@@ -118,12 +121,10 @@ router.get('/', async (req, res, next) => {
       }
 
       // Remove old fields
-      delete order.customer_name;
       delete order.customer_first_name;
       delete order.customer_last_name;
       delete order.customer_phone;
       delete order.customer_email;
-      delete order.recipient_name;
       delete order.recipient_phone;
       delete order.recipient_first_name;
       delete order.recipient_last_name;
@@ -214,10 +215,10 @@ router.get('/track/:token', async (req, res, next) => {
     });
 
     order.items = Array.from(itemsMap.values());
-    // Формируем name из firstName и lastName, если они есть, иначе используем customer_name
+    // Формируем name из firstName и lastName
     const customerName = (order.customer_first_name && order.customer_last_name) 
       ? `${order.customer_last_name} ${order.customer_first_name}`.trim()
-      : (order.customer_name || '');
+      : '';
     order.customer = {
       name: customerName,
       firstName: order.customer_first_name || undefined,
@@ -225,11 +226,11 @@ router.get('/track/:token', async (req, res, next) => {
       phone: order.customer_phone
     };
 
-    if (order.recipient_name || order.recipient_phone || order.recipient_first_name || order.recipient_last_name) {
-      // Формируем name из firstName и lastName, если они есть, иначе используем recipient_name
+    if (order.recipient_first_name || order.recipient_last_name || order.recipient_phone) {
+      // Формируем name из firstName и lastName
       const recipientName = (order.recipient_first_name && order.recipient_last_name) 
         ? `${order.recipient_last_name} ${order.recipient_first_name}`.trim()
-        : (order.recipient_name || '');
+        : '';
       order.recipient = {
         name: recipientName,
         phone: order.recipient_phone || undefined,
@@ -480,10 +481,10 @@ router.get('/:id', async (req, res, next) => {
     });
 
     order.items = Array.from(itemsMap.values());
-    // Формируем name из firstName и lastName, если они есть, иначе используем customer_name
+    // Формируем name из firstName и lastName
     const customerName = (order.customer_first_name && order.customer_last_name) 
       ? `${order.customer_last_name} ${order.customer_first_name}`.trim()
-      : (order.customer_name || '');
+      : '';
     order.customer = {
       name: customerName,
       firstName: order.customer_first_name || undefined,
@@ -492,11 +493,11 @@ router.get('/:id', async (req, res, next) => {
     };
 
     // Добавляем данные получателя, если они есть
-    if (order.recipient_name || order.recipient_phone || order.recipient_first_name || order.recipient_last_name) {
-      // Формируем name из firstName и lastName, если они есть, иначе используем recipient_name
+    if (order.recipient_first_name || order.recipient_last_name || order.recipient_phone) {
+      // Формируем name из firstName и lastName
       const recipientName = (order.recipient_first_name && order.recipient_last_name) 
         ? `${order.recipient_last_name} ${order.recipient_first_name}`.trim()
-        : (order.recipient_name || '');
+        : '';
       order.recipient = {
         name: recipientName,
         phone: order.recipient_phone || undefined,
@@ -644,28 +645,19 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
       
       // Insert order БЕЗ order_number (используем AUTO_INCREMENT id)
       const recipient = req.body.recipient || null;
-      // Формируем customer_name из firstName и lastName для обратной совместимости
-      const customerNameForDB = (customer.firstName && customer.lastName)
-        ? `${customer.lastName} ${customer.firstName}`.trim()
-        : (customer.name || null);
-      const recipientNameForDB = recipient && recipient.firstName && recipient.lastName
-        ? `${recipient.lastName} ${recipient.firstName}`.trim()
-        : (recipient?.name || null);
       const [orderResult] = await connection.execute(`
-        INSERT INTO orders (user_id, analytics_session_id, customer_name, customer_first_name, customer_last_name, customer_phone, customer_email,
-          recipient_name, recipient_phone, recipient_first_name, recipient_last_name,
+        INSERT INTO orders (user_id, analytics_session_id, customer_first_name, customer_last_name, customer_phone, customer_email,
+          recipient_phone, recipient_first_name, recipient_last_name,
           delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
           payment_method, subtotal, discount, delivery_cost, total, status, comment, promo_code)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         userId, // Привязываем заказ к пользователю если он авторизован
         sessionId, // Привязываем заказ к сессии аналитики
-        customerNameForDB,
         customer.firstName || null,
         customer.lastName || null,
         customer.phone || null,
         req.user ? req.user.email : null, // Сохраняем email если пользователь авторизован
-        recipientNameForDB,
         recipient ? (recipient.phone || null) : null,
         recipient ? (recipient.firstName || null) : null,
         recipient ? (recipient.lastName || null) : null, 
@@ -797,10 +789,10 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
             };
             
             // Данные для шаблона
-            // Формируем customerName из firstName и lastName, если они есть
+            // Формируем customerName из firstName и lastName
             const customerNameForEmail = (order.customer_first_name && order.customer_last_name) 
               ? `${order.customer_last_name} ${order.customer_first_name}`.trim()
-              : (order.customer_name || '');
+              : '';
             const templateData = {
               orderNumber: orderNumber,
               customerName: customerNameForEmail,
@@ -948,10 +940,10 @@ router.patch('/:id/status', async (req, res, next) => {
           // Если статус изменился на "paid", отправляем отдельные уведомления
           if (status === 'paid') {
             const { sendEmailToAdmin } = await import('../utils/emailService.js');
-            // Формируем customerName из firstName и lastName, если они есть
+            // Формируем customerName из firstName и lastName
             const customerNameForEmail = (order.customer_first_name && order.customer_last_name) 
               ? `${order.customer_last_name} ${order.customer_first_name}`.trim()
-              : (order.customer_name || '');
+              : '';
             const paidData = {
               orderNumber: id,
               customerName: customerNameForEmail,
@@ -992,19 +984,11 @@ router.put('/:id', async (req, res, next) => {
       : String(deliveryTtn).trim() || null;
 
     // Обрабатываем все поля, чтобы не было undefined
-    // Формируем customer_name из firstName и lastName для обратной совместимости
-    const customerName = (customer?.firstName && customer?.lastName)
-      ? `${customer.lastName} ${customer.firstName}`.trim()
-      : (customer?.name || null);
     const customerFirstName = customer?.firstName || null;
     const customerLastName = customer?.lastName || null;
     const customerPhone = customer?.phone || null;
     
     // Обрабатываем получателя
-    // Формируем recipient_name из firstName и lastName для обратной совместимости
-    const recipientName = (recipient?.firstName && recipient?.lastName)
-      ? `${recipient.lastName} ${recipient.firstName}`.trim()
-      : (recipient?.name || null);
     const recipientPhone = recipient?.phone || null;
     const recipientFirstName = recipient?.firstName || null;
     const recipientLastName = recipient?.lastName || null;
@@ -1060,8 +1044,8 @@ router.put('/:id', async (req, res, next) => {
     if (hasPaymentStatus && hasCustomerFirstName) {
       await pool.execute(`
         UPDATE orders SET
-          customer_name = ?, customer_first_name = ?, customer_last_name = ?, customer_phone = ?,
-          recipient_name = ?, recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
+          customer_first_name = ?, customer_last_name = ?, customer_phone = ?,
+          recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
           delivery_method = ?, delivery_city = ?, delivery_city_ref = ?, delivery_warehouse = ?, delivery_warehouse_ref = ?,
           delivery_post_index = ?, delivery_address = ?,
           payment_method = ?, payment_status = ?, paid_amount = ?,
@@ -1069,8 +1053,8 @@ router.put('/:id', async (req, res, next) => {
           delivery_cost = ?, total = ?, delivery_ttn = ?, updated_at = CURRENT_TIMESTAMP
         WHERE order_number = ?
       `, [
-        customerName, customerFirstName, customerLastName, customerPhone,
-        recipientName, recipientPhone, recipientFirstName, recipientLastName,
+        customerFirstName, customerLastName, customerPhone,
+        recipientPhone, recipientFirstName, recipientLastName,
         deliveryMethod, deliveryCity, deliveryCityRef, deliveryWarehouse, deliveryWarehouseRef,
         deliveryPostIndex, deliveryAddress,
         paymentMethod, paymentStatus, paidAmount,
@@ -1081,8 +1065,8 @@ router.put('/:id', async (req, res, next) => {
     } else if (hasPaymentStatus) {
       await pool.execute(`
         UPDATE orders SET
-          customer_name = ?, customer_phone = ?,
-          recipient_name = ?, recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
+          customer_phone = ?,
+          recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
           delivery_method = ?, delivery_city = ?, delivery_city_ref = ?, delivery_warehouse = ?, delivery_warehouse_ref = ?,
           delivery_post_index = ?, delivery_address = ?,
           payment_method = ?, payment_status = ?, paid_amount = ?,
@@ -1090,8 +1074,8 @@ router.put('/:id', async (req, res, next) => {
           delivery_cost = ?, total = ?, delivery_ttn = ?, updated_at = CURRENT_TIMESTAMP
         WHERE order_number = ?
       `, [
-        customerName, customerPhone,
-        recipientName, recipientPhone, recipientFirstName, recipientLastName,
+        customerPhone,
+        recipientPhone, recipientFirstName, recipientLastName,
         deliveryMethod, deliveryCity, deliveryCityRef, deliveryWarehouse, deliveryWarehouseRef,
         deliveryPostIndex, deliveryAddress,
         paymentMethod, paymentStatus, paidAmount,
@@ -1102,16 +1086,16 @@ router.put('/:id', async (req, res, next) => {
     } else if (hasCustomerFirstName) {
       await pool.execute(`
         UPDATE orders SET
-          customer_name = ?, customer_first_name = ?, customer_last_name = ?, customer_phone = ?,
-          recipient_name = ?, recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
+          customer_first_name = ?, customer_last_name = ?, customer_phone = ?,
+          recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
           delivery_method = ?, delivery_city = ?, delivery_city_ref = ?, delivery_warehouse = ?, delivery_warehouse_ref = ?,
           delivery_post_index = ?, delivery_address = ?,
           payment_method = ?, status = ?, subtotal = ?, discount = ?,
           delivery_cost = ?, total = ?, delivery_ttn = ?, updated_at = CURRENT_TIMESTAMP
         WHERE order_number = ?
       `, [
-        customerName, customerFirstName, customerLastName, customerPhone,
-        recipientName, recipientPhone, recipientFirstName, recipientLastName,
+        customerFirstName, customerLastName, customerPhone,
+        recipientPhone, recipientFirstName, recipientLastName,
         deliveryMethod, deliveryCity, deliveryCityRef, deliveryWarehouse, deliveryWarehouseRef,
         deliveryPostIndex, deliveryAddress,
         paymentMethod, orderStatus, orderSubtotal, orderDiscount,
@@ -1122,16 +1106,16 @@ router.put('/:id', async (req, res, next) => {
       // Если поля не существуют, обновляем только старые поля
       await pool.execute(`
         UPDATE orders SET
-          customer_name = ?, customer_phone = ?,
-          recipient_name = ?, recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
+          customer_phone = ?,
+          recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
           delivery_method = ?, delivery_city = ?, delivery_city_ref = ?, delivery_warehouse = ?, delivery_warehouse_ref = ?,
           delivery_post_index = ?, delivery_address = ?,
           payment_method = ?, status = ?, subtotal = ?, discount = ?,
           delivery_cost = ?, total = ?, delivery_ttn = ?, updated_at = CURRENT_TIMESTAMP
         WHERE order_number = ?
       `, [
-        customerName, customerPhone,
-        recipientName, recipientPhone, recipientFirstName, recipientLastName,
+        customerPhone,
+        recipientPhone, recipientFirstName, recipientLastName,
         deliveryMethod, deliveryCity, deliveryCityRef, deliveryWarehouse, deliveryWarehouseRef,
         deliveryPostIndex, deliveryAddress,
         paymentMethod, orderStatus, orderSubtotal, orderDiscount,
