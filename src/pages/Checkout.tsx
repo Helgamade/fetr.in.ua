@@ -40,19 +40,6 @@ const Checkout = () => {
   const paymentWayForPayTitle = texts.find(t => t.key === 'checkout.payment.wayforpay.title')?.value || 'Онлайн оплата';
   const paymentWayForPayDescription = texts.find(t => t.key === 'checkout.payment.wayforpay.description')?.value || 'Безпечна оплата карткою через WayForPay';
   const paymentNalojkaTitle = texts.find(t => t.key === 'checkout.payment.nalojka.title')?.value || 'Оплата при отриманні';
-  
-  // Описание для "Оплата при отриманні" зависит от способа доставки
-  const paymentNalojkaDescription = useMemo(() => {
-    if (formData.deliveryMethod === 'nova_poshta') {
-      return 'Післяплата (комісія 2% + 20 грн)';
-    } else if (formData.deliveryMethod === 'ukr_poshta' || formData.deliveryMethod === 'ukrposhta') {
-      return 'Післяплата (комісія 2% + 15 грн)';
-    } else if (formData.deliveryMethod === 'pickup') {
-      return 'Оплата готівкою при отриманні замовлення';
-    }
-    // Fallback - используем значение из базы или дефолтное
-    return texts.find(t => t.key === 'checkout.payment.nalojka.description')?.value || 'Оплата при отриманні (+20 грн комісія)';
-  }, [formData.deliveryMethod, texts]);
   const paymentFopTitle = texts.find(t => t.key === 'checkout.payment.fop.title')?.value || 'Оплата на рахунок ФОП';
   const paymentFopDescription = texts.find(t => t.key === 'checkout.payment.fop.description')?.value || 'Оплата на банківський рахунок ФОП';
 
@@ -160,6 +147,20 @@ const Checkout = () => {
     contactInfoExpanded: true,
     deliveryExpanded: true
   });
+
+  // Описание для "Оплата при отриманні" зависит от способа доставки
+  // Должно быть после объявления formData
+  const paymentNalojkaDescription = useMemo(() => {
+    if (formData.deliveryMethod === 'nova_poshta') {
+      return 'Післяплата (комісія 2% + 20 грн)';
+    } else if (formData.deliveryMethod === 'ukr_poshta' || formData.deliveryMethod === 'ukrposhta') {
+      return 'Післяплата (комісія 2% + 15 грн)';
+    } else if (formData.deliveryMethod === 'pickup') {
+      return 'Оплата готівкою при отриманні замовлення';
+    }
+    // Fallback - используем значение из базы или дефолтное
+    return texts.find(t => t.key === 'checkout.payment.nalojka.description')?.value || 'Оплата при отриманні (+20 грн комісія)';
+  }, [formData.deliveryMethod, texts]);
 
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [phoneError, setPhoneError] = useState("");
