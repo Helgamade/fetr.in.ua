@@ -499,7 +499,7 @@ export interface NovaPoshtaWarehouse {
   description_ru?: string;
   short_address_ua?: string;
   short_address_ru?: string;
-  type_of_warehouse: 'PostOffice' | 'Postomat';
+  type_of_warehouse: string; // UUID типа отделения (не 'PostOffice' | 'Postomat')
   number?: string;
   phone?: string;
   max_weight_allowed?: number;

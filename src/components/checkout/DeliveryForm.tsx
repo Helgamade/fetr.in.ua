@@ -168,6 +168,18 @@ export const DeliveryForm = ({
     return null;
   };
 
+  // UUID типов отделений и почтоматов Новой Почты
+  const POSTOFFICE_UUIDS = [
+    '6f8c7162-4b72-4b0a-88e5-906948c6a92f', // Поштове відділення з обмеження
+    '841339c7-591a-42e2-8233-7a0a00f0ed6f', // Поштове(ий)
+    '9a68df70-0267-42a8-bb5c-37f427e36ee4', // Вантажне(ий)
+  ];
+  
+  const POSTOMAT_UUIDS = [
+    '95dc212d-479c-4ffb-a8ab-8c1b9073d0bc', // Поштомат ПриватБанку
+    'f9316480-5f2d-425d-bc2c-ac7cd29decf0', // Поштомат
+  ];
+
   // Определение типа доставки (PostOffice/Postomat) по warehouseRef из базы данных
   useEffect(() => {
     if (formData.method === 'nova_poshta' && 
@@ -176,7 +188,10 @@ export const DeliveryForm = ({
       // Загружаем информацию об отделении из базы данных для определения типа
       novaPoshtaAPI.getWarehouse(initialDelivery.warehouseRef)
         .then(warehouse => {
-          const deliveryType = warehouse.type_of_warehouse === 'Postomat' ? 'Postomat' : 'PostOffice';
+          // type_of_warehouse - это UUID, а не строка 'Postomat' или 'PostOffice'
+          const warehouseTypeUUID = warehouse.type_of_warehouse as string;
+          const isPostomat = POSTOMAT_UUIDS.includes(warehouseTypeUUID);
+          const deliveryType: 'PostOffice' | 'Postomat' = isPostomat ? 'Postomat' : 'PostOffice';
           const warehouseName = initialDelivery.warehouse || '';
           
           setFormData(prev => {
