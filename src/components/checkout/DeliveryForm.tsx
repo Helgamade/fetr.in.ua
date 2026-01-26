@@ -74,31 +74,52 @@ export const DeliveryForm = ({
     const method = dbMethod === 'ukrposhta' ? 'ukr_poshta' : dbMethod;
     
     if (method === 'nova_poshta') {
+      // Проверяем, есть ли сохраненные данные из базы
+      const hasCity = !!initialDelivery.city;
+      const hasWarehouse = !!initialDelivery.warehouse;
+      const isCompleted = hasCity && hasWarehouse;
+      
       return {
         method,
         novaPoshtaCity: initialDelivery.city || '',
-        novaPoshtaCityRef: null,
+        novaPoshtaCityRef: null, // Будет загружен через API при необходимости
         novaPoshtaPostOfficeWarehouse: initialDelivery.warehouse || '',
-        novaPoshtaPostOfficeWarehouseRef: null,
-        novaPoshtaPostOfficeCompleted: false,
+        novaPoshtaPostOfficeWarehouseRef: null, // Будет загружен через API при необходимости
+        novaPoshtaPostOfficeCompleted: isCompleted, // true если данные есть в БД
         novaPoshtaPostomatWarehouse: '',
         novaPoshtaPostomatWarehouseRef: null,
         novaPoshtaPostomatCompleted: false,
-        novaPoshtaDeliveryType: 'PostOffice',
-        novaPoshtaExpanded: false,
+        novaPoshtaDeliveryType: 'PostOffice', // По умолчанию PostOffice, можно определить по warehouse если нужно
+        novaPoshtaExpanded: isCompleted && (defaultExpanded || mode === 'edit'), // Открываем если данные есть
       };
     } else if (method === 'ukr_poshta') {
+      // Проверяем, есть ли сохраненные данные из базы
+      const hasCity = !!initialDelivery.city;
+      const hasBranch = !!initialDelivery.warehouse;
+      const isCompleted = hasCity && hasBranch;
+      
+      // Пытаемся извлечь область из названия города (формат "Город (Область)" или просто "Город")
+      let cityRegion = '';
+      let cityName = initialDelivery.city || '';
+      if (cityName.includes('(') && cityName.includes(')')) {
+        const match = cityName.match(/^(.+?)\s*\((.+?)\)$/);
+        if (match) {
+          cityName = match[1].trim();
+          cityRegion = match[2].trim();
+        }
+      }
+      
       return {
         method,
-        ukrPoshtaCity: initialDelivery.city || '',
-        ukrPoshtaCityId: null,
-        ukrPoshtaCityRegion: '',
+        ukrPoshtaCity: initialDelivery.city || '', // Сохраняем полное название как есть
+        ukrPoshtaCityId: null, // Будет загружен через API при необходимости
+        ukrPoshtaCityRegion: cityRegion,
         ukrPoshtaBranch: initialDelivery.warehouse || '',
-        ukrPoshtaBranchId: null,
+        ukrPoshtaBranchId: null, // Будет загружен через API при необходимости
         ukrPoshtaPostalCode: initialDelivery.postIndex || '',
         ukrPoshtaAddress: initialDelivery.address || '',
-        ukrPoshtaCompleted: false,
-        ukrPoshtaExpanded: false,
+        ukrPoshtaCompleted: isCompleted, // true если данные есть в БД
+        ukrPoshtaExpanded: isCompleted && (defaultExpanded || mode === 'edit'), // Открываем если данные есть
       };
     }
     
@@ -135,13 +156,14 @@ export const DeliveryForm = ({
   // При открытии формы редактирования автоматически открываем соответствующую форму доставки
   useEffect(() => {
     if (isExpanded) {
+      // Если данные уже есть (completed = true), но форма не развернута - разворачиваем
       if (formData.method === 'nova_poshta' && formData.novaPoshtaExpanded === false) {
         setFormData(prev => ({ ...prev, novaPoshtaExpanded: true }));
-      } else       if (formData.method === 'ukr_poshta' && formData.ukrPoshtaExpanded === false) {
+      } else if (formData.method === 'ukr_poshta' && formData.ukrPoshtaExpanded === false) {
         setFormData(prev => ({ ...prev, ukrPoshtaExpanded: true }));
       }
     }
-  }, [isExpanded, formData.method]);
+  }, [isExpanded, formData.method, formData.novaPoshtaExpanded, formData.ukrPoshtaExpanded]);
 
   const isCompleted = () => {
     if (formData.method === 'pickup') return true;
