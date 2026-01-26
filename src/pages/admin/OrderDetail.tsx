@@ -208,6 +208,48 @@ export function OrderDetail() {
     }
   }, [id]);
 
+  // Отдельный useEffect для валидации контактов при изменении order
+  useEffect(() => {
+    if (!order?.customer) {
+      setContactValidation(false);
+      setContactInfoCompleted(false);
+      return;
+    }
+
+    const phone = order.customer.phone || '';
+    const firstName = order.customer.firstName || '';
+    const lastName = order.customer.lastName || '';
+    
+    const isPhoneValid = validatePhone(phone);
+    const isLastNameValid = lastName.trim() !== '' && validateCyrillic(lastName);
+    const isFirstNameValid = firstName.trim() !== '' && validateCyrillic(firstName);
+    
+    // Проверка получателя (если указан)
+    let recipientValid = true;
+    if (order.recipient) {
+      const recipientPhone = order.recipient.phone || '';
+      const recipientFirstName = order.recipient.firstName || '';
+      const recipientLastName = order.recipient.lastName || '';
+      const isRecipientPhoneValid = validatePhone(recipientPhone);
+      const isRecipientLastNameValid = recipientLastName.trim() !== '' && validateCyrillic(recipientLastName);
+      const isRecipientFirstNameValid = recipientFirstName.trim() !== '' && validateCyrillic(recipientFirstName);
+      recipientValid = isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid;
+    }
+    
+    const contactValid = isPhoneValid && isLastNameValid && isFirstNameValid && recipientValid;
+    
+    console.log('[OrderDetail] Contact validation updated:', { 
+      phone, firstName, lastName,
+      isPhoneValid, isLastNameValid, isFirstNameValid, recipientValid, contactValid 
+    });
+    
+    setContactValidation(contactValid);
+    // Устанавливаем completed только если валидно
+    if (contactValid) {
+      setContactInfoCompleted(true);
+    }
+  }, [order?.customer, order?.recipient]);
+
   // Пересчет цены заказа
   const recalculateOrder = useMemo(() => {
     if (!order || localItems.length === 0) return null;
