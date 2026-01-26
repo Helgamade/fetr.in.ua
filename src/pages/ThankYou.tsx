@@ -431,16 +431,23 @@ const ThankYou = () => {
                 <div className="bg-muted/30 rounded-xl p-4">
                   {order.payment && order.payment.method ? (
                     <>
-                      <div className="flex items-center gap-2">
-                        {order.payment.method === 'wayforpay' && <WayForPayLogo className="w-5 h-5" />}
-                        {order.payment.method === 'nalojka' && <CODPaymentLogo className="w-5 h-5" />}
-                        {order.payment.method === 'fopiban' && <FOPPaymentLogo className="w-5 h-5" />}
-                        <span className="font-medium">
-                          {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
-                          {order.payment.method === 'nalojka' && 'Оплата при отриманні'}
-                          {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
-                          {!['wayforpay', 'nalojka', 'fopiban'].includes(order.payment.method) && `Спосіб оплати: ${order.payment.method}`}
-                        </span>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          {order.payment.method === 'wayforpay' && <WayForPayLogo className="w-5 h-5" />}
+                          {order.payment.method === 'nalojka' && <CODPaymentLogo className="w-5 h-5" />}
+                          {order.payment.method === 'fopiban' && <FOPPaymentLogo className="w-5 h-5" />}
+                          <span className="font-medium">
+                            {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
+                            {order.payment.method === 'nalojka' && 'Оплата при отриманні'}
+                            {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
+                            {!['wayforpay', 'nalojka', 'fopiban'].includes(order.payment.method) && `Спосіб оплати: ${order.payment.method}`}
+                          </span>
+                        </div>
+                        {order.total && (
+                          <span className="font-semibold text-lg">
+                            {Math.round(parseFloat(order.total))} ₴
+                          </span>
+                        )}
                       </div>
                       {isPaymentPending && order.payment.method === 'wayforpay' && (
                         <div className="mt-4 pt-4 border-t">
