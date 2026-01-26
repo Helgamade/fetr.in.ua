@@ -383,13 +383,6 @@ export function OrderDetail() {
     ));
   };
 
-  // Функции валидации (ТОЧНО как в Checkout)
-  const validateCyrillic = (value: string): boolean => {
-    const cyrillicRegex = /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/;
-    return cyrillicRegex.test(value);
-  };
-
-
   // Проверка частичной заполненности контактов (для оранжевой иконки)
   const isContactInfoPartiallyFilled = useMemo(() => {
     if (!order?.customer) return false;
