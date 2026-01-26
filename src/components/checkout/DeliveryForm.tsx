@@ -96,6 +96,17 @@ export const DeliveryForm = ({
   const [novaPoshtaExpanded, setNovaPoshtaExpanded] = useState(false);
   const [ukrPoshtaExpanded, setUkrPoshtaExpanded] = useState(false);
 
+  // При открытии формы редактирования автоматически открываем соответствующую форму доставки
+  useEffect(() => {
+    if (isExpanded && mode === 'view') {
+      if (formData.method === 'nova_poshta') {
+        setNovaPoshtaExpanded(true);
+      } else if (formData.method === 'ukrposhta') {
+        setUkrPoshtaExpanded(true);
+      }
+    }
+  }, [isExpanded, mode, formData.method]);
+
   const isCompleted = () => {
     if (formData.method === 'pickup') return true;
     if (formData.method === 'nova_poshta') {
@@ -237,7 +248,17 @@ export const DeliveryForm = ({
         className="space-y-3"
       >
         {/* Нова Пошта */}
-        <div className="border rounded-xl transition-all">
+        <div 
+          className="border rounded-xl transition-all"
+          onClick={(e) => {
+            // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
+            if (formData.method === "nova_poshta" && !novaPoshtaExpanded && mode === 'view') {
+              e.stopPropagation();
+              setNovaPoshtaExpanded(true);
+              setIsExpanded(true);
+            }
+          }}
+        >
           <label className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors">
             <div className="flex items-center gap-3">
               <RadioGroupItem value="nova_poshta" id="nova_poshta" />
@@ -317,7 +338,17 @@ export const DeliveryForm = ({
         </div>
 
         {/* Укрпошта */}
-        <div className="border rounded-xl transition-all">
+        <div 
+          className="border rounded-xl transition-all"
+          onClick={(e) => {
+            // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
+            if (formData.method === "ukrposhta" && !ukrPoshtaExpanded && mode === 'view') {
+              e.stopPropagation();
+              setUkrPoshtaExpanded(true);
+              setIsExpanded(true);
+            }
+          }}
+        >
           <label className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors w-full">
             <div className="flex items-center gap-3">
               <RadioGroupItem value="ukrposhta" id="ukrposhta" />

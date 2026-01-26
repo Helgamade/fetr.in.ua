@@ -34,6 +34,26 @@ export const CustomerRecipientForm = ({
     recipientPhone: initialRecipient?.phone || "",
   });
 
+  // Функции валидации (определяем до useEffect, чтобы использовать в нем)
+  const validatePhone = (phone: string): boolean => {
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (digitsOnly.length === 0) {
+      setPhoneError("Це обов'язкове поле");
+      return false;
+    }
+    if (digitsOnly.length < 12 || !digitsOnly.startsWith('380')) {
+      setPhoneError("Некоректний номер");
+      return false;
+    }
+    setPhoneError("");
+    return true;
+  };
+
+  const validateCyrillic = (value: string): boolean => {
+    const cyrillicRegex = /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/;
+    return cyrillicRegex.test(value);
+  };
+
   // Обновляем formData при изменении initialCustomer/initialRecipient или при открытии формы редактирования
   useEffect(() => {
     if (isExpanded || mode === 'edit') {
@@ -75,20 +95,73 @@ export const CustomerRecipientForm = ({
         recipientPhone: initialRecipient?.phone || "",
       });
       
-      // Сбрасываем состояния touched при открытии формы, чтобы не показывать ошибки валидации
+      // При открытии формы автоматически валидируем заполненные поля
       if (isExpanded) {
-        setPhoneTouched(false);
-        setPhoneError("");
-        setLastNameTouched(false);
-        setLastNameError("");
-        setFirstNameTouched(false);
-        setFirstNameError("");
-        setRecipientPhoneTouched(false);
-        setRecipientPhoneError("");
-        setRecipientLastNameTouched(false);
-        setRecipientLastNameError("");
-        setRecipientFirstNameTouched(false);
-        setRecipientFirstNameError("");
+        // Валидация телефона заказчика
+        if (initialCustomer.phone) {
+          setPhoneTouched(true);
+          validatePhone(initialCustomer.phone);
+        }
+        
+        // Валидация имени и фамилии заказчика
+        if (lastName) {
+          setLastNameTouched(true);
+          if (lastName.trim() === "") {
+            setLastNameError("Це обов'язкове поле");
+          } else if (!validateCyrillic(lastName)) {
+            setLastNameError("Використовуйте тільки кириличні символи");
+          } else {
+            setLastNameError("");
+          }
+        }
+        
+        if (firstName) {
+          setFirstNameTouched(true);
+          if (firstName.trim() === "") {
+            setFirstNameError("Це обов'язкове поле");
+          } else if (!validateCyrillic(firstName)) {
+            setFirstNameError("Використовуйте тільки кириличні символи");
+          } else {
+            setFirstNameError("");
+          }
+        }
+        
+        // Валидация данных получателя (если указан)
+        if (initialRecipient) {
+          if (initialRecipient.phone) {
+            setRecipientPhoneTouched(true);
+            const digitsOnly = initialRecipient.phone.replace(/\D/g, '');
+            if (digitsOnly.length === 0) {
+              setRecipientPhoneError("Це обов'язкове поле");
+            } else if (digitsOnly.length < 12 || !digitsOnly.startsWith('380')) {
+              setRecipientPhoneError("Некоректний номер");
+            } else {
+              setRecipientPhoneError("");
+            }
+          }
+          
+          if (recipientLastName) {
+            setRecipientLastNameTouched(true);
+            if (recipientLastName.trim() === "") {
+              setRecipientLastNameError("Це обов'язкове поле");
+            } else if (!validateCyrillic(recipientLastName)) {
+              setRecipientLastNameError("Використовуйте тільки кириличні символи");
+            } else {
+              setRecipientLastNameError("");
+            }
+          }
+          
+          if (recipientFirstName) {
+            setRecipientFirstNameTouched(true);
+            if (recipientFirstName.trim() === "") {
+              setRecipientFirstNameError("Це обов'язкове поле");
+            } else if (!validateCyrillic(recipientFirstName)) {
+              setRecipientFirstNameError("Використовуйте тільки кириличні символи");
+            } else {
+              setRecipientFirstNameError("");
+            }
+          }
+        }
       }
     }
   }, [initialCustomer, initialRecipient, isExpanded, mode]);
@@ -107,25 +180,6 @@ export const CustomerRecipientForm = ({
   const [recipientLastNameError, setRecipientLastNameError] = useState("");
   const [recipientFirstNameTouched, setRecipientFirstNameTouched] = useState(false);
   const [recipientFirstNameError, setRecipientFirstNameError] = useState("");
-
-  const validatePhone = (phone: string): boolean => {
-    const digitsOnly = phone.replace(/\D/g, '');
-    if (digitsOnly.length === 0) {
-      setPhoneError("Це обов'язкове поле");
-      return false;
-    }
-    if (digitsOnly.length < 12 || !digitsOnly.startsWith('380')) {
-      setPhoneError("Некоректний номер");
-      return false;
-    }
-    setPhoneError("");
-    return true;
-  };
-
-  const validateCyrillic = (value: string): boolean => {
-    const cyrillicRegex = /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/;
-    return cyrillicRegex.test(value);
-  };
 
   const formatPhone = (value: string): string => {
     const digitsOnly = value.replace(/\D/g, '');
