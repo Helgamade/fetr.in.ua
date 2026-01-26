@@ -736,7 +736,7 @@ export function OrderDetail() {
                 setEditingCustomer(!editingCustomer);
               }}
             >
-              {isContactInfoValid && contactInfoCompleted ? (
+              {isContactInfoValid ? (
                 <CheckCircle className="w-6 h-6 text-green-500" />
               ) : (order?.customer?.phone || order?.customer?.firstName || order?.customer?.lastName ? (
                 <span className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-medium">1</span>
