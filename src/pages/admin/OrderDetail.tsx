@@ -661,7 +661,7 @@ export function OrderDetail() {
 
                       {/* Кнопки редактирования */}
                       {editingItems && (
-                        <div className="flex gap-2 mt-4">
+                        <div className="flex items-center gap-2 mt-4">
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
@@ -694,7 +694,7 @@ export function OrderDetail() {
                           <button
                             type="button"
                             onClick={() => handleRemoveItem(item.id)}
-                            className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+                            className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>

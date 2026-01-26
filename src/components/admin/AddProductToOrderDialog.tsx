@@ -176,37 +176,6 @@ export function AddProductToOrderDialog({
                 </Button>
               </div>
 
-              {/* Количество */}
-              <div className="space-y-2">
-                <Label>Кількість</Label>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  >
-                    -
-                  </Button>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={quantity}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value) || 1;
-                      setQuantity(Math.max(1, val));
-                    }}
-                    className="w-20 text-center"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQuantity(quantity + 1)}
-                  >
-                    +
-                  </Button>
-                </div>
-              </div>
-
               {/* Дополнительные опции */}
               {selectedProductOptions.length > 0 && (
                 <div className="space-y-3">
@@ -252,14 +221,12 @@ export function AddProductToOrderDialog({
                     {totalPrice.toFixed(0)} ₴
                   </span>
                 </div>
-                {totalOptionsPrice > 0 && (
-                  <div className="text-sm text-muted-foreground mt-1">
-                    Товар: {productPrice} ₴ × {quantity} ={' '}
-                    {(productPrice * quantity).toFixed(0)} ₴
-                    <br />
-                    Опції: +{totalOptionsPrice.toFixed(0)} ₴
-                  </div>
-                )}
+                <div className="text-sm text-muted-foreground mt-1">
+                  Товар: {productPrice} ₴ × {quantity} ={' '}
+                  {(productPrice * quantity).toFixed(0)} ₴
+                  <br />
+                  Опції: +{totalOptionsPrice.toFixed(0)} ₴
+                </div>
               </div>
             </div>
           )}
