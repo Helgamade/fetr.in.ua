@@ -111,6 +111,9 @@ export function OrderDetail() {
   
   // Состояние валидации доставки из DeliveryForm
   const [deliveryValidation, setDeliveryValidation] = useState<boolean | null>(null);
+  
+  // Флаг завершенности контактов (как в Checkout)
+  const [contactInfoCompleted, setContactInfoCompleted] = useState(false);
 
   // Получаем тексты способов доставки
   const deliveryNovaPoshtaTitle = texts.find(t => t.key === 'checkout.delivery.nova_poshta.title')?.value || 'Нова Пошта';
@@ -166,7 +169,23 @@ export function OrderDetail() {
             const isPhoneValid = phone.replace(/\D/g, '').length >= 12 && phone.replace(/\D/g, '').startsWith('380');
             const isLastNameValid = lastName.trim() !== '' && /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/.test(lastName);
             const isFirstNameValid = firstName.trim() !== '' && /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/.test(firstName);
-            const contactValid = isPhoneValid && isLastNameValid && isFirstNameValid;
+            
+            // Проверка получателя (если указан)
+            let recipientValid = true;
+            if (orderData.recipient) {
+              const recipientPhone = orderData.recipient.phone || '';
+              const recipientFirstName = orderData.recipient.firstName || '';
+              const recipientLastName = orderData.recipient.lastName || '';
+              const isRecipientPhoneValid = recipientPhone.replace(/\D/g, '').length >= 12 && recipientPhone.replace(/\D/g, '').startsWith('380');
+              const isRecipientLastNameValid = recipientLastName.trim() !== '' && /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/.test(recipientLastName);
+              const isRecipientFirstNameValid = recipientFirstName.trim() !== '' && /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/.test(recipientFirstName);
+              recipientValid = isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid;
+            }
+            
+            const contactValid = isPhoneValid && isLastNameValid && isFirstNameValid && recipientValid;
+            
+            // Устанавливаем флаг завершенности (как в Checkout)
+            setContactInfoCompleted(contactValid);
             
             // Если валидно, блок свернут по умолчанию (как в Checkout)
             if (contactValid) {
@@ -750,7 +769,7 @@ export function OrderDetail() {
               ))}
               Контактні дані *
             </h2>
-            {isContactInfoValid && !editingCustomer ? (
+            {isContactInfoValid && contactInfoCompleted && !editingCustomer ? (
               // Свернутый вид с информацией (как в Checkout)
               <div className="space-y-3">
                 <div className="space-y-1">
@@ -781,6 +800,8 @@ export function OrderDetail() {
                 recipient={order.recipient}
                 onSave={(customer, recipient) => {
                   handleSaveOrder({ customer, recipient });
+                  // Устанавливаем флаг завершенности после сохранения (как в Checkout)
+                  setContactInfoCompleted(true);
                   setEditingCustomer(false);
                 }}
                 onCancel={() => setEditingCustomer(false)}
