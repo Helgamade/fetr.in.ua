@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   ArrowLeft,
   Phone,
@@ -7,7 +7,10 @@ import {
   CreditCard,
   Package,
   Calendar,
-  User
+  User,
+  Pencil,
+  Trash2,
+  Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,11 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Order, OrderStatus } from '@/types/store';
+import { Order, OrderStatus, CartItem, CustomerInfo, RecipientInfo, DeliveryInfo, PaymentInfo } from '@/types/store';
 import { useUpdateOrderStatus, useUpdateOrder } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { ordersAPI } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { CustomerRecipientForm } from '@/components/checkout/CustomerRecipientForm';
+import { DeliveryForm } from '@/components/checkout/DeliveryForm';
+import { PaymentForm } from '@/components/checkout/PaymentForm';
 
 // Только рабочие статусы
 const statusLabels: Record<OrderStatus, string> = {
@@ -87,6 +93,14 @@ export function OrderDetail() {
   const [deliveryTtn, setDeliveryTtn] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<'not_paid' | 'cash_on_delivery' | 'paid'>('not_paid');
   const [paidAmount, setPaidAmount] = useState<string>('');
+  
+  // Состояния для редактирования
+  const [editingCustomer, setEditingCustomer] = useState(false);
+  const [editingRecipient, setEditingRecipient] = useState(false);
+  const [editingDelivery, setEditingDelivery] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(false);
+  const [editingItems, setEditingItems] = useState(false);
+  const [localItems, setLocalItems] = useState<CartItem[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -97,6 +111,10 @@ export function OrderDetail() {
           console.log('[OrderDetail] Has analytics:', !!(orderData as any).analytics);
           console.log('[OrderDetail] Analytics keys:', (orderData as any).analytics ? Object.keys((orderData as any).analytics) : 'none');
           setOrder(orderData);
+          setLocalItems(orderData.items.map((item, index) => ({
+            ...item,
+            id: item.id || `item_${index}_${Date.now()}`
+          })));
           setDeliveryTtn(orderData.deliveryTtn || '');
           setPaymentStatus(orderData.payment?.status || 'not_paid');
           setPaidAmount(orderData.payment?.paidAmount?.toString() || '');
@@ -107,6 +125,49 @@ export function OrderDetail() {
         .finally(() => setIsLoading(false));
     }
   }, [id]);
+
+  // Пересчет цены заказа
+  const recalculateOrder = useMemo(() => {
+    if (!order || localItems.length === 0) return null;
+
+    let subtotal = 0;
+    let discount = 0;
+
+    localItems.forEach(item => {
+      const product = products.find(p => p.code === item.productId);
+      if (!product) return;
+
+      const basePrice = product.basePrice || 0;
+      const salePrice = product.salePrice;
+      const productPrice = salePrice || basePrice;
+      
+      // Цена опций
+      const optionsPrice = item.selectedOptions.reduce((total, optId) => {
+        const option = product.options.find(o => o.code === optId);
+        return total + (option?.price || 0);
+      }, 0);
+
+      // Цена товара с опциями
+      const itemPrice = (productPrice + optionsPrice) * item.quantity;
+      subtotal += itemPrice;
+
+      // Скидка на товар
+      if (salePrice && salePrice < basePrice) {
+        discount += (basePrice - salePrice) * item.quantity;
+      }
+    });
+
+    // Стоимость доставки (пока используем существующую)
+    const deliveryCost = order.deliveryCost || 0;
+    const total = subtotal - discount + deliveryCost;
+
+    return {
+      subtotal,
+      discount,
+      deliveryCost,
+      total,
+    };
+  }, [order, localItems, products]);
 
   const handleStatusChange = (newStatus: OrderStatus) => {
     if (!order) return;
@@ -147,6 +208,73 @@ export function OrderDetail() {
 
   const getProductName = (productId: string) => {
     return products.find(p => p.code === productId)?.name || productId;
+  };
+
+  const handleSaveOrder = async (updates: Partial<Order>) => {
+    if (!order) return;
+
+    const newOrder = {
+      ...order,
+      ...updates,
+      items: localItems,
+      ...(recalculateOrder ? {
+        subtotal: recalculateOrder.subtotal,
+        discount: recalculateOrder.discount,
+        total: recalculateOrder.total,
+      } : {}),
+    };
+
+    try {
+      await updateOrder.mutateAsync({
+        id: order.id,
+        data: {
+          customer: newOrder.customer,
+          recipient: newOrder.recipient,
+          delivery: newOrder.delivery,
+          payment: newOrder.payment,
+          status: newOrder.status,
+          subtotal: newOrder.subtotal,
+          discount: newOrder.discount,
+          deliveryCost: newOrder.deliveryCost,
+          total: newOrder.total,
+          deliveryTtn: newOrder.deliveryTtn,
+          items: localItems.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            selectedOptions: item.selectedOptions,
+          })),
+        },
+      });
+      
+      setOrder(newOrder);
+      setEditingCustomer(false);
+      setEditingRecipient(false);
+      setEditingDelivery(false);
+      setEditingPayment(false);
+      setEditingItems(false);
+      
+      toast({
+        title: 'Збережено',
+        description: 'Замовлення оновлено',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Помилка',
+        description: error.message || 'Не вдалося зберегти зміни',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRemoveItem = (itemId: string) => {
+    setLocalItems(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  const handleUpdateItemQuantity = (itemId: string, quantity: number) => {
+    if (quantity < 1) return;
+    setLocalItems(prev => prev.map(item => 
+      item.id === itemId ? { ...item, quantity } : item
+    ));
   };
 
   if (isLoading) {
@@ -236,9 +364,45 @@ export function OrderDetail() {
         <div className="lg:col-span-2 space-y-6">
           {/* Items */}
           <div className="bg-card rounded-lg border p-6">
-            <h2 className="text-lg font-semibold mb-4">Товари в замовленні ({order.items.length})</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Товари в замовленні ({localItems.length})</h2>
+              <div className="flex gap-2">
+                {!editingItems ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingItems(true)}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Редагувати
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setLocalItems(order.items.map((item, index) => ({
+                          ...item,
+                          id: item.id || `item_${index}_${Date.now()}`
+                        })));
+                        setEditingItems(false);
+                      }}
+                    >
+                      Скасувати
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveOrder({ items: localItems })}
+                    >
+                      Зберегти
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
             <div className="space-y-4">
-              {order.items.map((item, index) => {
+              {localItems.map((item, index) => {
                 const product = products.find(p => p.code === item.productId);
                 const basePrice = product?.basePrice || 0;
                 const salePrice = product?.salePrice;
@@ -351,111 +515,273 @@ export function OrderDetail() {
                           </div>
                         </div>
                       )}
+
+                      {/* Кнопки редактирования */}
+                      {editingItems && (
+                        <div className="flex gap-2 mt-4">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newQuantity = item.quantity - 1;
+                                if (newQuantity >= 1) {
+                                  handleUpdateItemQuantity(item.id, newQuantity);
+                                }
+                              }}
+                            >
+                              -
+                            </Button>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const qty = parseInt(e.target.value) || 1;
+                                handleUpdateItemQuantity(item.id, qty);
+                              }}
+                              className="w-20 text-center"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleUpdateItemQuantity(item.id, item.quantity + 1)}
+                            >
+                              +
+                            </Button>
+                          </div>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleRemoveItem(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
+            {editingItems && (
+              <div className="mt-4 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // TODO: Открыть модальное окно для добавления товара
+                    toast({
+                      title: 'Увага',
+                      description: 'Функція додавання товарів буде реалізована наступним кроком',
+                    });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Додати товар
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Customer */}
           <div className="bg-card rounded-lg border p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Замовник
-            </h2>
-            <div className="space-y-2">
-              <div className="font-medium">{order.customer.name}</div>
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4" />
-                {order.customer.phone}
-              </div>
-              {order.promoCode && (
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">Промокод:</span>
-                  <span className="font-medium text-green-600">{order.promoCode}</span>
-                </div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Замовник
+              </h2>
+              {!editingCustomer && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingCustomer(true)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
               )}
             </div>
+            {editingCustomer ? (
+              <CustomerRecipientForm
+                customer={order.customer}
+                recipient={order.recipient}
+                onSave={(customer, recipient) => {
+                  handleSaveOrder({ customer, recipient });
+                }}
+                onCancel={() => setEditingCustomer(false)}
+                mode="edit"
+                defaultExpanded={true}
+              />
+            ) : (
+              <div className="space-y-2">
+                <div className="font-medium">{order.customer.name}</div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="h-4 w-4" />
+                  {order.customer.phone}
+                </div>
+                {order.promoCode && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">Промокод:</span>
+                    <span className="font-medium text-green-600">{order.promoCode}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Recipient (if different) */}
-          {order.recipient && order.recipient.name && (
+          {(order.recipient && order.recipient.name) || editingRecipient ? (
             <div className="bg-card rounded-lg border p-6">
-              <h2 className="text-lg font-semibold mb-4">Отримувач</h2>
-              <div className="space-y-2">
-                <div className="font-medium">{order.recipient.name}</div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4" />
-                  {order.recipient.phone}
-                </div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Отримувач</h2>
+                {!editingRecipient && order.recipient && order.recipient.name && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingRecipient(true)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
+              {editingRecipient ? (
+                <CustomerRecipientForm
+                  customer={order.customer}
+                  recipient={order.recipient}
+                  onSave={(customer, recipient) => {
+                    handleSaveOrder({ customer, recipient });
+                  }}
+                  onCancel={() => {
+                    setEditingRecipient(false);
+                    if (!order.recipient || !order.recipient.name) {
+                      // Если получателя не было, скрываем секцию
+                    }
+                  }}
+                  mode="edit"
+                  defaultExpanded={true}
+                />
+              ) : order.recipient && order.recipient.name ? (
+                <div className="space-y-2">
+                  <div className="font-medium">{order.recipient.name}</div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4" />
+                    {order.recipient.phone}
+                  </div>
+                </div>
+              ) : null}
             </div>
-          )}
+          ) : null}
 
           {/* Delivery */}
           <div className="bg-card rounded-lg border p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Доставка
-            </h2>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="font-medium">{deliveryLabels[order.delivery.method]}</div>
-                {order.delivery.city && (
-                  <div className="text-sm">м. {order.delivery.city}</div>
-                )}
-                {order.delivery.warehouse && (
-                  <div className="text-sm">{order.delivery.warehouse}</div>
-                )}
-                {order.delivery.address && (
-                  <div className="text-sm">{order.delivery.address}</div>
-                )}
-                {order.delivery.postIndex && (
-                  <div className="text-sm">Індекс: {order.delivery.postIndex}</div>
-                )}
-              </div>
-              
-              {/* ТТН поле - только для Нова Пошта и Укрпошта */}
-              {(order.delivery.method === 'nova_poshta' || order.delivery.method === 'ukrposhta') && (
-                <div className="pt-4 border-t">
-                  <label className="text-sm font-medium mb-2 block">ТТН (Трекінг-номер)</label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={deliveryTtn}
-                      onChange={(e) => setDeliveryTtn(e.target.value)}
-                      placeholder="Введіть номер ТТН"
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={handleDeliveryTtnSave}
-                      variant="outline"
-                      size="default"
-                    >
-                      Зберегти
-                    </Button>
-                  </div>
-                  {order.deliveryTtn && (
-                    <div className="text-xs text-muted-foreground mt-2">
-                      Поточний ТТН: {order.deliveryTtn}
-                    </div>
-                  )}
-                </div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Доставка
+              </h2>
+              {!editingDelivery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingDelivery(true)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
               )}
             </div>
+            {editingDelivery ? (
+              <DeliveryForm
+                delivery={order.delivery}
+                onSave={(delivery) => {
+                  handleSaveOrder({ delivery });
+                }}
+                onCancel={() => setEditingDelivery(false)}
+                mode="edit"
+                defaultExpanded={true}
+                orderTotal={recalculateOrder?.total || order.total}
+              />
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="font-medium">{deliveryLabels[order.delivery.method]}</div>
+                  {order.delivery.city && (
+                    <div className="text-sm">м. {order.delivery.city}</div>
+                  )}
+                  {order.delivery.warehouse && (
+                    <div className="text-sm">{order.delivery.warehouse}</div>
+                  )}
+                  {order.delivery.address && (
+                    <div className="text-sm">{order.delivery.address}</div>
+                  )}
+                  {order.delivery.postIndex && (
+                    <div className="text-sm">Індекс: {order.delivery.postIndex}</div>
+                  )}
+                </div>
+                
+                {/* ТТН поле - только для Нова Пошта и Укрпошта */}
+                {(order.delivery.method === 'nova_poshta' || order.delivery.method === 'ukrposhta') && (
+                  <div className="pt-4 border-t">
+                    <label className="text-sm font-medium mb-2 block">ТТН (Трекінг-номер)</label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={deliveryTtn}
+                        onChange={(e) => setDeliveryTtn(e.target.value)}
+                        placeholder="Введіть номер ТТН"
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={handleDeliveryTtnSave}
+                        variant="outline"
+                        size="default"
+                      >
+                        Зберегти
+                      </Button>
+                    </div>
+                    {order.deliveryTtn && (
+                      <div className="text-xs text-muted-foreground mt-2">
+                        Поточний ТТН: {order.deliveryTtn}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Payment */}
           <div className="bg-card rounded-lg border p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Оплата
-            </h2>
-            <div className="text-sm">
-              {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
-              {order.payment.method === 'nalojka' && 'Оплата при отриманні'}
-              {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Оплата
+              </h2>
+              {!editingPayment && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingPayment(true)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
             </div>
+            {editingPayment ? (
+              <PaymentForm
+                payment={order.payment}
+                deliveryMethod={order.delivery.method}
+                onSave={(payment) => {
+                  handleSaveOrder({ payment });
+                }}
+                onCancel={() => setEditingPayment(false)}
+                mode="edit"
+                defaultExpanded={true}
+              />
+            ) : (
+              <div className="text-sm">
+                {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
+                {order.payment.method === 'nalojka' && 'Оплата при отриманні'}
+                {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
+              </div>
+            )}
           </div>
 
           {/* Comment */}
@@ -597,22 +923,22 @@ export function OrderDetail() {
             <h2 className="text-lg font-semibold mb-4">Підсумок</h2>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Товари ({order.items.length})</span>
-                <span>₴{order.subtotal}</span>
+                <span>Товари ({localItems.length})</span>
+                <span>₴{recalculateOrder?.subtotal.toFixed(2) || order.subtotal.toFixed(2)}</span>
               </div>
-              {order.discount > 0 && (
+              {(recalculateOrder?.discount || order.discount) > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
                   <span>Знижка</span>
-                  <span>-₴{order.discount}</span>
+                  <span>-₴{(recalculateOrder?.discount || order.discount).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
                 <span>Доставка</span>
-                <span>{order.deliveryCost > 0 ? `₴${order.deliveryCost}` : 'Безкоштовно'}</span>
+                <span>{order.deliveryCost > 0 ? `₴${order.deliveryCost.toFixed(2)}` : 'Безкоштовно'}</span>
               </div>
               <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                 <span>Всього</span>
-                <span>₴{order.total}</span>
+                <span>₴{recalculateOrder?.total.toFixed(2) || order.total.toFixed(2)}</span>
               </div>
             </div>
           </div>

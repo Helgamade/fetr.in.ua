@@ -922,7 +922,7 @@ router.patch('/:id/status', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { customer, delivery, payment, status, subtotal, discount, deliveryCost, total, deliveryTtn } = req.body;
+    const { customer, delivery, payment, status, subtotal, discount, deliveryCost, total, deliveryTtn, items, recipient } = req.body;
 
     // Helper function to convert undefined/empty to null
     const toNull = (val) => (val === undefined || val === null || val === '') ? null : val;
@@ -937,6 +937,12 @@ router.put('/:id', async (req, res, next) => {
     // Обрабатываем все поля, чтобы не было undefined
     const customerName = customer?.name || null;
     const customerPhone = customer?.phone || null;
+    
+    // Обрабатываем получателя
+    const recipientName = recipient?.name || null;
+    const recipientPhone = recipient?.phone || null;
+    const recipientFirstName = recipient?.firstName || null;
+    const recipientLastName = recipient?.lastName || null;
     const deliveryMethod = delivery?.method || null;
     const deliveryCity = toNull(delivery?.city);
     const deliveryWarehouse = toNull(delivery?.warehouse);
@@ -963,11 +969,24 @@ router.put('/:id', async (req, res, next) => {
        AND COLUMN_NAME = 'payment_status'`
     ).then(([rows]) => rows.length > 0).catch(() => false);
 
-    // id is order_number (VARCHAR), not INT id
+    // Получаем INT id заказа по order_number
+    const [orderRows] = await pool.execute(
+      'SELECT id FROM orders WHERE order_number = ?',
+      [id]
+    );
+    
+    if (orderRows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    
+    const orderIdInt = orderRows[0].id;
+
+    // Обновляем данные заказа
     if (hasPaymentStatus) {
       await pool.execute(`
         UPDATE orders SET
           customer_name = ?, customer_phone = ?,
+          recipient_name = ?, recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
           delivery_method = ?, delivery_city = ?, delivery_warehouse = ?,
           delivery_post_index = ?, delivery_address = ?,
           payment_method = ?, payment_status = ?, paid_amount = ?,
@@ -976,6 +995,7 @@ router.put('/:id', async (req, res, next) => {
         WHERE order_number = ?
       `, [
         customerName, customerPhone,
+        recipientName, recipientPhone, recipientFirstName, recipientLastName,
         deliveryMethod, deliveryCity, deliveryWarehouse,
         deliveryPostIndex, deliveryAddress,
         paymentMethod, paymentStatus, paidAmount,
@@ -988,6 +1008,7 @@ router.put('/:id', async (req, res, next) => {
       await pool.execute(`
         UPDATE orders SET
           customer_name = ?, customer_phone = ?,
+          recipient_name = ?, recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
           delivery_method = ?, delivery_city = ?, delivery_warehouse = ?,
           delivery_post_index = ?, delivery_address = ?,
           payment_method = ?, status = ?, subtotal = ?, discount = ?,
@@ -995,12 +1016,76 @@ router.put('/:id', async (req, res, next) => {
         WHERE order_number = ?
       `, [
         customerName, customerPhone,
+        recipientName, recipientPhone, recipientFirstName, recipientLastName,
         deliveryMethod, deliveryCity, deliveryWarehouse,
         deliveryPostIndex, deliveryAddress,
         paymentMethod, orderStatus, orderSubtotal, orderDiscount,
         orderDeliveryCost, orderTotal, deliveryTtnValue, id
       ]);
       console.log('[Update Order] WARNING: payment_status column does not exist. Please run migration 014_add_payment_status_and_paid_amount.sql');
+    }
+
+    // Обновляем товары в заказе, если они переданы
+    if (items && Array.isArray(items)) {
+      // Удаляем старые товары
+      await pool.execute('DELETE FROM order_item_options WHERE order_item_id IN (SELECT id FROM order_items WHERE order_id = ?)', [orderIdInt]);
+      await pool.execute('DELETE FROM order_items WHERE order_id = ?', [orderIdInt]);
+
+      // Добавляем новые товары
+      for (const item of items) {
+        const product = await pool.execute('SELECT id FROM products WHERE code = ?', [item.productId]);
+        if (product[0].length === 0) {
+          console.warn(`[Update Order] Product with code ${item.productId} not found, skipping`);
+          continue;
+        }
+        const productIdInt = product[0][0].id;
+
+        // Получаем цену товара
+        const [productData] = await pool.execute(
+          'SELECT base_price, sale_price FROM products WHERE id = ?',
+          [productIdInt]
+        );
+        const basePrice = productData[0]?.base_price || 0;
+        const salePrice = productData[0]?.sale_price;
+        const productPrice = salePrice || basePrice;
+
+        // Вычисляем цену опций
+        let optionsPrice = 0;
+        if (item.selectedOptions && item.selectedOptions.length > 0) {
+          const optionCodes = item.selectedOptions;
+          const [optionRows] = await pool.execute(
+            `SELECT id, price FROM product_options WHERE code IN (${optionCodes.map(() => '?').join(',')})`,
+            optionCodes
+          );
+          optionsPrice = optionRows.reduce((sum, opt) => sum + (opt.price || 0), 0);
+        }
+
+        const itemPrice = productPrice + optionsPrice;
+
+        // Вставляем товар
+        const [insertResult] = await pool.execute(
+          'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
+          [orderIdInt, productIdInt, item.quantity, itemPrice]
+        );
+        const orderItemId = insertResult.insertId;
+
+        // Вставляем опции товара
+        if (item.selectedOptions && item.selectedOptions.length > 0) {
+          for (const optionCode of item.selectedOptions) {
+            const [optionRows] = await pool.execute(
+              'SELECT id FROM product_options WHERE code = ?',
+              [optionCode]
+            );
+            if (optionRows.length > 0) {
+              await pool.execute(
+                'INSERT INTO order_item_options (order_item_id, option_id) VALUES (?, ?)',
+                [orderItemId, optionRows[0].id]
+              );
+            }
+          }
+        }
+      }
+      console.log('[Update Order] Updated items:', items.length);
     }
 
     res.json({ id, message: 'Order updated' });
