@@ -96,7 +96,6 @@ export function OrderDetail() {
   
   // Состояния для редактирования
   const [editingCustomer, setEditingCustomer] = useState(false);
-  const [editingRecipient, setEditingRecipient] = useState(false);
   const [editingDelivery, setEditingDelivery] = useState(false);
   const [editingPayment, setEditingPayment] = useState(false);
   const [editingItems, setEditingItems] = useState(false);
@@ -248,7 +247,6 @@ export function OrderDetail() {
       
       setOrder(newOrder);
       setEditingCustomer(false);
-      setEditingRecipient(false);
       setEditingDelivery(false);
       setEditingPayment(false);
       setEditingItems(false);
@@ -583,93 +581,30 @@ export function OrderDetail() {
             )}
           </div>
 
-          {/* Customer */}
+          {/* Contact Info - объединенный блок для Замовник и Отримувач */}
           <div className="bg-card rounded-lg border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Замовник
-              </h2>
-              {!editingCustomer && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingCustomer(true)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-            {editingCustomer ? (
-              <CustomerRecipientForm
-                customer={order.customer}
-                recipient={order.recipient}
-                onSave={(customer, recipient) => {
-                  handleSaveOrder({ customer, recipient });
-                }}
-                onCancel={() => setEditingCustomer(false)}
-                mode="edit"
-                defaultExpanded={true}
-              />
-            ) : (
-              <div className="space-y-2">
-                <div className="font-medium">{order.customer.name}</div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4" />
-                  {order.customer.phone}
-                </div>
-                {order.promoCode && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Промокод:</span>
-                    <span className="font-medium text-green-600">{order.promoCode}</span>
-                  </div>
-                )}
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Контактні дані
+            </h2>
+            <CustomerRecipientForm
+              customer={order.customer}
+              recipient={order.recipient}
+              onSave={(customer, recipient) => {
+                handleSaveOrder({ customer, recipient });
+                setEditingCustomer(false);
+              }}
+              onCancel={() => setEditingCustomer(false)}
+              mode="view"
+              defaultExpanded={false}
+            />
+            {order.promoCode && (
+              <div className="flex items-center gap-2 text-sm mt-4 pt-4 border-t">
+                <span className="text-muted-foreground">Промокод:</span>
+                <span className="font-medium text-green-600">{order.promoCode}</span>
               </div>
             )}
           </div>
-
-          {/* Recipient (if different) */}
-          {(order.recipient && order.recipient.name) || editingRecipient ? (
-            <div className="bg-card rounded-lg border p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Отримувач</h2>
-                {!editingRecipient && order.recipient && order.recipient.name && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEditingRecipient(true)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              {editingRecipient ? (
-                <CustomerRecipientForm
-                  customer={order.customer}
-                  recipient={order.recipient}
-                  onSave={(customer, recipient) => {
-                    handleSaveOrder({ customer, recipient });
-                  }}
-                  onCancel={() => {
-                    setEditingRecipient(false);
-                    if (!order.recipient || !order.recipient.name) {
-                      // Если получателя не было, скрываем секцию
-                    }
-                  }}
-                  mode="edit"
-                  defaultExpanded={true}
-                />
-              ) : order.recipient && order.recipient.name ? (
-                <div className="space-y-2">
-                  <div className="font-medium">{order.recipient.name}</div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4" />
-                    {order.recipient.phone}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
 
           {/* Delivery */}
           <div className="bg-card rounded-lg border p-6">
