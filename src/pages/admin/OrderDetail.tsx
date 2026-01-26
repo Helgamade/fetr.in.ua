@@ -715,7 +715,7 @@ export function OrderDetail() {
             >
               {isContactInfoValid && contactInfoCompleted ? (
                 <CheckCircle className="w-6 h-6 text-green-500" />
-              ) : (isContactInfoPartiallyFilled ? (
+              ) : (order?.customer?.phone || order?.customer?.firstName || order?.customer?.lastName ? (
                 <span className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-medium">1</span>
               ) : (
                 <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">1</span>
