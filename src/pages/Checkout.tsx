@@ -727,8 +727,9 @@ const Checkout = () => {
       const deliveryCost = 0;
       const orderTotal = subtotal - discount; // Стоимость заказа БЕЗ доставки (после всех скидок)
       
-      // Add COD commission if needed
-      const finalTotal = orderTotal + (formData.paymentMethod === "nalojka" ? 20 : 0);
+      // Комиссия за наложенный платеж и доставка оплачиваются клиентом при получении
+      // Не добавляем их к стоимости заказа
+      const finalTotal = orderTotal;
       
       // Номер заказа генерируется на сервере (начиная с 305317)
       // Получаем session_id аналитики для привязки к заказу
