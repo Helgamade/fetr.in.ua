@@ -330,16 +330,24 @@ export const DeliveryForm = ({
     } else if (formData.method === 'ukr_poshta') {
       delivery.method = 'ukrposhta'; // Конвертируем в формат базы данных (без подчеркивания)
       delivery.city = formData.ukrPoshtaCity || '';
-      delivery.cityRef = formData.ukrPoshtaCityId || null; // Для Укрпошта используем cityRef для ID города
+      // Для Укрпошта конвертируем ID в строку (база данных хранит как varchar(36))
+      delivery.cityRef = formData.ukrPoshtaCityId ? String(formData.ukrPoshtaCityId) : null;
       delivery.warehouse = formData.ukrPoshtaBranch || '';
-      delivery.warehouseRef = formData.ukrPoshtaBranchId || null; // Для Укрпошта используем warehouseRef для ID отделения
+      delivery.warehouseRef = formData.ukrPoshtaBranchId ? String(formData.ukrPoshtaBranchId) : null;
       delivery.postIndex = formData.ukrPoshtaPostalCode || '';
       delivery.address = formData.ukrPoshtaAddress || '';
     }
 
     onSave(delivery);
+    // Закрываем блок доставки после сохранения
     if (mode === 'view') {
       setIsExpanded(false);
+    }
+    // Сворачиваем подформу доставки
+    if (formData.method === 'nova_poshta') {
+      setFormData(prev => ({ ...prev, novaPoshtaExpanded: false }));
+    } else if (formData.method === 'ukr_poshta') {
+      setFormData(prev => ({ ...prev, ukrPoshtaExpanded: false }));
     }
   };
 
@@ -575,6 +583,8 @@ export const DeliveryForm = ({
                       ? { novaPoshtaPostOfficeCompleted: true }
                       : { novaPoshtaPostomatCompleted: true })
                   }));
+                  // Сохраняем данные при нажатии на Продовжити
+                  handleSave();
                 }}
               />
             </div>
@@ -688,6 +698,8 @@ export const DeliveryForm = ({
                     ukrPoshtaExpanded: false,
                     ukrPoshtaCompleted: true
                   }));
+                  // Сохраняем данные при нажатии на Продовжити
+                  handleSave();
                 }}
               />
             </div>
@@ -713,28 +725,6 @@ export const DeliveryForm = ({
           </label>
         </div>
       </RadioGroup>
-
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={!isCompleted()}
-          onClick={handleSave}
-          className="flex-1 rounded-xl"
-        >
-          Зберегти
-        </Button>
-        {onCancel && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleCancel}
-            className="flex-1 rounded-xl"
-          >
-            Скасувати
-          </Button>
-        )}
-      </div>
     </div>
   );
 };
