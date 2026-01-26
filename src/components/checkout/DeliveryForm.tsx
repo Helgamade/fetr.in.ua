@@ -93,15 +93,15 @@ export const DeliveryForm = ({
     return { method };
   });
 
-  const [novaPoshtaExpanded, setNovaPoshtaExpanded] = useState(false);
-  const [ukrPoshtaExpanded, setUkrPoshtaExpanded] = useState(false);
+  const [novaPoshtaExpanded, setNovaPoshtaExpanded] = useState<boolean | undefined>(false);
+  const [ukrPoshtaExpanded, setUkrPoshtaExpanded] = useState<boolean | undefined>(false);
 
   // При открытии формы редактирования автоматически открываем соответствующую форму доставки
   useEffect(() => {
     if (isExpanded) {
-      if (formData.method === 'nova_poshta') {
+      if (formData.method === 'nova_poshta' && novaPoshtaExpanded === false) {
         setNovaPoshtaExpanded(true);
-      } else if (formData.method === 'ukrposhta') {
+      } else if (formData.method === 'ukrposhta' && ukrPoshtaExpanded === false) {
         setUkrPoshtaExpanded(true);
       }
     }
@@ -229,8 +229,8 @@ export const DeliveryForm = ({
           const method = value as 'nova_poshta' | 'ukrposhta' | 'pickup';
           if (method === 'pickup') {
             setFormData({ method });
-            setNovaPoshtaExpanded(false);
-            setUkrPoshtaExpanded(false);
+            setNovaPoshtaExpanded(undefined);
+            setUkrPoshtaExpanded(undefined);
           } else if (method === 'nova_poshta') {
             setFormData(prev => ({
               ...prev,
@@ -238,10 +238,10 @@ export const DeliveryForm = ({
               novaPoshtaDeliveryType: prev.novaPoshtaDeliveryType || 'PostOffice',
             }));
             setNovaPoshtaExpanded(true);
-            setUkrPoshtaExpanded(false);
+            setUkrPoshtaExpanded(undefined);
           } else if (method === 'ukrposhta') {
             setFormData(prev => ({ ...prev, method }));
-            setNovaPoshtaExpanded(false);
+            setNovaPoshtaExpanded(undefined);
             setUkrPoshtaExpanded(true);
           }
         }}
@@ -252,10 +252,9 @@ export const DeliveryForm = ({
           className="border rounded-xl transition-all"
           onClick={(e) => {
             // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
-            if (formData.method === "nova_poshta" && !novaPoshtaExpanded) {
+            if (formData.method === "nova_poshta" && novaPoshtaExpanded === false) {
               e.stopPropagation();
               setNovaPoshtaExpanded(true);
-              setIsExpanded(true);
             }
           }}
         >
@@ -289,7 +288,7 @@ export const DeliveryForm = ({
               )}
             </div>
           </label>
-          {formData.method === "nova_poshta" && novaPoshtaExpanded && (
+          {formData.method === "nova_poshta" && novaPoshtaExpanded !== false && (
             <div className="pl-4 pr-4 pb-4">
               <NovaPoshtaDelivery
                 cityRef={formData.novaPoshtaCityRef}
@@ -342,10 +341,9 @@ export const DeliveryForm = ({
           className="border rounded-xl transition-all"
           onClick={(e) => {
             // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
-            if (formData.method === "ukrposhta" && !ukrPoshtaExpanded) {
+            if (formData.method === "ukrposhta" && ukrPoshtaExpanded === false) {
               e.stopPropagation();
               setUkrPoshtaExpanded(true);
-              setIsExpanded(true);
             }
           }}
         >
@@ -377,7 +375,7 @@ export const DeliveryForm = ({
               )}
             </div>
           </label>
-          {formData.method === "ukrposhta" && ukrPoshtaExpanded && (
+          {formData.method === "ukrposhta" && ukrPoshtaExpanded !== false && (
             <div className="pl-4 pr-4 pb-4">
               <UkrPoshtaDelivery
                 cityId={formData.ukrPoshtaCityId}
