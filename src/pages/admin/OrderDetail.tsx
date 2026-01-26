@@ -691,13 +691,13 @@ export function OrderDetail() {
                               <Plus className="w-3 h-3" />
                             </button>
                           </div>
-                          <Button
-                            variant="destructive"
-                            size="sm"
+                          <button
+                            type="button"
                             onClick={() => handleRemoveItem(item.id)}
+                            className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                            <Trash2 className="w-5 h-5" />
+                          </button>
                         </div>
                       )}
                     </div>
