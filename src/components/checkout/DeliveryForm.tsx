@@ -88,25 +88,21 @@ export const DeliveryForm = ({
       const hasWarehouseRef = !!initialDelivery.warehouseRef;
       const isCompleted = hasCity && hasWarehouse;
       
-      // Определяем тип доставки по названию warehouse (как в Checkout)
-      // Если в названии есть "Поштомат" или "почтомат", то это Postomat
+      // По умолчанию PostOffice, будет обновлено в useEffect если есть warehouseRef
+      const deliveryType: 'PostOffice' | 'Postomat' = 'PostOffice';
       const warehouseName = initialDelivery.warehouse || '';
-      const isPostomat = warehouseName.toLowerCase().includes('поштомат') || 
-                         warehouseName.toLowerCase().includes('почтомат') ||
-                         warehouseName.toLowerCase().includes('postomat');
-      const deliveryType: 'PostOffice' | 'Postomat' = isPostomat ? 'Postomat' : 'PostOffice';
       
       return {
         method,
         novaPoshtaCity: initialDelivery.city || '',
         novaPoshtaCityRef: initialDelivery.cityRef || null, // Используем ref из базы, если есть
-        novaPoshtaPostOfficeWarehouse: deliveryType === 'PostOffice' ? warehouseName : '',
-        novaPoshtaPostOfficeWarehouseRef: deliveryType === 'PostOffice' ? initialDelivery.warehouseRef : null,
-        novaPoshtaPostOfficeCompleted: deliveryType === 'PostOffice' ? isCompleted : false,
-        novaPoshtaPostomatWarehouse: deliveryType === 'Postomat' ? warehouseName : '',
-        novaPoshtaPostomatWarehouseRef: deliveryType === 'Postomat' ? initialDelivery.warehouseRef : null,
-        novaPoshtaPostomatCompleted: deliveryType === 'Postomat' ? isCompleted : false,
-        novaPoshtaDeliveryType: deliveryType, // Определяем тип по названию warehouse
+        novaPoshtaPostOfficeWarehouse: warehouseName, // Временно в PostOffice, будет перемещено в useEffect
+        novaPoshtaPostOfficeWarehouseRef: initialDelivery.warehouseRef || null,
+        novaPoshtaPostOfficeCompleted: isCompleted, // Временно true, будет обновлено в useEffect
+        novaPoshtaPostomatWarehouse: '',
+        novaPoshtaPostomatWarehouseRef: null,
+        novaPoshtaPostomatCompleted: false,
+        novaPoshtaDeliveryType: deliveryType, // Будет обновлено в useEffect
         novaPoshtaExpanded: isCompleted && (defaultExpanded || mode === 'edit'), // Открываем если данные есть
       };
     } else if (method === 'ukr_poshta') {
@@ -171,6 +167,50 @@ export const DeliveryForm = ({
     }
     return null;
   };
+
+  // Определение типа доставки (PostOffice/Postomat) по warehouseRef из базы данных
+  useEffect(() => {
+    if (formData.method === 'nova_poshta' && 
+        initialDelivery.warehouseRef && 
+        mode === 'edit') {
+      // Загружаем информацию об отделении из базы данных для определения типа
+      novaPoshtaAPI.getWarehouse(initialDelivery.warehouseRef)
+        .then(warehouse => {
+          const deliveryType = warehouse.type_of_warehouse === 'Postomat' ? 'Postomat' : 'PostOffice';
+          const warehouseName = initialDelivery.warehouse || '';
+          
+          setFormData(prev => {
+            if (deliveryType === 'PostOffice') {
+              return {
+                ...prev,
+                novaPoshtaDeliveryType: 'PostOffice',
+                novaPoshtaPostOfficeWarehouse: warehouseName,
+                novaPoshtaPostOfficeWarehouseRef: initialDelivery.warehouseRef,
+                novaPoshtaPostOfficeCompleted: !!(initialDelivery.city && initialDelivery.warehouse),
+                novaPoshtaPostomatWarehouse: '',
+                novaPoshtaPostomatWarehouseRef: null,
+                novaPoshtaPostomatCompleted: false,
+              };
+            } else {
+              return {
+                ...prev,
+                novaPoshtaDeliveryType: 'Postomat',
+                novaPoshtaPostomatWarehouse: warehouseName,
+                novaPoshtaPostomatWarehouseRef: initialDelivery.warehouseRef,
+                novaPoshtaPostomatCompleted: !!(initialDelivery.city && initialDelivery.warehouse),
+                novaPoshtaPostOfficeWarehouse: '',
+                novaPoshtaPostOfficeWarehouseRef: null,
+                novaPoshtaPostOfficeCompleted: false,
+              };
+            }
+          });
+        })
+        .catch(error => {
+          console.error('[DeliveryForm] Error loading warehouse type:', error);
+          // В случае ошибки оставляем как есть (PostOffice по умолчанию)
+        });
+    }
+  }, [formData.method, initialDelivery.warehouseRef, mode]);
 
   // Загрузка ref'ов для Новой Почты из базы данных при инициализации (только если ref'ов нет)
   useEffect(() => {

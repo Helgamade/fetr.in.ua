@@ -157,6 +157,22 @@ export function OrderDetail() {
               setDeliveryValidation(false);
             }
           }
+          
+          // Инициализация состояния редактирования контактов (свернуто если валидно)
+          if (orderData.customer) {
+            const phone = orderData.customer.phone || '';
+            const firstName = orderData.customer.firstName || '';
+            const lastName = orderData.customer.lastName || '';
+            const isPhoneValid = phone.replace(/\D/g, '').length >= 12 && phone.replace(/\D/g, '').startsWith('380');
+            const isLastNameValid = lastName.trim() !== '' && /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/.test(lastName);
+            const isFirstNameValid = firstName.trim() !== '' && /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/.test(firstName);
+            const contactValid = isPhoneValid && isLastNameValid && isFirstNameValid;
+            
+            // Если валидно, блок свернут по умолчанию (как в Checkout)
+            if (contactValid) {
+              setEditingCustomer(false);
+            }
+          }
         })
         .catch((error) => {
           console.error('[OrderDetail] Error loading order:', error);
@@ -721,12 +737,8 @@ export function OrderDetail() {
             <h2 
               className="text-lg font-bold flex items-center gap-2 cursor-pointer mb-4"
               onClick={() => {
-                if (isContactInfoValid) {
-                  setEditingCustomer(!editingCustomer);
-                } else {
-                  // Если не валидно, открываем для редактирования
-                  setEditingCustomer(true);
-                }
+                // Всегда сворачиваем/разворачиваем при клике (как в Checkout и других блоках)
+                setEditingCustomer(!editingCustomer);
               }}
             >
               {isContactInfoValid ? (
