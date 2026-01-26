@@ -642,38 +642,43 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
       // Insert order БЕЗ order_number (используем AUTO_INCREMENT id)
       const recipient = req.body.recipient || null;
       
+      // Подготавливаем значения для INSERT в правильном порядке
+      const insertValues = [
+        userId, // user_id
+        sessionId, // analytics_session_id
+        customer.firstName || null, // customer_first_name
+        customer.lastName || null, // customer_last_name
+        customer.phone || null, // customer_phone
+        recipient ? (recipient.firstName || null) : null, // recipient_first_name
+        recipient ? (recipient.lastName || null) : null, // recipient_last_name
+        recipient ? (recipient.phone || null) : null, // recipient_phone
+        req.user ? req.user.email : null, // customer_email
+        delivery.method || null, // delivery_method
+        toNull(delivery.city), // delivery_city
+        toNull(delivery.cityRef), // delivery_city_ref
+        toNull(delivery.warehouse), // delivery_warehouse
+        toNull(delivery.warehouseRef), // delivery_warehouse_ref
+        toNull(delivery.postIndex), // delivery_post_index
+        toNull(delivery.address), // delivery_address
+        dbPaymentMethod, // payment_method
+        Number(subtotal) || 0, // subtotal
+        Number(discount) || 0, // discount
+        Number(deliveryCost) || 0, // delivery_cost
+        Number(total) || 0, // total
+        initialStatus, // status
+        toNull(req.body.comment), // comment
+        toNull(promoCode) // promo_code
+      ];
+      
+      console.log('[Create Order] Insert values count:', insertValues.length);
+      
       const [orderResult] = await connection.execute(`
-        INSERT INTO orders (user_id, analytics_session_id, customer_first_name, customer_last_name, customer_phone, customer_email,
-          recipient_phone, recipient_first_name, recipient_last_name,
+        INSERT INTO orders (user_id, analytics_session_id, customer_first_name, customer_last_name, customer_phone,
+          recipient_first_name, recipient_last_name, recipient_phone, customer_email,
           delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
           payment_method, subtotal, discount, delivery_cost, total, status, comment, promo_code)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        userId, // Привязываем заказ к пользователю если он авторизован
-        sessionId, // Привязываем заказ к сессии аналитики
-        customer.firstName || null,
-        customer.lastName || null,
-        customer.phone || null,
-        req.user ? req.user.email : null, // Сохраняем email если пользователь авторизован
-        recipient ? (recipient.phone || null) : null,
-        recipient ? (recipient.firstName || null) : null,
-        recipient ? (recipient.lastName || null) : null, 
-        delivery.method || null, 
-        toNull(delivery.city), 
-        toNull(delivery.cityRef),
-        toNull(delivery.warehouse),
-        toNull(delivery.warehouseRef),
-        toNull(delivery.postIndex), 
-        toNull(delivery.address),
-        dbPaymentMethod, 
-        Number(subtotal) || 0, 
-        Number(discount) || 0, 
-        Number(deliveryCost) || 0, 
-        Number(total) || 0,
-        initialStatus,
-        toNull(req.body.comment),
-        toNull(promoCode)
-      ]);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, insertValues);
 
       const orderIdInt = orderResult.insertId; // Get the AUTO_INCREMENT id (INT) - начинается с 305317
       
