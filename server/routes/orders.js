@@ -214,14 +214,24 @@ router.get('/track/:token', async (req, res, next) => {
     });
 
     order.items = Array.from(itemsMap.values());
+    // Формируем name из firstName и lastName, если они есть, иначе используем customer_name
+    const customerName = (order.customer_first_name && order.customer_last_name) 
+      ? `${order.customer_last_name} ${order.customer_first_name}`.trim()
+      : (order.customer_name || '');
     order.customer = {
-      name: order.customer_name,
+      name: customerName,
+      firstName: order.customer_first_name || undefined,
+      lastName: order.customer_last_name || undefined,
       phone: order.customer_phone
     };
 
-    if (order.recipient_name || order.recipient_phone) {
+    if (order.recipient_name || order.recipient_phone || order.recipient_first_name || order.recipient_last_name) {
+      // Формируем name из firstName и lastName, если они есть, иначе используем recipient_name
+      const recipientName = (order.recipient_first_name && order.recipient_last_name) 
+        ? `${order.recipient_last_name} ${order.recipient_first_name}`.trim()
+        : (order.recipient_name || '');
       order.recipient = {
-        name: order.recipient_name || undefined,
+        name: recipientName,
         phone: order.recipient_phone || undefined,
         firstName: order.recipient_first_name || undefined,
         lastName: order.recipient_last_name || undefined,
