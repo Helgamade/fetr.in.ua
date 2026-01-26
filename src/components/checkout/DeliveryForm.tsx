@@ -7,6 +7,7 @@ import { UkrPoshtaDelivery } from "@/components/UkrPoshtaDelivery";
 import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from "@/components/DeliveryLogos";
 import { usePublicSettings } from "@/hooks/usePublicSettings";
 import { useTexts, SiteText } from "@/hooks/useTexts";
+import { novaPoshtaAPI, ukrposhtaAPI } from "@/lib/api";
 import type { DeliveryInfo } from "@/types/store";
 import type { NovaPoshtaCity, NovaPoshtaWarehouse, UkrposhtaCity, UkrposhtaBranch } from "@/lib/api";
 
@@ -152,6 +153,131 @@ export const DeliveryForm = ({
     }
     return null;
   };
+
+  // Загрузка ref'ов для Новой Почты из базы данных при инициализации
+  useEffect(() => {
+    if (formData.method === 'nova_poshta' && 
+        formData.novaPoshtaCity && 
+        !formData.novaPoshtaCityRef && 
+        isExpanded) {
+      // Ищем город по названию
+      const cityName = formData.novaPoshtaCity.trim();
+      novaPoshtaAPI.searchCities(cityName)
+        .then(cities => {
+          // Ищем точное совпадение или первое похожее
+          const foundCity = cities.find(c => 
+            c.full_description_ua === cityName || 
+            c.description_ua === cityName ||
+            c.full_description_ua.includes(cityName) ||
+            cityName.includes(c.description_ua)
+          ) || cities[0];
+          
+          if (foundCity) {
+            setFormData(prev => ({
+              ...prev,
+              novaPoshtaCityRef: foundCity.ref,
+              novaPoshtaCity: foundCity.full_description_ua, // Обновляем на полное название
+            }));
+            
+            // Если есть warehouse, ищем его ref
+            const warehouseName = formData.novaPoshtaPostOfficeWarehouse || formData.novaPoshtaPostomatWarehouse;
+            if (warehouseName && foundCity.ref) {
+              const deliveryType = formData.novaPoshtaDeliveryType || 'PostOffice';
+              novaPoshtaAPI.getWarehouses(foundCity.ref, deliveryType)
+                .then(warehouses => {
+                  const foundWarehouse = warehouses.find(w => 
+                    w.description_ua === warehouseName ||
+                    w.description_ua.includes(warehouseName) ||
+                    warehouseName.includes(w.description_ua)
+                  ) || warehouses[0];
+                  
+                  if (foundWarehouse) {
+                    setFormData(prev => {
+                      if (deliveryType === 'PostOffice') {
+                        return {
+                          ...prev,
+                          novaPoshtaPostOfficeWarehouseRef: foundWarehouse.ref,
+                          novaPoshtaPostOfficeWarehouse: foundWarehouse.description_ua,
+                        };
+                      } else {
+                        return {
+                          ...prev,
+                          novaPoshtaPostomatWarehouseRef: foundWarehouse.ref,
+                          novaPoshtaPostomatWarehouse: foundWarehouse.description_ua,
+                        };
+                      }
+                    });
+                  }
+                })
+                .catch(console.error);
+            }
+          }
+        })
+        .catch(console.error);
+    }
+  }, [formData.method, formData.novaPoshtaCity, formData.novaPoshtaCityRef, formData.novaPoshtaPostOfficeWarehouse, formData.novaPoshtaPostomatWarehouse, formData.novaPoshtaDeliveryType, isExpanded]);
+
+  // Загрузка ID для Укрпошта из базы данных при инициализации
+  useEffect(() => {
+    if (formData.method === 'ukr_poshta' && 
+        formData.ukrPoshtaCity && 
+        !formData.ukrPoshtaCityId && 
+        isExpanded) {
+      // Ищем город по названию
+      const cityName = formData.ukrPoshtaCity.trim();
+      // Убираем область из названия для поиска (формат "Город (Область)")
+      const cityNameOnly = cityName.replace(/\s*\([^)]*\)\s*$/, '').trim();
+      
+      ukrposhtaAPI.searchCities(cityNameOnly)
+        .then(cities => {
+          // Ищем точное совпадение или первое похожее
+          const foundCity = cities.find(c => 
+            c.name === cityNameOnly ||
+            c.name.includes(cityNameOnly) ||
+            cityNameOnly.includes(c.name)
+          ) || cities[0];
+          
+          if (foundCity) {
+            // Формируем полное название с областью
+            const cityFullName = foundCity.region && foundCity.region.trim() !== ''
+              ? `${foundCity.name} (${foundCity.region})`
+              : `${foundCity.name} (*)`;
+            
+            setFormData(prev => ({
+              ...prev,
+              ukrPoshtaCityId: foundCity.id,
+              ukrPoshtaCity: cityFullName,
+              ukrPoshtaCityRegion: foundCity.region || '',
+            }));
+            
+            // Если есть branch, ищем его ID
+            if (formData.ukrPoshtaBranch && foundCity.id) {
+              ukrposhtaAPI.getBranches(foundCity.id)
+                .then(branches => {
+                  const branchName = formData.ukrPoshtaBranch.trim();
+                  const foundBranch = branches.find(b => 
+                    b.name === branchName ||
+                    b.name.includes(branchName) ||
+                    branchName.includes(b.name)
+                  ) || branches[0];
+                  
+                  if (foundBranch) {
+                    setFormData(prev => ({
+                      ...prev,
+                      ukrPoshtaBranchId: foundBranch.id,
+                      ukrPoshtaBranch: foundBranch.name,
+                      ukrPoshtaPostalCode: foundBranch.postalCode || prev.ukrPoshtaPostalCode,
+                      ukrPoshtaAddress: foundBranch.address || prev.ukrPoshtaAddress,
+                    }));
+                  }
+                })
+                .catch(console.error);
+            }
+          }
+        })
+        .catch(console.error);
+    }
+  }, [formData.method, formData.ukrPoshtaCity, formData.ukrPoshtaCityId, formData.ukrPoshtaBranch, isExpanded]);
 
   // При открытии формы редактирования автоматически открываем соответствующую форму доставки
   useEffect(() => {
