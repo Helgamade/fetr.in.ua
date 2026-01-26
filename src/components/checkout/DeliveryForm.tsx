@@ -279,9 +279,7 @@ export const DeliveryForm = ({
             }}
           >
             <div className="flex items-center gap-3">
-              <RadioGroupItem 
-                value="nova_poshta" 
-                id="nova_poshta"
+              <div
                 onClick={(e) => {
                   // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
                   if (formData.method === "nova_poshta" && novaPoshtaExpanded === false) {
@@ -289,7 +287,9 @@ export const DeliveryForm = ({
                     setNovaPoshtaExpanded(true);
                   }
                 }}
-              />
+              >
+                <RadioGroupItem value="nova_poshta" id="nova_poshta" />
+              </div>
               <div className="font-medium flex items-center gap-2 flex-1">
                 <NovaPoshtaLogo className="w-5 h-5" />
                 {deliveryNovaPoshtaTitle}
@@ -396,9 +396,7 @@ export const DeliveryForm = ({
             }}
           >
             <div className="flex items-center gap-3">
-              <RadioGroupItem 
-                value="ukrposhta" 
-                id="ukrposhta"
+              <div
                 onClick={(e) => {
                   // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
                   if (formData.method === "ukrposhta" && ukrPoshtaExpanded === false) {
@@ -406,7 +404,9 @@ export const DeliveryForm = ({
                     setUkrPoshtaExpanded(true);
                   }
                 }}
-              />
+              >
+                <RadioGroupItem value="ukrposhta" id="ukrposhta" />
+              </div>
               <div className="font-medium flex items-center gap-2 flex-1">
                 <UkrposhtaLogo className="w-5 h-5" />
                 {deliveryUkrposhtaTitle}
