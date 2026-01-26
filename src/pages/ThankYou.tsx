@@ -355,7 +355,7 @@ const ThankYou = () => {
                 </h2>
                 <div className="bg-muted/30 rounded-xl p-4 space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Ім'я:</span>
+                    <span className="text-muted-foreground">Прізвище та ім'я:</span>
                     <span className="font-medium">{order.customer.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -365,10 +365,10 @@ const ThankYou = () => {
                   </div>
                   {order.recipient && (
                     <>
-                      <div className="pt-2 border-t">
-                        <div className="text-sm text-muted-foreground mb-2">Отримувач замовлення:</div>
+                      <div className="pt-2 border-t space-y-2">
+                        <div className="text-sm text-muted-foreground">Отримувач замовлення:</div>
                         <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">Ім'я:</span>
+                          <span className="text-muted-foreground">Прізвище та ім'я:</span>
                           <span className="font-medium">{order.recipient.name}</span>
                         </div>
                         <div className="flex items-center gap-2">
