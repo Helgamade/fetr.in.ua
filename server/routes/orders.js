@@ -62,7 +62,9 @@ router.get('/', async (req, res, next) => {
       order.delivery = {
         method: order.delivery_method,
         city: order.delivery_city || undefined,
+        cityRef: order.delivery_city_ref || undefined,
         warehouse: order.delivery_warehouse || undefined,
+        warehouseRef: order.delivery_warehouse_ref || undefined,
         postIndex: order.delivery_post_index || undefined,
         address: order.delivery_address || undefined
       };
@@ -120,7 +122,9 @@ router.get('/', async (req, res, next) => {
       delete order.promo_code;
       delete order.delivery_method;
       delete order.delivery_city;
+      delete order.delivery_city_ref;
       delete order.delivery_warehouse;
+      delete order.delivery_warehouse_ref;
       delete order.delivery_post_index;
       delete order.delivery_address;
       delete order.payment_method;
@@ -945,7 +949,9 @@ router.put('/:id', async (req, res, next) => {
     const recipientLastName = recipient?.lastName || null;
     const deliveryMethod = delivery?.method || null;
     const deliveryCity = toNull(delivery?.city);
+    const deliveryCityRef = toNull(delivery?.cityRef);
     const deliveryWarehouse = toNull(delivery?.warehouse);
+    const deliveryWarehouseRef = toNull(delivery?.warehouseRef);
     const deliveryPostIndex = toNull(delivery?.postIndex);
     const deliveryAddress = toNull(delivery?.address);
     const paymentMethod = payment?.method || null;
@@ -987,7 +993,7 @@ router.put('/:id', async (req, res, next) => {
         UPDATE orders SET
           customer_name = ?, customer_phone = ?,
           recipient_name = ?, recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
-          delivery_method = ?, delivery_city = ?, delivery_warehouse = ?,
+          delivery_method = ?, delivery_city = ?, delivery_city_ref = ?, delivery_warehouse = ?, delivery_warehouse_ref = ?,
           delivery_post_index = ?, delivery_address = ?,
           payment_method = ?, payment_status = ?, paid_amount = ?,
           status = ?, subtotal = ?, discount = ?,
@@ -996,7 +1002,7 @@ router.put('/:id', async (req, res, next) => {
       `, [
         customerName, customerPhone,
         recipientName, recipientPhone, recipientFirstName, recipientLastName,
-        deliveryMethod, deliveryCity, deliveryWarehouse,
+        deliveryMethod, deliveryCity, deliveryCityRef, deliveryWarehouse, deliveryWarehouseRef,
         deliveryPostIndex, deliveryAddress,
         paymentMethod, paymentStatus, paidAmount,
         orderStatus, orderSubtotal, orderDiscount,
@@ -1009,7 +1015,7 @@ router.put('/:id', async (req, res, next) => {
         UPDATE orders SET
           customer_name = ?, customer_phone = ?,
           recipient_name = ?, recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
-          delivery_method = ?, delivery_city = ?, delivery_warehouse = ?,
+          delivery_method = ?, delivery_city = ?, delivery_city_ref = ?, delivery_warehouse = ?, delivery_warehouse_ref = ?,
           delivery_post_index = ?, delivery_address = ?,
           payment_method = ?, status = ?, subtotal = ?, discount = ?,
           delivery_cost = ?, total = ?, delivery_ttn = ?, updated_at = CURRENT_TIMESTAMP
@@ -1017,7 +1023,7 @@ router.put('/:id', async (req, res, next) => {
       `, [
         customerName, customerPhone,
         recipientName, recipientPhone, recipientFirstName, recipientLastName,
-        deliveryMethod, deliveryCity, deliveryWarehouse,
+        deliveryMethod, deliveryCity, deliveryCityRef, deliveryWarehouse, deliveryWarehouseRef,
         deliveryPostIndex, deliveryAddress,
         paymentMethod, orderStatus, orderSubtotal, orderDiscount,
         orderDeliveryCost, orderTotal, deliveryTtnValue, id

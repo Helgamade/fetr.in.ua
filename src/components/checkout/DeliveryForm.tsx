@@ -78,14 +78,16 @@ export const DeliveryForm = ({
       // Проверяем, есть ли сохраненные данные из базы
       const hasCity = !!initialDelivery.city;
       const hasWarehouse = !!initialDelivery.warehouse;
+      const hasCityRef = !!initialDelivery.cityRef;
+      const hasWarehouseRef = !!initialDelivery.warehouseRef;
       const isCompleted = hasCity && hasWarehouse;
       
       return {
         method,
         novaPoshtaCity: initialDelivery.city || '',
-        novaPoshtaCityRef: null, // Будет загружен через API при необходимости
+        novaPoshtaCityRef: initialDelivery.cityRef || null, // Используем ref из базы, если есть
         novaPoshtaPostOfficeWarehouse: initialDelivery.warehouse || '',
-        novaPoshtaPostOfficeWarehouseRef: null, // Будет загружен через API при необходимости
+        novaPoshtaPostOfficeWarehouseRef: initialDelivery.warehouseRef || null, // Используем ref из базы, если есть
         novaPoshtaPostOfficeCompleted: isCompleted, // true если данные есть в БД
         novaPoshtaPostomatWarehouse: '',
         novaPoshtaPostomatWarehouseRef: null,
@@ -97,6 +99,8 @@ export const DeliveryForm = ({
       // Проверяем, есть ли сохраненные данные из базы
       const hasCity = !!initialDelivery.city;
       const hasBranch = !!initialDelivery.warehouse;
+      const hasCityRef = !!initialDelivery.cityRef; // Для Укрпошта cityRef содержит ID города
+      const hasWarehouseRef = !!initialDelivery.warehouseRef; // Для Укрпошта warehouseRef содержит ID отделения
       const isCompleted = hasCity && hasBranch;
       
       // Пытаемся извлечь область из названия города (формат "Город (Область)" или просто "Город")
@@ -113,10 +117,10 @@ export const DeliveryForm = ({
       return {
         method,
         ukrPoshtaCity: initialDelivery.city || '', // Сохраняем полное название как есть
-        ukrPoshtaCityId: null, // Будет загружен через API при необходимости
+        ukrPoshtaCityId: initialDelivery.cityRef || null, // Используем cityRef из базы как ID города
         ukrPoshtaCityRegion: cityRegion,
         ukrPoshtaBranch: initialDelivery.warehouse || '',
-        ukrPoshtaBranchId: null, // Будет загружен через API при необходимости
+        ukrPoshtaBranchId: initialDelivery.warehouseRef || null, // Используем warehouseRef из базы как ID отделения
         ukrPoshtaPostalCode: initialDelivery.postIndex || '',
         ukrPoshtaAddress: initialDelivery.address || '',
         ukrPoshtaCompleted: isCompleted, // true если данные есть в БД
@@ -154,12 +158,13 @@ export const DeliveryForm = ({
     return null;
   };
 
-  // Загрузка ref'ов для Новой Почты из базы данных при инициализации
+  // Загрузка ref'ов для Новой Почты из базы данных при инициализации (только если ref'ов нет)
   useEffect(() => {
     if (formData.method === 'nova_poshta' && 
         formData.novaPoshtaCity && 
         !formData.novaPoshtaCityRef && 
-        isExpanded) {
+        isExpanded &&
+        mode === 'edit') { // Только в режиме редактирования
       // Ищем город по названию
       const cityName = formData.novaPoshtaCity.trim();
       novaPoshtaAPI.searchCities(cityName)
@@ -217,12 +222,13 @@ export const DeliveryForm = ({
     }
   }, [formData.method, formData.novaPoshtaCity, formData.novaPoshtaCityRef, formData.novaPoshtaPostOfficeWarehouse, formData.novaPoshtaPostomatWarehouse, formData.novaPoshtaDeliveryType, isExpanded]);
 
-  // Загрузка ID для Укрпошта из базы данных при инициализации
+  // Загрузка ID для Укрпошта из базы данных при инициализации (только если ID нет)
   useEffect(() => {
     if (formData.method === 'ukr_poshta' && 
         formData.ukrPoshtaCity && 
         !formData.ukrPoshtaCityId && 
-        isExpanded) {
+        isExpanded &&
+        mode === 'edit') { // Только в режиме редактирования
       // Ищем город по названию
       const cityName = formData.ukrPoshtaCity.trim();
       // Убираем область из названия для поиска (формат "Город (Область)")
@@ -314,13 +320,19 @@ export const DeliveryForm = ({
 
     if (formData.method === 'nova_poshta') {
       delivery.city = formData.novaPoshtaCity || '';
+      delivery.cityRef = formData.novaPoshtaCityRef || null;
       delivery.warehouse = formData.novaPoshtaDeliveryType === 'PostOffice'
         ? formData.novaPoshtaPostOfficeWarehouse || ''
         : formData.novaPoshtaPostomatWarehouse || '';
-    } else     if (formData.method === 'ukr_poshta') {
+      delivery.warehouseRef = formData.novaPoshtaDeliveryType === 'PostOffice'
+        ? formData.novaPoshtaPostOfficeWarehouseRef || null
+        : formData.novaPoshtaPostomatWarehouseRef || null;
+    } else if (formData.method === 'ukr_poshta') {
       delivery.method = 'ukrposhta'; // Конвертируем в формат базы данных (без подчеркивания)
       delivery.city = formData.ukrPoshtaCity || '';
+      delivery.cityRef = formData.ukrPoshtaCityId || null; // Для Укрпошта используем cityRef для ID города
       delivery.warehouse = formData.ukrPoshtaBranch || '';
+      delivery.warehouseRef = formData.ukrPoshtaBranchId || null; // Для Укрпошта используем warehouseRef для ID отделения
       delivery.postIndex = formData.ukrPoshtaPostalCode || '';
       delivery.address = formData.ukrPoshtaAddress || '';
     }

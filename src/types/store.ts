@@ -76,7 +76,9 @@ export interface RecipientInfo {
 export interface DeliveryInfo {
   method: 'nova_poshta' | 'ukrposhta' | 'pickup';
   city?: string;
+  cityRef?: string | null; // Ref города Новой Почты или ID города Укрпошта
   warehouse?: string;
+  warehouseRef?: string | null; // Ref отделения Новой Почты или ID отделения Укрпошта
   postIndex?: string;
   address?: string;
 }
