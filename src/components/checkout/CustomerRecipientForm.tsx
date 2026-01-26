@@ -34,6 +34,65 @@ export const CustomerRecipientForm = ({
     recipientPhone: initialRecipient?.phone || "",
   });
 
+  // Обновляем formData при изменении initialCustomer/initialRecipient или при открытии формы редактирования
+  useEffect(() => {
+    if (isExpanded || mode === 'edit') {
+      // Парсим имя заказчика, если оно в формате "Фамилия Имя"
+      let firstName = initialCustomer.firstName || "";
+      let lastName = initialCustomer.lastName || "";
+      
+      if (!firstName && !lastName && initialCustomer.name) {
+        const nameParts = initialCustomer.name.trim().split(/\s+/);
+        if (nameParts.length >= 2) {
+          lastName = nameParts[0];
+          firstName = nameParts.slice(1).join(' ');
+        } else if (nameParts.length === 1) {
+          lastName = nameParts[0];
+        }
+      }
+
+      // Парсим имя получателя, если оно в формате "Фамилия Имя"
+      let recipientFirstName = initialRecipient?.firstName || "";
+      let recipientLastName = initialRecipient?.lastName || "";
+      
+      if (initialRecipient && !recipientFirstName && !recipientLastName && initialRecipient.name) {
+        const recipientNameParts = initialRecipient.name.trim().split(/\s+/);
+        if (recipientNameParts.length >= 2) {
+          recipientLastName = recipientNameParts[0];
+          recipientFirstName = recipientNameParts.slice(1).join(' ');
+        } else if (recipientNameParts.length === 1) {
+          recipientLastName = recipientNameParts[0];
+        }
+      }
+
+      setFormData({
+        firstName,
+        lastName,
+        phone: initialCustomer.phone || "",
+        hasDifferentRecipient: !!initialRecipient,
+        recipientFirstName,
+        recipientLastName,
+        recipientPhone: initialRecipient?.phone || "",
+      });
+      
+      // Сбрасываем состояния touched при открытии формы, чтобы не показывать ошибки валидации
+      if (isExpanded) {
+        setPhoneTouched(false);
+        setPhoneError("");
+        setLastNameTouched(false);
+        setLastNameError("");
+        setFirstNameTouched(false);
+        setFirstNameError("");
+        setRecipientPhoneTouched(false);
+        setRecipientPhoneError("");
+        setRecipientLastNameTouched(false);
+        setRecipientLastNameError("");
+        setRecipientFirstNameTouched(false);
+        setRecipientFirstNameError("");
+      }
+    }
+  }, [initialCustomer, initialRecipient, isExpanded, mode]);
+
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const phoneInputRef = useRef<HTMLInputElement>(null);
@@ -351,14 +410,40 @@ export const CustomerRecipientForm = ({
   };
 
   const handleCancel = () => {
-    // Восстанавливаем исходные значения
+    // Восстанавливаем исходные значения с парсингом имени
+    let firstName = initialCustomer.firstName || "";
+    let lastName = initialCustomer.lastName || "";
+    
+    if (!firstName && !lastName && initialCustomer.name) {
+      const nameParts = initialCustomer.name.trim().split(/\s+/);
+      if (nameParts.length >= 2) {
+        lastName = nameParts[0];
+        firstName = nameParts.slice(1).join(' ');
+      } else if (nameParts.length === 1) {
+        lastName = nameParts[0];
+      }
+    }
+
+    let recipientFirstName = initialRecipient?.firstName || "";
+    let recipientLastName = initialRecipient?.lastName || "";
+    
+    if (initialRecipient && !recipientFirstName && !recipientLastName && initialRecipient.name) {
+      const recipientNameParts = initialRecipient.name.trim().split(/\s+/);
+      if (recipientNameParts.length >= 2) {
+        recipientLastName = recipientNameParts[0];
+        recipientFirstName = recipientNameParts.slice(1).join(' ');
+      } else if (recipientNameParts.length === 1) {
+        recipientLastName = recipientNameParts[0];
+      }
+    }
+
     setFormData({
-      firstName: initialCustomer.firstName || "",
-      lastName: initialCustomer.lastName || "",
+      firstName,
+      lastName,
       phone: initialCustomer.phone || "",
       hasDifferentRecipient: !!initialRecipient,
-      recipientFirstName: initialRecipient?.firstName || "",
-      recipientLastName: initialRecipient?.lastName || "",
+      recipientFirstName,
+      recipientLastName,
       recipientPhone: initialRecipient?.phone || "",
     });
     setPhoneTouched(false);

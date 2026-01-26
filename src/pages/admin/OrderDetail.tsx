@@ -129,8 +129,8 @@ export function OrderDetail() {
   const recalculateOrder = useMemo(() => {
     if (!order || localItems.length === 0) return null;
 
-    let subtotal = 0;
-    let discount = 0;
+    let subtotal = 0; // Сумма БЕЗ скидки (basePrice)
+    let discount = 0; // Общая скидка
 
     localItems.forEach(item => {
       const product = products.find(p => p.code === item.productId);
@@ -138,7 +138,7 @@ export function OrderDetail() {
 
       const basePrice = product.basePrice || 0;
       const salePrice = product.salePrice;
-      const productPrice = salePrice || basePrice;
+      const productPrice = salePrice || basePrice; // Цена товара (со скидкой если есть)
       
       // Цена опций
       const optionsPrice = item.selectedOptions.reduce((total, optId) => {
@@ -146,11 +146,11 @@ export function OrderDetail() {
         return total + (option?.price || 0);
       }, 0);
 
-      // Цена товара с опциями
-      const itemPrice = (productPrice + optionsPrice) * item.quantity;
-      subtotal += itemPrice;
+      // Subtotal считаем по базовой цене (БЕЗ скидки)
+      const itemSubtotal = (basePrice + optionsPrice) * item.quantity;
+      subtotal += itemSubtotal;
 
-      // Скидка на товар
+      // Скидка на товар (разница между базовой и скидочной ценой)
       if (salePrice && salePrice < basePrice) {
         discount += (basePrice - salePrice) * item.quantity;
       }
@@ -158,6 +158,7 @@ export function OrderDetail() {
 
     // Стоимость доставки (пока используем существующую)
     const deliveryCost = order.deliveryCost || 0;
+    // Total = subtotal (базовая цена) - discount (скидка) + deliveryCost
     const total = subtotal - discount + deliveryCost;
 
     return {
