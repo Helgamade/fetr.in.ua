@@ -127,6 +127,12 @@ export function OrderDetail() {
   const paymentFopTitle = texts.find(t => t.key === 'checkout.payment.fop.title')?.value || 'Оплата на рахунок ФОП';
   const paymentFopDescription = texts.find(t => t.key === 'checkout.payment.fop.description')?.value || 'Оплата на банківський рахунок ФОП';
 
+  // Функции валидации (ОБЯЗАТЕЛЬНО ПЕРЕД использованием!)
+  const validateCyrillic = (value: string): boolean => {
+    const cyrillicRegex = /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/;
+    return cyrillicRegex.test(value);
+  };
+
   useEffect(() => {
     if (id) {
       ordersAPI.getOrder(id)
