@@ -167,41 +167,6 @@ export function OrderDetail() {
             }
           }
           
-          // Инициализация состояния редактирования контактов (как в Checkout)
-          // В Checkout валидация вычисляется на каждый рендер, здесь тоже
-          // Просто устанавливаем флаг завершенности если данные валидны
-          if (orderData.customer) {
-            const phone = orderData.customer.phone || '';
-            const cleanPhone = phone === "" || phone === "+380" ? "" : phone;
-            const isPhoneValid = cleanPhone.replace(/\D/g, '').length === 12 && cleanPhone.replace(/\D/g, '').startsWith('380');
-            const lastName = orderData.customer.lastName || '';
-            const isLastNameValid = lastName.trim() !== "" && validateCyrillic(lastName);
-            const firstName = orderData.customer.firstName || '';
-            const isFirstNameValid = firstName.trim() !== "" && validateCyrillic(firstName);
-            
-            // Проверка получателя (если указан)
-            let isRecipientValid = true;
-            if (orderData.recipient) {
-              const recipientPhone = orderData.recipient.phone || '';
-              const cleanRecipientPhone = recipientPhone === "" || recipientPhone === "+380" ? "" : recipientPhone;
-              const isRecipientPhoneValid = cleanRecipientPhone.replace(/\D/g, '').length === 12 && cleanRecipientPhone.replace(/\D/g, '').startsWith('380');
-              const recipientLastName = orderData.recipient.lastName || '';
-              const isRecipientLastNameValid = recipientLastName.trim() !== "" && validateCyrillic(recipientLastName);
-              const recipientFirstName = orderData.recipient.firstName || '';
-              const isRecipientFirstNameValid = recipientFirstName.trim() !== "" && validateCyrillic(recipientFirstName);
-              isRecipientValid = isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid;
-            }
-            
-            const contactValid = isPhoneValid && isLastNameValid && isFirstNameValid && isRecipientValid;
-            
-            // Устанавливаем флаг завершенности (как в Checkout - formData.contactInfoCompleted)
-            setContactInfoCompleted(contactValid);
-            
-            // Если валидно, блок свернут по умолчанию (как в Checkout)
-            if (contactValid) {
-              setEditingCustomer(false);
-            }
-          }
         })
         .catch((error) => {
           console.error('[OrderDetail] Error loading order:', error);
@@ -210,8 +175,7 @@ export function OrderDetail() {
     }
   }, [id]);
 
-  // Валидация контактов (ТОЧНО КАК В CHECKOUT - без useMemo, просто вычисления)
-  // В Checkout строка 513-524 - валидация вычисляется прямо в теле компонента
+  // Валидация контактов (ТОЧНО КАК В CHECKOUT строка 513-524)
   const isPhoneValid = order?.customer?.phone 
     ? ((order.customer.phone === "" || order.customer.phone === "+380" ? "" : order.customer.phone).replace(/\D/g, '').length === 12 && (order.customer.phone === "" || order.customer.phone === "+380" ? "" : order.customer.phone).replace(/\D/g, '').startsWith('380'))
     : false;
@@ -382,10 +346,6 @@ export function OrderDetail() {
       item.id === itemId ? { ...item, quantity } : item
     ));
   };
-
-  // Проверка частичной заполненности контактов (для оранжевой иконки)
-  const isContactInfoPartiallyFilled = useMemo(() => {
-    if (!order?.customer) return false;
     const phone = order.customer.phone || '';
     const firstName = order.customer.firstName || '';
     const lastName = order.customer.lastName || '';
