@@ -12,6 +12,8 @@ interface PaymentFormProps {
   onCancel?: () => void;
   mode?: 'edit' | 'view';
   defaultExpanded?: boolean;
+  isCompleted?: boolean; // Для отображения иконки валидации
+  onToggleExpanded?: () => void; // Для клика по заголовку
 }
 
 export const PaymentForm = ({
@@ -21,6 +23,8 @@ export const PaymentForm = ({
   onCancel,
   mode = 'view',
   defaultExpanded = false,
+  isCompleted,
+  onToggleExpanded,
 }: PaymentFormProps) => {
   const { data: textsData } = useTexts();
   const texts: SiteText[] = Array.isArray(textsData) ? textsData : [];

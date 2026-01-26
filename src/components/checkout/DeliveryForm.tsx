@@ -18,6 +18,8 @@ interface DeliveryFormProps {
   mode?: 'edit' | 'view';
   defaultExpanded?: boolean;
   orderTotal?: number; // Для расчета бесплатной доставки
+  isCompleted?: boolean; // Для отображения иконки валидации
+  onToggleExpanded?: () => void; // Для клика по заголовку
 }
 
 interface DeliveryFormData {
@@ -52,6 +54,8 @@ export const DeliveryForm = ({
   mode = 'view',
   defaultExpanded = false,
   orderTotal = 0,
+  isCompleted,
+  onToggleExpanded,
 }: DeliveryFormProps) => {
   const { data: storeSettings = {} } = usePublicSettings();
   const { data: textsData } = useTexts();
@@ -297,7 +301,7 @@ export const DeliveryForm = ({
     }
   }, [isExpanded, formData.method, formData.novaPoshtaExpanded, formData.ukrPoshtaExpanded]);
 
-  const isCompleted = () => {
+  const checkIsCompleted = () => {
     if (formData.method === 'pickup') return true;
     if (formData.method === 'nova_poshta') {
       const completed = formData.novaPoshtaDeliveryType === "PostOffice"
@@ -312,7 +316,7 @@ export const DeliveryForm = ({
   };
 
   const handleSave = () => {
-    if (!isCompleted()) return;
+    if (!checkIsCompleted()) return;
 
     let delivery: DeliveryInfo = {
       method: formData.method,

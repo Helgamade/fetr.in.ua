@@ -10,7 +10,8 @@ import {
   User,
   Pencil,
   Trash2,
-  Plus
+  Plus,
+  CheckCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -584,9 +585,23 @@ export function OrderDetail() {
 
           {/* Contact Info - объединенный блок для Замовник и Отримувач */}
           <div className="bg-card rounded-lg border p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Контактні дані
+            <h2 
+              className="text-lg font-bold flex items-center gap-2 cursor-pointer mb-4"
+              onClick={() => {
+                if (!editingCustomer) {
+                  const isValid = order.customer?.phone && order.customer?.firstName && order.customer?.lastName;
+                  if (isValid) {
+                    setEditingCustomer(!editingCustomer);
+                  }
+                }
+              }}
+            >
+              {order.customer?.phone && order.customer?.firstName && order.customer?.lastName ? (
+                <CheckCircle className="w-6 h-6 text-green-500" />
+              ) : (
+                <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">1</span>
+              )}
+              Контактні дані *
             </h2>
             <CustomerRecipientForm
               customer={order.customer}
@@ -597,7 +612,9 @@ export function OrderDetail() {
               }}
               onCancel={() => setEditingCustomer(false)}
               mode="view"
-              defaultExpanded={false}
+              defaultExpanded={editingCustomer}
+              isCompleted={!!(order.customer?.phone && order.customer?.firstName && order.customer?.lastName)}
+              onToggleExpanded={() => setEditingCustomer(!editingCustomer)}
             />
             {order.promoCode && (
               <div className="flex items-center gap-2 text-sm mt-4 pt-4 border-t">
@@ -609,21 +626,24 @@ export function OrderDetail() {
 
           {/* Delivery */}
           <div className="bg-card rounded-lg border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Доставка
-              </h2>
-              {!editingDelivery && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingDelivery(true)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+            <h2 
+              className="text-lg font-bold flex items-center gap-2 cursor-pointer mb-4"
+              onClick={() => {
+                if (!editingDelivery) {
+                  const isCompleted = !!(order.delivery.method && order.delivery.city && order.delivery.warehouse);
+                  if (isCompleted) {
+                    setEditingDelivery(!editingDelivery);
+                  }
+                }
+              }}
+            >
+              {order.delivery.method && order.delivery.city && order.delivery.warehouse ? (
+                <CheckCircle className="w-6 h-6 text-green-500" />
+              ) : (
+                <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">2</span>
               )}
-            </div>
+              Доставка *
+            </h2>
             {editingDelivery ? (
               <DeliveryForm
                 delivery={order.delivery}
@@ -634,50 +654,32 @@ export function OrderDetail() {
                 mode="edit"
                 defaultExpanded={true}
                 orderTotal={recalculateOrder?.total || order.total}
+                isCompleted={!!(order.delivery.method && order.delivery.city && order.delivery.warehouse)}
+                onToggleExpanded={() => setEditingDelivery(!editingDelivery)}
               />
             ) : (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="font-medium">{deliveryLabels[order.delivery.method]}</div>
-                  {order.delivery.city && (
-                    <div className="text-sm">м. {order.delivery.city}</div>
-                  )}
-                  {order.delivery.warehouse && (
-                    <div className="text-sm">{order.delivery.warehouse}</div>
-                  )}
-                  {order.delivery.address && (
-                    <div className="text-sm">{order.delivery.address}</div>
-                  )}
-                  {order.delivery.postIndex && (
-                    <div className="text-sm">Індекс: {order.delivery.postIndex}</div>
-                  )}
-                </div>
-                
-                {/* ТТН поле - только для Нова Пошта и Укрпошта */}
-                {(order.delivery.method === 'nova_poshta' || order.delivery.method === 'ukrposhta') && (
-                  <div className="pt-4 border-t">
-                    <label className="text-sm font-medium mb-2 block">ТТН (Трекінг-номер)</label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={deliveryTtn}
-                        onChange={(e) => setDeliveryTtn(e.target.value)}
-                        placeholder="Введіть номер ТТН"
-                        className="flex-1"
-                      />
-                      <Button
-                        onClick={handleDeliveryTtnSave}
-                        variant="outline"
-                        size="default"
-                      >
-                        Зберегти
-                      </Button>
-                    </div>
-                    {order.deliveryTtn && (
-                      <div className="text-xs text-muted-foreground mt-2">
-                        Поточний ТТН: {order.deliveryTtn}
-                      </div>
-                    )}
-                  </div>
+              <div className="space-y-2">
+                <div className="font-medium">{deliveryLabels[order.delivery.method]}</div>
+                {order.delivery.city && (
+                  <div className="text-sm">м. {order.delivery.city}</div>
+                )}
+                {order.delivery.warehouse && (
+                  <div className="text-sm">{order.delivery.warehouse}</div>
+                )}
+                {order.delivery.address && (
+                  <div className="text-sm">{order.delivery.address}</div>
+                )}
+                {order.delivery.postIndex && (
+                  <div className="text-sm">Індекс: {order.delivery.postIndex}</div>
+                )}
+                {!editingDelivery && (
+                  <button
+                    type="button"
+                    onClick={() => setEditingDelivery(true)}
+                    className="text-muted-foreground hover:text-primary mt-2"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
                 )}
               </div>
             )}
@@ -685,21 +687,21 @@ export function OrderDetail() {
 
           {/* Payment */}
           <div className="bg-card rounded-lg border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Оплата
-              </h2>
-              {!editingPayment && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingPayment(true)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+            <h2 
+              className="text-lg font-bold flex items-center gap-2 cursor-pointer mb-4"
+              onClick={() => {
+                if (!editingPayment && order.payment?.method) {
+                  setEditingPayment(!editingPayment);
+                }
+              }}
+            >
+              {order.payment?.method ? (
+                <CheckCircle className="w-6 h-6 text-green-500" />
+              ) : (
+                <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">3</span>
               )}
-            </div>
+              Спосіб оплати *
+            </h2>
             {editingPayment ? (
               <PaymentForm
                 payment={order.payment}
@@ -710,12 +712,25 @@ export function OrderDetail() {
                 onCancel={() => setEditingPayment(false)}
                 mode="edit"
                 defaultExpanded={true}
+                isCompleted={!!order.payment?.method}
+                onToggleExpanded={() => setEditingPayment(!editingPayment)}
               />
             ) : (
-              <div className="text-sm">
-                {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
-                {order.payment.method === 'nalojka' && 'Оплата при отриманні'}
-                {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
+              <div className="space-y-2">
+                <div className="text-sm">
+                  {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
+                  {order.payment.method === 'nalojka' && 'Оплата при отриманні'}
+                  {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
+                </div>
+                {!editingPayment && (
+                  <button
+                    type="button"
+                    onClick={() => setEditingPayment(true)}
+                    className="text-muted-foreground hover:text-primary"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -878,6 +893,37 @@ export function OrderDetail() {
               </div>
             </div>
           </div>
+
+          {/* ТТН (Трекінг-номер) */}
+          {(order.delivery.method === 'nova_poshta' || order.delivery.method === 'ukrposhta') && (
+            <div className="bg-card rounded-lg border p-6">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                ТТН (Трекінг-номер)
+              </h2>
+              <div className="space-y-2">
+                <Input
+                  value={deliveryTtn}
+                  onChange={(e) => setDeliveryTtn(e.target.value)}
+                  placeholder="Введіть номер ТТН"
+                  className="w-full"
+                />
+                <Button
+                  onClick={handleDeliveryTtnSave}
+                  variant="outline"
+                  size="default"
+                  className="w-full"
+                >
+                  Зберегти
+                </Button>
+                {order.deliveryTtn && (
+                  <div className="text-xs text-muted-foreground mt-2">
+                    Поточний ТТН: {order.deliveryTtn}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Payment Status & Amount */}
           <div className="bg-card rounded-lg border p-6">

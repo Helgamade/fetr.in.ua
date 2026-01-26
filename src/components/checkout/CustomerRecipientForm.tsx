@@ -13,6 +13,8 @@ interface CustomerRecipientFormProps {
   onCancel?: () => void;
   mode?: 'edit' | 'view'; // 'edit' - всегда в режиме редактирования, 'view' - можно свернуть/развернуть
   defaultExpanded?: boolean;
+  isCompleted?: boolean; // Для отображения иконки валидации
+  onToggleExpanded?: () => void; // Для клика по заголовку
 }
 
 export const CustomerRecipientForm = ({
@@ -22,6 +24,8 @@ export const CustomerRecipientForm = ({
   onCancel,
   mode = 'view',
   defaultExpanded = false,
+  isCompleted,
+  onToggleExpanded,
 }: CustomerRecipientFormProps) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded || mode === 'edit');
   const [formData, setFormData] = useState({
