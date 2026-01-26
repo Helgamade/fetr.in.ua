@@ -161,35 +161,34 @@ export function OrderDetail() {
             }
           }
           
-          // Инициализация состояния редактирования контактов (свернуто если валидно)
+          // Инициализация состояния редактирования контактов (как в Checkout)
+          // В Checkout валидация вычисляется на каждый рендер, здесь тоже
+          // Просто устанавливаем флаг завершенности если данные валидны
           if (orderData.customer) {
             const phone = orderData.customer.phone || '';
-            const firstName = orderData.customer.firstName || '';
+            const cleanPhone = phone === "" || phone === "+380" ? "" : phone;
+            const isPhoneValid = cleanPhone.replace(/\D/g, '').length === 12 && cleanPhone.replace(/\D/g, '').startsWith('380');
             const lastName = orderData.customer.lastName || '';
-            const isPhoneValid = phone.replace(/\D/g, '').length >= 12 && phone.replace(/\D/g, '').startsWith('380');
-            const isLastNameValid = lastName.trim() !== '' && /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/.test(lastName);
-            const isFirstNameValid = firstName.trim() !== '' && /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/.test(firstName);
+            const isLastNameValid = lastName.trim() !== "" && validateCyrillic(lastName);
+            const firstName = orderData.customer.firstName || '';
+            const isFirstNameValid = firstName.trim() !== "" && validateCyrillic(firstName);
             
             // Проверка получателя (если указан)
-            let recipientValid = true;
+            let isRecipientValid = true;
             if (orderData.recipient) {
               const recipientPhone = orderData.recipient.phone || '';
-              const recipientFirstName = orderData.recipient.firstName || '';
+              const cleanRecipientPhone = recipientPhone === "" || recipientPhone === "+380" ? "" : recipientPhone;
+              const isRecipientPhoneValid = cleanRecipientPhone.replace(/\D/g, '').length === 12 && cleanRecipientPhone.replace(/\D/g, '').startsWith('380');
               const recipientLastName = orderData.recipient.lastName || '';
-              const isRecipientPhoneValid = recipientPhone.replace(/\D/g, '').length >= 12 && recipientPhone.replace(/\D/g, '').startsWith('380');
-              const isRecipientLastNameValid = recipientLastName.trim() !== '' && /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/.test(recipientLastName);
-              const isRecipientFirstNameValid = recipientFirstName.trim() !== '' && /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/.test(recipientFirstName);
-              recipientValid = isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid;
+              const isRecipientLastNameValid = recipientLastName.trim() !== "" && validateCyrillic(recipientLastName);
+              const recipientFirstName = orderData.recipient.firstName || '';
+              const isRecipientFirstNameValid = recipientFirstName.trim() !== "" && validateCyrillic(recipientFirstName);
+              isRecipientValid = isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid;
             }
             
-            const contactValid = isPhoneValid && isLastNameValid && isFirstNameValid && recipientValid;
+            const contactValid = isPhoneValid && isLastNameValid && isFirstNameValid && isRecipientValid;
             
-            console.log('[OrderDetail] Contact validation on load:', { isPhoneValid, isLastNameValid, isFirstNameValid, recipientValid, contactValid });
-            
-            // Устанавливаем state валидации (как для delivery)
-            setContactValidation(contactValid);
-            
-            // Устанавливаем флаг завершенности (как в Checkout)
+            // Устанавливаем флаг завершенности (как в Checkout - formData.contactInfoCompleted)
             setContactInfoCompleted(contactValid);
             
             // Если валидно, блок свернут по умолчанию (как в Checkout)
