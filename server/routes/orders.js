@@ -642,71 +642,22 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
       // Insert order БЕЗ order_number (используем AUTO_INCREMENT id)
       const recipient = req.body.recipient || null;
       
-      // Проверяем наличие столбцов customer_name и recipient_name в базе
-      const [columnCheck] = await connection.execute(`
-        SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_SCHEMA = DATABASE() 
-        AND TABLE_NAME = 'orders' 
-        AND COLUMN_NAME IN ('customer_name', 'recipient_name')
-      `);
-      const hasOldColumns = columnCheck.length > 0;
-      
-      // Формируем customer_name и recipient_name для обратной совместимости (если столбцы еще существуют)
-      const customerNameForDB = hasOldColumns && customer.firstName && customer.lastName
-        ? `${customer.lastName} ${customer.firstName}`.trim()
-        : null;
-      const recipientNameForDB = hasOldColumns && recipient && recipient.firstName && recipient.lastName
-        ? `${recipient.lastName} ${recipient.firstName}`.trim()
-        : null;
-      
-      let insertSQL, insertValues;
-      
-      if (hasOldColumns) {
-        // Если старые столбцы еще есть, включаем их в INSERT
-        insertSQL = `
-          INSERT INTO orders (user_id, analytics_session_id, customer_name, customer_first_name, customer_last_name, customer_phone, customer_email,
-            recipient_name, recipient_phone, recipient_first_name, recipient_last_name,
-            delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
-            payment_method, subtotal, discount, delivery_cost, total, status, comment, promo_code)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        insertValues = [
-          userId,
-          sessionId,
-          customerNameForDB,
-          customer.firstName || null,
-          customer.lastName || null,
-          customer.phone || null,
-          req.user ? req.user.email : null,
-          recipientNameForDB,
-          recipient ? (recipient.phone || null) : null,
-          recipient ? (recipient.firstName || null) : null,
-          recipient ? (recipient.lastName || null) : null,
-        ];
-      } else {
-        // Если старых столбцов нет, используем только новые
-        insertSQL = `
-          INSERT INTO orders (user_id, analytics_session_id, customer_first_name, customer_last_name, customer_phone, customer_email,
-            recipient_phone, recipient_first_name, recipient_last_name,
-            delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
-            payment_method, subtotal, discount, delivery_cost, total, status, comment, promo_code)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        insertValues = [
-          userId,
-          sessionId,
-          customer.firstName || null,
-          customer.lastName || null,
-          customer.phone || null,
-          req.user ? req.user.email : null,
-          recipient ? (recipient.phone || null) : null,
-          recipient ? (recipient.firstName || null) : null,
-          recipient ? (recipient.lastName || null) : null,
-        ];
-      }
-      
-      const [orderResult] = await connection.execute(insertSQL, [
-        ...insertValues, 
+      const [orderResult] = await connection.execute(`
+        INSERT INTO orders (user_id, analytics_session_id, customer_first_name, customer_last_name, customer_phone, customer_email,
+          recipient_phone, recipient_first_name, recipient_last_name,
+          delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
+          payment_method, subtotal, discount, delivery_cost, total, status, comment, promo_code)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        userId, // Привязываем заказ к пользователю если он авторизован
+        sessionId, // Привязываем заказ к сессии аналитики
+        customer.firstName || null,
+        customer.lastName || null,
+        customer.phone || null,
+        req.user ? req.user.email : null, // Сохраняем email если пользователь авторизован
+        recipient ? (recipient.phone || null) : null,
+        recipient ? (recipient.firstName || null) : null,
+        recipient ? (recipient.lastName || null) : null, 
         delivery.method || null, 
         toNull(delivery.city), 
         toNull(delivery.cityRef),
