@@ -204,6 +204,7 @@ export function OrderDetail() {
   }, [id]);
 
   // Валидация контактов (ТОЧНО КАК В CHECKOUT строка 513-524)
+  // В Checkout валидация вычисляется на каждый рендер БЕЗ зависимостей от state
   const isPhoneValid = order?.customer?.phone 
     ? ((order.customer.phone === "" || order.customer.phone === "+380" ? "" : order.customer.phone).replace(/\D/g, '').length === 12 && (order.customer.phone === "" || order.customer.phone === "+380" ? "" : order.customer.phone).replace(/\D/g, '').startsWith('380'))
     : false;
@@ -223,6 +224,20 @@ export function OrderDetail() {
   const isRecipientInfoValid = !order?.recipient || (isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid);
   
   const isContactInfoValid = isPhoneValid && isLastNameValid && isFirstNameValid && isRecipientInfoValid;
+  
+  // Синхронизация contactInfoCompleted с валидацией (как в Checkout - через useEffect при изменении formData)
+  useEffect(() => {
+    // Если валидация изменилась и стала валидной - устанавливаем completed
+    if (isContactInfoValid && !contactInfoCompleted) {
+      console.log('[OrderDetail] Setting contactInfoCompleted to true because validation is valid');
+      setContactInfoCompleted(true);
+    }
+    // Если валидация стала невалидной - сбрасываем completed
+    if (!isContactInfoValid && contactInfoCompleted) {
+      console.log('[OrderDetail] Setting contactInfoCompleted to false because validation is invalid');
+      setContactInfoCompleted(false);
+    }
+  }, [isContactInfoValid, contactInfoCompleted]);
 
   // Пересчет цены заказа
   const recalculateOrder = useMemo(() => {
