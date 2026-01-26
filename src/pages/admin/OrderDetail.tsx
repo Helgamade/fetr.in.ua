@@ -112,10 +112,7 @@ export function OrderDetail() {
   // Состояние валидации доставки из DeliveryForm
   const [deliveryValidation, setDeliveryValidation] = useState<boolean | null>(null);
   
-  // Состояние валидации контактов (как для delivery - через state, а не useMemo)
-  const [contactValidation, setContactValidation] = useState(false);
-  
-  // Флаг завершенности контактов (как в Checkout)
+  // Флаг завершенности контактов (как в Checkout - formData.contactInfoCompleted)
   const [contactInfoCompleted, setContactInfoCompleted] = useState(false);
 
   // Получаем тексты способов доставки
@@ -208,55 +205,27 @@ export function OrderDetail() {
     }
   }, [id]);
 
-  // Валидация контактов (ТОЧНО как в Checkout - упрощенная версия без цепочки useMemo)
-  // В Checkout используется ТОЧНО length === 12, а не >= 12!
-  const isContactInfoValidComputed = useMemo(() => {
-    if (!order?.customer) return false;
-    
-    // Валидация заказчика
-    const phone = order.customer.phone || '';
-    const cleanPhone = phone === "" || phone === "+380" ? "" : phone;
-    const isPhoneValid = cleanPhone.replace(/\D/g, '').length === 12 && cleanPhone.replace(/\D/g, '').startsWith('380');
-    
-    const lastName = order.customer.lastName || '';
-    const isLastNameValid = lastName.trim() !== "" && validateCyrillic(lastName);
-    
-    const firstName = order.customer.firstName || '';
-    const isFirstNameValid = firstName.trim() !== "" && validateCyrillic(firstName);
-    
-    // Валидация получателя (если есть)
-    let isRecipientValid = true;
-    if (order.recipient) {
-      const recipientPhone = order.recipient.phone || '';
-      const cleanRecipientPhone = recipientPhone === "" || recipientPhone === "+380" ? "" : recipientPhone;
-      const isRecipientPhoneValid = cleanRecipientPhone.replace(/\D/g, '').length === 12 && cleanRecipientPhone.replace(/\D/g, '').startsWith('380');
-      
-      const recipientLastName = order.recipient.lastName || '';
-      const isRecipientLastNameValid = recipientLastName.trim() !== "" && validateCyrillic(recipientLastName);
-      
-      const recipientFirstName = order.recipient.firstName || '';
-      const isRecipientFirstNameValid = recipientFirstName.trim() !== "" && validateCyrillic(recipientFirstName);
-      
-      isRecipientValid = isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid;
-    }
-    
-    const isValid = isPhoneValid && isLastNameValid && isFirstNameValid && isRecipientValid;
-    
-    console.log('[OrderDetail] Contact validation computed:', { 
-      isPhoneValid, isLastNameValid, isFirstNameValid, isRecipientValid, isValid 
-    });
-    
-    return isValid;
-  }, [order?.customer, order?.recipient]);
+  // Валидация контактов (ТОЧНО КАК В CHECKOUT - без useMemo, просто вычисления)
+  // В Checkout строка 513-524 - валидация вычисляется прямо в теле компонента
+  const isPhoneValid = order?.customer?.phone 
+    ? ((order.customer.phone === "" || order.customer.phone === "+380" ? "" : order.customer.phone).replace(/\D/g, '').length === 12 && (order.customer.phone === "" || order.customer.phone === "+380" ? "" : order.customer.phone).replace(/\D/g, '').startsWith('380'))
+    : false;
   
-  // Синхронизация contactValidation с вычисленной валидацией
-  useEffect(() => {
-    setContactValidation(isContactInfoValidComputed);
-    // Устанавливаем completed только если валидно
-    if (isContactInfoValidComputed) {
-      setContactInfoCompleted(true);
-    }
-  }, [isContactInfoValidComputed]);
+  const isLastNameValid = order?.customer?.lastName 
+    ? (order.customer.lastName.trim() !== "" && validateCyrillic(order.customer.lastName))
+    : false;
+    
+  const isFirstNameValid = order?.customer?.firstName 
+    ? (order.customer.firstName.trim() !== "" && validateCyrillic(order.customer.firstName))
+    : false;
+  
+  // Валидация для полей получателя (только если указан получатель)
+  const isRecipientPhoneValid = !order?.recipient || ((order.recipient.phone === "" || order.recipient.phone === "+380" ? "" : order.recipient.phone).replace(/\D/g, '').length === 12 && (order.recipient.phone === "" || order.recipient.phone === "+380" ? "" : order.recipient.phone).replace(/\D/g, '').startsWith('380'));
+  const isRecipientLastNameValid = !order?.recipient || (order.recipient.lastName.trim() !== "" && validateCyrillic(order.recipient.lastName));
+  const isRecipientFirstNameValid = !order?.recipient || (order.recipient.firstName.trim() !== "" && validateCyrillic(order.recipient.firstName));
+  const isRecipientInfoValid = !order?.recipient || (isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid);
+  
+  const isContactInfoValid = isPhoneValid && isLastNameValid && isFirstNameValid && isRecipientInfoValid;
 
   // Пересчет цены заказа
   const recalculateOrder = useMemo(() => {
@@ -786,7 +755,7 @@ export function OrderDetail() {
                 setEditingCustomer(!editingCustomer);
               }}
             >
-              {contactValidation ? (
+              {isContactInfoValid && contactInfoCompleted ? (
                 <CheckCircle className="w-6 h-6 text-green-500" />
               ) : (isContactInfoPartiallyFilled ? (
                 <span className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-medium">1</span>
@@ -795,7 +764,7 @@ export function OrderDetail() {
               ))}
               Контактні дані *
             </h2>
-            {contactValidation && contactInfoCompleted && !editingCustomer ? (
+            {isContactInfoValid && contactInfoCompleted && !editingCustomer ? (
               // Свернутый вид с информацией (как в Checkout)
               <div className="space-y-3">
                 <div className="space-y-1">
@@ -826,15 +795,14 @@ export function OrderDetail() {
                 recipient={order.recipient}
                 onSave={(customer, recipient) => {
                   handleSaveOrder({ customer, recipient });
-                  // Устанавливаем флаги после сохранения (как в Checkout)
-                  setContactValidation(true);
+                  // Устанавливаем флаг после сохранения (ТОЧНО как в Checkout строка 1478)
                   setContactInfoCompleted(true);
                   setEditingCustomer(false);
                 }}
                 onCancel={() => setEditingCustomer(false)}
                 mode="view"
                 defaultExpanded={editingCustomer}
-                isCompleted={contactValidation}
+                isCompleted={isContactInfoValid}
                 onToggleExpanded={() => setEditingCustomer(!editingCustomer)}
               />
             )}
