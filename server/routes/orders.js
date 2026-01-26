@@ -44,8 +44,12 @@ router.get('/', async (req, res, next) => {
       order.items = Array.from(itemsMap.values());
 
       // Format customer, delivery, payment
+      // Формируем name из firstName и lastName, если они есть, иначе используем customer_name
+      const customerName = (order.customer_first_name && order.customer_last_name) 
+        ? `${order.customer_last_name} ${order.customer_first_name}`.trim()
+        : (order.customer_name || '');
       order.customer = {
-        name: order.customer_name,
+        name: customerName,
         firstName: order.customer_first_name || undefined,
         lastName: order.customer_last_name || undefined,
         phone: order.customer_phone
@@ -466,15 +470,25 @@ router.get('/:id', async (req, res, next) => {
     });
 
     order.items = Array.from(itemsMap.values());
+    // Формируем name из firstName и lastName, если они есть, иначе используем customer_name
+    const customerName = (order.customer_first_name && order.customer_last_name) 
+      ? `${order.customer_last_name} ${order.customer_first_name}`.trim()
+      : (order.customer_name || '');
     order.customer = {
-      name: order.customer_name,
+      name: customerName,
+      firstName: order.customer_first_name || undefined,
+      lastName: order.customer_last_name || undefined,
       phone: order.customer_phone
     };
 
     // Добавляем данные получателя, если они есть
-    if (order.recipient_name || order.recipient_phone) {
+    if (order.recipient_name || order.recipient_phone || order.recipient_first_name || order.recipient_last_name) {
+      // Формируем name из firstName и lastName, если они есть, иначе используем recipient_name
+      const recipientName = (order.recipient_first_name && order.recipient_last_name) 
+        ? `${order.recipient_last_name} ${order.recipient_first_name}`.trim()
+        : (order.recipient_name || '');
       order.recipient = {
-        name: order.recipient_name || undefined,
+        name: recipientName,
         phone: order.recipient_phone || undefined,
         firstName: order.recipient_first_name || undefined,
         lastName: order.recipient_last_name || undefined,
@@ -620,6 +634,13 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
       
       // Insert order БЕЗ order_number (используем AUTO_INCREMENT id)
       const recipient = req.body.recipient || null;
+      // Формируем customer_name из firstName и lastName для обратной совместимости
+      const customerNameForDB = (customer.firstName && customer.lastName)
+        ? `${customer.lastName} ${customer.firstName}`.trim()
+        : (customer.name || null);
+      const recipientNameForDB = recipient && recipient.firstName && recipient.lastName
+        ? `${recipient.lastName} ${recipient.firstName}`.trim()
+        : (recipient?.name || null);
       const [orderResult] = await connection.execute(`
         INSERT INTO orders (user_id, analytics_session_id, customer_name, customer_first_name, customer_last_name, customer_phone, customer_email,
           recipient_name, recipient_phone, recipient_first_name, recipient_last_name,
@@ -629,12 +650,12 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
       `, [
         userId, // Привязываем заказ к пользователю если он авторизован
         sessionId, // Привязываем заказ к сессии аналитики
-        customer.name || null,
+        customerNameForDB,
         customer.firstName || null,
         customer.lastName || null,
         customer.phone || null,
         req.user ? req.user.email : null, // Сохраняем email если пользователь авторизован
-        recipient ? (recipient.name || null) : null,
+        recipientNameForDB,
         recipient ? (recipient.phone || null) : null,
         recipient ? (recipient.firstName || null) : null,
         recipient ? (recipient.lastName || null) : null, 
@@ -766,9 +787,13 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
             };
             
             // Данные для шаблона
+            // Формируем customerName из firstName и lastName, если они есть
+            const customerNameForEmail = (order.customer_first_name && order.customer_last_name) 
+              ? `${order.customer_last_name} ${order.customer_first_name}`.trim()
+              : (order.customer_name || '');
             const templateData = {
               orderNumber: orderNumber,
-              customerName: order.customer_name,
+              customerName: customerNameForEmail,
               customerPhone: order.customer_phone,
               customerEmail: order.customer_email || '',
               total: parseFloat(order.total).toFixed(2),
@@ -913,9 +938,13 @@ router.patch('/:id/status', async (req, res, next) => {
           // Если статус изменился на "paid", отправляем отдельные уведомления
           if (status === 'paid') {
             const { sendEmailToAdmin } = await import('../utils/emailService.js');
+            // Формируем customerName из firstName и lastName, если они есть
+            const customerNameForEmail = (order.customer_first_name && order.customer_last_name) 
+              ? `${order.customer_last_name} ${order.customer_first_name}`.trim()
+              : (order.customer_name || '');
             const paidData = {
               orderNumber: id,
-              customerName: order.customer_name,
+              customerName: customerNameForEmail,
               total: parseFloat(order.total).toFixed(2),
               orderLink: `${baseUrl}/admin/orders/${id}`,
               trackingLink: order.tracking_token ? `${baseUrl}/order/${order.tracking_token}` : `${baseUrl}/order/${id}`
@@ -953,13 +982,19 @@ router.put('/:id', async (req, res, next) => {
       : String(deliveryTtn).trim() || null;
 
     // Обрабатываем все поля, чтобы не было undefined
-    const customerName = customer?.name || null;
+    // Формируем customer_name из firstName и lastName для обратной совместимости
+    const customerName = (customer?.firstName && customer?.lastName)
+      ? `${customer.lastName} ${customer.firstName}`.trim()
+      : (customer?.name || null);
     const customerFirstName = customer?.firstName || null;
     const customerLastName = customer?.lastName || null;
     const customerPhone = customer?.phone || null;
     
     // Обрабатываем получателя
-    const recipientName = recipient?.name || null;
+    // Формируем recipient_name из firstName и lastName для обратной совместимости
+    const recipientName = (recipient?.firstName && recipient?.lastName)
+      ? `${recipient.lastName} ${recipient.firstName}`.trim()
+      : (recipient?.name || null);
     const recipientPhone = recipient?.phone || null;
     const recipientFirstName = recipient?.firstName || null;
     const recipientLastName = recipient?.lastName || null;
