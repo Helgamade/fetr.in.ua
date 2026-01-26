@@ -85,7 +85,7 @@ export function AddProductToOrderDialog({
                   <button
                     key={product.id}
                     onClick={() => handleProductSelect(product)}
-                    className="flex items-center gap-4 p-4 border rounded-lg hover:bg-accent transition-colors text-left"
+                    className="flex items-center gap-4 p-4 border rounded-lg hover:border-orange-500 transition-colors text-left"
                   >
                     <div className="flex-shrink-0">
                       {product.images && product.images.length > 0 ? (
@@ -215,7 +215,7 @@ export function AddProductToOrderDialog({
                     {selectedProductOptions.map((option: ProductOption) => (
                       <div
                         key={option.code}
-                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                        className="flex items-center justify-between p-3 border rounded-lg hover:border-orange-500 transition-colors"
                       >
                         <div className="flex items-center gap-3 flex-1">
                           <Checkbox
