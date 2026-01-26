@@ -94,10 +94,17 @@ const ThankYou = () => {
   const getTimelineSteps = (): TimelineStep[] => {
     if (!order) return [];
 
-    // Определяем порядок статусов в зависимости от способа оплаты
+    // Определяем способ доставки
+    const deliveryMethod = order.delivery?.method;
+    const isPickup = deliveryMethod === 'pickup';
+
+    // Определяем порядок статусов в зависимости от способа доставки и оплаты
     let statusOrder: OrderStatus[];
     
-    if (order.payment?.method === 'nalojka') {
+    if (isPickup) {
+      // Самовивіз: created → accepted → packed → completed (БЕЗ paid, shipped, arrived)
+      statusOrder = ['created', 'accepted', 'packed', 'completed'];
+    } else if (order.payment?.method === 'nalojka') {
       // Оплата при отриманні: created → accepted → packed → shipped → arrived → completed (БЕЗ paid)
       statusOrder = ['created', 'accepted', 'packed', 'shipped', 'arrived', 'completed'];
     } else {
@@ -108,6 +115,7 @@ const ThankYou = () => {
     const currentStatusIndex = statusOrder.indexOf(order.status);
     
     // Логирование для отладки
+    console.log('[ThankYou Timeline] Delivery method:', deliveryMethod);
     console.log('[ThankYou Timeline] Payment method:', order.payment?.method);
     console.log('[ThankYou Timeline] Order status from DB:', order.status);
     console.log('[ThankYou Timeline] Status order:', statusOrder);
@@ -136,7 +144,9 @@ const ThankYou = () => {
       packed: {
         id: "packed",
         title: "Спаковано",
-        description: "Замовлення зібране та очікує відправлення",
+        description: isPickup 
+          ? "Замовлення зібране та готове до самовивозу"
+          : "Замовлення зібране та очікує відправлення",
         icon: <Box className="w-5 h-5" />
       },
       shipped: {
