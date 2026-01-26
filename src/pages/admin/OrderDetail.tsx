@@ -167,34 +167,6 @@ export function OrderDetail() {
             }
           }
           
-          // Инициализация contactInfoCompleted при загрузке (как в Checkout)
-          if (orderData.customer) {
-            const phone = orderData.customer.phone || '';
-            const cleanPhone = phone === "" || phone === "+380" ? "" : phone;
-            const isPhoneValid = cleanPhone.replace(/\D/g, '').length === 12 && cleanPhone.replace(/\D/g, '').startsWith('380');
-            const lastName = orderData.customer.lastName || '';
-            const isLastNameValid = lastName.trim() !== "" && validateCyrillic(lastName);
-            const firstName = orderData.customer.firstName || '';
-            const isFirstNameValid = firstName.trim() !== "" && validateCyrillic(firstName);
-            
-            let isRecipientValid = true;
-            if (orderData.recipient) {
-              const recipientPhone = orderData.recipient.phone || '';
-              const cleanRecipientPhone = recipientPhone === "" || recipientPhone === "+380" ? "" : recipientPhone;
-              const isRecipientPhoneValid = cleanRecipientPhone.replace(/\D/g, '').length === 12 && cleanRecipientPhone.replace(/\D/g, '').startsWith('380');
-              const recipientLastName = orderData.recipient.lastName || '';
-              const isRecipientLastNameValid = recipientLastName.trim() !== "" && validateCyrillic(recipientLastName);
-              const recipientFirstName = orderData.recipient.firstName || '';
-              const isRecipientFirstNameValid = recipientFirstName.trim() !== "" && validateCyrillic(recipientFirstName);
-              isRecipientValid = isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid;
-            }
-            
-            const contactValid = isPhoneValid && isLastNameValid && isFirstNameValid && isRecipientValid;
-            setContactInfoCompleted(contactValid);
-            if (contactValid) {
-              setEditingCustomer(false);
-            }
-          }
         })
         .catch((error) => {
           console.error('[OrderDetail] Error loading order:', error);
@@ -225,19 +197,18 @@ export function OrderDetail() {
   
   const isContactInfoValid = isPhoneValid && isLastNameValid && isFirstNameValid && isRecipientInfoValid;
   
-  // Синхронизация contactInfoCompleted с валидацией (как в Checkout - через useEffect при изменении formData)
+  // Синхронизация contactInfoCompleted с валидацией (как в Checkout)
+  // В Checkout contactInfoCompleted устанавливается при нажатии "Продовжити" (строка 1478)
+  // Здесь устанавливаем автоматически когда валидация становится валидной
   useEffect(() => {
-    // Если валидация изменилась и стала валидной - устанавливаем completed
-    if (isContactInfoValid && !contactInfoCompleted) {
-      console.log('[OrderDetail] Setting contactInfoCompleted to true because validation is valid');
+    if (isContactInfoValid) {
       setContactInfoCompleted(true);
+      // Если валидно, блок свернут по умолчанию (как в Checkout)
+      if (!editingCustomer) {
+        setEditingCustomer(false);
+      }
     }
-    // Если валидация стала невалидной - сбрасываем completed
-    if (!isContactInfoValid && contactInfoCompleted) {
-      console.log('[OrderDetail] Setting contactInfoCompleted to false because validation is invalid');
-      setContactInfoCompleted(false);
-    }
-  }, [isContactInfoValid, contactInfoCompleted]);
+  }, [isContactInfoValid]);
 
   // Пересчет цены заказа
   const recalculateOrder = useMemo(() => {
