@@ -177,18 +177,17 @@ export function OrderDetail() {
 
   // Валидация контактов (ТОЧНО КАК В CHECKOUT строка 513-524)
   // В Checkout валидация вычисляется на каждый рендер БЕЗ зависимостей от state
-  // ВАЖНО: В базе данных customer.name хранится как полное имя, нужно парсить на firstName и lastName
-  const customerName = order?.customer?.name || '';
-  const nameParts = customerName.trim().split(/\s+/).filter(p => p);
-  const customerFirstName = order?.customer?.firstName || nameParts.slice(0, -1).join(' ') || '';
-  const customerLastName = order?.customer?.lastName || nameParts[nameParts.length - 1] || '';
-  
   const isPhoneValid = order?.customer?.phone 
     ? ((order.customer.phone === "" || order.customer.phone === "+380" ? "" : order.customer.phone).replace(/\D/g, '').length === 12 && (order.customer.phone === "" || order.customer.phone === "+380" ? "" : order.customer.phone).replace(/\D/g, '').startsWith('380'))
     : false;
   
-  const isLastNameValid = customerLastName.trim() !== "" && validateCyrillic(customerLastName);
-  const isFirstNameValid = customerFirstName.trim() !== "" && validateCyrillic(customerFirstName);
+  const isLastNameValid = order?.customer?.lastName 
+    ? (order.customer.lastName.trim() !== "" && validateCyrillic(order.customer.lastName))
+    : false;
+    
+  const isFirstNameValid = order?.customer?.firstName 
+    ? (order.customer.firstName.trim() !== "" && validateCyrillic(order.customer.firstName))
+    : false;
   
   // Валидация для полей получателя (только если указан получатель)
   const isRecipientPhoneValid = !order?.recipient || ((order.recipient.phone === "" || order.recipient.phone === "+380" ? "" : order.recipient.phone).replace(/\D/g, '').length === 12 && (order.recipient.phone === "" || order.recipient.phone === "+380" ? "" : order.recipient.phone).replace(/\D/g, '').startsWith('380'));
@@ -725,7 +724,7 @@ export function OrderDetail() {
             >
               {isContactInfoValid ? (
                 <CheckCircle className="w-6 h-6 text-green-500" />
-              ) : (order?.customer?.phone || customerFirstName || customerLastName ? (
+              ) : (order?.customer?.phone || order?.customer?.firstName || order?.customer?.lastName ? (
                 <span className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-medium">1</span>
               ) : (
                 <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">1</span>

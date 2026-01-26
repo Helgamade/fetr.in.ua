@@ -46,6 +46,8 @@ router.get('/', async (req, res, next) => {
       // Format customer, delivery, payment
       order.customer = {
         name: order.customer_name,
+        firstName: order.customer_first_name || undefined,
+        lastName: order.customer_last_name || undefined,
         phone: order.customer_phone
       };
 
@@ -113,6 +115,8 @@ router.get('/', async (req, res, next) => {
 
       // Remove old fields
       delete order.customer_name;
+      delete order.customer_first_name;
+      delete order.customer_last_name;
       delete order.customer_phone;
       delete order.customer_email;
       delete order.recipient_name;
@@ -617,15 +621,17 @@ router.post('/', optionalAuthenticate, async (req, res, next) => {
       // Insert order БЕЗ order_number (используем AUTO_INCREMENT id)
       const recipient = req.body.recipient || null;
       const [orderResult] = await connection.execute(`
-        INSERT INTO orders (user_id, analytics_session_id, customer_name, customer_phone, customer_email,
+        INSERT INTO orders (user_id, analytics_session_id, customer_name, customer_first_name, customer_last_name, customer_phone, customer_email,
           recipient_name, recipient_phone, recipient_first_name, recipient_last_name,
           delivery_method, delivery_city, delivery_city_ref, delivery_warehouse, delivery_warehouse_ref, delivery_post_index, delivery_address,
           payment_method, subtotal, discount, delivery_cost, total, status, comment, promo_code)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         userId, // Привязываем заказ к пользователю если он авторизован
         sessionId, // Привязываем заказ к сессии аналитики
-        customer.name || null, 
+        customer.name || null,
+        customer.firstName || null,
+        customer.lastName || null,
         customer.phone || null,
         req.user ? req.user.email : null, // Сохраняем email если пользователь авторизован
         recipient ? (recipient.name || null) : null,
@@ -948,6 +954,8 @@ router.put('/:id', async (req, res, next) => {
 
     // Обрабатываем все поля, чтобы не было undefined
     const customerName = customer?.name || null;
+    const customerFirstName = customer?.firstName || null;
+    const customerLastName = customer?.lastName || null;
     const customerPhone = customer?.phone || null;
     
     // Обрабатываем получателя
@@ -995,8 +1003,37 @@ router.put('/:id', async (req, res, next) => {
     
     const orderIdInt = orderRows[0].id;
 
+    // Проверяем наличие полей customer_first_name и customer_last_name
+    const hasCustomerFirstName = await pool.execute(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+       WHERE TABLE_SCHEMA = DATABASE() 
+       AND TABLE_NAME = 'orders' 
+       AND COLUMN_NAME = 'customer_first_name'`
+    ).then(([rows]) => rows.length > 0).catch(() => false);
+
     // Обновляем данные заказа
-    if (hasPaymentStatus) {
+    if (hasPaymentStatus && hasCustomerFirstName) {
+      await pool.execute(`
+        UPDATE orders SET
+          customer_name = ?, customer_first_name = ?, customer_last_name = ?, customer_phone = ?,
+          recipient_name = ?, recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
+          delivery_method = ?, delivery_city = ?, delivery_city_ref = ?, delivery_warehouse = ?, delivery_warehouse_ref = ?,
+          delivery_post_index = ?, delivery_address = ?,
+          payment_method = ?, payment_status = ?, paid_amount = ?,
+          status = ?, subtotal = ?, discount = ?,
+          delivery_cost = ?, total = ?, delivery_ttn = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE order_number = ?
+      `, [
+        customerName, customerFirstName, customerLastName, customerPhone,
+        recipientName, recipientPhone, recipientFirstName, recipientLastName,
+        deliveryMethod, deliveryCity, deliveryCityRef, deliveryWarehouse, deliveryWarehouseRef,
+        deliveryPostIndex, deliveryAddress,
+        paymentMethod, paymentStatus, paidAmount,
+        orderStatus, orderSubtotal, orderDiscount,
+        orderDeliveryCost, orderTotal, deliveryTtnValue, id
+      ]);
+      console.log('[Update Order] Updated with payment_status and customer_first_name/customer_last_name');
+    } else if (hasPaymentStatus) {
       await pool.execute(`
         UPDATE orders SET
           customer_name = ?, customer_phone = ?,
@@ -1016,7 +1053,26 @@ router.put('/:id', async (req, res, next) => {
         orderStatus, orderSubtotal, orderDiscount,
         orderDeliveryCost, orderTotal, deliveryTtnValue, id
       ]);
-      console.log('[Update Order] Updated with payment_status:', paymentStatus, 'paid_amount:', paidAmount);
+      console.log('[Update Order] Updated with payment_status (customer_first_name columns not found)');
+    } else if (hasCustomerFirstName) {
+      await pool.execute(`
+        UPDATE orders SET
+          customer_name = ?, customer_first_name = ?, customer_last_name = ?, customer_phone = ?,
+          recipient_name = ?, recipient_phone = ?, recipient_first_name = ?, recipient_last_name = ?,
+          delivery_method = ?, delivery_city = ?, delivery_city_ref = ?, delivery_warehouse = ?, delivery_warehouse_ref = ?,
+          delivery_post_index = ?, delivery_address = ?,
+          payment_method = ?, status = ?, subtotal = ?, discount = ?,
+          delivery_cost = ?, total = ?, delivery_ttn = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE order_number = ?
+      `, [
+        customerName, customerFirstName, customerLastName, customerPhone,
+        recipientName, recipientPhone, recipientFirstName, recipientLastName,
+        deliveryMethod, deliveryCity, deliveryCityRef, deliveryWarehouse, deliveryWarehouseRef,
+        deliveryPostIndex, deliveryAddress,
+        paymentMethod, orderStatus, orderSubtotal, orderDiscount,
+        orderDeliveryCost, orderTotal, deliveryTtnValue, id
+      ]);
+      console.log('[Update Order] Updated with customer_first_name/customer_last_name (payment_status columns not found)');
     } else {
       // Если поля не существуют, обновляем только старые поля
       await pool.execute(`
@@ -1036,7 +1092,7 @@ router.put('/:id', async (req, res, next) => {
         paymentMethod, orderStatus, orderSubtotal, orderDiscount,
         orderDeliveryCost, orderTotal, deliveryTtnValue, id
       ]);
-      console.log('[Update Order] WARNING: payment_status column does not exist. Please run migration 014_add_payment_status_and_paid_amount.sql');
+      console.log('[Update Order] WARNING: customer_first_name and payment_status columns do not exist. Please run migrations.');
     }
 
     // Обновляем товары в заказе, если они переданы
