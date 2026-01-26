@@ -11,6 +11,7 @@ import {
   Pencil,
   Trash2,
   Plus,
+  Minus,
   CheckCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -662,35 +663,33 @@ export function OrderDetail() {
                       {editingItems && (
                         <div className="flex gap-2 mt-4">
                           <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
+                            <button
+                              type="button"
                               onClick={() => {
                                 const newQuantity = item.quantity - 1;
                                 if (newQuantity >= 1) {
                                   handleUpdateItemQuantity(item.id, newQuantity);
                                 }
                               }}
+                              disabled={item.quantity <= 1}
+                              className={`h-8 w-8 flex items-center justify-center rounded-xl border border-border transition-colors text-sm font-medium ${
+                                item.quantity <= 1
+                                  ? 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground'
+                                  : 'hover:bg-muted hover:border-primary text-foreground'
+                              }`}
                             >
-                              -
-                            </Button>
-                            <Input
-                              type="number"
-                              min="1"
-                              value={item.quantity}
-                              onChange={(e) => {
-                                const qty = parseInt(e.target.value) || 1;
-                                handleUpdateItemQuantity(item.id, qty);
-                              }}
-                              className="w-20 text-center"
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="w-8 text-center text-sm font-medium text-muted-foreground">
+                              {item.quantity}
+                            </span>
+                            <button
+                              type="button"
                               onClick={() => handleUpdateItemQuantity(item.id, item.quantity + 1)}
+                              className="h-8 w-8 flex items-center justify-center rounded-xl border border-border hover:bg-muted hover:border-primary transition-colors text-foreground text-sm font-medium"
                             >
-                              +
-                            </Button>
+                              <Plus className="w-3 h-3" />
+                            </button>
                           </div>
                           <Button
                             variant="destructive"
