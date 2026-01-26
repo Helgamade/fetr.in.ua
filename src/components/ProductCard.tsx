@@ -203,7 +203,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
         </div>
 
         {/* Stock warning */}
-        {product.stock <= 10 && (
+        {product.stock > 0 && (
           <div className="flex items-center gap-2 text-warning text-sm font-medium mb-4">
             <span>Залишилось {product.stock} шт</span>
           </div>
