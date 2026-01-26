@@ -294,10 +294,8 @@ router.get('/track/:token', async (req, res, next) => {
       order.promoCode = order.promo_code;
     }
 
-    delete order.customer_name;
     delete order.customer_phone;
     delete order.customer_email;
-    delete order.recipient_name;
     delete order.recipient_phone;
     delete order.recipient_first_name;
     delete order.recipient_last_name;
@@ -561,10 +559,8 @@ router.get('/:id', async (req, res, next) => {
       console.log('[Get Order] No analytics session data to add');
     }
 
-    delete order.customer_name;
     delete order.customer_phone;
     delete order.customer_email;
-    delete order.recipient_name;
     delete order.recipient_phone;
     delete order.recipient_first_name;
     delete order.recipient_last_name;
