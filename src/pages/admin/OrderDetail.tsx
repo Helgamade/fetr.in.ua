@@ -35,6 +35,7 @@ import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from '@/components/Delivery
 import { CODPaymentLogo, WayForPayLogo, FOPPaymentLogo } from '@/components/PaymentLogos';
 import { usePublicSettings } from '@/hooks/usePublicSettings';
 import { useTexts, SiteText } from '@/hooks/useTexts';
+import { AddProductToOrderDialog } from '@/components/admin/AddProductToOrderDialog';
 
 // Только рабочие статусы
 const statusLabels: Record<OrderStatus, string> = {
@@ -108,6 +109,7 @@ export function OrderDetail() {
   const [editingPayment, setEditingPayment] = useState(false);
   const [editingItems, setEditingItems] = useState(false);
   const [localItems, setLocalItems] = useState<CartItem[]>([]);
+  const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
   
   // Состояние валидации доставки из DeliveryForm
   const [deliveryValidation, setDeliveryValidation] = useState<boolean | null>(null);
@@ -359,6 +361,16 @@ export function OrderDetail() {
     setLocalItems(prev => prev.map(item => 
       item.id === itemId ? { ...item, quantity } : item
     ));
+  };
+
+  const handleAddProduct = (productId: string, quantity: number, selectedOptions: string[]) => {
+    const newItem: CartItem = {
+      id: `item_${Date.now()}_${Math.random()}`,
+      productId,
+      quantity,
+      selectedOptions,
+    };
+    setLocalItems(prev => [...prev, newItem]);
   };
 
   // Получить текущие данные доставки (как в Checkout)
@@ -698,13 +710,7 @@ export function OrderDetail() {
               <div className="mt-4 pt-4 border-t">
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    // TODO: Открыть модальное окно для добавления товара
-                    toast({
-                      title: 'Увага',
-                      description: 'Функція додавання товарів буде реалізована наступним кроком',
-                    });
-                  }}
+                  onClick={() => setIsAddProductDialogOpen(true)}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Додати товар
@@ -1271,6 +1277,14 @@ export function OrderDetail() {
           </div>
         </div>
       </div>
+
+      {/* Диалог добавления товара */}
+      <AddProductToOrderDialog
+        isOpen={isAddProductDialogOpen}
+        onClose={() => setIsAddProductDialogOpen(false)}
+        onAdd={handleAddProduct}
+        products={products}
+      />
     </div>
   );
 }
