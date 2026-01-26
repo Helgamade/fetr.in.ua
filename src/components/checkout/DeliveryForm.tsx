@@ -227,6 +227,16 @@ export const DeliveryForm = ({
         value={formData.method}
         onValueChange={(value) => {
           const method = value as 'nova_poshta' | 'ukrposhta' | 'pickup';
+          // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
+          if (formData.method === method && method === "nova_poshta" && novaPoshtaExpanded === false) {
+            setNovaPoshtaExpanded(true);
+            return;
+          }
+          if (formData.method === method && method === "ukrposhta" && ukrPoshtaExpanded === false) {
+            setUkrPoshtaExpanded(true);
+            return;
+          }
+          
           if (method === 'pickup') {
             setFormData({ method });
             setNovaPoshtaExpanded(undefined);
@@ -258,7 +268,16 @@ export const DeliveryForm = ({
             }
           }}
         >
-          <label className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors">
+          <label 
+            className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors"
+            onClick={(e) => {
+              // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
+              if (formData.method === "nova_poshta" && novaPoshtaExpanded === false) {
+                e.stopPropagation();
+                setNovaPoshtaExpanded(true);
+              }
+            }}
+          >
             <div className="flex items-center gap-3">
               <RadioGroupItem value="nova_poshta" id="nova_poshta" />
               <div className="font-medium flex items-center gap-2 flex-1">
@@ -273,7 +292,16 @@ export const DeliveryForm = ({
                 )}
               </div>
             </div>
-            <div className="ml-[28px]">
+            <div 
+              className="ml-[28px]"
+              onClick={(e) => {
+                // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
+                if (formData.method === "nova_poshta" && novaPoshtaExpanded === false) {
+                  e.stopPropagation();
+                  setNovaPoshtaExpanded(true);
+                }
+              }}
+            >
               {formData.method === 'nova_poshta' && formData.novaPoshtaCity ? (
                 <div className="space-y-1 text-sm">
                   <div className="text-foreground">{formData.novaPoshtaCity}</div>
@@ -347,7 +375,16 @@ export const DeliveryForm = ({
             }
           }}
         >
-          <label className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors w-full">
+          <label 
+            className="flex flex-col gap-2 p-4 cursor-pointer hover:border-primary transition-colors w-full"
+            onClick={(e) => {
+              // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
+              if (formData.method === "ukrposhta" && ukrPoshtaExpanded === false) {
+                e.stopPropagation();
+                setUkrPoshtaExpanded(true);
+              }
+            }}
+          >
             <div className="flex items-center gap-3">
               <RadioGroupItem value="ukrposhta" id="ukrposhta" />
               <div className="font-medium flex items-center gap-2 flex-1">
@@ -362,7 +399,16 @@ export const DeliveryForm = ({
                 )}
               </div>
             </div>
-            <div className="ml-[28px] w-full">
+            <div 
+              className="ml-[28px] w-full"
+              onClick={(e) => {
+                // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
+                if (formData.method === "ukrposhta" && ukrPoshtaExpanded === false) {
+                  e.stopPropagation();
+                  setUkrPoshtaExpanded(true);
+                }
+              }}
+            >
               {formData.method === 'ukrposhta' && formData.ukrPoshtaCity ? (
                 <div className="space-y-1 text-sm">
                   <div className="text-foreground">{formData.ukrPoshtaCity}</div>
