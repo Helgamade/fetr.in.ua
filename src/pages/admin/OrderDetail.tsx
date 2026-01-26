@@ -208,65 +208,55 @@ export function OrderDetail() {
     }
   }, [id]);
 
-  // Валидация контактов (ТОЧНО как в Checkout - на каждый рендер)
+  // Валидация контактов (ТОЧНО как в Checkout - упрощенная версия без цепочки useMemo)
   // В Checkout используется ТОЧНО length === 12, а не >= 12!
-  const isPhoneValid = useMemo(() => {
-    if (!order?.customer?.phone) return false;
-    const phone = order.customer.phone === "" || order.customer.phone === "+380" ? "" : order.customer.phone;
-    return phone.replace(/\D/g, '').length === 12 && phone.replace(/\D/g, '').startsWith('380');
-  }, [order?.customer?.phone]);
-  
-  const isLastNameValid = useMemo(() => {
-    if (!order?.customer?.lastName) return false;
-    return order.customer.lastName.trim() !== "" && validateCyrillic(order.customer.lastName);
-  }, [order?.customer?.lastName]);
-  
-  const isFirstNameValid = useMemo(() => {
-    if (!order?.customer?.firstName) return false;
-    return order.customer.firstName.trim() !== "" && validateCyrillic(order.customer.firstName);
-  }, [order?.customer?.firstName]);
-  
-  // Валидация получателя (ТОЧНО как в Checkout)
-  const isRecipientPhoneValid = useMemo(() => {
-    if (!order?.recipient) return true; // Если нет получателя - валидно
-    const recipientPhone = order.recipient.phone === "" || order.recipient.phone === "+380" ? "" : order.recipient.phone;
-    return recipientPhone.replace(/\D/g, '').length === 12 && recipientPhone.replace(/\D/g, '').startsWith('380');
-  }, [order?.recipient?.phone]);
-  
-  const isRecipientLastNameValid = useMemo(() => {
-    if (!order?.recipient) return true;
-    return order.recipient.lastName.trim() !== "" && validateCyrillic(order.recipient.lastName);
-  }, [order?.recipient?.lastName]);
-  
-  const isRecipientFirstNameValid = useMemo(() => {
-    if (!order?.recipient) return true;
-    return order.recipient.firstName.trim() !== "" && validateCyrillic(order.recipient.firstName);
-  }, [order?.recipient?.firstName]);
-  
-  const isRecipientInfoValid = useMemo(() => {
-    if (!order?.recipient) return true;
-    return isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid;
-  }, [isRecipientPhoneValid, isRecipientLastNameValid, isRecipientFirstNameValid, order?.recipient]);
-  
-  // Финальная валидация контактов (ТОЧНО как в Checkout строка 524)
   const isContactInfoValidComputed = useMemo(() => {
-    return isPhoneValid && isLastNameValid && isFirstNameValid && isRecipientInfoValid;
-  }, [isPhoneValid, isLastNameValid, isFirstNameValid, isRecipientInfoValid]);
+    if (!order?.customer) return false;
+    
+    // Валидация заказчика
+    const phone = order.customer.phone || '';
+    const cleanPhone = phone === "" || phone === "+380" ? "" : phone;
+    const isPhoneValid = cleanPhone.replace(/\D/g, '').length === 12 && cleanPhone.replace(/\D/g, '').startsWith('380');
+    
+    const lastName = order.customer.lastName || '';
+    const isLastNameValid = lastName.trim() !== "" && validateCyrillic(lastName);
+    
+    const firstName = order.customer.firstName || '';
+    const isFirstNameValid = firstName.trim() !== "" && validateCyrillic(firstName);
+    
+    // Валидация получателя (если есть)
+    let isRecipientValid = true;
+    if (order.recipient) {
+      const recipientPhone = order.recipient.phone || '';
+      const cleanRecipientPhone = recipientPhone === "" || recipientPhone === "+380" ? "" : recipientPhone;
+      const isRecipientPhoneValid = cleanRecipientPhone.replace(/\D/g, '').length === 12 && cleanRecipientPhone.replace(/\D/g, '').startsWith('380');
+      
+      const recipientLastName = order.recipient.lastName || '';
+      const isRecipientLastNameValid = recipientLastName.trim() !== "" && validateCyrillic(recipientLastName);
+      
+      const recipientFirstName = order.recipient.firstName || '';
+      const isRecipientFirstNameValid = recipientFirstName.trim() !== "" && validateCyrillic(recipientFirstName);
+      
+      isRecipientValid = isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid;
+    }
+    
+    const isValid = isPhoneValid && isLastNameValid && isFirstNameValid && isRecipientValid;
+    
+    console.log('[OrderDetail] Contact validation computed:', { 
+      isPhoneValid, isLastNameValid, isFirstNameValid, isRecipientValid, isValid 
+    });
+    
+    return isValid;
+  }, [order?.customer, order?.recipient]);
   
   // Синхронизация contactValidation с вычисленной валидацией
   useEffect(() => {
-    console.log('[OrderDetail] Contact validation computed:', { 
-      isPhoneValid, isLastNameValid, isFirstNameValid, 
-      isRecipientPhoneValid, isRecipientLastNameValid, isRecipientFirstNameValid,
-      isRecipientInfoValid, isContactInfoValidComputed 
-    });
-    
     setContactValidation(isContactInfoValidComputed);
     // Устанавливаем completed только если валидно
     if (isContactInfoValidComputed) {
       setContactInfoCompleted(true);
     }
-  }, [isContactInfoValidComputed, isPhoneValid, isLastNameValid, isFirstNameValid, isRecipientPhoneValid, isRecipientLastNameValid, isRecipientFirstNameValid, isRecipientInfoValid]);
+  }, [isContactInfoValidComputed]);
 
   // Пересчет цены заказа
   const recalculateOrder = useMemo(() => {
