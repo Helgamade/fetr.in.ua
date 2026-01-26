@@ -346,11 +346,6 @@ export function OrderDetail() {
       item.id === itemId ? { ...item, quantity } : item
     ));
   };
-    const phone = order.customer.phone || '';
-    const firstName = order.customer.firstName || '';
-    const lastName = order.customer.lastName || '';
-    return !!(phone || firstName || lastName);
-  }, [order?.customer]);
 
   // Получить текущие данные доставки (как в Checkout)
   const getCurrentDeliveryData = useMemo(() => {
