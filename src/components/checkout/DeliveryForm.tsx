@@ -88,17 +88,25 @@ export const DeliveryForm = ({
       const hasWarehouseRef = !!initialDelivery.warehouseRef;
       const isCompleted = hasCity && hasWarehouse;
       
+      // Определяем тип доставки по названию warehouse (как в Checkout)
+      // Если в названии есть "Поштомат" или "почтомат", то это Postomat
+      const warehouseName = initialDelivery.warehouse || '';
+      const isPostomat = warehouseName.toLowerCase().includes('поштомат') || 
+                         warehouseName.toLowerCase().includes('почтомат') ||
+                         warehouseName.toLowerCase().includes('postomat');
+      const deliveryType: 'PostOffice' | 'Postomat' = isPostomat ? 'Postomat' : 'PostOffice';
+      
       return {
         method,
         novaPoshtaCity: initialDelivery.city || '',
         novaPoshtaCityRef: initialDelivery.cityRef || null, // Используем ref из базы, если есть
-        novaPoshtaPostOfficeWarehouse: initialDelivery.warehouse || '',
-        novaPoshtaPostOfficeWarehouseRef: initialDelivery.warehouseRef || null, // Используем ref из базы, если есть
-        novaPoshtaPostOfficeCompleted: isCompleted, // true если данные есть в БД
-        novaPoshtaPostomatWarehouse: '',
-        novaPoshtaPostomatWarehouseRef: null,
-        novaPoshtaPostomatCompleted: false,
-        novaPoshtaDeliveryType: 'PostOffice', // По умолчанию PostOffice, можно определить по warehouse если нужно
+        novaPoshtaPostOfficeWarehouse: deliveryType === 'PostOffice' ? warehouseName : '',
+        novaPoshtaPostOfficeWarehouseRef: deliveryType === 'PostOffice' ? initialDelivery.warehouseRef : null,
+        novaPoshtaPostOfficeCompleted: deliveryType === 'PostOffice' ? isCompleted : false,
+        novaPoshtaPostomatWarehouse: deliveryType === 'Postomat' ? warehouseName : '',
+        novaPoshtaPostomatWarehouseRef: deliveryType === 'Postomat' ? initialDelivery.warehouseRef : null,
+        novaPoshtaPostomatCompleted: deliveryType === 'Postomat' ? isCompleted : false,
+        novaPoshtaDeliveryType: deliveryType, // Определяем тип по названию warehouse
         novaPoshtaExpanded: isCompleted && (defaultExpanded || mode === 'edit'), // Открываем если данные есть
       };
     } else if (method === 'ukr_poshta') {

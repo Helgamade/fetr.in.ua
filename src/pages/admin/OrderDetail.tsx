@@ -140,6 +140,23 @@ export function OrderDetail() {
           setDeliveryTtn(orderData.deliveryTtn || '');
           setPaymentStatus(orderData.payment?.status || 'not_paid');
           setPaidAmount(orderData.payment?.paidAmount?.toString() || '');
+          
+          // Инициализация валидации доставки при загрузке заказа
+          if (orderData.delivery) {
+            if (orderData.delivery.method === 'pickup') {
+              setDeliveryValidation(true);
+            } else if (orderData.delivery.method === 'nova_poshta') {
+              const hasCity = !!(orderData.delivery.city && orderData.delivery.cityRef);
+              const hasWarehouse = !!(orderData.delivery.warehouse && orderData.delivery.warehouseRef);
+              setDeliveryValidation(hasCity && hasWarehouse);
+            } else if (orderData.delivery.method === 'ukrposhta') {
+              const hasCity = !!(orderData.delivery.city && orderData.delivery.cityRef);
+              const hasBranch = !!(orderData.delivery.warehouse && orderData.delivery.warehouseRef);
+              setDeliveryValidation(hasCity && hasBranch);
+            } else {
+              setDeliveryValidation(false);
+            }
+          }
         })
         .catch((error) => {
           console.error('[OrderDetail] Error loading order:', error);
@@ -392,24 +409,6 @@ export function OrderDetail() {
     return getCurrentDeliveryData?.completed || false;
   }, [getCurrentDeliveryData, deliveryValidation]);
 
-  // Инициализация валидации доставки при загрузке заказа
-  useEffect(() => {
-    if (order?.delivery) {
-      if (order.delivery.method === 'pickup') {
-        setDeliveryValidation(true);
-      } else if (order.delivery.method === 'nova_poshta') {
-        const hasCity = !!(order.delivery.city && order.delivery.cityRef);
-        const hasWarehouse = !!(order.delivery.warehouse && order.delivery.warehouseRef);
-        setDeliveryValidation(hasCity && hasWarehouse);
-      } else if (order.delivery.method === 'ukrposhta') {
-        const hasCity = !!(order.delivery.city && order.delivery.cityRef);
-        const hasBranch = !!(order.delivery.warehouse && order.delivery.warehouseRef);
-        setDeliveryValidation(hasCity && hasBranch);
-      } else {
-        setDeliveryValidation(false);
-      }
-    }
-  }, [order?.delivery]);
 
   if (isLoading) {
     return (
@@ -724,6 +723,9 @@ export function OrderDetail() {
               onClick={() => {
                 if (isContactInfoValid) {
                   setEditingCustomer(!editingCustomer);
+                } else {
+                  // Если не валидно, открываем для редактирования
+                  setEditingCustomer(true);
                 }
               }}
             >
@@ -742,7 +744,7 @@ export function OrderDetail() {
                 <div className="space-y-1">
                   <div className="text-xs text-muted-foreground">Замовник</div>
                   <div className="flex items-center justify-between">
-                    <div className="text-sm">{order.customer.lastName} {order.customer.firstName}</div>
+                    <div className="text-sm">{order.customer?.lastName} {order.customer?.firstName}</div>
                     <button
                       type="button"
                       onClick={() => setEditingCustomer(true)}
@@ -751,7 +753,7 @@ export function OrderDetail() {
                       <Pencil className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="text-sm">{order.customer.phone}</div>
+                  <div className="text-sm">{order.customer?.phone}</div>
                 </div>
                 {order.recipient && (
                   <div className="space-y-1 pt-2 border-t">
