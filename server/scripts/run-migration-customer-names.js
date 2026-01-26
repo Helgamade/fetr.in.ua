@@ -1,6 +1,10 @@
-const fs = require('fs');
-const path = require('path');
-const mysql = require('mysql2/promise');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import mysql from 'mysql2/promise';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 (async () => {
   try {
