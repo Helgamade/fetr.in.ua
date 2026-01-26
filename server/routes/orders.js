@@ -223,7 +223,9 @@ router.get('/track/:token', async (req, res, next) => {
     order.delivery = {
       method: order.delivery_method,
       city: order.delivery_city || undefined,
+      cityRef: order.delivery_city_ref || undefined,
       warehouse: order.delivery_warehouse || undefined,
+      warehouseRef: order.delivery_warehouse_ref || undefined,
       postIndex: order.delivery_post_index || undefined,
       address: order.delivery_address || undefined
     };
@@ -283,7 +285,9 @@ router.get('/track/:token', async (req, res, next) => {
     delete order.promo_code;
     delete order.delivery_method;
     delete order.delivery_city;
+    delete order.delivery_city_ref;
     delete order.delivery_warehouse;
+    delete order.delivery_warehouse_ref;
     delete order.delivery_post_index;
     delete order.delivery_address;
     delete order.payment_method;
@@ -476,7 +480,9 @@ router.get('/:id', async (req, res, next) => {
     order.delivery = {
       method: order.delivery_method,
       city: order.delivery_city || undefined,
+      cityRef: order.delivery_city_ref || undefined,
       warehouse: order.delivery_warehouse || undefined,
+      warehouseRef: order.delivery_warehouse_ref || undefined,
       postIndex: order.delivery_post_index || undefined,
       address: order.delivery_address || undefined
     };
@@ -536,7 +542,9 @@ router.get('/:id', async (req, res, next) => {
     delete order.promo_code;
     delete order.delivery_method;
     delete order.delivery_city;
+    delete order.delivery_city_ref;
     delete order.delivery_warehouse;
+    delete order.delivery_warehouse_ref;
     delete order.delivery_post_index;
     delete order.delivery_address;
     delete order.payment_method;
