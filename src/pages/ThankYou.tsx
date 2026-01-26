@@ -94,60 +94,73 @@ const ThankYou = () => {
   const getTimelineSteps = (): TimelineStep[] => {
     if (!order) return [];
 
-    const statusOrder: OrderStatus[] = ['created', 'accepted', 'paid', 'packed', 'shipped', 'arrived', 'completed'];
+    // Определяем порядок статусов в зависимости от способа оплаты
+    let statusOrder: OrderStatus[];
+    
+    if (order.payment?.method === 'nalojka') {
+      // Оплата при отриманні: created → accepted → packed → shipped → arrived → completed (БЕЗ paid)
+      statusOrder = ['created', 'accepted', 'packed', 'shipped', 'arrived', 'completed'];
+    } else {
+      // WayForPay и ФОП: created → accepted → paid → packed → shipped → arrived → completed
+      statusOrder = ['created', 'accepted', 'paid', 'packed', 'shipped', 'arrived', 'completed'];
+    }
+    
     const currentStatusIndex = statusOrder.indexOf(order.status);
     
     // Логирование для отладки
+    console.log('[ThankYou Timeline] Payment method:', order.payment?.method);
     console.log('[ThankYou Timeline] Order status from DB:', order.status);
+    console.log('[ThankYou Timeline] Status order:', statusOrder);
     console.log('[ThankYou Timeline] Current status index:', currentStatusIndex);
     
-    const allSteps: Omit<TimelineStep, 'status'>[] = [
-      {
+    // Все возможные шаги таймлайна
+    const allPossibleSteps: Record<string, Omit<TimelineStep, 'status'>> = {
+      created: {
         id: "created",
         title: "Замовлення оформлено",
         description: "Ваше замовлення успішно створено",
         icon: <CheckCircle className="w-5 h-5" />
       },
-      {
+      accepted: {
         id: "accepted",
         title: "Прийнято",
         description: "Замовлення прийнято в обробку",
         icon: <Package className="w-5 h-5" />
       },
-      {
+      paid: {
         id: "paid",
         title: "Оплачено",
         description: "Оплату успішно отримано, дякуємо!",
         icon: <CreditCard className="w-5 h-5" />
       },
-      {
+      packed: {
         id: "packed",
         title: "Спаковано",
         description: "Замовлення зібране та очікує відправлення",
         icon: <Box className="w-5 h-5" />
       },
-      {
+      shipped: {
         id: "shipped",
         title: "Відправлено",
         description: "Посилка вже в дорозі до вас",
         icon: <Truck className="w-5 h-5" />
       },
-      {
+      arrived: {
         id: "arrived",
         title: "Прибуло",
         description: "Посилка чекає на отримання",
         icon: <MapPin className="w-5 h-5" />
       },
-      {
+      completed: {
         id: "completed",
         title: "Залишити відгук",
         description: "Нам важлива ваша думка 💛",
         icon: <Star className="w-5 h-5" />
       }
-    ];
+    };
 
-    // Простая логика: используем order.status напрямую из базы
-    // "created" всегда completed, так как он идет до "accepted" и никогда не попадает в базу
+    // Формируем шаги таймлайна только для нужных статусов
+    const allSteps: Omit<TimelineStep, 'status'>[] = statusOrder.map(status => allPossibleSteps[status]);
     
     // currentStatusIndex может быть -1, если статус не найден (не должно быть, но на всякий случай)
     if (currentStatusIndex === -1) {
@@ -156,7 +169,7 @@ const ThankYou = () => {
       return allSteps.map((step) => ({ ...step, status: "pending" as const }));
     }
 
-    // Используем order.status напрямую из базы БЕЗ специальных условий
+    // Используем order.status напрямую из базы
     return allSteps.map((step, index) => {
       let status: "completed" | "current" | "pending" = "pending";
       
