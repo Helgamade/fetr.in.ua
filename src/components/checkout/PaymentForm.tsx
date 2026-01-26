@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CheckCircle, Pencil } from "lucide-react";
 import { CODPaymentLogo, WayForPayLogo, FOPPaymentLogo } from "@/components/PaymentLogos";
@@ -45,29 +44,6 @@ export const PaymentForm = ({
 
   const [isExpanded, setIsExpanded] = useState(defaultExpanded || mode === 'edit');
   const [paymentMethod, setPaymentMethod] = useState(initialPayment.method);
-
-  const handleSave = () => {
-    if (!paymentMethod) return;
-
-    const payment: PaymentInfo = {
-      method: paymentMethod as 'wayforpay' | 'nalojka' | 'fopiban',
-      status: initialPayment.status,
-      paidAmount: initialPayment.paidAmount,
-    };
-
-    onSave(payment);
-    if (mode === 'view') {
-      setIsExpanded(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setPaymentMethod(initialPayment.method);
-    if (mode === 'view') {
-      setIsExpanded(false);
-    }
-    onCancel?.();
-  };
 
   const getPaymentLabel = (method: string) => {
     if (method === 'wayforpay') return paymentWayForPayTitle;
@@ -115,7 +91,22 @@ export const PaymentForm = ({
     <div className="space-y-4">
       <RadioGroup
         value={paymentMethod}
-        onValueChange={(value) => setPaymentMethod(value)}
+        onValueChange={(value) => {
+          setPaymentMethod(value);
+          // Сразу сохраняем при выборе способа оплаты (как в Checkout)
+          if (value) {
+            const payment: PaymentInfo = {
+              method: value as 'wayforpay' | 'nalojka' | 'fopiban',
+              status: initialPayment.status,
+              paidAmount: initialPayment.paidAmount,
+            };
+            onSave(payment);
+            // Сворачиваем блок после сохранения
+            if (mode === 'view') {
+              setIsExpanded(false);
+            }
+          }
+        }}
         className="space-y-3"
       >
         <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors">
@@ -149,28 +140,6 @@ export const PaymentForm = ({
           </div>
         </label>
       </RadioGroup>
-
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={!paymentMethod}
-          onClick={handleSave}
-          className="flex-1 rounded-xl"
-        >
-          Зберегти
-        </Button>
-        {onCancel && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleCancel}
-            className="flex-1 rounded-xl"
-          >
-            Скасувати
-          </Button>
-        )}
-      </div>
     </div>
   );
 };

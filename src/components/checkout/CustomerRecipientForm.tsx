@@ -761,27 +761,15 @@ export const CustomerRecipientForm = ({
         </div>
       )}
 
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={!isValid}
-          onClick={handleSave}
-          className="flex-1 rounded-xl"
-        >
-          Зберегти
-        </Button>
-        {onCancel && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleCancel}
-            className="flex-1 rounded-xl"
-          >
-            Скасувати
-          </Button>
-        )}
-      </div>
+      <Button
+        type="button"
+        variant="outline"
+        disabled={!isValid}
+        onClick={handleSave}
+        className="w-full rounded-xl"
+      >
+        Продовжити
+      </Button>
     </div>
   );
 };
