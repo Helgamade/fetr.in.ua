@@ -31,6 +31,10 @@ import { useToast } from '@/hooks/use-toast';
 import { CustomerRecipientForm } from '@/components/checkout/CustomerRecipientForm';
 import { DeliveryForm } from '@/components/checkout/DeliveryForm';
 import { PaymentForm } from '@/components/checkout/PaymentForm';
+import { NovaPoshtaLogo, UkrposhtaLogo, PickupLogo } from '@/components/DeliveryLogos';
+import { CODPaymentLogo, WayForPayLogo, FOPPaymentLogo } from '@/components/PaymentLogos';
+import { usePublicSettings } from '@/hooks/usePublicSettings';
+import { useTexts, SiteText } from '@/hooks/useTexts';
 
 // Только рабочие статусы
 const statusLabels: Record<OrderStatus, string> = {
@@ -89,6 +93,9 @@ export function OrderDetail() {
   const updateStatus = useUpdateOrderStatus();
   const updateOrder = useUpdateOrder();
   const { toast } = useToast();
+  const { data: storeSettings = {} } = usePublicSettings();
+  const { data: textsData } = useTexts();
+  const texts: SiteText[] = Array.isArray(textsData) ? textsData : [];
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deliveryTtn, setDeliveryTtn] = useState('');
@@ -101,6 +108,21 @@ export function OrderDetail() {
   const [editingPayment, setEditingPayment] = useState(false);
   const [editingItems, setEditingItems] = useState(false);
   const [localItems, setLocalItems] = useState<CartItem[]>([]);
+  
+  // Состояние валидации доставки из DeliveryForm
+  const [deliveryValidation, setDeliveryValidation] = useState<boolean | null>(null);
+
+  // Получаем тексты способов доставки
+  const deliveryNovaPoshtaTitle = texts.find(t => t.key === 'checkout.delivery.nova_poshta.title')?.value || 'Нова Пошта';
+  const deliveryUkrposhtaTitle = texts.find(t => t.key === 'checkout.delivery.ukrposhta.title')?.value || 'Укрпошта';
+  const deliveryPickupTitle = texts.find(t => t.key === 'checkout.delivery.pickup.title')?.value || 'Самовивіз';
+
+  // Получаем тексты способов оплаты
+  const paymentWayForPayTitle = texts.find(t => t.key === 'checkout.payment.wayforpay.title')?.value || 'Онлайн оплата';
+  const paymentWayForPayDescription = texts.find(t => t.key === 'checkout.payment.wayforpay.description')?.value || 'Безпечна оплата карткою через WayForPay';
+  const paymentNalojkaTitle = texts.find(t => t.key === 'checkout.payment.nalojka.title')?.value || 'Оплата при отриманні';
+  const paymentFopTitle = texts.find(t => t.key === 'checkout.payment.fop.title')?.value || 'Оплата на рахунок ФОП';
+  const paymentFopDescription = texts.find(t => t.key === 'checkout.payment.fop.description')?.value || 'Оплата на банківський рахунок ФОП';
 
   useEffect(() => {
     if (id) {
@@ -276,6 +298,118 @@ export function OrderDetail() {
       item.id === itemId ? { ...item, quantity } : item
     ));
   };
+
+  // Функции валидации (как в Checkout)
+  const validatePhone = (phone: string): boolean => {
+    const digitsOnly = phone.replace(/\D/g, '');
+    return digitsOnly.length >= 12 && digitsOnly.startsWith('380');
+  };
+
+  const validateCyrillic = (value: string): boolean => {
+    const cyrillicRegex = /^[а-яА-ЯіІїЇєЄґҐ\s-]+$/;
+    return cyrillicRegex.test(value);
+  };
+
+  // Проверка валидности контактов (как в Checkout)
+  const isContactInfoValid = useMemo(() => {
+    if (!order?.customer) return false;
+    const phone = order.customer.phone || '';
+    const firstName = order.customer.firstName || '';
+    const lastName = order.customer.lastName || '';
+    
+    const isPhoneValid = validatePhone(phone);
+    const isLastNameValid = lastName.trim() !== '' && validateCyrillic(lastName);
+    const isFirstNameValid = firstName.trim() !== '' && validateCyrillic(firstName);
+    
+    // Проверка получателя (если указан)
+    if (order.recipient) {
+      const recipientPhone = order.recipient.phone || '';
+      const recipientFirstName = order.recipient.firstName || '';
+      const recipientLastName = order.recipient.lastName || '';
+      
+      const isRecipientPhoneValid = validatePhone(recipientPhone);
+      const isRecipientLastNameValid = recipientLastName.trim() !== '' && validateCyrillic(recipientLastName);
+      const isRecipientFirstNameValid = recipientFirstName.trim() !== '' && validateCyrillic(recipientFirstName);
+      
+      return isPhoneValid && isLastNameValid && isFirstNameValid && 
+             isRecipientPhoneValid && isRecipientLastNameValid && isRecipientFirstNameValid;
+    }
+    
+    return isPhoneValid && isLastNameValid && isFirstNameValid;
+  }, [order?.customer, order?.recipient]);
+
+  // Проверка частичной заполненности контактов (для оранжевой иконки)
+  const isContactInfoPartiallyFilled = useMemo(() => {
+    if (!order?.customer) return false;
+    const phone = order.customer.phone || '';
+    const firstName = order.customer.firstName || '';
+    const lastName = order.customer.lastName || '';
+    return !!(phone || firstName || lastName);
+  }, [order?.customer]);
+
+  // Получить текущие данные доставки (как в Checkout)
+  const getCurrentDeliveryData = useMemo(() => {
+    if (!order?.delivery) return null;
+    
+    if (order.delivery.method === 'nova_poshta') {
+      // Для Новой Почты проверяем наличие всех необходимых полей
+      // Используем валидацию из DeliveryForm если доступна, иначе проверяем базовые поля
+      const hasCity = !!(order.delivery.city && order.delivery.cityRef);
+      const hasWarehouse = !!(order.delivery.warehouse && order.delivery.warehouseRef);
+      const completed = deliveryValidation !== null ? deliveryValidation : (hasCity && hasWarehouse);
+      return {
+        city: order.delivery.city,
+        warehouse: order.delivery.warehouse,
+        completed,
+      };
+    } else if (order.delivery.method === 'ukrposhta') {
+      // Для Укрпошта проверяем наличие всех необходимых полей
+      const hasCity = !!(order.delivery.city && order.delivery.cityRef);
+      const hasBranch = !!(order.delivery.warehouse && order.delivery.warehouseRef);
+      const completed = deliveryValidation !== null ? deliveryValidation : (hasCity && hasBranch);
+      return {
+        city: order.delivery.city,
+        branch: order.delivery.warehouse,
+        postalCode: order.delivery.postIndex,
+        address: order.delivery.address,
+        completed,
+      };
+    } else if (order.delivery.method === 'pickup') {
+      return {
+        completed: true,
+      };
+    }
+    return null;
+  }, [order?.delivery, deliveryValidation]);
+
+  // Проверка валидности доставки (как в Checkout - используем completed флаг)
+  const isDeliveryValid = useMemo(() => {
+    // Если есть валидация из DeliveryForm, используем её
+    if (deliveryValidation !== null) {
+      return deliveryValidation;
+    }
+    // Иначе проверяем базовые поля
+    return getCurrentDeliveryData?.completed || false;
+  }, [getCurrentDeliveryData, deliveryValidation]);
+
+  // Инициализация валидации доставки при загрузке заказа
+  useEffect(() => {
+    if (order?.delivery) {
+      if (order.delivery.method === 'pickup') {
+        setDeliveryValidation(true);
+      } else if (order.delivery.method === 'nova_poshta') {
+        const hasCity = !!(order.delivery.city && order.delivery.cityRef);
+        const hasWarehouse = !!(order.delivery.warehouse && order.delivery.warehouseRef);
+        setDeliveryValidation(hasCity && hasWarehouse);
+      } else if (order.delivery.method === 'ukrposhta') {
+        const hasCity = !!(order.delivery.city && order.delivery.cityRef);
+        const hasBranch = !!(order.delivery.warehouse && order.delivery.warehouseRef);
+        setDeliveryValidation(hasCity && hasBranch);
+      } else {
+        setDeliveryValidation(false);
+      }
+    }
+  }, [order?.delivery]);
 
   if (isLoading) {
     return (
@@ -588,34 +722,60 @@ export function OrderDetail() {
             <h2 
               className="text-lg font-bold flex items-center gap-2 cursor-pointer mb-4"
               onClick={() => {
-                if (!editingCustomer) {
-                  const isValid = order.customer?.phone && order.customer?.firstName && order.customer?.lastName;
-                  if (isValid) {
-                    setEditingCustomer(!editingCustomer);
-                  }
+                if (isContactInfoValid) {
+                  setEditingCustomer(!editingCustomer);
                 }
               }}
             >
-              {order.customer?.phone && order.customer?.firstName && order.customer?.lastName ? (
+              {isContactInfoValid ? (
                 <CheckCircle className="w-6 h-6 text-green-500" />
+              ) : (isContactInfoPartiallyFilled ? (
+                <span className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-medium">1</span>
               ) : (
                 <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">1</span>
-              )}
+              ))}
               Контактні дані *
             </h2>
-            <CustomerRecipientForm
-              customer={order.customer}
-              recipient={order.recipient}
-              onSave={(customer, recipient) => {
-                handleSaveOrder({ customer, recipient });
-                setEditingCustomer(false);
-              }}
-              onCancel={() => setEditingCustomer(false)}
-              mode="view"
-              defaultExpanded={editingCustomer}
-              isCompleted={!!(order.customer?.phone && order.customer?.firstName && order.customer?.lastName)}
-              onToggleExpanded={() => setEditingCustomer(!editingCustomer)}
-            />
+            {isContactInfoValid && !editingCustomer ? (
+              // Свернутый вид с информацией (как в Checkout)
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <div className="text-xs text-muted-foreground">Замовник</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm">{order.customer.lastName} {order.customer.firstName}</div>
+                    <button
+                      type="button"
+                      onClick={() => setEditingCustomer(true)}
+                      className="text-muted-foreground hover:text-primary"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="text-sm">{order.customer.phone}</div>
+                </div>
+                {order.recipient && (
+                  <div className="space-y-1 pt-2 border-t">
+                    <div className="text-xs text-muted-foreground">Отримувач</div>
+                    <div className="text-sm">{order.recipient.lastName} {order.recipient.firstName}</div>
+                    <div className="text-sm">{order.recipient.phone}</div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <CustomerRecipientForm
+                customer={order.customer}
+                recipient={order.recipient}
+                onSave={(customer, recipient) => {
+                  handleSaveOrder({ customer, recipient });
+                  setEditingCustomer(false);
+                }}
+                onCancel={() => setEditingCustomer(false)}
+                mode="view"
+                defaultExpanded={editingCustomer}
+                isCompleted={isContactInfoValid}
+                onToggleExpanded={() => setEditingCustomer(!editingCustomer)}
+              />
+            )}
             {order.promoCode && (
               <div className="flex items-center gap-2 text-sm mt-4 pt-4 border-t">
                 <span className="text-muted-foreground">Промокод:</span>
@@ -629,15 +789,12 @@ export function OrderDetail() {
             <h2 
               className="text-lg font-bold flex items-center gap-2 cursor-pointer mb-4"
               onClick={() => {
-                if (!editingDelivery) {
-                  const isCompleted = !!(order.delivery.method && order.delivery.city && order.delivery.warehouse);
-                  if (isCompleted) {
-                    setEditingDelivery(!editingDelivery);
-                  }
+                if (isDeliveryValid) {
+                  setEditingDelivery(!editingDelivery);
                 }
               }}
             >
-              {order.delivery.method && order.delivery.city && order.delivery.warehouse ? (
+              {isDeliveryValid ? (
                 <CheckCircle className="w-6 h-6 text-green-500" />
               ) : (
                 <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">2</span>
@@ -654,33 +811,81 @@ export function OrderDetail() {
                 mode="edit"
                 defaultExpanded={true}
                 orderTotal={recalculateOrder?.total || order.total}
-                isCompleted={!!(order.delivery.method && order.delivery.city && order.delivery.warehouse)}
+                isCompleted={isDeliveryValid}
                 onToggleExpanded={() => setEditingDelivery(!editingDelivery)}
+                onValidationChange={(isValid) => setDeliveryValidation(isValid)}
               />
             ) : (
+              // Свернутый вид (как в Checkout)
               <div className="space-y-2">
-                <div className="font-medium">{deliveryLabels[order.delivery.method]}</div>
-                {order.delivery.city && (
-                  <div className="text-sm">м. {order.delivery.city}</div>
-                )}
-                {order.delivery.warehouse && (
-                  <div className="text-sm">{order.delivery.warehouse}</div>
-                )}
-                {order.delivery.address && (
-                  <div className="text-sm">{order.delivery.address}</div>
-                )}
-                {order.delivery.postIndex && (
-                  <div className="text-sm">Індекс: {order.delivery.postIndex}</div>
-                )}
-                {!editingDelivery && (
-                  <button
-                    type="button"
-                    onClick={() => setEditingDelivery(true)}
-                    className="text-muted-foreground hover:text-primary mt-2"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                )}
+                {(() => {
+                  const deliveryData = getCurrentDeliveryData;
+                  if (order.delivery.method === 'nova_poshta' && deliveryData) {
+                    return (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-medium flex items-center gap-2">
+                            <NovaPoshtaLogo className="w-5 h-5" />
+                            {deliveryNovaPoshtaTitle}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditingDelivery(true)}
+                            className="text-muted-foreground hover:text-primary"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {deliveryData.city && <div className="text-sm">{deliveryData.city}</div>}
+                        {deliveryData.warehouse && <div className="text-sm">{deliveryData.warehouse}</div>}
+                      </>
+                    );
+                  } else if (order.delivery.method === 'ukrposhta' && deliveryData) {
+                    const cityDisplayName = deliveryData.city || '';
+                    const fullAddress = deliveryData.postalCode && deliveryData.address
+                      ? `${deliveryData.postalCode} ${cityDisplayName.replace(/\s*\([^)]*\)\s*$/, '')}, ${deliveryData.address}`
+                      : deliveryData.branch || '';
+                    return (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-medium flex items-center gap-2">
+                            <UkrposhtaLogo className="w-5 h-5" />
+                            {deliveryUkrposhtaTitle}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditingDelivery(true)}
+                            className="text-muted-foreground hover:text-primary"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {cityDisplayName && <div className="text-sm">{cityDisplayName}</div>}
+                        {fullAddress && <div className="text-sm">{fullAddress}</div>}
+                      </>
+                    );
+                  } else if (order.delivery.method === 'pickup') {
+                    return (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-medium flex items-center gap-2">
+                            <PickupLogo className="w-5 h-5" />
+                            {deliveryPickupTitle}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditingDelivery(true)}
+                            className="text-muted-foreground hover:text-primary"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="text-sm">{storeSettings.store_address || 'м. Київ, вул. Урлівська 30'}</div>
+                      </>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             )}
           </div>
@@ -690,7 +895,7 @@ export function OrderDetail() {
             <h2 
               className="text-lg font-bold flex items-center gap-2 cursor-pointer mb-4"
               onClick={() => {
-                if (!editingPayment && order.payment?.method) {
+                if (order.payment?.method) {
                   setEditingPayment(!editingPayment);
                 }
               }}
@@ -702,7 +907,69 @@ export function OrderDetail() {
               )}
               Спосіб оплати *
             </h2>
-            {editingPayment ? (
+            {order.payment?.method && !editingPayment ? (
+              // Свернутый вид блока оплаты (как в Checkout)
+              <div className="space-y-2">
+                {order.payment.method === 'wayforpay' && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-medium flex items-center gap-2">
+                        <WayForPayLogo className="w-5 h-5" />
+                        {paymentWayForPayTitle}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingPayment(true)}
+                        className="text-muted-foreground hover:text-primary"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="text-sm text-muted-foreground">{paymentWayForPayDescription}</div>
+                  </>
+                )}
+                {order.payment.method === 'nalojka' && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-medium flex items-center gap-2">
+                        <CODPaymentLogo className="w-5 h-5" />
+                        {paymentNalojkaTitle}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingPayment(true)}
+                        className="text-muted-foreground hover:text-primary"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {order.delivery.method === 'nova_poshta' && 'Післяплата (комісія 2% + 20 грн)'}
+                      {order.delivery.method === 'ukrposhta' && 'Післяплата (комісія 2% + 15 грн)'}
+                      {order.delivery.method === 'pickup' && 'Оплата готівкою при отриманні замовлення'}
+                    </div>
+                  </>
+                )}
+                {order.payment.method === 'fopiban' && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-medium flex items-center gap-2">
+                        <FOPPaymentLogo className="w-5 h-5" />
+                        {paymentFopTitle}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingPayment(true)}
+                        className="text-muted-foreground hover:text-primary"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="text-sm text-muted-foreground">{paymentFopDescription}</div>
+                  </>
+                )}
+              </div>
+            ) : (
               <PaymentForm
                 payment={order.payment}
                 deliveryMethod={order.delivery.method}
@@ -711,27 +978,10 @@ export function OrderDetail() {
                 }}
                 onCancel={() => setEditingPayment(false)}
                 mode="edit"
-                defaultExpanded={true}
+                defaultExpanded={editingPayment}
                 isCompleted={!!order.payment?.method}
                 onToggleExpanded={() => setEditingPayment(!editingPayment)}
               />
-            ) : (
-              <div className="space-y-2">
-                <div className="text-sm">
-                  {order.payment.method === 'wayforpay' && 'Онлайн оплата (WayForPay)'}
-                  {order.payment.method === 'nalojka' && 'Оплата при отриманні'}
-                  {order.payment.method === 'fopiban' && 'Оплата на рахунок ФОП'}
-                </div>
-                {!editingPayment && (
-                  <button
-                    type="button"
-                    onClick={() => setEditingPayment(true)}
-                    className="text-muted-foreground hover:text-primary"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
             )}
           </div>
 

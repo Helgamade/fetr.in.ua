@@ -20,6 +20,7 @@ interface DeliveryFormProps {
   orderTotal?: number; // Для расчета бесплатной доставки
   isCompleted?: boolean; // Для отображения иконки валидации
   onToggleExpanded?: () => void; // Для клика по заголовку
+  onValidationChange?: (isValid: boolean) => void; // Для передачи статуса валидации родителю
 }
 
 interface DeliveryFormData {
@@ -56,6 +57,7 @@ export const DeliveryForm = ({
   orderTotal = 0,
   isCompleted,
   onToggleExpanded,
+  onValidationChange,
 }: DeliveryFormProps) => {
   const { data: storeSettings = {} } = usePublicSettings();
   const { data: textsData } = useTexts();
@@ -314,6 +316,13 @@ export const DeliveryForm = ({
     }
     return false;
   };
+
+  // Передаем статус валидации родителю при изменении
+  useEffect(() => {
+    if (onValidationChange) {
+      onValidationChange(checkIsCompleted());
+    }
+  }, [formData.method, formData.novaPoshtaDeliveryType, formData.novaPoshtaPostOfficeCompleted, formData.novaPoshtaPostomatCompleted, formData.ukrPoshtaCompleted, onValidationChange]);
 
   const handleSave = () => {
     if (!checkIsCompleted()) return;
