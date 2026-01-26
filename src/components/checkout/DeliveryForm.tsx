@@ -98,14 +98,14 @@ export const DeliveryForm = ({
 
   // При открытии формы редактирования автоматически открываем соответствующую форму доставки
   useEffect(() => {
-    if (isExpanded && mode === 'view') {
+    if (isExpanded) {
       if (formData.method === 'nova_poshta') {
         setNovaPoshtaExpanded(true);
       } else if (formData.method === 'ukrposhta') {
         setUkrPoshtaExpanded(true);
       }
     }
-  }, [isExpanded, mode, formData.method]);
+  }, [isExpanded, formData.method]);
 
   const isCompleted = () => {
     if (formData.method === 'pickup') return true;
@@ -252,7 +252,7 @@ export const DeliveryForm = ({
           className="border rounded-xl transition-all"
           onClick={(e) => {
             // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
-            if (formData.method === "nova_poshta" && !novaPoshtaExpanded && mode === 'view') {
+            if (formData.method === "nova_poshta" && !novaPoshtaExpanded) {
               e.stopPropagation();
               setNovaPoshtaExpanded(true);
               setIsExpanded(true);
@@ -342,7 +342,7 @@ export const DeliveryForm = ({
           className="border rounded-xl transition-all"
           onClick={(e) => {
             // Если кликаем на уже выбранный способ доставки и он свернут, раскрываем его
-            if (formData.method === "ukrposhta" && !ukrPoshtaExpanded && mode === 'view') {
+            if (formData.method === "ukrposhta" && !ukrPoshtaExpanded) {
               e.stopPropagation();
               setUkrPoshtaExpanded(true);
               setIsExpanded(true);
