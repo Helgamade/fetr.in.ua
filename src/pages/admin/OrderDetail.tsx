@@ -112,6 +112,9 @@ export function OrderDetail() {
   // Состояние валидации доставки из DeliveryForm
   const [deliveryValidation, setDeliveryValidation] = useState<boolean | null>(null);
   
+  // Состояние валидации контактов (как для delivery - через state, а не useMemo)
+  const [contactValidation, setContactValidation] = useState(false);
+  
   // Флаг завершенности контактов (как в Checkout)
   const [contactInfoCompleted, setContactInfoCompleted] = useState(false);
 
@@ -183,6 +186,11 @@ export function OrderDetail() {
             }
             
             const contactValid = isPhoneValid && isLastNameValid && isFirstNameValid && recipientValid;
+            
+            console.log('[OrderDetail] Contact validation on load:', { isPhoneValid, isLastNameValid, isFirstNameValid, recipientValid, contactValid });
+            
+            // Устанавливаем state валидации (как для delivery)
+            setContactValidation(contactValid);
             
             // Устанавливаем флаг завершенности (как в Checkout)
             setContactInfoCompleted(contactValid);
@@ -760,7 +768,7 @@ export function OrderDetail() {
                 setEditingCustomer(!editingCustomer);
               }}
             >
-              {isContactInfoValid ? (
+              {contactValidation ? (
                 <CheckCircle className="w-6 h-6 text-green-500" />
               ) : (isContactInfoPartiallyFilled ? (
                 <span className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-medium">1</span>
@@ -769,7 +777,7 @@ export function OrderDetail() {
               ))}
               Контактні дані *
             </h2>
-            {isContactInfoValid && contactInfoCompleted && !editingCustomer ? (
+            {contactValidation && contactInfoCompleted && !editingCustomer ? (
               // Свернутый вид с информацией (как в Checkout)
               <div className="space-y-3">
                 <div className="space-y-1">
@@ -800,14 +808,15 @@ export function OrderDetail() {
                 recipient={order.recipient}
                 onSave={(customer, recipient) => {
                   handleSaveOrder({ customer, recipient });
-                  // Устанавливаем флаг завершенности после сохранения (как в Checkout)
+                  // Устанавливаем флаги после сохранения (как в Checkout)
+                  setContactValidation(true);
                   setContactInfoCompleted(true);
                   setEditingCustomer(false);
                 }}
                 onCancel={() => setEditingCustomer(false)}
                 mode="view"
                 defaultExpanded={editingCustomer}
-                isCompleted={isContactInfoValid}
+                isCompleted={contactValidation}
                 onToggleExpanded={() => setEditingCustomer(!editingCustomer)}
               />
             )}
