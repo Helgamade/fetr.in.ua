@@ -16,6 +16,10 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
+    // Отключаем modulepreload — Vite иначе добавляет <link rel="modulepreload">
+    // для chunk-lottie и chunk-charts прямо в index.html, и браузер скачивает их
+    // на главной странице даже если они нужны только на /thank-you и /admin
+    modulePreload: false,
     rollupOptions: {
       output: {
         manualChunks: (id) => {

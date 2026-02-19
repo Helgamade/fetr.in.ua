@@ -11,33 +11,36 @@ interface GoogleTagManagerProps {
  */
 export function GoogleTagManager({ gtmId, ga4Id, gadsId }: GoogleTagManagerProps) {
   useEffect(() => {
-    // Подавляем предупреждения о third-party cookies в консоли (дополнительная защита)
-    const originalWarn = console.warn;
-    const originalError = console.error;
-    
-    console.warn = function(...args: any[]) {
-      const message = args[0]?.toString() || '';
-      // Пропускаем все варианты предупреждений о third-party cookies
-      if (message.includes('Third-party cookie') || 
-          message.includes('third-party cookie') ||
-          message.includes('cookie is blocked') ||
-          message.includes('cookie.*blocked') ||
-          message.includes('Third-party cookie is blocked')) {
-        return;
-      }
-      originalWarn.apply(console, args);
-    };
-    
-    console.error = function(...args: any[]) {
-      const message = args[0]?.toString() || '';
-      if (message.includes('Third-party cookie') || 
-          message.includes('third-party cookie') ||
-          message.includes('cookie is blocked')) {
-        return;
-      }
-      originalError.apply(console, args);
+    if (!gtmId && !ga4Id && !gadsId) return;
+
+    let loaded = false;
+
+    const loadScripts = () => {
+      if (loaded) return;
+      loaded = true;
+
+      // Убираем слушатели
+      INTERACTION_EVENTS.forEach(e => window.removeEventListener(e, loadScripts));
+      clearTimeout(fallbackTimer);
+
+      doLoadScripts({ gtmId, ga4Id, gadsId });
     };
 
+    // Загружаем после первого взаимодействия ИЛИ через 4 секунды — что раньше
+    const INTERACTION_EVENTS = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll', 'click'];
+    INTERACTION_EVENTS.forEach(e => window.addEventListener(e, loadScripts, { once: true, passive: true }));
+    const fallbackTimer = setTimeout(loadScripts, 4000);
+
+    return () => {
+      INTERACTION_EVENTS.forEach(e => window.removeEventListener(e, loadScripts));
+      clearTimeout(fallbackTimer);
+    };
+  }, [gtmId, ga4Id, gadsId]);
+
+  return null;
+}
+
+function doLoadScripts({ gtmId, ga4Id, gadsId }: GoogleTagManagerProps) {
     // Загружаем Google Tag Manager
     if (gtmId) {
       // GTM script
@@ -114,9 +117,6 @@ export function GoogleTagManager({ gtmId, ga4Id, gadsId }: GoogleTagManagerProps
       `;
       document.head.appendChild(gadsConfig);
     }
-  }, [gtmId, ga4Id, gadsId]);
-
-  return null;
 }
 
 /**
