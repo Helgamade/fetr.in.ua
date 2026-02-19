@@ -910,7 +910,7 @@ const ThankYou = () => {
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 rounded-full border border-contact-instagram-pink bg-card/60 px-4 py-2 text-sm font-medium text-contact-instagram-pink backdrop-blur-md transition-all hover:bg-gradient-to-r hover:from-contact-instagram-purple hover:via-contact-instagram-pink hover:to-contact-instagram-orange hover:text-primary-foreground"
                     >
-                      <span className="text-xs">📷</span>
+                      <Instagram className="h-4 w-4" />
                       Instagram
                     </a>
                   </>
