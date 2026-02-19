@@ -72,6 +72,9 @@ export const GallerySection: React.FC = () => {
                   <img
                     src={previewImage.url}
                     alt={previewImage.title || gallery.name || `Gallery image ${index + 1}`}
+                    loading="lazy"
+                    width={600}
+                    height={600}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                   {/* Gallery name overlay - always visible on all images */}

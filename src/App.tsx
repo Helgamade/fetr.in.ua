@@ -1,48 +1,60 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "@/context/CartContext";
-// AnalyticsProvider полностью удален - используем src/lib/analytics.ts
 import { AuthProvider } from "@/context/AuthContext";
-import Index from "./pages/Index";
-import Checkout from "./pages/Checkout";
-import ThankYou from "./pages/ThankYou";
-import NotFound from "./pages/NotFound";
-import Page from "./pages/Page";
-import Login from "./pages/Login";
-import AuthCallback from "./pages/AuthCallback";
-import { AdminLayout } from "./components/admin/AdminLayout";
-import { Dashboard } from "./pages/admin/Dashboard";
-import { Orders } from "./pages/admin/Orders";
-import { OrderDetail } from "./pages/admin/OrderDetail";
-import { Products } from "./pages/admin/Products";
-import { Settings } from "./pages/admin/Settings";
-import { Comparison } from "./pages/admin/Comparison";
-import { Options } from "./pages/admin/Options";
-import { Materials } from "./pages/admin/Materials";
-import { Galleries } from "./pages/admin/Galleries";
-import { Reviews } from "./pages/admin/Reviews";
-import { FAQ } from "./pages/admin/FAQ";
-import { Team } from "./pages/admin/Team";
-import { Instagram } from "./pages/admin/Instagram";
-import { Texts } from "./pages/admin/Texts";
-import { Pages } from "./pages/admin/Pages";
-import { PageDetail } from "./pages/admin/PageDetail";
-import { EmailTemplates } from "./pages/admin/EmailTemplates";
-import { Analytics } from "./pages/admin/Analytics";
-import { SocialProof } from "./pages/admin/SocialProof";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AnalyticsInit } from "./components/AnalyticsInit";
-import Profile from "./pages/user/Profile";
-import UserOrders from "./pages/user/UserOrders";
-import UserOrderDetail from "./pages/user/UserOrderDetail";
-import UserMaterials from "./pages/user/UserMaterials";
-import AllReviews from "./pages/AllReviews";
+
+// Public pages
+const Index = lazy(() => import("./pages/Index"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const ThankYou = lazy(() => import("./pages/ThankYou"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Page = lazy(() => import("./pages/Page"));
+const Login = lazy(() => import("./pages/Login"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const AllReviews = lazy(() => import("./pages/AllReviews"));
+
+// User pages
+const Profile = lazy(() => import("./pages/user/Profile"));
+const UserOrders = lazy(() => import("./pages/user/UserOrders"));
+const UserOrderDetail = lazy(() => import("./pages/user/UserOrderDetail"));
+const UserMaterials = lazy(() => import("./pages/user/UserMaterials"));
+
+// Admin pages — в отдельном чанке, грузятся только при заходе в /admin
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
+const Dashboard = lazy(() => import("./pages/admin/Dashboard").then(m => ({ default: m.Dashboard })));
+const Orders = lazy(() => import("./pages/admin/Orders").then(m => ({ default: m.Orders })));
+const OrderDetail = lazy(() => import("./pages/admin/OrderDetail").then(m => ({ default: m.OrderDetail })));
+const Products = lazy(() => import("./pages/admin/Products").then(m => ({ default: m.Products })));
+const Settings = lazy(() => import("./pages/admin/Settings").then(m => ({ default: m.Settings })));
+const Comparison = lazy(() => import("./pages/admin/Comparison").then(m => ({ default: m.Comparison })));
+const Options = lazy(() => import("./pages/admin/Options").then(m => ({ default: m.Options })));
+const Materials = lazy(() => import("./pages/admin/Materials").then(m => ({ default: m.Materials })));
+const Galleries = lazy(() => import("./pages/admin/Galleries").then(m => ({ default: m.Galleries })));
+const Reviews = lazy(() => import("./pages/admin/Reviews").then(m => ({ default: m.Reviews })));
+const FAQ = lazy(() => import("./pages/admin/FAQ").then(m => ({ default: m.FAQ })));
+const Team = lazy(() => import("./pages/admin/Team").then(m => ({ default: m.Team })));
+const Instagram = lazy(() => import("./pages/admin/Instagram").then(m => ({ default: m.Instagram })));
+const Texts = lazy(() => import("./pages/admin/Texts").then(m => ({ default: m.Texts })));
+const Pages = lazy(() => import("./pages/admin/Pages").then(m => ({ default: m.Pages })));
+const PageDetail = lazy(() => import("./pages/admin/PageDetail").then(m => ({ default: m.PageDetail })));
+const EmailTemplates = lazy(() => import("./pages/admin/EmailTemplates").then(m => ({ default: m.EmailTemplates })));
+const Analytics = lazy(() => import("./pages/admin/Analytics").then(m => ({ default: m.Analytics })));
+const AdminSocialProof = lazy(() => import("./pages/admin/SocialProof").then(m => ({ default: m.SocialProof })));
 
 const queryClient = new QueryClient();
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const App = () => (
   <HelmetProvider>
@@ -54,7 +66,8 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <AnalyticsInit />
-              <Routes>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
                   {/* Public routes */}
                   <Route path="/" element={<Index />} />
                   <Route path="/reviews" element={<AllReviews />} />
@@ -62,29 +75,21 @@ const App = () => (
                   <Route path="/thank-you" element={<ThankYou />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
-                  
+
                   {/* User routes - protected */}
                   <Route path="/user/profile" element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
+                    <ProtectedRoute><Profile /></ProtectedRoute>
                   } />
                   <Route path="/user/orders" element={
-                    <ProtectedRoute>
-                      <UserOrders />
-                    </ProtectedRoute>
+                    <ProtectedRoute><UserOrders /></ProtectedRoute>
                   } />
                   <Route path="/user/orders/:id" element={
-                    <ProtectedRoute>
-                      <UserOrderDetail />
-                    </ProtectedRoute>
+                    <ProtectedRoute><UserOrderDetail /></ProtectedRoute>
                   } />
                   <Route path="/user/materials" element={
-                    <ProtectedRoute>
-                      <UserMaterials />
-                    </ProtectedRoute>
+                    <ProtectedRoute><UserMaterials /></ProtectedRoute>
                   } />
-                  
+
                   {/* Admin routes - protected */}
                   <Route path="/admin" element={
                     <ProtectedRoute requireAdmin>
@@ -107,16 +112,17 @@ const App = () => (
                     <Route path="pages/:id" element={<PageDetail />} />
                     <Route path="email-templates" element={<EmailTemplates />} />
                     <Route path="analytics/*" element={<Analytics />} />
-                    <Route path="social-proof/*" element={<SocialProof />} />
+                    <Route path="social-proof/*" element={<AdminSocialProof />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="comparison" element={<Comparison />} />
                   </Route>
-                  
+
                   {/* Dynamic page routes - must be after admin routes */}
                   <Route path="/:slug" element={<Page />} />
-                  
+
                   <Route path="*" element={<NotFound />} />
-              </Routes>
+                </Routes>
+              </Suspense>
             </BrowserRouter>
           </TooltipProvider>
         </CartProvider>

@@ -1,0 +1,1 @@
+function t(e){return e.replace(/\s/g,"").replace(/[^\d+]/g,"")}function r(e){return t(e).replace(/^\+/,"")}function o(e){const n=t(e);return`viber://chat?number=${encodeURIComponent(n)}`}function a(e){return`https://t.me/${t(e)}`}function d(e){return`https://wa.me/${r(e)}`}export{o as a,d as b,a as g};

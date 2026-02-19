@@ -1,127 +1,57 @@
 <!doctype html>
-<html lang="en">
+<html lang="uk">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>Lovable App</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
+    <title>FetrInUA — Набори для творчості з фетру | Купити в Україні</title>
+    <meta name="description" content="Творчі набори з фетру для дітей та дорослих. 12+ років досвіду, 3000+ задоволених клієнтів. Швидка доставка по Україні." />
 
-    <!-- TODO: Update og:title to match your application name -->
-    <meta property="og:title" content="Lovable App" />
-    <meta property="og:description" content="Lovable Generated Project" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:url" content="https://fetr.in.ua" />
+    <meta property="og:title" content="FetrInUA — Набори для творчості з фетру" />
+    <meta property="og:description" content="Творчі набори з фетру для дітей та дорослих. 12+ років досвіду, 3000+ задоволених клієнтів. Швидка доставка по Україні." />
+    <meta property="og:image" content="https://fetr.in.ua/uploads/hero/og-image.jpg" />
+    <meta property="og:locale" content="uk_UA" />
+    <meta property="og:site_name" content="FetrInUA" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    <!-- Подавляем предупреждения о third-party cookies ДО загрузки любых скриптов -->
+    <meta name="twitter:title" content="FetrInUA — Набори для творчості з фетру" />
+    <meta name="twitter:description" content="Творчі набори з фетру для дітей та дорослих. Швидка доставка по Україні." />
+    <meta name="twitter:image" content="https://fetr.in.ua/uploads/hero/og-image.jpg" />
+
+    <!-- Preload hero background image for LCP -->
+    <link rel="preload" as="image" href="https://fetr.in.ua/uploads/hero/og-image.jpg" fetchpriority="high" />
+
+    <!-- Подавляем предупреждения о third-party cookies в консоли -->
     <script>
       (function() {
-        // Сохраняем оригинальные методы консоли
         var originalWarn = console.warn;
         var originalError = console.error;
-        var originalLog = console.log;
-        
-        // Функция для проверки сообщения на предупреждения о cookies
-        function isCookieWarning(message) {
-          if (!message) return false;
-          var msg = message.toLowerCase();
-          return msg.includes('third-party cookie') || 
-                 msg.includes('cookie is blocked') ||
-                 msg.includes('cookie.*blocked') ||
-                 msg.includes('third-party cookie is blocked') ||
-                 msg.includes('cookie.*blocked in chrome') ||
-                 msg.includes('browser configuration') ||
-                 msg.includes('chrome flags') ||
-                 msg.includes('third-party') && msg.includes('cookie') && msg.includes('blocked');
+        function isCookieWarning(msg) {
+          if (!msg) return false;
+          var m = msg.toLowerCase();
+          return (m.includes('third-party') && m.includes('cookie')) || m.includes('cookie is blocked');
         }
-        
-        // Переопределяем console.warn для подавления предупреждений о cookies
         console.warn = function() {
-          var message = '';
-          // Проверяем все аргументы на наличие предупреждений о cookies
-          for (var i = 0; i < arguments.length; i++) {
-            var arg = arguments[i];
-            if (typeof arg === 'string') {
-              message += arg + ' ';
-            } else if (arg && typeof arg.toString === 'function') {
-              message += arg.toString() + ' ';
-            }
-          }
-          
-          if (isCookieWarning(message)) {
-            return; // Подавляем предупреждение
-          }
+          var m = Array.prototype.join.call(arguments, ' ');
+          if (isCookieWarning(m)) return;
           originalWarn.apply(console, arguments);
         };
-        
-        // Также переопределяем console.error
         console.error = function() {
-          var message = '';
-          for (var i = 0; i < arguments.length; i++) {
-            var arg = arguments[i];
-            if (typeof arg === 'string') {
-              message += arg + ' ';
-            } else if (arg && typeof arg.toString === 'function') {
-              message += arg.toString() + ' ';
-            }
-          }
-          
-          if (isCookieWarning(message)) {
-            return;
-          }
+          var m = Array.prototype.join.call(arguments, ' ');
+          if (isCookieWarning(m)) return;
           originalError.apply(console, arguments);
         };
-        
-        // Также перехватываем console.log
-        console.log = function() {
-          var message = '';
-          for (var i = 0; i < arguments.length; i++) {
-            var arg = arguments[i];
-            if (typeof arg === 'string') {
-              message += arg + ' ';
-            } else if (arg && typeof arg.toString === 'function') {
-              message += arg.toString() + ' ';
-            }
-          }
-          
-          if (isCookieWarning(message)) {
-            return;
-          }
-          originalLog.apply(console, arguments);
-        };
       })();
     </script>
-    
-    <!-- Выводим timestamp деплоя ПЕРВОЙ СТРОКОЙ в консоль, ДО загрузки React -->
-    <script>
-      (function() {
-        try {
-          var xhr = new XMLHttpRequest();
-          // Добавляем параметр для обхода кеша
-          var cacheBuster = '?t=' + Date.now();
-          xhr.open('GET', '/DEPLOY_TIMESTAMP.txt' + cacheBuster, false); // синхронный запрос
-          xhr.send();
-          if (xhr.status === 200) {
-            var timestamp = xhr.responseText.trim();
-            if (timestamp) {
-              console.log('%c🕐 DEPLOY TIMESTAMP: ' + timestamp + ' ✅', 'color: #10b981; font-weight: bold; font-size: 14px;');
-            } else {
-              console.warn('%c⚠️ DEPLOY TIMESTAMP: файл пустой', 'color: #f59e0b; font-weight: bold;');
-            }
-          } else {
-            console.warn('%c⚠️ DEPLOY TIMESTAMP: статус ' + xhr.status, 'color: #f59e0b; font-weight: bold;');
-          }
-        } catch (e) {
-          console.error('%c❌ DEPLOY TIMESTAMP: ошибка загрузки', 'color: #ef4444; font-weight: bold;', e);
-        }
-      })();
-    </script>
-    <script type="module" crossorigin src="/assets/index-CUCKduW7.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DWFJztwT.css">
+    <script type="module" crossorigin src="/assets/index-Dv87KhRC.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/chunk-lottie-DoMt_38f.js">
+    <link rel="modulepreload" crossorigin href="/assets/chunk-vendor-C_GYGcpd.js">
+    <link rel="modulepreload" crossorigin href="/assets/chunk-react-CHUe_c_M.js">
+    <link rel="modulepreload" crossorigin href="/assets/chunk-radix-BYx9rzOz.js">
+    <link rel="modulepreload" crossorigin href="/assets/chunk-query-BDB5idE8.js">
+    <link rel="modulepreload" crossorigin href="/assets/chunk-router-BMV24Bow.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Nng0y7l_.css">
   </head>
 
   <body>

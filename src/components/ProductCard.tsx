@@ -110,6 +110,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
         <img
           src={product.images[0]}
           alt={product.name}
+          loading="lazy"
+          width={400}
+          height={300}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
         
