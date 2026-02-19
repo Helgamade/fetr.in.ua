@@ -28,3 +28,16 @@ uploads/
 # Environment secrets — never in Git
 server/.env
 .env
+
+# Database backups — never in Git
+*.sql.gz
+*.sql
+*.dump
+
+# Temporary / stale files
+web_index.html
+index.html.bak
+app.log
+server.js
+.next/
+public/uploads/
