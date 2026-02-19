@@ -11,7 +11,8 @@ export const HeroSection: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   
   // Используем изображение из настроек или дефолтное
-  const heroBackgroundImage = publicSettings.hero_background_image || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920';
+  // Fallback — локальный файл, не внешний Unsplash (экономит ~600KB при первой загрузке)
+  const heroBackgroundImage = publicSettings.hero_background_image || '/uploads/hero/hero-bg-default.jpg';
 
   const stats = [
     { icon: Star, value: t('stat1.value'), label: t('stat1.label') },
