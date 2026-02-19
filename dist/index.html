@@ -44,6 +44,19 @@
         };
       })();
     </script>
+
+    <!-- Выводим timestamp деплоя в консоль (async, не блокирует рендер) -->
+    <script>
+      fetch('/DEPLOY_TIMESTAMP.txt?t=' + Date.now())
+        .then(function(r) { return r.text(); })
+        .then(function(ts) {
+          ts = ts.trim();
+          if (ts) {
+            console.log('%c🕐 DEPLOY TIMESTAMP: ' + ts + ' ✅', 'color:#10b981;font-weight:bold;font-size:14px;');
+          }
+        })
+        .catch(function() {});
+    </script>
     <script type="module" crossorigin src="/assets/index-Cyldqwgc.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/chunk-charts-BaLkbnPn.js">
     <link rel="modulepreload" crossorigin href="/assets/chunk-lottie-CUWK48HK.js">

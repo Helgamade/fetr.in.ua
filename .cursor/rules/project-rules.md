@@ -24,6 +24,7 @@
 - ✅ После каждого коммита с изменениями фронтенда выполнять `npm run build` и коммитить `dist/`
 - ✅ **После каждого деплоя проверять timestamp в терминале (первая строка после "=== DEPLOYMENT COMPLETE ===")**
 - ✅ **Проверять, что timestamp на сайте (`https://fetr.in.ua/DEPLOY_TIMESTAMP.txt`) совпадает с выведенным в терминале**
+- ✅ **DEPLOY TIMESTAMP ОБЯЗАТЕЛЕН:** В `index.html` ВСЕГДА должен быть async-fetch `/DEPLOY_TIMESTAMP.txt` → вывод в консоль первой строкой. НЕ удалять, НЕ заменять на sync XHR!
 
 ---
 
