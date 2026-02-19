@@ -8,7 +8,6 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
 dist-ssr
 *.local
 
@@ -29,7 +28,3 @@ uploads/
 # Environment secrets — never in Git
 server/.env
 .env
-
-# Compiled index.html — генерируется при деплое из index.src.html
-# index.src.html — исходник (в Git), index.html — скомпилированный (НЕ в Git)
-index.html

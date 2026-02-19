@@ -1,181 +1,136 @@
 #!/bin/bash
-# Скрипт для деплоя фронтенда после обновления кода
-# Использование: cd /home/idesig02/fetr.in.ua/www && bash server/deploy.sh
+# =============================================================================
+# deploy.sh — деплой fetr.in.ua на production сервер
 #
-# Что защищено от перезаписи:
-#   uploads/     — не в Git (.gitignore), git pull не трогает
-#   server/.env  — не в Git (.gitignore), git pull не трогает
+# КАК ИСПОЛЬЗОВАТЬ:
+#   ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && bash server/deploy.sh"
+#
+# ЧТО ДЕЛАЕТ:
+#   1. git reset --hard origin/main  — получает точную копию того что в Git
+#   2. Копирует dist/index.html → index.html  (для Apache)
+#   3. Копирует dist/assets/* → assets/       (JS/CSS бандлы)
+#   4. Перезапускает Node.js API сервер
+#
+# ВАЖНО:
+#   - npm run build выполняется ЛОКАЛЬНО перед git push, НЕ на сервере
+#   - dist/ зафиксирован в Git — сервер получает уже собранный фронтенд
+#   - uploads/ и server/.env в .gitignore — git reset их никогда не трогает
+# =============================================================================
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+set -e
 
-cd "$PROJECT_ROOT" || exit 1
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$PROJECT_ROOT"
 
-# Генерируем timestamp для отслеживания деплоя
-DEPLOY_TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
+DEPLOY_TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 DEPLOY_TIMESTAMP_FILE="$PROJECT_ROOT/DEPLOY_TIMESTAMP.txt"
 
+echo ""
 echo "=== DEPLOYMENT STARTED ==="
 echo "Project root: $PROJECT_ROOT"
-echo "Current branch: $(git branch --show-current)"
-echo "Current commit: $(git log --oneline -1)"
+echo "Branch: $(git branch --show-current)"
+echo "Current commit before pull: $(git log --oneline -1)"
 
-# 1. Получаем свежий код из Git
+# ── 1. Получаем последний код из Git ─────────────────────────────────────────
 echo ""
-echo "Pulling latest code..."
-git pull origin main
+echo "Fetching latest code from Git..."
+git fetch origin main
 
-if [ $? -ne 0 ]; then
-  echo "ERROR: git pull failed! Aborting deploy."
-  exit 1
-fi
+# Сбрасываем всё до состояния origin/main.
+# uploads/ и server/.env в .gitignore — они не затрагиваются.
+git reset --hard origin/main
 
 echo "New commit: $(git log --oneline -1)"
 
-# 2. Сборка фронтенда
+# ── 2. Проверяем, что dist/ есть ─────────────────────────────────────────────
+if [ ! -f "dist/index.html" ]; then
+  echo ""
+  echo "ERROR: dist/index.html not found!"
+  echo "Run 'npm run build' locally, commit dist/, and push before deploying."
+  exit 1
+fi
+
+# ── 3. Копируем скомпилированный фронтенд ────────────────────────────────────
 echo ""
-echo "Building frontend..."
-# Vite читает index.src.html как точку входа (настроено в vite.config.ts).
-# index.html в корне — скомпилированная версия для Apache, не участвует в сборке.
-npm run build
+echo "Copying compiled frontend from dist/..."
 
-# 2. КРИТИЧНО: Копирование файлов из dist/ в корень
-echo "Copying files from dist/ to root..."
-
-# Создаем папку assets если её нет
 mkdir -p assets
 
-# Очищаем старые файлы из assets перед копированием новых
-echo "Cleaning old assets..."
+# Очищаем старые бандлы
 rm -f assets/index-*.js assets/index-*.css 2>/dev/null || true
 
-# Копируем index.html ПЕРВЫМ (КРИТИЧНО!)
-echo "Copying index.html..."
+# index.html для Apache (скомпилированная версия со ссылками на /assets/...)
 cp -f dist/index.html index.html
 
-# Копируем assets
-echo "Copying assets..."
+# JS/CSS бандлы
 if [ -d "dist/assets" ]; then
-  cp -r dist/assets/* assets/ 2>/dev/null || true
+  cp -r dist/assets/* assets/
 else
-  echo "ERROR: dist/assets directory not found!"
+  echo "ERROR: dist/assets/ not found!"
   exit 1
 fi
 
-# Копируем другие файлы из dist (favicon, robots.txt и т.д.)
-if [ -f "dist/favicon.ico" ]; then
-  cp -f dist/favicon.ico favicon.ico 2>/dev/null || true
-fi
-if [ -f "dist/robots.txt" ]; then
-  cp -f dist/robots.txt robots.txt 2>/dev/null || true
-fi
-
-# Копируем папку animations (для Lottie анимаций)
-if [ -d "dist/animations" ]; then
-  echo "Copying animations..."
-  mkdir -p animations
-  cp -r dist/animations/* animations/ 2>/dev/null || true
-  chmod 755 animations 2>/dev/null || true
-  chmod 644 animations/* 2>/dev/null || true
-fi
-
-# КРИТИЧНО: Копируем .htaccess для правильных MIME типов
+# .htaccess (если обновился)
 if [ -f "public/.htaccess" ]; then
-  cp -f public/.htaccess .htaccess 2>/dev/null || true
-  echo "Copied .htaccess for MIME types"
+  cp -f public/.htaccess .htaccess
 fi
 
-# 3. Установка прав доступа
+# ── 4. Права доступа ─────────────────────────────────────────────────────────
 echo "Setting permissions..."
-chmod 755 assets
-chmod 644 assets/* 2>/dev/null || true
+chmod 755 assets/
 chmod 644 index.html
+find assets/ -type f -exec chmod 644 {} \;
 
-# 4. КРИТИЧНО: Проверка, что файлы скопированы правильно
-echo "Verifying deployment..."
-if grep -q "main.tsx" index.html; then
-  echo "ERROR: index.html still references main.tsx! Deployment failed!"
-  exit 1
-fi
-
-if ! grep -q "index-.*\.js" index.html; then
-  echo "ERROR: index.html doesn't reference compiled JS file! Deployment failed!"
-  exit 1
-fi
-
-if [ ! -d "assets" ] || [ -z "$(ls -A assets 2>/dev/null)" ]; then
-  echo "ERROR: assets directory is empty! Deployment failed!"
-  exit 1
-fi
-
-echo "✓ Deployment verification passed"
-
-# 5. Сохраняем timestamp деплоя
-echo "Saving deployment timestamp..."
+# ── 5. Timestamp деплоя ───────────────────────────────────────────────────────
 echo "$DEPLOY_TIMESTAMP" > "$DEPLOY_TIMESTAMP_FILE"
 chmod 644 "$DEPLOY_TIMESTAMP_FILE"
-echo "✓ Deployment timestamp saved: $DEPLOY_TIMESTAMP"
 
-# 6. Перезапуск сервера
-echo "Restarting server..."
-# Останавливаем все процессы node, связанные с server/index.js
+# ── 6. Перезапуск Node.js API ─────────────────────────────────────────────────
+echo ""
+echo "Restarting Node.js API server..."
 pkill -f "node.*server/index.js" || true
-sleep 2
-# Запускаем с ограничением памяти (512MB) для предотвращения OOM killer
-# Важно: запускаем из корня проекта
-nohup node --max-old-space-size=512 server/index.js > server/api.log 2>&1 &
 sleep 1
-
-# 7. Проверка, что файлы действительно обновились на сайте
-echo "Verifying files on website..."
+nohup node --max-old-space-size=512 server/index.js > server/api.log 2>&1 &
 sleep 2
-VERIFY_URL="https://fetr.in.ua/DEPLOY_TIMESTAMP.txt"
-REMOTE_TIMESTAMP=$(curl -s "$VERIFY_URL" 2>/dev/null | head -1 | tr -d '\r\n' || echo "")
-
-if [ -n "$REMOTE_TIMESTAMP" ] && [ "$REMOTE_TIMESTAMP" = "$DEPLOY_TIMESTAMP" ]; then
-  echo "✓ Files verified on website - timestamp matches"
+if pgrep -f "node.*server/index.js" > /dev/null; then
+  echo "Node.js server started (PID: $(pgrep -f 'node.*server/index.js'))"
 else
-  echo "⚠ WARNING: Timestamp mismatch or file not accessible"
-  echo "  Expected: $DEPLOY_TIMESTAMP"
-  echo "  Got from website: $REMOTE_TIMESTAMP"
-  echo "  Retrying file copy..."
-  
-  # Повторная попытка копирования
-  cp -f dist/index.html index.html
-  cp -r dist/assets/* assets/ 2>/dev/null || true
-  echo "$DEPLOY_TIMESTAMP" > "$DEPLOY_TIMESTAMP_FILE"
-  chmod 644 "$DEPLOY_TIMESTAMP_FILE"
-  chmod 755 assets
-  chmod 644 assets/* 2>/dev/null || true
-  chmod 644 index.html
-  
-  sleep 2
-  REMOTE_TIMESTAMP_RETRY=$(curl -s "$VERIFY_URL" 2>/dev/null | head -1 | tr -d '\r\n' || echo "")
-  if [ -n "$REMOTE_TIMESTAMP_RETRY" ] && [ "$REMOTE_TIMESTAMP_RETRY" = "$DEPLOY_TIMESTAMP" ]; then
-    echo "✓ Files verified after retry - timestamp matches"
-  else
-    echo "⚠ WARNING: Timestamp still doesn't match after retry"
-    echo "  This might be a caching issue. Please check manually."
-  fi
+  echo "WARNING: Node.js server may not have started. Check server/api.log"
 fi
+
+# ── 7. Проверка ───────────────────────────────────────────────────────────────
+echo ""
+echo "Verifying deployment..."
+
+# Проверяем что index.html ссылается на скомпилированный JS, не на src/main.tsx
+if grep -q "main.tsx" index.html; then
+  echo "ERROR: index.html still references main.tsx — dist/ in git is outdated!"
+  echo "Run 'npm run build && git add dist/ && git commit && git push' locally."
+  exit 1
+fi
+
+if ! grep -q "assets/index-" index.html; then
+  echo "ERROR: index.html doesn't reference compiled JS!"
+  exit 1
+fi
+
+# Проверяем timestamp на сайте
+VERIFY_URL="https://fetr.in.ua/DEPLOY_TIMESTAMP.txt"
+sleep 3
+REMOTE_TIMESTAMP=$(curl -s "$VERIFY_URL?t=$(date +%s)" 2>/dev/null | head -1 | tr -d '\r\n' || echo "")
 
 echo ""
 echo "=== DEPLOYMENT COMPLETE ==="
 echo ""
-echo "🕐 DEPLOY TIMESTAMP: $DEPLOY_TIMESTAMP"
+echo "🕐 Deploy timestamp : $DEPLOY_TIMESTAMP"
+echo "🌐 Remote timestamp : $REMOTE_TIMESTAMP"
+
+if [ "$REMOTE_TIMESTAMP" = "$DEPLOY_TIMESTAMP" ]; then
+  echo "✅ Verified — timestamps match!"
+else
+  echo "⚠ Timestamps differ (may be CDN cache). Check manually:"
+  echo "   curl -s 'https://fetr.in.ua/DEPLOY_TIMESTAMP.txt'"
+fi
+
 echo ""
-echo "✅ All files automatically copied:"
-echo "  - dist/index.html -> index.html"
-echo "  - dist/assets/* -> assets/"
-echo "  - public/.htaccess -> .htaccess (for MIME types)"
-echo "  - DEPLOY_TIMESTAMP.txt -> DEPLOY_TIMESTAMP.txt"
-echo ""
-echo "✅ Permissions set:"
-echo "  - assets/ (755)"
-echo "  - assets/* (644)"
-echo "  - index.html (644)"
-echo "  - DEPLOY_TIMESTAMP.txt (644)"
-echo ""
-echo "✅ Server restarted"
-echo ""
-echo "🎯 Все выполнено автоматически одним скриптом!"
+echo "Commit deployed: $(git log --oneline -1)"
