@@ -86,6 +86,44 @@ const Index = () => {
           <meta name="description" content="Творчі набори з фетру для дітей та дорослих. 12+ років досвіду, 3000+ задоволених клієнтів. Швидка доставка по Україні. Замовляйте зараз!" />
           <meta name="keywords" content="фетр, набори для творчості, рукоділля, діти, іграшки з фетру, Україна" />
           <link rel="canonical" href="https://fetr.in.ua" />
+          {/* Open Graph — для Facebook, Instagram, Telegram */}
+          <meta property="og:type" content="website" />
+          <meta property="og:url" content="https://fetr.in.ua" />
+          <meta property="og:title" content="FetrInUA — Набори для творчості з фетру" />
+          <meta property="og:description" content="Творчі набори з фетру для дітей та дорослих. 12+ років досвіду, 3000+ задоволених клієнтів. Швидка доставка по Україні." />
+          <meta property="og:image" content="https://fetr.in.ua/uploads/hero/og-image.jpg" />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:locale" content="uk_UA" />
+          <meta property="og:site_name" content="FetrInUA" />
+          {/* Twitter Card */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content="FetrInUA — Набори для творчості з фетру" />
+          <meta name="twitter:description" content="Творчі набори з фетру для дітей та дорослих. Швидка доставка по Україні." />
+          <meta name="twitter:image" content="https://fetr.in.ua/uploads/hero/og-image.jpg" />
+          {/* JSON-LD — структурированные данные для Google */}
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "FetrInUA",
+            "url": "https://fetr.in.ua",
+            "logo": "https://fetr.in.ua/uploads/hero/og-image.jpg",
+            "description": "Творчі набори з фетру для дітей та дорослих. 12+ років досвіду.",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer service",
+              "availableLanguage": "Ukrainian"
+            },
+            "sameAs": [
+              "https://instagram.com/helgamade_ua"
+            ]
+          })}</script>
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "FetrInUA",
+            "url": "https://fetr.in.ua"
+          })}</script>
         </Helmet>
         
         <div className="min-h-screen bg-background">

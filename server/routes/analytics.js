@@ -584,6 +584,22 @@ router.get('/stats', async (req, res, next) => {
       ORDER BY sessions DESC
     `, [dateFrom, dateTo]);
 
+    // UTM кампании
+    const [utmCampaigns] = await pool.execute(`
+      SELECT 
+        utm_campaign as campaign,
+        COALESCE(utm_source, 'direct') as source,
+        COALESCE(utm_medium, '') as medium,
+        COUNT(*) as sessions,
+        COUNT(DISTINCT user_id) as users
+      FROM analytics_sessions
+      WHERE created_at BETWEEN ? AND ?
+        AND utm_campaign IS NOT NULL AND utm_campaign != ''
+      GROUP BY utm_campaign, utm_source, utm_medium
+      ORDER BY sessions DESC
+      LIMIT 20
+    `, [dateFrom, dateTo]);
+
     // Устройства
     const [devices] = await pool.execute(`
       SELECT 
@@ -613,6 +629,7 @@ router.get('/stats', async (req, res, next) => {
       general: general[0] || {},
       topPages: topPages || [],
       trafficSources: trafficSources || [],
+      utmCampaigns: utmCampaigns || [],
       devices: devices || [],
       events: events || []
     };

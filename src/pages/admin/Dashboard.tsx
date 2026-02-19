@@ -5,12 +5,16 @@ import {
   Users, 
   Package,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Globe,
+  Megaphone
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useOrders } from '@/hooks/useOrders';
 import { useTexts } from '@/hooks/useTexts';
 import { useProducts } from '@/hooks/useProducts';
+import { useQuery } from '@tanstack/react-query';
 import {
   BarChart,
   Bar,
@@ -33,10 +37,39 @@ const statusLabels: Record<string, string> = {
   completed: 'Залишити відгук',
 };
 
+const SOURCE_LABELS: Record<string, string> = {
+  direct: 'Прямий перехід',
+  google: 'Google',
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  telegram: 'Telegram',
+  viber: 'Viber',
+};
+
+const SOURCE_COLORS: Record<string, string> = {
+  direct: 'bg-gray-400',
+  google: 'bg-blue-500',
+  facebook: 'bg-blue-700',
+  instagram: 'bg-pink-500',
+  telegram: 'bg-sky-500',
+  viber: 'bg-violet-500',
+};
+
 export function Dashboard() {
   const { data: orders = [], isLoading } = useOrders();
   const { data: products = [] } = useProducts();
   const { data: texts = [] } = useTexts();
+
+  // Трафик за последние 30 дней
+  const { data: analyticsStats } = useQuery({
+    queryKey: ['dashboard-traffic'],
+    queryFn: async () => {
+      const res = await fetch('/api/analytics/stats', { credentials: 'include' });
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
   
   // Calculate stats from real orders
   const totalOrders = orders.length;
@@ -381,6 +414,109 @@ export function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Traffic Sources + UTM Campaigns */}
+      {analyticsStats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Источники трафика */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5 text-muted-foreground" />
+                Джерела трафіку (30 днів)
+              </CardTitle>
+              <CardDescription>Звідки приходять відвідувачі</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {analyticsStats.trafficSources?.length > 0 ? (
+                <div className="space-y-3">
+                  {(() => {
+                    const totalSessions = analyticsStats.trafficSources.reduce(
+                      (s: number, r: any) => s + Number(r.sessions), 0
+                    );
+                    return analyticsStats.trafficSources.slice(0, 8).map((row: any) => {
+                      const src = row.source || 'direct';
+                      const pct = totalSessions > 0 ? Math.round((Number(row.sessions) / totalSessions) * 100) : 0;
+                      const color = SOURCE_COLORS[src] || 'bg-emerald-500';
+                      return (
+                        <div key={`${src}-${row.medium}`} className="flex items-center gap-3">
+                          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${color}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-medium truncate">
+                                {SOURCE_LABELS[src] || src}
+                              </span>
+                              {row.medium && (
+                                <Badge variant="outline" className="text-xs px-1 py-0">
+                                  {row.medium}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="w-full h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
+                              <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-sm font-semibold">{row.sessions}</div>
+                            <div className="text-xs text-muted-foreground">{pct}%</div>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">Немає даних за цей період</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* UTM Кампании */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Megaphone className="h-5 w-5 text-muted-foreground" />
+                Рекламні кампанії (30 днів)
+              </CardTitle>
+              <CardDescription>Статистика по UTM-кампаніях</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {analyticsStats.utmCampaigns?.length > 0 ? (
+                <div className="space-y-3">
+                  {analyticsStats.utmCampaigns.slice(0, 8).map((row: any) => (
+                    <div key={row.campaign} className="flex items-start justify-between gap-3 pb-2 border-b last:border-0">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{row.campaign}</div>
+                        <div className="flex gap-1.5 mt-0.5 flex-wrap">
+                          {row.source && (
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                              {row.source}
+                            </Badge>
+                          )}
+                          {row.medium && (
+                            <Badge variant="outline" className="text-xs px-1.5 py-0">
+                              {row.medium}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-sm font-semibold">{row.sessions} сес.</div>
+                        <div className="text-xs text-muted-foreground">{row.users} користувачів</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Даних по кампаніях ще немає.<br />
+                  <span className="text-xs">Додайте UTM-мітки до рекламних посилань</span>
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

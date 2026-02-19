@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { analytics } from '@/lib/analytics';
 import { GoogleTagManager } from './GoogleTagManager';
+import { MetaPixel } from './MetaPixel';
 
 /**
  * Компонент для инициализации аналитики
@@ -56,11 +57,14 @@ export function AnalyticsInit() {
   }, [location.pathname]);
 
   return (
-    <GoogleTagManager
-      gtmId={settings?.google_tag_manager_id}
-      ga4Id={settings?.google_analytics_id}
-      gadsId={settings?.google_ads_id}
-    />
+    <>
+      <GoogleTagManager
+        gtmId={settings?.google_tag_manager_id}
+        ga4Id={settings?.google_analytics_id}
+        gadsId={settings?.google_ads_id}
+      />
+      <MetaPixel pixelId={settings?.facebook_pixel_id} />
+    </>
   );
 }
 
