@@ -35,11 +35,8 @@ echo "New commit: $(git log --oneline -1)"
 # 2. Сборка фронтенда
 echo ""
 echo "Building frontend..."
-# КРИТИЧНО: восстанавливаем исходный index.html перед сборкой.
-# deploy.sh копирует dist/index.html → index.html после каждого билда.
-# Если не восстановить, Vite читает скомпилированный index.html как точку входа
-# и собирает только 4 модуля вместо 2795 — новый код в бандл НЕ ПОПАДАЕТ.
-git checkout -- index.html
+# Vite читает index.src.html как точку входа (настроено в vite.config.ts).
+# index.html в корне — скомпилированная версия для Apache, не участвует в сборке.
 npm run build
 
 # 2. КРИТИЧНО: Копирование файлов из dist/ в корень

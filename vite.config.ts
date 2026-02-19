@@ -15,4 +15,12 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      // Читаем исходный шаблон из index.src.html, а не из index.html.
+      // index.html в корне — всегда скомпилированная версия для Apache.
+      // index.src.html — неизменяемый источник с /src/main.tsx.
+      input: path.resolve(__dirname, "index.src.html"),
+    },
+  },
 }));
