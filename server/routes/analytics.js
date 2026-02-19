@@ -465,17 +465,8 @@ router.post('/session/:sessionId/offline', async (req, res, next) => {
 // Получить онлайн пользователей
 router.get('/realtime', async (req, res, next) => {
   try {
-    // Помечаем как офлайн тех, кто неактивен более 5 минут
-    await pool.execute(`
-      UPDATE analytics_sessions 
-      SET is_online = false 
-      WHERE is_online = true 
-      AND last_activity_at < DATE_SUB(NOW(), INTERVAL 5 MINUTE)
-    `);
-
-    // Получаем онлайн пользователей (ИСКЛЮЧАЕМ тех, кто находится в админке)
-    // ВАЖНО: cart_items_count берем из analytics_sessions, но если NULL или 0,
-    // восстанавливаем из последней записи в analytics_events
+    // Фильтруем по last_activity_at напрямую — без UPDATE is_online,
+    // чтобы исключить гонку условий при частом поллинге (каждые 3 сек)
     const [sessions] = await pool.execute(`
       SELECT 
         s.session_id,
@@ -524,7 +515,7 @@ router.get('/realtime', async (req, res, next) => {
         WHERE session_id = s.session_id 
         ORDER BY entered_at DESC, id DESC LIMIT 1
       )
-      WHERE s.is_online = true
+      WHERE s.last_activity_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
         AND (pv.page_url IS NULL OR pv.page_url NOT LIKE '/admin%')
         AND (pv.page_url IS NULL OR pv.page_url != '/admin')
       ORDER BY s.last_activity_at DESC
@@ -536,21 +527,20 @@ router.get('/realtime', async (req, res, next) => {
   }
 });
 
+// Форматирует JS Date в строку для MySQL DATETIME (в киевском времени UTC+2)
+function toKyivDatetime(date) {
+  // Добавляем 2 часа к UTC для получения Киевского времени (EET)
+  const kyiv = new Date(date.getTime() + 2 * 60 * 60 * 1000);
+  return kyiv.toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '');
+}
+
 // Получить статистику за период
 router.get('/stats', async (req, res, next) => {
   try {
     const { from, to } = req.query;
-    // Если даты переданы как YYYY-MM-DD, добавляем время для корректного сравнения
-    let dateFrom = from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    let dateTo = to || new Date().toISOString();
-    
-    // Если дата в формате YYYY-MM-DD, добавляем время начала/конца дня
-    if (from && from.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      dateFrom = `${from}T00:00:00.000Z`;
-    }
-    if (to && to.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      dateTo = `${to}T23:59:59.999Z`;
-    }
+    // Используем Киевское время для DATETIME колонок
+    let dateFrom = from ? `${from} 00:00:00` : toKyivDatetime(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+    let dateTo = to ? `${to} 23:59:59` : toKyivDatetime(new Date());
     
     console.log('[Analytics Stats] Fetching stats from', dateFrom, 'to', dateTo);
 
@@ -637,17 +627,9 @@ router.get('/stats', async (req, res, next) => {
 router.get('/funnel-stats', async (req, res, next) => {
   try {
     const { from, to } = req.query;
-    // Если даты переданы как YYYY-MM-DD, добавляем время для корректного сравнения
-    let dateFrom = from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    let dateTo = to || new Date().toISOString();
-    
-    // Если дата в формате YYYY-MM-DD, добавляем время начала/конца дня
-    if (from && from.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      dateFrom = `${from}T00:00:00.000Z`;
-    }
-    if (to && to.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      dateTo = `${to}T23:59:59.999Z`;
-    }
+    // Используем Киевское время для DATETIME колонок
+    let dateFrom = from ? `${from} 00:00:00` : toKyivDatetime(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+    let dateTo = to ? `${to} 23:59:59` : toKyivDatetime(new Date());
     
     console.log('[Analytics Funnel] Fetching funnel stats from', dateFrom, 'to', dateTo);
 

@@ -336,7 +336,7 @@ export function Analytics() {
                   </p>
                 ) : (
                   realtimeData.map((session: any) => (
-                    <div key={session.id} className="flex items-center justify-between border-b pb-4 last:border-0">
+                    <div key={session.session_id} className="flex items-center justify-between border-b pb-4 last:border-0">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           {session.device_type === 'mobile' && <Smartphone className="h-4 w-4 text-muted-foreground" />}
