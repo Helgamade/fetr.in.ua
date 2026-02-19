@@ -27,6 +27,7 @@ import authRoutes from './routes/auth.js';
 import adminAuthRoutes from './routes/admin-auth.js';
 import analyticsRoutes from './routes/analytics.js';
 import socialProofRoutes from './routes/social-proof.js';
+import sitemapRoutes from './routes/sitemap.js';
 
 import { configurePassport, passport } from './utils/oauth.js';
 import { apiRateLimiter, startCleanupInterval } from './middleware/rateLimit.js';
@@ -113,6 +114,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/comparison', comparisonRoutes);
 app.use('/api/galleries', galleriesRoutes);
 app.use('/api/social-proof', socialProofRoutes);
+app.use('/sitemap.xml', sitemapRoutes);
 
 // Protected routes (требуют авторизации)
 app.use('/api/orders', apiRateLimiter, ordersRoutes);

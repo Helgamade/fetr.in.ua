@@ -7,6 +7,9 @@
   # Use internal IP and port provided by hosting (127.1.5.169:3000)
   RewriteCond %{REQUEST_URI} ^/api/
   RewriteRule ^api/(.*)$ http://127.1.5.169:3000/api/$1 [P,L]
+
+  # Proxy sitemap.xml to Node.js (dynamic generation from DB)
+  RewriteRule ^sitemap\.xml$ http://127.1.5.169:3000/sitemap.xml [P,L]
   
   # Don't rewrite files or directories that exist
   RewriteCond %{REQUEST_FILENAME} !-f
