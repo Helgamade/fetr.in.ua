@@ -1,6 +1,10 @@
 #!/bin/bash
 # Скрипт для деплоя фронтенда после обновления кода
 # Использование: cd /home/idesig02/fetr.in.ua/www && bash server/deploy.sh
+#
+# Что защищено от перезаписи:
+#   uploads/     — не в Git (.gitignore), git pull не трогает
+#   server/.env  — не в Git (.gitignore), git pull не трогает
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -13,8 +17,23 @@ DEPLOY_TIMESTAMP_FILE="$PROJECT_ROOT/DEPLOY_TIMESTAMP.txt"
 
 echo "=== DEPLOYMENT STARTED ==="
 echo "Project root: $PROJECT_ROOT"
+echo "Current branch: $(git branch --show-current)"
+echo "Current commit: $(git log --oneline -1)"
 
-# 1. Сборка фронтенда
+# 1. Получаем свежий код из Git
+echo ""
+echo "Pulling latest code..."
+git pull origin main
+
+if [ $? -ne 0 ]; then
+  echo "ERROR: git pull failed! Aborting deploy."
+  exit 1
+fi
+
+echo "New commit: $(git log --oneline -1)"
+
+# 2. Сборка фронтенда
+echo ""
 echo "Building frontend..."
 npm run build
 

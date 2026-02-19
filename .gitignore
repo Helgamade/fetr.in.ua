@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# User uploads — persistent data, never in Git
+uploads/
+
+# Environment secrets — never in Git
+server/.env
+.env
