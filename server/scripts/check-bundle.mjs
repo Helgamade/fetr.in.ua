@@ -1,12 +1,15 @@
-import { readFileSync } from 'fs';
-import { readdirSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 
 const dir = '/home/idesig02/fetr.in.ua/www/dist/assets';
-const files = readdirSync(dir).filter(f => f.startsWith('Products-') && f.endsWith('.js'));
-console.log('Bundle files:', files);
+const files = readdirSync(dir).filter(f => f.endsWith('.js'));
 
-const content = readFileSync(`${dir}/${files[0]}`, 'utf8');
-const idx = content.indexOf('sortOrder');
-console.log('Context around sortOrder:', content.slice(idx, idx + 120));
-console.log('Has orderCount:', content.includes('orderCount'));
-console.log('Has sr-only:', content.includes('sr-only'));
+for (const f of files) {
+  const content = readFileSync(`${dir}/${f}`, 'utf8');
+  const idx = content.indexOf('sortOrder');
+  if (idx !== -1) {
+    console.log(`\n=== ${f} ===`);
+    console.log('sortOrder context:', content.slice(idx, idx + 150));
+    console.log('Has sr-only:', content.includes('sr-only'));
+    console.log('Has orderCount in handleSave area:', content.slice(idx, idx+150).includes('orderCount'));
+  }
+}
