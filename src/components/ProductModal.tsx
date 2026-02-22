@@ -342,7 +342,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
             </div>
 
             {/* Content */}
-            <div className="p-6 md:w-[660px] md:flex-shrink-0 md:overflow-y-auto md:max-h-[90vh]">
+            <div className="pt-6 px-6 pb-0 md:w-[660px] md:flex-shrink-0 md:overflow-y-auto md:max-h-[90vh]">
               {/* Header */}
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -534,7 +534,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
               </div>
 
               {/* Total & Add to cart */}
-              <div className="sticky bottom-0 bg-card pt-4 border-t border-border">
+              <div className="sticky bottom-0 bg-card pt-4 pb-6 border-t border-border">
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-medium">Разом:</span>
