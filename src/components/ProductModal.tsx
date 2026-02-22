@@ -546,7 +546,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                     </div>
                   )}
                 </div>
-                <Button variant="cta" size="xl" className="w-full" onClick={handleAddToCart}>
+                <Button variant="cta" size="xl" className="w-full rounded-xl" onClick={handleAddToCart}>
                   <ShoppingBag className="w-5 h-5" />
                   Купити зараз
                 </Button>
