@@ -147,14 +147,14 @@ export default function UserOrders() {
 
                       {/* Bottom row: price + count + arrow */}
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4 text-sm">
-                          <span className="flex items-center gap-1.5 text-foreground">
-                            <CreditCard className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-semibold">{formatPrice(order.total)} ₴</span>
+                        <div className="flex items-center gap-5">
+                          <span className="flex items-center gap-2 text-foreground">
+                            <CreditCard className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-base font-semibold">{formatPrice(order.total)} ₴</span>
                           </span>
-                          <span className="flex items-center gap-1.5 text-muted-foreground">
-                            <ShoppingCart className="h-4 w-4" />
-                            <span>
+                          <span className="flex items-center gap-2 text-muted-foreground">
+                            <ShoppingCart className="h-4 w-4 flex-shrink-0" />
+                            <span className="text-base">
                               {itemCount}{' '}
                               {itemCount === 1 ? 'товар' : itemCount >= 2 && itemCount <= 4 ? 'товари' : 'товарів'}
                             </span>
