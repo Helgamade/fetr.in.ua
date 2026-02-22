@@ -534,7 +534,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
               </div>
 
               {/* Total & Add to cart */}
-              <div className="sticky bottom-0 bg-card pt-4 pb-6 border-t border-border">
+              <div className="sticky bottom-0 bg-card pt-4 pb-4 border-t border-border">
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-medium">Разом:</span>
