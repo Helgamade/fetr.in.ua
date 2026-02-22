@@ -507,7 +507,7 @@ export function Products() {
                   <Label htmlFor="slug">Пряме посилання (slug)</Label>
                   <div className="flex gap-2">
                     <div className="flex items-center text-sm text-muted-foreground border border-input rounded-l-md px-3 bg-muted whitespace-nowrap">
-                      fetr.in.ua/?product=
+                      fetr.in.ua/nabory-fetru/
                     </div>
                     <Input
                       id="slug"
