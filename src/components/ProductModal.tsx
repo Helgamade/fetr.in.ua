@@ -500,7 +500,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                       >
                         {/* Badge */}
                         {option.badge && (
-                          <span className="absolute -top-2.5 right-3 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent text-accent-foreground">
+                          <span className="absolute -top-2.5 right-3 inline-flex items-center leading-none text-[10px] font-semibold px-2 py-1 rounded-full bg-primary text-primary-foreground">
                             {option.badge}
                           </span>
                         )}
