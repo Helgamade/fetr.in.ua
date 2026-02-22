@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useMatch, useNavigate } from 'react-router-dom';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductModal } from '@/components/ProductModal';
 import { Product } from '@/types/store';
@@ -12,23 +12,29 @@ export const ProductsSection: React.FC = () => {
   const { data: products = [], isLoading } = useProducts();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const pathMatch = useMatch('/nabory-fetru/:slug');
   const openedFromUrlRef = useRef(false);
 
-  // Open product modal from URL param ?product=<slug>
+  // Priority: /nabory-fetru/<slug> path > ?product=<slug> query param
+  const slugFromUrl = pathMatch?.params?.slug ?? searchParams.get('product');
+
+  // Open product modal from URL
   useEffect(() => {
     if (products.length === 0 || openedFromUrlRef.current) return;
-    const slug = searchParams.get('product');
-    if (!slug) return;
-    const product = products.find(p => p.slug === slug);
+    if (!slugFromUrl) return;
+    const product = products.find(p => p.slug === slugFromUrl);
     if (product) {
       openedFromUrlRef.current = true;
       setSelectedProduct(product);
     }
-  }, [products, searchParams]);
+  }, [products, slugFromUrl]);
 
   const handleCloseModal = () => {
     setSelectedProduct(null);
-    if (searchParams.has('product')) {
+    if (pathMatch) {
+      navigate('/#products', { replace: true });
+    } else if (searchParams.has('product')) {
       const next = new URLSearchParams(searchParams);
       next.delete('product');
       setSearchParams(next, { replace: true });

@@ -117,6 +117,9 @@ const App = () => (
                     <Route path="comparison" element={<Comparison />} />
                   </Route>
 
+                  {/* Product direct links */}
+                  <Route path="/nabory-fetru/:slug" element={<Index />} />
+
                   {/* Dynamic page routes - must be after admin routes */}
                   <Route path="/:slug" element={<Page />} />
 

@@ -59,7 +59,7 @@ export function Products() {
   const { toast } = useToast();
 
   const copyProductLink = (product: Product) => {
-    const url = `https://fetr.in.ua/?product=${product.slug}`;
+    const url = `https://fetr.in.ua/nabory-fetru/${product.slug}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopiedId(product.id);
       setTimeout(() => setCopiedId(null), 2000);
@@ -326,7 +326,7 @@ export function Products() {
               <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-xs">
                 <Link className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 <span className="text-muted-foreground truncate flex-1">
-                  /?product={product.slug}
+                  /nabory-fetru/{product.slug}
                 </span>
                 <Button
                   variant="ghost"
@@ -531,7 +531,7 @@ export function Products() {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Тільки латинські букви, цифри та дефіс. Пряме посилання: <code className="bg-muted px-1 rounded">https://fetr.in.ua/?product={editingProduct.slug}</code>
+                    Тільки латинські букви, цифри та дефіс. Пряме посилання: <code className="bg-muted px-1 rounded">https://fetr.in.ua/nabory-fetru/{editingProduct.slug}</code>
                   </p>
                 </div>
               </TabsContent>
