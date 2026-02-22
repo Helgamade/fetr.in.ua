@@ -484,36 +484,62 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                   )}
                   Додаткові опції:
                 </h3>
-                <div className="space-y-3">
-                  {product.options.map(option => (
-                    <label
-                      key={option.code}
-                      className={cn(
-                        'flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors',
-                        selectedOptions.includes(option.code)
-                          ? 'border-primary bg-peach'
-                          : 'border-border hover:border-primary/50'
-                      )}
-                    >
-                      <Checkbox
-                        checked={selectedOptions.includes(option.code)}
-                        onCheckedChange={() => toggleOption(option.code)}
-                        className="mt-0.5"
-                      />
-                      <div className="flex-grow">
-                        <div className="flex items-center gap-2">
-                          {option.icon && (
-                            <OptionIcon icon={option.icon} />
-                          )}
-                          <span className="font-medium text-foreground">{option.name}</span>
-                        </div>
-                        {option.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{option.description}</p>
+                <div className="space-y-2.5">
+                  {product.options.map(option => {
+                    const isSelected = selectedOptions.includes(option.code);
+                    return (
+                      <div
+                        key={option.code}
+                        className={cn(
+                          'relative border rounded-lg p-3.5 cursor-pointer transition-all',
+                          isSelected
+                            ? 'border-primary bg-peach shadow-sm'
+                            : 'border-border hover:border-primary/30 hover:shadow-sm'
                         )}
+                        onClick={() => toggleOption(option.code)}
+                      >
+                        {/* Badge */}
+                        {option.badge && (
+                          <span className="absolute -top-2.5 right-3 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent text-accent-foreground">
+                            {option.badge}
+                          </span>
+                        )}
+
+                        <div className="flex items-start gap-3">
+                          {/* Square checkbox */}
+                          <div className={cn(
+                            'mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+                            isSelected ? 'border-primary bg-primary' : 'border-muted-foreground/30'
+                          )}>
+                            {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  {option.icon && <OptionIcon icon={option.icon} className="w-4 h-4 flex-shrink-0" />}
+                                  <span className="font-medium text-foreground">{option.name}</span>
+                                </div>
+                                {option.description && (
+                                  <p className="text-sm text-muted-foreground mt-0.5">{option.description}</p>
+                                )}
+                              </div>
+                              <span className="font-bold text-primary whitespace-nowrap flex-shrink-0">+{option.price} ₴</span>
+                            </div>
+
+                            {/* Social proof */}
+                            {option.orderCount != null && option.orderCount > 0 && (
+                              <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
+                                <Users className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>Замовили разом <strong className="text-foreground">{option.orderCount.toLocaleString('uk-UA')}</strong> разів</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <span className="font-bold text-primary whitespace-nowrap">+{option.price} ₴</span>
-                    </label>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

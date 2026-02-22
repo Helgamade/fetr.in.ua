@@ -939,13 +939,52 @@ export function Products() {
                                 <ChevronDown className="h-3 w-3" />
                               </Button>
                             </div>
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                               <div className="font-medium">{option.name}</div>
                               {option.description && (
                                 <div className="text-sm text-muted-foreground">{option.description}</div>
                               )}
                               <div className="text-sm font-semibold text-primary mt-1">
                                 +{option.price} ₴
+                              </div>
+                              {/* Per-product social proof & badge */}
+                              <div className="flex gap-2 mt-2">
+                                <div className="flex-1">
+                                  <label className="text-xs text-muted-foreground mb-1 block">Замовили разом (кількість)</label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    placeholder="0"
+                                    className="h-7 text-xs"
+                                    value={option.orderCount ?? ''}
+                                    onChange={(e) => {
+                                      const val = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+                                      setEditingProduct({
+                                        ...editingProduct,
+                                        options: editingProduct.options.map(o =>
+                                          o.id === option.id ? { ...o, orderCount: val } : o
+                                        )
+                                      });
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <label className="text-xs text-muted-foreground mb-1 block">Бейдж (напр. ⭐ Популярне)</label>
+                                  <Input
+                                    type="text"
+                                    placeholder="⭐ Популярне"
+                                    className="h-7 text-xs"
+                                    value={option.badge ?? ''}
+                                    onChange={(e) => {
+                                      setEditingProduct({
+                                        ...editingProduct,
+                                        options: editingProduct.options.map(o =>
+                                          o.id === option.id ? { ...o, badge: e.target.value || undefined } : o
+                                        )
+                                      });
+                                    }}
+                                  />
+                                </div>
                               </div>
                             </div>
                             <Button
