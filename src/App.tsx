@@ -19,6 +19,7 @@ const Page = lazy(() => import("./pages/Page"));
 const Login = lazy(() => import("./pages/Login"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const AllReviews = lazy(() => import("./pages/AllReviews"));
+const NaboryFetru = lazy(() => import("./pages/NaboryFetru"));
 
 // User pages
 const Profile = lazy(() => import("./pages/user/Profile"));
@@ -117,7 +118,8 @@ const App = () => (
                     <Route path="comparison" element={<Comparison />} />
                   </Route>
 
-                  {/* Product direct links */}
+                  {/* Набори фетру — каталог і прямі посилання на товари */}
+                  <Route path="/nabory-fetru" element={<NaboryFetru />} />
                   <Route path="/nabory-fetru/:slug" element={<Index />} />
 
                   {/* Dynamic page routes - must be after admin routes */}

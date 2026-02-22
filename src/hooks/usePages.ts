@@ -30,6 +30,18 @@ export function usePage(slug: string) {
   });
 }
 
+// Graceful version — не повторяет запрос при 404, не бросает ошибку в boundary
+export function useOptionalPage(slug: string) {
+  return useQuery<Page>({
+    queryKey: ['page', slug],
+    queryFn: () => pagesAPI.getBySlug(slug),
+    enabled: !!slug,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+    throwOnError: false,
+  });
+}
+
 export function useCreatePage() {
   const queryClient = useQueryClient();
   return useMutation({
