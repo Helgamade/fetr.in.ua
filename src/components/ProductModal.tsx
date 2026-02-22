@@ -532,7 +532,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                             {option.orderCount != null && option.orderCount > 0 && (
                               <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
                                 <Users className="w-3.5 h-3.5 flex-shrink-0" />
-                                <span>Замовили разом <strong className="text-foreground">{option.orderCount.toLocaleString('uk-UA')}</strong> разів</span>
+                                <span>Замовили разом <strong className="text-foreground">{option.orderCount}</strong> разів</span>
                               </div>
                             )}
                           </div>
