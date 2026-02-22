@@ -349,7 +349,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                   <CountdownTimer endDate={saleEndDate} compact />
                   <span className="text-sm text-muted-foreground">до кінця акції</span>
                 </div>
-                <h2 className="text-2xl font-heading font-bold text-foreground mb-2">
+                <h2 className="text-2xl leading-[3.5rem] font-heading font-bold text-foreground mb-2">
                   {product.fullName || product.name}
                 </h2>
                 <p className="text-muted-foreground">
