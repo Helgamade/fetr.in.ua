@@ -227,7 +227,7 @@ router.get('/all', async (req, res, next) => {
       const [result] = await pool.execute(`
         SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
         FROM reviews
-        ORDER BY created_at DESC
+        ORDER BY featured DESC, created_at DESC
       `);
       reviews = result;
     } catch (error) {
