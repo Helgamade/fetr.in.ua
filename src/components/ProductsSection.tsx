@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductModal } from '@/components/ProductModal';
 import { Product } from '@/types/store';
@@ -10,6 +11,29 @@ export const ProductsSection: React.FC = () => {
   const { t } = useTranslation('products');
   const { data: products = [], isLoading } = useProducts();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openedFromUrlRef = useRef(false);
+
+  // Open product modal from URL param ?product=<slug>
+  useEffect(() => {
+    if (products.length === 0 || openedFromUrlRef.current) return;
+    const slug = searchParams.get('product');
+    if (!slug) return;
+    const product = products.find(p => p.slug === slug);
+    if (product) {
+      openedFromUrlRef.current = true;
+      setSelectedProduct(product);
+    }
+  }, [products, searchParams]);
+
+  const handleCloseModal = () => {
+    setSelectedProduct(null);
+    if (searchParams.has('product')) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('product');
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   return (
     <section id="products" className="py-20 relative overflow-hidden">
@@ -68,7 +92,7 @@ export const ProductsSection: React.FC = () => {
       <ProductModal
         product={selectedProduct}
         isOpen={!!selectedProduct}
-        onClose={() => setSelectedProduct(null)}
+        onClose={handleCloseModal}
       />
     </section>
   );

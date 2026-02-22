@@ -11,7 +11,10 @@ import {
   Upload,
   Loader2,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Link,
+  Copy,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,8 +54,17 @@ export function Products() {
   const [availableOptions, setAvailableOptions] = useState<ProductOption[]>([]);
   const [availableMaterials, setAvailableMaterials] = useState<ProductMaterial[]>([]);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const fileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
   const { toast } = useToast();
+
+  const copyProductLink = (product: Product) => {
+    const url = `https://fetr.in.ua/?product=${product.slug}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedId(product.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
 
   const badgeLabels = {
     hit: t('badge.hit'),
@@ -310,6 +322,27 @@ export function Products() {
                 />
               </div>
 
+              {/* Direct link */}
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-xs">
+                <Link className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                <span className="text-muted-foreground truncate flex-1">
+                  /?product={product.slug}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 flex-shrink-0"
+                  onClick={() => copyProductLink(product)}
+                  title="Скопіювати пряме посилання"
+                >
+                  {copiedId === product.id ? (
+                    <Check className="h-3 w-3 text-green-600" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
+                </Button>
+              </div>
+
               {/* Actions */}
               <div className="flex gap-2 pt-2">
                 <Button
@@ -467,6 +500,38 @@ export function Products() {
                   />
                   <p className="text-xs text-muted-foreground">
                     Менше значення = вище в списку. Рекомендовано: Стартовий=1, Оптимальний=2, Преміум=3
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-4 border-t">
+                  <Label htmlFor="slug">Пряме посилання (slug)</Label>
+                  <div className="flex gap-2">
+                    <div className="flex items-center text-sm text-muted-foreground border border-input rounded-l-md px-3 bg-muted whitespace-nowrap">
+                      fetr.in.ua/?product=
+                    </div>
+                    <Input
+                      id="slug"
+                      value={editingProduct.slug}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                      placeholder="optimal"
+                      className="rounded-l-none"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => copyProductLink(editingProduct)}
+                      title="Скопіювати посилання"
+                    >
+                      {copiedId === editingProduct.id ? (
+                        <Check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Тільки латинські букви, цифри та дефіс. Пряме посилання: <code className="bg-muted px-1 rounded">https://fetr.in.ua/?product={editingProduct.slug}</code>
                   </p>
                 </div>
               </TabsContent>
