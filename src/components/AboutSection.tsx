@@ -1,14 +1,11 @@
 import React from 'react';
-import { Heart, Star, Users, Award, CheckCircle } from 'lucide-react';
+import { Heart, Star, Users, Award, CheckCircle, Flower2, Sparkles } from 'lucide-react';
 import { useTeam } from '@/hooks/useTeam';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export const AboutSection: React.FC = () => {
   const { t } = useTranslation('about');
   const { data: teamMembers = [], isLoading } = useTeam(true); // Только активные
-
-  // Берем первые два активных члена команды
-  const displayMembers = teamMembers.slice(0, 2);
 
   const stats = [
     { value: t('stat1.value'), label: t('stat1.label') },
@@ -79,96 +76,76 @@ export const AboutSection: React.FC = () => {
           ))}
         </div>
 
-        {/* About Founder Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl sm:text-4xl font-heading font-bold text-center mb-4">
-            {t('founder.title')}
-          </h2>
-          <p className="text-center text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            {t('founder.subtitle')}
-          </p>
-          
-          <div className="glass-card p-8 md:p-12">
-            <div className="prose prose-lg max-w-none text-foreground space-y-4 mb-6">
-              <p>
-                {t('founder.text1')}
-              </p>
-              <p>
-                {t('founder.text2')}
-              </p>
-            </div>
-            
-            {teamMembers.length > 0 && teamMembers[0] && (
-              <div className="flex items-center gap-4 mt-6">
-                <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+        {/* Founder Card — Variant 19 style */}
+        <div className="mb-6">
+          <div className="bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-soft border border-primary/10">
+            <div className="flex flex-col items-center text-center">
+              {teamMembers.length > 0 && teamMembers[0] && (
+                <div className="relative mb-4">
+                  <div className="absolute -inset-3 bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 rounded-full animate-pulse" />
                   {teamMembers[0].photo ? (
                     <img
                       src={teamMembers[0].photo}
                       alt={teamMembers[0].name}
-                      className="w-full h-full object-cover"
+                      className="relative w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-card"
                     />
                   ) : (
-                    <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                      <Users className="w-8 h-8 text-primary" />
+                    <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full bg-primary/10 flex items-center justify-center border-4 border-card">
+                      <Users className="w-10 h-10 text-primary" />
                     </div>
                   )}
+                  <Sparkles className="absolute -top-1 -right-1 w-6 h-6 text-primary" />
                 </div>
-                <div>
-                  <div className="font-heading font-bold text-lg text-foreground">{teamMembers[0].name}</div>
-                  <div className="text-sm text-[#8B4A4A] font-medium">{teamMembers[0].role}</div>
-                </div>
-              </div>
-            )}
+              )}
+
+              {teamMembers.length > 0 && teamMembers[0] && (
+                <>
+                  <h3 className="font-heading text-xl md:text-2xl font-bold text-foreground">{teamMembers[0].name}</h3>
+                  <p className="text-primary text-sm mb-4">{teamMembers[0].role}</p>
+                </>
+              )}
+
+              <p className="text-foreground/80 text-sm md:text-base leading-relaxed max-w-md">
+                {t('founder.text1')}
+              </p>
+              {t('founder.text2') && (
+                <p className="text-foreground/80 text-sm md:text-base leading-relaxed max-w-md mt-3">
+                  {t('founder.text2')}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Team Section */}
+        {/* Team — Variant 19 style */}
         <div className="mb-16">
-          <h3 className="text-2xl sm:text-3xl font-heading font-bold text-center mb-4 text-foreground">
-            {t('team.title')}
-          </h3>
-          <p className="text-center text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            {t('team.subtitle')}
-          </p>
-          
-          {isLoading ? (
-            <div className="text-center py-12 text-muted-foreground">
-              {t('team.loading')}
-            </div>
-          ) : displayMembers.length > 0 ? (
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-8 md:gap-12">
-              {displayMembers.map((member, index) => (
-                <div
-                  key={member.id}
-                  className="flex flex-col items-center text-center max-w-[280px] animate-fade-in"
-                  style={{ animationDelay: `${index * 0.15}s` }}
-                >
-                  <div className="w-32 h-32 rounded-full overflow-hidden mb-4 border-2 border-pink-200 flex-shrink-0">
-                    {member.photo ? (
-                      <img
-                        src={member.photo}
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                        <Users className="w-16 h-16 text-primary" />
-                      </div>
-                    )}
+          <div className="bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-soft border border-accent/10">
+            <h3 className="font-heading text-lg md:text-xl font-bold text-foreground text-center mb-5">
+              🌷 {t('team.title')} 🌷
+            </h3>
+
+            {isLoading ? (
+              <div className="text-center py-6 text-muted-foreground">{t('team.loading')}</div>
+            ) : teamMembers.length > 0 ? (
+              <div className="flex flex-wrap justify-center gap-6">
+                {teamMembers.map((member, i) => (
+                  <div key={member.id} className="text-center">
+                    <div className={`w-14 h-14 md:w-16 md:h-16 mx-auto mb-2 rounded-full ${i % 2 === 0 ? 'bg-gradient-to-br from-primary/30' : 'bg-gradient-to-br from-accent/30'} to-transparent flex items-center justify-center overflow-hidden`}>
+                      {member.photo ? (
+                        <img src={member.photo} alt={member.name} className="w-full h-full object-cover rounded-full" />
+                      ) : (
+                        <span className="text-2xl">🌸</span>
+                      )}
+                    </div>
+                    <p className="font-medium text-foreground text-sm">{member.name}</p>
+                    <p className="text-muted-foreground text-xs">{member.role}</p>
                   </div>
-                  <h4 className="text-xl font-heading font-bold mb-2 text-foreground">{member.name}</h4>
-                  <p className="text-[#8B4A4A] text-sm font-medium mb-3">{member.role}</p>
-                  {member.description && (
-                    <p className="text-muted-foreground text-sm">{member.description}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              {t('team.empty')}
-            </div>
-          )}
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-muted-foreground">{t('team.empty')}</div>
+            )}
+          </div>
         </div>
 
         {/* Why trust us */}
