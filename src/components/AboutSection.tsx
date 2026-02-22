@@ -78,7 +78,7 @@ export const AboutSection: React.FC = () => {
 
         {/* Founder Card — Variant 19 style */}
         <div className="mb-6">
-          <div className="bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-soft border border-primary/10">
+          <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 [box-shadow:var(--shadow-md)] border border-primary/10">
             <div className="flex flex-col items-center text-center">
               {teamMembers.length > 0 && teamMembers[0] && (
                 <div className="relative mb-4">
@@ -119,7 +119,7 @@ export const AboutSection: React.FC = () => {
 
         {/* Team — Variant 19 style */}
         <div className="mb-16">
-          <div className="bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-soft border border-accent/10">
+          <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 [box-shadow:var(--shadow-md)] border border-accent/10">
             <h3 className="font-heading text-lg md:text-xl font-bold text-foreground text-center mb-5">
               🌷 {t('team.title')} 🌷
             </h3>
