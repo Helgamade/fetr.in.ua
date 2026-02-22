@@ -15,27 +15,27 @@ router.get('/', async (req, res, next) => {
         SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
         FROM reviews
         WHERE is_approved = TRUE AND featured = TRUE
-        ORDER BY RAND()
+        ORDER BY created_at DESC
         LIMIT 4
       `);
 
-      // Get other approved reviews if we have less than 4 featured (random order)
+      // Get other approved reviews if we have less than 4 featured (newest first)
       const [otherReviews] = await pool.execute(`
         SELECT id, name, text, rating, photo, is_approved, featured, created_at, updated_at
         FROM reviews
         WHERE is_approved = TRUE AND (featured = FALSE OR featured IS NULL)
-        ORDER BY RAND()
+        ORDER BY created_at DESC
         LIMIT ?
       `, [Math.max(0, 4 - featuredReviews.length)]);
 
       reviews = [...featuredReviews, ...otherReviews].slice(0, 4);
     } catch (error) {
-      // If featured column doesn't exist, fallback to regular query (random order)
+      // If featured column doesn't exist, fallback to regular query (newest first)
       const [allReviews] = await pool.execute(`
         SELECT id, name, text, rating, photo, is_approved, created_at, updated_at
         FROM reviews
         WHERE is_approved = TRUE
-        ORDER BY RAND()
+        ORDER BY created_at DESC
         LIMIT 4
       `);
       reviews = allReviews.map(r => ({ ...r, featured: false }));
