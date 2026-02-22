@@ -23,6 +23,7 @@ export interface Product {
   id: number; // Changed to number (INT AUTO_INCREMENT)
   code: string; // Product code like 'starter', 'optimal', 'premium'
   name: string;
+  fullName?: string; // Повна назва товару (наприклад, "Набір фетру БАЗОВИЙ"), відображається в модалі
   slug: string;
   shortDescription: string;
   fullDescription: string;

@@ -151,6 +151,7 @@ router.get('/', async (req, res, next) => {
       product.displayOrder = parseInt(product.display_order) || 0;
       product.shortDescription = product.short_description;
       product.fullDescription = product.full_description;
+      product.fullName = product.full_name || null;
       product.sectionIconFeatures = product.section_icon_features || null;
       product.sectionIconMaterials = product.section_icon_materials || null;
       product.sectionIconCanMake = product.section_icon_can_make || null;
@@ -170,6 +171,7 @@ router.get('/', async (req, res, next) => {
       delete product.display_order;
       delete product.short_description;
       delete product.full_description;
+      delete product.full_name;
       delete product.section_icon_features;
       delete product.section_icon_materials;
       delete product.section_icon_can_make;
@@ -277,6 +279,7 @@ router.get('/:id', async (req, res, next) => {
       product.displayOrder = parseInt(product.display_order) || 0;
       product.shortDescription = product.short_description;
       product.fullDescription = product.full_description;
+      product.fullName = product.full_name || null;
       // Keep code field for comparison and cart
       product.code = product.code;
       
@@ -290,6 +293,7 @@ router.get('/:id', async (req, res, next) => {
       delete product.display_order;
       delete product.short_description;
       delete product.full_description;
+      delete product.full_name;
       delete product.created_at;
       delete product.updated_at;
 
@@ -339,7 +343,7 @@ router.put('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const {
-      name, slug, shortDescription, fullDescription,
+      name, fullName, slug, shortDescription, fullDescription,
       basePrice, salePrice, badge, stock, viewCount, purchaseCount, displayOrder,
       features, materials, canMake, suitableFor, options, images,
       sectionIconFeatures, sectionIconMaterials, sectionIconCanMake, sectionIconSuitableFor, sectionIconOptions,
@@ -349,14 +353,14 @@ router.put('/:id', async (req, res, next) => {
     // Update main product fields
     await pool.execute(`
       UPDATE products SET
-        name = ?, slug = ?, short_description = ?, full_description = ?,
+        name = ?, full_name = ?, slug = ?, short_description = ?, full_description = ?,
         base_price = ?, sale_price = ?, badge = ?, stock = ?,
         view_count = ?, purchase_count = ?, daily_sales_target = ?, display_order = ?,
         section_icon_features = ?, section_icon_materials = ?, section_icon_can_make = ?,
         section_icon_suitable_for = ?, section_icon_options = ?, features_extra_text = ?
       WHERE id = ?
     `, [
-      name, slug, shortDescription, fullDescription, basePrice, salePrice, badge, stock,
+      name, fullName || null, slug, shortDescription, fullDescription, basePrice, salePrice, badge, stock,
       viewCount || 0, purchaseCount || 0, req.body.dailySalesTarget || null, displayOrder || 0,
       sectionIconFeatures || null, sectionIconMaterials || null, sectionIconCanMake || null,
       sectionIconSuitableFor || null, sectionIconOptions || null, featuresExtraText || null,

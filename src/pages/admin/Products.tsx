@@ -413,6 +413,19 @@ export function Products() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="fullName">Повна назва товару</Label>
+                  <Input
+                    id="fullName"
+                    value={editingProduct.fullName || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, fullName: e.target.value || undefined })}
+                    placeholder="Набір фетру БАЗОВИЙ"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Відображається як заголовок у картці товару. Якщо не заповнено — використовується «Назва».
+                  </p>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="shortDescription">Короткий опис</Label>
                   <Textarea
                     id="shortDescription"
