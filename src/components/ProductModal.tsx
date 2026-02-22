@@ -448,7 +448,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                   {product.sectionIconMaterials && (
                     <OptionIcon icon={product.sectionIconMaterials} className="w-5 h-5" />
                   )}
-                  Матеріали:
+                  Матеріали ({product.materials.length} позицій):
                 </h3>
                 <div className="space-y-2">
                   {product.materials.map((material, idx) => (
