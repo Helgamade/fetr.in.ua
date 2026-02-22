@@ -978,7 +978,7 @@ export function Products() {
                                   <label className="text-xs text-muted-foreground mb-1 block">Бейдж (напр. ⭐ Популярне)</label>
                                   <Input
                                     type="text"
-                                    placeholder="⭐ Популярне"
+                                    placeholder=""
                                     className="h-7 text-xs"
                                     value={option.badge ?? ''}
                                     onChange={(e) => {
