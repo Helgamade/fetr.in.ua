@@ -267,12 +267,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
           <X className="w-5 h-5" />
         </button>
 
-        <div className="h-full overflow-y-auto">
-          <div className="flex flex-col md:flex-row">
+        <div className="h-full flex flex-col md:flex-row">
             {/* Image Gallery */}
             <div 
               ref={imageContainerRef}
-              className="relative aspect-square md:aspect-auto md:flex-1 md:h-[90vh] bg-muted flex items-center justify-center min-w-0"
+              className="relative aspect-square flex-shrink-0 md:aspect-auto md:flex-1 md:h-[90vh] bg-muted flex items-center justify-center min-w-0"
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
@@ -341,8 +340,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
               )}
             </div>
 
-            {/* Content */}
-            <div className="pt-6 px-6 pb-0 md:w-[660px] md:flex-shrink-0 md:overflow-y-auto md:max-h-[90vh]">
+            {/* Content column: flex-col, scroll area + button outside scroll */}
+            <div className="flex flex-col flex-1 min-h-0 md:w-[660px] md:flex-shrink-0">
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto pt-6 px-6">
               {/* Header */}
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -533,8 +534,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                 </div>
               </div>
 
-              {/* Total & Add to cart */}
-              <div className="sticky bottom-0 bg-card pt-4 pb-6 border-t border-border">
+              </div>{/* end scrollable content */}
+
+              {/* Total & Add to cart — outside scroll, always visible at bottom */}
+              <div className="flex-shrink-0 bg-card px-6 pt-4 pb-6 border-t border-border">
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-medium">Разом:</span>
@@ -551,8 +554,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                   Купити зараз
                 </Button>
               </div>
-            </div>
-          </div>
+            </div>{/* end content column */}
         </div>
       </div>
 
