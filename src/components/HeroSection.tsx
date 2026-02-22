@@ -139,6 +139,14 @@ export const HeroSection: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Scroll indicator — desktop only */}
+      <div
+        className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2 cursor-pointer"
+        onClick={handleCTAClick}
+      >
+        <ArrowDown className="w-6 h-6 text-primary animate-bounce-subtle" />
+      </div>
     </section>
   );
 };
