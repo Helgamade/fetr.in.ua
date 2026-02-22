@@ -25,6 +25,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -114,7 +115,9 @@ export function Products() {
       ...editingProduct,
       options: editingProduct.options.map((opt, index) => ({
         id: opt.id,
-        sortOrder: index
+        sortOrder: index,
+        orderCount: opt.orderCount ?? null,
+        badge: opt.badge ?? null,
       })),
       materials: editingProduct.materials.map((mat) => mat.id),
       images: editingProduct.images.filter(img => img && img.trim()),
@@ -381,6 +384,9 @@ export function Products() {
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Редагувати товар</DialogTitle>
+            <DialogDescription className="sr-only">
+              Форма редагування товару: основна інформація, зображення, опції та матеріали
+            </DialogDescription>
           </DialogHeader>
 
           {editingProduct && (
