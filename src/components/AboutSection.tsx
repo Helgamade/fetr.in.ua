@@ -130,6 +130,9 @@ export const AboutSection: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground">
               {t('greeting.title')} <span ref={waveRef} className="wave-emoji">👋</span>
             </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-4">
+              {t('greeting.subtitle')}
+            </p>
           </div>
 
           {/* Founder Card — Variant 19 style */}
