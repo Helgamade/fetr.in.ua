@@ -141,7 +141,7 @@ export const AboutSection: React.FC = () => {
               <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-primary/30 rounded-br-[1.3rem]" />
               <div className="flex flex-col items-center text-center">
                 {teamMembers.length > 0 && teamMembers[0] && (
-                  <div className="relative mb-4">
+                  <div className="relative mb-6">
                     <div className="absolute -inset-3 bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 rounded-full animate-pulse" />
                     {teamMembers[0].photo ? (
                       <img
