@@ -8,6 +8,23 @@ export const AboutSection: React.FC = () => {
   const { data: teamMembers = [], isLoading } = useTeam(true); // Только активные
   const parallaxRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  const waveRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = waveRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add('animate-wave');
+          el.addEventListener('animationend', () => el.classList.remove('animate-wave'), { once: true });
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -97,7 +114,7 @@ export const AboutSection: React.FC = () => {
               <span className="text-sm font-medium">{t('greeting.badge')}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground">
-              {t('greeting.title')}
+              {t('greeting.title')} <span ref={waveRef} style={{ display: 'inline-block', transformOrigin: '70% 70%' }}>👋</span>
             </h2>
           </div>
 
