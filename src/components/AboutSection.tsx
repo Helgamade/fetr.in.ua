@@ -13,17 +13,31 @@ export const AboutSection: React.FC = () => {
   useEffect(() => {
     const el = waveRef.current;
     if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.classList.add('animate-wave');
-          el.addEventListener('animationend', () => el.classList.remove('animate-wave'), { once: true });
-        }
-      },
-      { threshold: 0.5 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+
+    let lastScrollY = window.scrollY;
+    let currentRotation = 0;
+    let targetRotation = 0;
+    let rafId: number;
+
+    const animate = () => {
+      currentRotation += (targetRotation - currentRotation) * 0.18;
+      targetRotation *= 0.82;
+      el.style.transform = `rotate(${currentRotation.toFixed(2)}deg)`;
+      rafId = requestAnimationFrame(animate);
+    };
+
+    const handleScroll = () => {
+      const delta = window.scrollY - lastScrollY;
+      lastScrollY = window.scrollY;
+      targetRotation = Math.max(-35, Math.min(35, delta * 2));
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    rafId = requestAnimationFrame(animate);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   useEffect(() => {
@@ -114,7 +128,7 @@ export const AboutSection: React.FC = () => {
               <span className="text-sm font-medium">{t('greeting.badge')}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground">
-              {t('greeting.title')} <span ref={waveRef} style={{ display: 'inline-block', transformOrigin: '70% 70%' }}>👋</span>
+              {t('greeting.title')} <span ref={waveRef} className="wave-emoji">👋</span>
             </h2>
           </div>
 

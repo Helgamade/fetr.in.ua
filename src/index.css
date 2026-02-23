@@ -337,8 +337,12 @@
 
 .animate-wave {
   animation: wave 1.2s ease-in-out;
-  transform-origin: 70% 70%;
+}
+
+.wave-emoji {
   display: inline-block;
+  transform-origin: 70% 70%;
+  will-change: transform;
 }
 
 /* Parallax Background */
