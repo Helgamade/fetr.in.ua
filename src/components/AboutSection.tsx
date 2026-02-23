@@ -25,8 +25,25 @@ export const AboutSection: React.FC = () => {
 
   return (
     <>
-      <section id="about" className="py-20">
-        <div className="container-tight">
+      <section id="about" className="py-20 relative overflow-hidden">
+        {/* Parallax photo layer — place /public/images/workshop-bg.jpg to activate */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: 'url(/images/workshop-bg.jpg)',
+            backgroundAttachment: 'fixed',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.06,
+          }}
+        />
+        {/* Gradient overlay — fades photo edges into background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background pointer-events-none" />
+        {/* Blob accents */}
+        <div className="absolute -top-24 -left-24 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-16 -right-16 w-96 h-96 bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-64 h-64 bg-accent/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="container-tight relative z-10">
           {/* Section header */}
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary mb-4">
