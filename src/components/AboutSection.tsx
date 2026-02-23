@@ -74,7 +74,7 @@ export const AboutSection: React.FC = () => {
 
           {/* Founder Card — Variant 19 style */}
           <div className="mb-6">
-            <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl px-8 pt-[2.7rem] pb-8 [box-shadow:var(--shadow-md)] border border-border/50 relative">
+            <div className="max-w-3xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl px-8 pt-[2.7rem] pb-8 [box-shadow:var(--shadow-md)] border border-border/50 relative">
               <div className="absolute top-3 left-3 md:top-4 md:left-4 w-6 h-6 md:w-8 md:h-8 border-t-2 border-l-2 border-primary/30 rounded-tl-[1.3rem]" />
               <div className="absolute top-3 right-3 md:top-4 md:right-4 w-6 h-6 md:w-8 md:h-8 border-t-2 border-r-2 border-primary/30 rounded-tr-[1.3rem]" />
               <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4 w-6 h-6 md:w-8 md:h-8 border-b-2 border-l-2 border-primary/30 rounded-bl-[1.3rem]" />
@@ -115,7 +115,7 @@ export const AboutSection: React.FC = () => {
 
           {/* Team — Variant 19 style */}
           <div className="mb-10">
-            <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 [box-shadow:var(--shadow-md)] border border-border/50">
+            <div className="max-w-3xl mx-auto">
               <h3 className="font-heading text-lg md:text-xl font-bold text-foreground text-center mb-5">
                 {t('team.title')}
               </h3>
