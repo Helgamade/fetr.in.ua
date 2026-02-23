@@ -133,7 +133,7 @@ export const AboutSection: React.FC = () => {
                           <span className="text-2xl">{member.emoji || '🌸'}</span>
                         )}
                       </div>
-                      <p className="font-medium text-foreground text-sm">{member.name}</p>
+                      <p className="font-medium text-foreground text-base">{member.name}</p>
                       <p className="text-muted-foreground text-xs">{member.role}</p>
                     </div>
                   ))}
