@@ -114,7 +114,7 @@ export const AboutSection: React.FC = () => {
           </div>
 
           {/* Team — Variant 19 style */}
-          <div className="mb-10 mt-2">
+          <div className="mb-16 mt-2">
             <div className="max-w-3xl mx-auto">
               <h3 className="font-heading text-lg md:text-xl font-bold text-foreground text-center mb-5">
                 {t('team.title')}
