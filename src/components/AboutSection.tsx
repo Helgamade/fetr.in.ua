@@ -184,7 +184,7 @@ export const AboutSection: React.FC = () => {
                 <div className="flex flex-wrap justify-center gap-6">
                   {teamMembers.map((member, i) => (
                     <div key={member.id} className="text-center w-[calc(50%-12px)] sm:w-auto">
-                      <div className="w-[4.5rem] h-[4.5rem] mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                      <div className="w-18 h-18 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                         {member.photo ? (
                           <img src={member.photo} alt={member.name} className="w-full h-full object-cover rounded-full" />
                         ) : (
