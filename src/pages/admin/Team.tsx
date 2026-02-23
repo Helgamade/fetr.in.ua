@@ -115,6 +115,9 @@ export function Team() {
 
       const response = await fetch('/api/team/upload-image', {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}`,
+        },
         body: formData,
       });
 

@@ -153,6 +153,9 @@ export function Products() {
     try {
       const response = await fetch('/api/products/upload-image', {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}`,
+        },
         body: formData,
       });
 

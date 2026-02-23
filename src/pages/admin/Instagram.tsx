@@ -121,6 +121,9 @@ export function Instagram() {
     try {
       const response = await fetch('/api/instagram/upload-image', {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}`,
+        },
         body: formData,
       });
 
