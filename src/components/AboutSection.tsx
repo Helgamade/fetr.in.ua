@@ -30,11 +30,11 @@ export const AboutSection: React.FC = () => {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: 'url(/images/workshop-bg.jpg)',
+            backgroundImage: 'url(/uploads/hero/hero-bg-default.jpg)',
             backgroundAttachment: 'fixed',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            opacity: 0.12,
+            opacity: 0.1,
           }}
         />
         {/* Gradient overlay — fades photo edges into background */}
