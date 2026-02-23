@@ -62,6 +62,7 @@ export default {
         },
         cream: "hsl(var(--cream))",
         peach: "hsl(var(--peach))",
+        "pastel-mint": "hsl(var(--pastel-mint))",
         sage: "hsl(var(--sage))",
         "coral-light": "hsl(var(--coral-light))",
         "audience-peach": "hsl(var(--audience-peach))",
