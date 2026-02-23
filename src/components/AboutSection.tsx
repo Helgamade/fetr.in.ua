@@ -7,13 +7,6 @@ export const AboutSection: React.FC = () => {
   const { t } = useTranslation('about');
   const { data: teamMembers = [], isLoading } = useTeam(true); // Только активные
 
-  const stats = [
-    { value: t('stat1.value'), label: t('stat1.label') },
-    { value: t('stat2.value'), label: t('stat2.label') },
-    { value: t('stat3.value'), label: t('stat3.label') },
-    { value: t('stat4.value'), label: t('stat4.label') },
-  ];
-
   const values = [
     { icon: Heart, title: t('values.love.title'), description: t('values.love.description') },
     { icon: Star, title: t('values.quality.title'), description: t('values.quality.description') },
@@ -46,18 +39,6 @@ export const AboutSection: React.FC = () => {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               {t('subtitle')}
             </p>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-            {stats.map((stat) => (
-              <div key={stat.label} className="glass-card p-6 text-center hover-lift">
-                <div className="text-3xl sm:text-4xl font-heading font-bold gradient-text mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
           </div>
 
           {/* Values */}
