@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Heart, Star, Users, Award, CheckCircle, Flower2, Sparkles, Palette } from 'lucide-react';
 import { useTeam } from '@/hooks/useTeam';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -6,6 +6,21 @@ import { useTranslation } from '@/hooks/useTranslation';
 export const AboutSection: React.FC = () => {
   const { t } = useTranslation('about');
   const { data: teamMembers = [], isLoading } = useTeam(true); // Только активные
+  const parallaxRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!parallaxRef.current || !sectionRef.current) return;
+      const rect = sectionRef.current.getBoundingClientRect();
+      const progress = -rect.top / (rect.height + window.innerHeight);
+      const translateY = progress * 80;
+      parallaxRef.current.style.transform = `translateY(${translateY}px)`;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const values = [
     { icon: Heart, title: t('values.love.title'), description: t('values.love.description') },
@@ -25,15 +40,19 @@ export const AboutSection: React.FC = () => {
 
   return (
     <>
-      <section id="about" className="py-20 relative overflow-hidden">
-        {/* Parallax photo layer — place /public/images/workshop-bg.jpg to activate */}
+      <section id="about" className="py-20 relative overflow-hidden" ref={sectionRef}>
+        {/* Parallax photo layer — JS-based, works on iOS without zoom jumping */}
         <div
-          className="absolute inset-0 pointer-events-none bg-scroll md:bg-fixed"
+          ref={parallaxRef}
+          className="absolute inset-0 pointer-events-none"
           style={{
             backgroundImage: 'url(/uploads/hero/hero-bg-default.jpg)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             opacity: 0.06,
+            top: '-10%',
+            bottom: '-10%',
+            willChange: 'transform',
           }}
         />
         <div className="container-tight relative z-10">
