@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Star, Users, Award, CheckCircle, Flower2, Sparkles } from 'lucide-react';
+import { Heart, Star, Users, Award, CheckCircle, Flower2, Sparkles, Palette } from 'lucide-react';
 import { useTeam } from '@/hooks/useTeam';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -11,7 +11,7 @@ export const AboutSection: React.FC = () => {
     { icon: Heart, title: t('values.love.title'), description: t('values.love.description') },
     { icon: Star, title: t('values.quality.title'), description: t('values.quality.description') },
     { icon: Users, title: t('values.community.title'), description: t('values.community.description') },
-    { icon: Award, title: t('values.experience.title'), description: t('values.experience.description') },
+    { icon: Palette, title: t('values.experience.title'), description: t('values.experience.description') },
   ];
 
   const trustItems = [
