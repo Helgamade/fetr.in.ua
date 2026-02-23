@@ -93,7 +93,7 @@ export const AboutSection: React.FC = () => {
                 {teamMembers.length > 0 && teamMembers[0] && (
                   <>
                     <h3 className="font-heading text-xl md:text-2xl font-bold text-foreground">{teamMembers[0].name}</h3>
-                    <p className="text-primary text-sm mb-4">{teamMembers[0].role}</p>
+                    <p className="text-primary text-sm mb-4">{t('founder.role')}</p>
                   </>
                 )}
 
