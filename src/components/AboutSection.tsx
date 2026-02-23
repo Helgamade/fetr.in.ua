@@ -105,9 +105,9 @@ export const AboutSection: React.FC = () => {
                   </>
                 )}
 
-              <p className="text-[#2e261f] text-sm md:text-base leading-relaxed w-full" dangerouslySetInnerHTML={{ __html: t('founder.text1') }} />
+              <p className="text-[#2e261f] text-base leading-relaxed w-full" dangerouslySetInnerHTML={{ __html: t('founder.text1') }} />
               {t('founder.text2') && (
-                <p className="text-[#2e261f] text-sm md:text-base leading-relaxed w-full mt-3" dangerouslySetInnerHTML={{ __html: t('founder.text2') }} />
+                <p className="text-[#2e261f] text-base leading-relaxed w-full mt-3" dangerouslySetInnerHTML={{ __html: t('founder.text2') }} />
               )}
               </div>
             </div>
