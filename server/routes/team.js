@@ -61,11 +61,11 @@ router.get('/', async (req, res, next) => {
   try {
     const activeOnly = req.query.active === 'true';
     const query = activeOnly
-      ? `SELECT id, name, role, photo, description, sort_order, is_active, created_at, updated_at
+      ? `SELECT id, name, role, photo, emoji, description, sort_order, is_active, created_at, updated_at
          FROM team_members
          WHERE is_active = TRUE
          ORDER BY sort_order ASC, created_at ASC`
-      : `SELECT id, name, role, photo, description, sort_order, is_active, created_at, updated_at
+      : `SELECT id, name, role, photo, emoji, description, sort_order, is_active, created_at, updated_at
          FROM team_members
          ORDER BY sort_order ASC, created_at ASC`;
     
@@ -97,12 +97,12 @@ router.get('/:id', async (req, res, next) => {
 // Create team member (требует авторизацию admin)
 router.post('/', authenticate, authorize('admin'), async (req, res, next) => {
   try {
-    const { name, role, photo, description, sort_order, is_active } = req.body;
+    const { name, role, photo, emoji, description, sort_order, is_active } = req.body;
 
     const [result] = await pool.execute(`
-      INSERT INTO team_members (name, role, photo, description, sort_order, is_active)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [name, role, photo || null, description || null, sort_order || 0, is_active !== undefined ? is_active : true]);
+      INSERT INTO team_members (name, role, photo, emoji, description, sort_order, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [name, role, photo || null, emoji || null, description || null, sort_order || 0, is_active !== undefined ? is_active : true]);
 
     res.status(201).json({ id: result.insertId, message: 'Team member created' });
   } catch (error) {
@@ -114,13 +114,13 @@ router.post('/', authenticate, authorize('admin'), async (req, res, next) => {
 router.put('/:id', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, role, photo, description, sort_order, is_active } = req.body;
+    const { name, role, photo, emoji, description, sort_order, is_active } = req.body;
 
     await pool.execute(`
       UPDATE team_members SET
-        name = ?, role = ?, photo = ?, description = ?, sort_order = ?, is_active = ?
+        name = ?, role = ?, photo = ?, emoji = ?, description = ?, sort_order = ?, is_active = ?
       WHERE id = ?
-    `, [name, role, photo || null, description || null, sort_order, is_active, id]);
+    `, [name, role, photo || null, emoji || null, description || null, sort_order, is_active, id]);
 
     res.json({ id, message: 'Team member updated' });
   } catch (error) {

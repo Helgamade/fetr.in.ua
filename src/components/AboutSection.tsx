@@ -118,11 +118,11 @@ export const AboutSection: React.FC = () => {
                 <div className="flex flex-wrap justify-center gap-6">
                   {teamMembers.map((member, i) => (
                     <div key={member.id} className="text-center w-[calc(50%-12px)] sm:w-auto">
-                      <div className={`w-14 h-14 md:w-16 md:h-16 mx-auto mb-2 rounded-full ${i % 2 === 0 ? 'bg-gradient-to-br from-primary/30' : 'bg-gradient-to-br from-accent/30'} to-transparent flex items-center justify-center overflow-hidden`}>
+                      <div className="w-14 h-14 md:w-16 md:h-16 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                         {member.photo ? (
                           <img src={member.photo} alt={member.name} className="w-full h-full object-cover rounded-full" />
                         ) : (
-                          <span className="text-2xl">🌸</span>
+                          <span className="text-2xl">{member.emoji || '🌸'}</span>
                         )}
                       </div>
                       <p className="font-medium text-foreground text-sm">{member.name}</p>

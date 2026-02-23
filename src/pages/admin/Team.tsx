@@ -35,6 +35,7 @@ export function Team() {
       name: '',
       role: '',
       photo: null,
+      emoji: '',
       description: '',
       sort_order: 0,
       is_active: true,
@@ -63,6 +64,7 @@ export function Team() {
       name: editingMember.name,
       role: editingMember.role,
       photo: editingMember.photo,
+      emoji: editingMember.emoji || null,
       description: editingMember.description || null,
       sort_order: editingMember.sort_order || 0,
       is_active: editingMember.is_active,
@@ -309,6 +311,15 @@ export function Team() {
                   id="role"
                   value={editingMember.role}
                   onChange={(e) => setEditingMember({ ...editingMember, role: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="emoji">Емодзі (якщо немає фото)</Label>
+                <Input
+                  id="emoji"
+                  value={editingMember.emoji || ''}
+                  onChange={(e) => setEditingMember({ ...editingMember, emoji: e.target.value })}
                 />
               </div>
 

@@ -6,6 +6,7 @@ export interface TeamMember {
   name: string;
   role: string;
   photo: string | null;
+  emoji?: string | null;
   description: string | null;
   sort_order: number;
   is_active: boolean;
