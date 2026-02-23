@@ -134,7 +134,7 @@ export const AboutSection: React.FC = () => {
                         )}
                       </div>
                       <p className="font-medium text-foreground text-base">{member.name}</p>
-                      <p className="text-muted-foreground text-xs">{member.role}</p>
+                      <p className="text-muted-foreground text-sm">{member.role}</p>
                     </div>
                   ))}
                 </div>
