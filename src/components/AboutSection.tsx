@@ -78,7 +78,7 @@ export const AboutSection: React.FC = () => {
 
         {/* Founder Card — Variant 19 style */}
         <div className="mb-6">
-          <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 [box-shadow:var(--shadow-md)] border border-primary/10">
+          <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 [box-shadow:var(--shadow-md)] border border-border/50">
             <div className="flex flex-col items-center text-center">
               {teamMembers.length > 0 && teamMembers[0] && (
                 <div className="relative mb-4">
@@ -105,11 +105,11 @@ export const AboutSection: React.FC = () => {
                 </>
               )}
 
-              <p className="text-foreground/80 text-sm md:text-base leading-relaxed max-w-md">
+              <p className="text-foreground/80 text-sm md:text-base leading-relaxed w-full">
                 {t('founder.text1')}
               </p>
               {t('founder.text2') && (
-                <p className="text-foreground/80 text-sm md:text-base leading-relaxed max-w-md mt-3">
+                <p className="text-foreground/80 text-sm md:text-base leading-relaxed w-full mt-3">
                   {t('founder.text2')}
                 </p>
               )}
@@ -119,7 +119,7 @@ export const AboutSection: React.FC = () => {
 
         {/* Team — Variant 19 style */}
         <div className="mb-16">
-          <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 [box-shadow:var(--shadow-md)] border border-accent/10">
+          <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 [box-shadow:var(--shadow-md)] border border-border/50">
             <h3 className="font-heading text-lg md:text-xl font-bold text-foreground text-center mb-5">
               🌷 {t('team.title')} 🌷
             </h3>
