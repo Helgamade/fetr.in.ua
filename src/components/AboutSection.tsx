@@ -70,7 +70,7 @@ export const AboutSection: React.FC = () => {
 
           {/* Founder Card — Variant 19 style */}
           <div className="mb-6">
-            <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl px-8 py-12 [box-shadow:var(--shadow-md)] border border-border/50">
+            <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl px-8 pt-[2.7rem] pb-8 [box-shadow:var(--shadow-md)] border border-border/50">
               <div className="flex flex-col items-center text-center">
                 {teamMembers.length > 0 && teamMembers[0] && (
                   <div className="relative mb-4">
