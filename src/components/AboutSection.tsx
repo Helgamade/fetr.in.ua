@@ -61,7 +61,7 @@ export const AboutSection: React.FC = () => {
           </div>
 
           {/* Values */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((value, index) => (
               <div
                 key={value.title}
