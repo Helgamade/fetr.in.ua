@@ -34,7 +34,7 @@ export const AboutSection: React.FC = () => {
             backgroundAttachment: 'fixed',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            opacity: 0.06,
+            opacity: 0.12,
           }}
         />
         {/* Gradient overlay — fades photo edges into background */}
