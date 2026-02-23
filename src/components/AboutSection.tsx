@@ -73,12 +73,12 @@ export const AboutSection: React.FC = () => {
           </div>
 
           {/* Founder Card — Variant 19 style */}
-          <div className="mb-6">
+          <div className="mb-10">
             <div className="max-w-3xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl px-8 pt-[2.7rem] pb-8 [box-shadow:var(--shadow-md)] border border-border/50 relative">
-              <div className="absolute top-3 left-3 md:top-4 md:left-4 w-6 h-6 md:w-8 md:h-8 border-t-2 border-l-2 border-primary/30 rounded-tl-[1.3rem]" />
-              <div className="absolute top-3 right-3 md:top-4 md:right-4 w-6 h-6 md:w-8 md:h-8 border-t-2 border-r-2 border-primary/30 rounded-tr-[1.3rem]" />
-              <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4 w-6 h-6 md:w-8 md:h-8 border-b-2 border-l-2 border-primary/30 rounded-bl-[1.3rem]" />
-              <div className="absolute bottom-3 right-3 md:bottom-4 md:right-4 w-6 h-6 md:w-8 md:h-8 border-b-2 border-r-2 border-primary/30 rounded-br-[1.3rem]" />
+              <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-primary/30 rounded-tl-[1.3rem]" />
+              <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-primary/30 rounded-tr-[1.3rem]" />
+              <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-primary/30 rounded-bl-[1.3rem]" />
+              <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-primary/30 rounded-br-[1.3rem]" />
               <div className="flex flex-col items-center text-center">
                 {teamMembers.length > 0 && teamMembers[0] && (
                   <div className="relative mb-4">
@@ -114,7 +114,7 @@ export const AboutSection: React.FC = () => {
           </div>
 
           {/* Team — Variant 19 style */}
-          <div className="mb-10">
+          <div className="mb-10 mt-2">
             <div className="max-w-3xl mx-auto">
               <h3 className="font-heading text-lg md:text-xl font-bold text-foreground text-center mb-5">
                 {t('team.title')}
@@ -145,7 +145,7 @@ export const AboutSection: React.FC = () => {
           </div>
 
           {/* Why trust us */}
-          <div className="max-w-2xl mx-auto p-8 rounded-2xl bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10">
+          <div className="max-w-3xl mx-auto p-8 rounded-2xl bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10">
             <h3 className="text-xl font-heading font-bold text-center mb-6">{t('trust.title')}</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {trustItems.map((item) => (
