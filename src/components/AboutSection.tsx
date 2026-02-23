@@ -28,10 +28,9 @@ export const AboutSection: React.FC = () => {
       <section id="about" className="py-20 relative overflow-hidden">
         {/* Parallax photo layer — place /public/images/workshop-bg.jpg to activate */}
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none bg-scroll md:bg-fixed"
           style={{
             backgroundImage: 'url(/uploads/hero/hero-bg-default.jpg)',
-            backgroundAttachment: 'fixed',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             opacity: 0.06,
