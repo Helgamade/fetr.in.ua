@@ -75,10 +75,10 @@ export const AboutSection: React.FC = () => {
           {/* Founder Card — Variant 19 style */}
           <div className="mb-6">
             <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl px-8 pt-[2.7rem] pb-8 [box-shadow:var(--shadow-md)] border border-border/50 relative">
-              <div className="absolute top-3 left-3 md:top-4 md:left-4 w-6 h-6 md:w-8 md:h-8 border-t-2 border-l-2 border-primary/30 rounded-tl-lg" />
-              <div className="absolute top-3 right-3 md:top-4 md:right-4 w-6 h-6 md:w-8 md:h-8 border-t-2 border-r-2 border-primary/30 rounded-tr-lg" />
-              <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4 w-6 h-6 md:w-8 md:h-8 border-b-2 border-l-2 border-primary/30 rounded-bl-lg" />
-              <div className="absolute bottom-3 right-3 md:bottom-4 md:right-4 w-6 h-6 md:w-8 md:h-8 border-b-2 border-r-2 border-primary/30 rounded-br-lg" />
+              <div className="absolute top-3 left-3 md:top-4 md:left-4 w-6 h-6 md:w-8 md:h-8 border-t-2 border-l-2 border-primary/30 rounded-tl-3xl" />
+              <div className="absolute top-3 right-3 md:top-4 md:right-4 w-6 h-6 md:w-8 md:h-8 border-t-2 border-r-2 border-primary/30 rounded-tr-3xl" />
+              <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4 w-6 h-6 md:w-8 md:h-8 border-b-2 border-l-2 border-primary/30 rounded-bl-3xl" />
+              <div className="absolute bottom-3 right-3 md:bottom-4 md:right-4 w-6 h-6 md:w-8 md:h-8 border-b-2 border-r-2 border-primary/30 rounded-br-3xl" />
               <div className="flex flex-col items-center text-center">
                 {teamMembers.length > 0 && teamMembers[0] && (
                   <div className="relative mb-4">
