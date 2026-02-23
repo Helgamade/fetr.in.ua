@@ -109,7 +109,7 @@ export const AboutSection: React.FC = () => {
           <div className="mb-10">
             <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 [box-shadow:var(--shadow-md)] border border-border/50">
               <h3 className="font-heading text-lg md:text-xl font-bold text-foreground text-center mb-5">
-                🌷 {t('team.title')} 🌷
+                {t('team.title')}
               </h3>
 
               {isLoading ? (
