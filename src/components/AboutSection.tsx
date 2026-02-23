@@ -60,7 +60,7 @@ export const AboutSection: React.FC = () => {
         </div>
       </section>
 
-      <section id="about-team" className="py-20 bg-pastel-mint/20">
+      <section id="about-team" className="py-20 bg-gradient-to-b from-sage/20 to-peach/20">
         <div className="container-tight">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4">
