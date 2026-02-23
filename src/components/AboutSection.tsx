@@ -31,136 +31,148 @@ export const AboutSection: React.FC = () => {
   ];
 
   return (
-    <section id="about" className="py-20 bg-pastel-mint/20">
-      <div className="container-tight">
-        {/* Section header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary mb-4">
-            <Heart className="w-4 h-4" />
-            <span className="text-sm font-medium">{t('badge')}</span>
+    <>
+      <section id="about" className="py-20">
+        <div className="container-tight">
+          {/* Section header */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary mb-4">
+              <Heart className="w-4 h-4" />
+              <span className="text-sm font-medium">{t('badge')}</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
+              {t('title')}
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              {t('subtitle')}
+            </p>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
-            {t('title')}
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {t('subtitle')}
-          </p>
-        </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {stats.map((stat) => (
-            <div key={stat.label} className="glass-card p-6 text-center hover-lift">
-              <div className="text-3xl sm:text-4xl font-heading font-bold gradient-text mb-2">
-                {stat.value}
-              </div>
-              <div className="text-muted-foreground">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Values */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {values.map((value, index) => (
-            <div
-              key={value.title}
-              className="text-center p-6 animate-fade-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <value.icon className="w-7 h-7 text-primary" />
-              </div>
-              <h3 className="font-heading font-bold text-lg mb-2">{value.title}</h3>
-              <p className="text-muted-foreground text-sm">{value.description}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Founder Card — Variant 19 style */}
-        <div className="mb-6">
-          <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 [box-shadow:var(--shadow-md)] border border-border/50">
-            <div className="flex flex-col items-center text-center">
-              {teamMembers.length > 0 && teamMembers[0] && (
-                <div className="relative mb-4">
-                  <div className="absolute -inset-3 bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 rounded-full animate-pulse" />
-                  {teamMembers[0].photo ? (
-                    <img
-                      src={teamMembers[0].photo}
-                      alt={teamMembers[0].name}
-                      className="relative w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-card"
-                    />
-                  ) : (
-                    <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full bg-primary/10 flex items-center justify-center border-4 border-card">
-                      <Users className="w-10 h-10 text-primary" />
-                    </div>
-                  )}
-                  <Sparkles className="absolute -top-1 -right-1 w-6 h-6 text-primary" />
+          {/* Stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            {stats.map((stat) => (
+              <div key={stat.label} className="glass-card p-6 text-center hover-lift">
+                <div className="text-3xl sm:text-4xl font-heading font-bold gradient-text mb-2">
+                  {stat.value}
                 </div>
-              )}
-
-              {teamMembers.length > 0 && teamMembers[0] && (
-                <>
-                  <h3 className="font-heading text-xl md:text-2xl font-bold text-foreground">{teamMembers[0].name}</h3>
-                  <p className="text-primary text-sm mb-4">{teamMembers[0].role}</p>
-                </>
-              )}
-
-              <p className="text-foreground/80 text-sm md:text-base leading-relaxed w-full">
-                {t('founder.text1')}
-              </p>
-              {t('founder.text2') && (
-                <p className="text-foreground/80 text-sm md:text-base leading-relaxed w-full mt-3">
-                  {t('founder.text2')}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Team — Variant 19 style */}
-        <div className="mb-16">
-          <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 [box-shadow:var(--shadow-md)] border border-border/50">
-            <h3 className="font-heading text-lg md:text-xl font-bold text-foreground text-center mb-5">
-              🌷 {t('team.title')} 🌷
-            </h3>
-
-            {isLoading ? (
-              <div className="text-center py-6 text-muted-foreground">{t('team.loading')}</div>
-            ) : teamMembers.length > 0 ? (
-              <div className="flex flex-wrap justify-center gap-6">
-                {teamMembers.map((member, i) => (
-                  <div key={member.id} className="text-center">
-                    <div className={`w-14 h-14 md:w-16 md:h-16 mx-auto mb-2 rounded-full ${i % 2 === 0 ? 'bg-gradient-to-br from-primary/30' : 'bg-gradient-to-br from-accent/30'} to-transparent flex items-center justify-center overflow-hidden`}>
-                      {member.photo ? (
-                        <img src={member.photo} alt={member.name} className="w-full h-full object-cover rounded-full" />
-                      ) : (
-                        <span className="text-2xl">🌸</span>
-                      )}
-                    </div>
-                    <p className="font-medium text-foreground text-sm">{member.name}</p>
-                    <p className="text-muted-foreground text-xs">{member.role}</p>
-                  </div>
-                ))}
+                <div className="text-muted-foreground">{stat.label}</div>
               </div>
-            ) : (
-              <div className="text-center py-6 text-muted-foreground">{t('team.empty')}</div>
-            )}
+            ))}
           </div>
-        </div>
 
-        {/* Why trust us */}
-        <div className="p-8 rounded-2xl bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10">
-          <h3 className="text-xl font-heading font-bold text-center mb-6">{t('trust.title')}</h3>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {trustItems.map((item) => (
-              <div key={item} className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
-                <span className="text-sm font-medium">{item}</span>
+          {/* Values */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {values.map((value, index) => (
+              <div
+                key={value.title}
+                className="text-center p-6 animate-fade-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <value.icon className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="font-heading font-bold text-lg mb-2">{value.title}</h3>
+                <p className="text-muted-foreground text-sm">{value.description}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <section id="about-team" className="py-20 bg-pastel-mint/20">
+        <div className="container-tight">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground">
+              Привіт, друзі! 👋
+            </h2>
+          </div>
+
+          {/* Founder Card — Variant 19 style */}
+          <div className="mb-6">
+            <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 [box-shadow:var(--shadow-md)] border border-border/50">
+              <div className="flex flex-col items-center text-center">
+                {teamMembers.length > 0 && teamMembers[0] && (
+                  <div className="relative mb-4">
+                    <div className="absolute -inset-3 bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 rounded-full animate-pulse" />
+                    {teamMembers[0].photo ? (
+                      <img
+                        src={teamMembers[0].photo}
+                        alt={teamMembers[0].name}
+                        className="relative w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-card"
+                      />
+                    ) : (
+                      <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full bg-primary/10 flex items-center justify-center border-4 border-card">
+                        <Users className="w-10 h-10 text-primary" />
+                      </div>
+                    )}
+                    <Sparkles className="absolute -top-1 -right-1 w-6 h-6 text-primary" />
+                  </div>
+                )}
+
+                {teamMembers.length > 0 && teamMembers[0] && (
+                  <>
+                    <h3 className="font-heading text-xl md:text-2xl font-bold text-foreground">{teamMembers[0].name}</h3>
+                    <p className="text-primary text-sm mb-4">{teamMembers[0].role}</p>
+                  </>
+                )}
+
+                <p className="text-foreground/80 text-sm md:text-base leading-relaxed w-full">
+                  {t('founder.text1')}
+                </p>
+                {t('founder.text2') && (
+                  <p className="text-foreground/80 text-sm md:text-base leading-relaxed w-full mt-3">
+                    {t('founder.text2')}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Team — Variant 19 style */}
+          <div className="mb-10">
+            <div className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 [box-shadow:var(--shadow-md)] border border-border/50">
+              <h3 className="font-heading text-lg md:text-xl font-bold text-foreground text-center mb-5">
+                🌷 {t('team.title')} 🌷
+              </h3>
+
+              {isLoading ? (
+                <div className="text-center py-6 text-muted-foreground">{t('team.loading')}</div>
+              ) : teamMembers.length > 0 ? (
+                <div className="flex flex-wrap justify-center gap-6">
+                  {teamMembers.map((member, i) => (
+                    <div key={member.id} className="text-center">
+                      <div className={`w-14 h-14 md:w-16 md:h-16 mx-auto mb-2 rounded-full ${i % 2 === 0 ? 'bg-gradient-to-br from-primary/30' : 'bg-gradient-to-br from-accent/30'} to-transparent flex items-center justify-center overflow-hidden`}>
+                        {member.photo ? (
+                          <img src={member.photo} alt={member.name} className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          <span className="text-2xl">🌸</span>
+                        )}
+                      </div>
+                      <p className="font-medium text-foreground text-sm">{member.name}</p>
+                      <p className="text-muted-foreground text-xs">{member.role}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">{t('team.empty')}</div>
+              )}
+            </div>
+          </div>
+
+          {/* Why trust us */}
+          <div className="max-w-2xl mx-auto p-8 rounded-2xl bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10">
+            <h3 className="text-xl font-heading font-bold text-center mb-6">{t('trust.title')}</h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {trustItems.map((item) => (
+                <div key={item} className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
+                  <span className="text-sm font-medium">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   );
 };
