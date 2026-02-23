@@ -64,7 +64,7 @@ export const AboutSection: React.FC = () => {
         <div className="container-tight">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-heading font-bold text-foreground">
-              Привіт, друзі! 👋
+              {t('greeting.title')}
             </h2>
           </div>
 
