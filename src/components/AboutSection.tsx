@@ -135,10 +135,8 @@ export const AboutSection: React.FC = () => {
           {/* Founder Card — Variant 19 style */}
           <div className="mb-10">
             <div className="max-w-3xl mx-auto bg-card/80 backdrop-blur-sm rounded-3xl px-8 pt-[2.7rem] pb-8 [box-shadow:var(--shadow-md)] border border-border/50 relative">
-              <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-primary/30 rounded-tl-[1.3rem]" />
               <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-primary/30 rounded-tr-[1.3rem]" />
               <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-primary/30 rounded-bl-[1.3rem]" />
-              <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-primary/30 rounded-br-[1.3rem]" />
               <div className="flex flex-col items-center text-center">
                 {teamMembers.length > 0 && teamMembers[0] && (
                   <div className="relative mb-6">
