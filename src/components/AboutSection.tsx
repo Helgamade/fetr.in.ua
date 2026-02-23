@@ -100,7 +100,7 @@ export const AboutSection: React.FC = () => {
 
                 {teamMembers.length > 0 && teamMembers[0] && (
                   <>
-                    <h3 className="font-heading text-xl md:text-2xl font-bold text-foreground">{teamMembers[0].name}</h3>
+                    <h3 className="font-heading text-xl font-bold text-foreground">{teamMembers[0].name}</h3>
                     <p className="text-primary text-sm mb-4">{t('founder.role')}</p>
                   </>
                 )}
@@ -116,7 +116,7 @@ export const AboutSection: React.FC = () => {
           {/* Team — Variant 19 style */}
           <div className="mb-16 mt-2">
             <div className="max-w-3xl mx-auto">
-              <h3 className="font-heading text-lg md:text-xl font-bold text-foreground text-center mb-5">
+              <h3 className="font-heading text-xl font-bold text-foreground text-center mb-5">
                 {t('team.title')}
               </h3>
 
