@@ -7,8 +7,11 @@ import { usePublicSettings } from '@/hooks/usePublicSettings';
 export const AboutSection: React.FC = () => {
   const { t } = useTranslation('about');
   const { data: teamMembers = [], isLoading } = useTeam(true); // Только активные
-  const { data: publicSettings = {} } = usePublicSettings();
-  const heroBackgroundImage = (publicSettings as Record<string, string>).hero_background_image || '/uploads/hero/hero-bg-default.jpg';
+  const { data: publicSettings, isLoading: settingsLoading } = usePublicSettings();
+  // Ждём настроек — не применяем фолбэк пока не загрузились (иначе два запроса к изображению)
+  const heroBackgroundImage = settingsLoading
+    ? undefined
+    : (publicSettings?.hero_background_image || '/uploads/hero/hero-bg-default.jpg');
   const parallaxRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const waveRef = useRef<HTMLSpanElement>(null);

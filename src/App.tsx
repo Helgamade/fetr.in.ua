@@ -122,6 +122,9 @@ const App = () => (
                   <Route path="/nabory-fetru" element={<NaboryFetru />} />
                   <Route path="/nabory-fetru/:slug" element={<Index />} />
 
+                  {/* Explicit 404 route so Page.tsx can redirect here */}
+                  <Route path="/404" element={<NotFound />} />
+
                   {/* Dynamic page routes - must be after admin routes */}
                   <Route path="/:slug" element={<Page />} />
 

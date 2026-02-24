@@ -7,16 +7,19 @@ import { trackEvent } from '@/lib/analytics';
 
 export const HeroSection: React.FC = () => {
   const { t } = useTranslation('hero');
-  const { data: publicSettings = {} } = usePublicSettings();
+  const { data: publicSettings, isLoading: settingsLoading } = usePublicSettings();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  
-  // Используем изображение из настроек или дефолтное
-  const heroBackgroundImage = (publicSettings as Record<string, string>).hero_background_image || '/uploads/hero/hero-bg-default.jpg';
 
-  // Динамический preload — срабатывает после получения настроек, грузит только нужный файл
+  // Ждём загрузки настроек — если ещё грузятся, не применяем фолбэк (иначе браузер
+  // начинает грузить hero-bg-default.jpg, а потом ещё раз admin-webp → два запроса)
+  const heroBackgroundImage = settingsLoading
+    ? undefined
+    : (publicSettings?.hero_background_image || '/uploads/hero/hero-bg-default.jpg');
+
+  // Динамический preload — срабатывает только когда точно известен нужный файл
   useEffect(() => {
     if (!heroBackgroundImage) return;
-    const existing = document.querySelector(`link[rel="preload"][data-hero-bg]`);
+    const existing = document.querySelector('link[rel="preload"][data-hero-bg]');
     if (existing) existing.remove();
     const link = document.createElement('link');
     link.rel = 'preload';

@@ -1,6 +1,6 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { usePage } from '@/hooks/usePages';
+import { useOptionalPage as usePage } from '@/hooks/usePages';
 import { Loader2 } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { Header } from '@/components/Header';
@@ -24,30 +24,7 @@ export default function Page() {
   }
 
   if (error || !page) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="pt-24 pb-20">
-          <div className="container-tight">
-            <div className="text-center py-20">
-              <h1 className="text-4xl font-heading font-bold text-foreground mb-4">Сторінку не знайдено</h1>
-              <p className="text-lg text-muted-foreground mb-6">
-                Сторінка, яку ви шукаєте, не існує або була видалена.
-              </p>
-              <a href="/" className="text-primary font-medium hover:underline">
-                Повернутися на головну
-              </a>
-            </div>
-          </div>
-        </main>
-        <Footer />
-        <CartDrawer />
-        <SocialProof />
-        <ChatWidget />
-        {/* <ExitIntentPopup /> - временно отключен */}
-        <StickyMobileCTA />
-      </div>
-    );
+    return <Navigate to="/404" replace />;
   }
 
   // Очистка HTML контента для безопасности
