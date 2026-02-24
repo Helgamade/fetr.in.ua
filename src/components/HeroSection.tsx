@@ -11,8 +11,21 @@ export const HeroSection: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   
   // Используем изображение из настроек или дефолтное
-  // Fallback — локальный файл, не внешний Unsplash (экономит ~600KB при первой загрузке)
-  const heroBackgroundImage = publicSettings.hero_background_image || '/uploads/hero/hero-bg-default.jpg';
+  const heroBackgroundImage = (publicSettings as Record<string, string>).hero_background_image || '/uploads/hero/hero-bg-default.jpg';
+
+  // Динамический preload — срабатывает после получения настроек, грузит только нужный файл
+  useEffect(() => {
+    if (!heroBackgroundImage) return;
+    const existing = document.querySelector(`link[rel="preload"][data-hero-bg]`);
+    if (existing) existing.remove();
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = heroBackgroundImage;
+    link.dataset.heroBg = '1';
+    document.head.appendChild(link);
+    return () => { link.remove(); };
+  }, [heroBackgroundImage]);
 
   const stats = [
     { icon: Star, value: t('stat1.value'), label: t('stat1.label') },
