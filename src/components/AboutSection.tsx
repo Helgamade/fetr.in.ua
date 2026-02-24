@@ -2,10 +2,13 @@ import React, { useRef, useEffect } from 'react';
 import { Heart, Star, Users, Award, CheckCircle, Flower2, Sparkles, Palette } from 'lucide-react';
 import { useTeam } from '@/hooks/useTeam';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePublicSettings } from '@/hooks/usePublicSettings';
 
 export const AboutSection: React.FC = () => {
   const { t } = useTranslation('about');
   const { data: teamMembers = [], isLoading } = useTeam(true); // Только активные
+  const { data: publicSettings = {} } = usePublicSettings();
+  const heroBackgroundImage = (publicSettings as Record<string, string>).hero_background_image || '/uploads/hero/hero-bg-default.jpg';
   const parallaxRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const waveRef = useRef<HTMLSpanElement>(null);
@@ -77,7 +80,7 @@ export const AboutSection: React.FC = () => {
           ref={parallaxRef}
           className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: 'url(/uploads/hero/hero-bg-default.jpg)',
+            backgroundImage: `url(${heroBackgroundImage})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             opacity: 0.06,
