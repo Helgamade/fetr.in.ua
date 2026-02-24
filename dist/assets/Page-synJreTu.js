@@ -1,0 +1,24 @@
+import{j as e}from"./vendor-react-CYjnCNCB.js";import{A as p,B as i,N as a,H as d}from"./index-DgJR60DP.js";import{u as m}from"./usePages-BJ90f0i8.js";import{p as l}from"./purify.es-D9RiKzGB.js";import{H as c,F as x}from"./Footer-DAe_ZDZu.js";import{C as g,S as u,a as f,b as h}from"./StickyMobileCTA-rMsCKs14.js";import"./button-DrNNnXgS.js";import"./useTranslation-DR-QBnjK.js";import"./useTexts-YKxGTeAG.js";import"./usePublicSettings-CMNN7c8O.js";import"./avatar-BFpaHmV8.js";import"./phone-DfMfKCXo.js";import"./user-DKyzApKN.js";import"./package-CJluHz5Q.js";import"./file-text-C62IQ4L7.js";import"./layout-dashboard-CCpwtZUJ.js";import"./log-out-CDWEwsXb.js";import"./truck-DhUFe1-z.js";import"./credit-card-CiJR6My6.js";import"./instagram-7NmHmkMp.js";import"./send-CKoWUd17.js";import"./mail-DNdwON03.js";import"./trash-2-nyeu8cnO.js";import"./minus-CSOjhgTg.js";import"./eye-C4mwoI-9.js";import"./users-D5tAew_Q.js";import"./messengerLinks-CdfhMe4D.js";function J(){const{slug:t}=p(),{data:o,isLoading:r,error:s}=m(t||"");if(r)return e.jsx("div",{className:"min-h-screen bg-background flex items-center justify-center",children:e.jsx(i,{className:"h-8 w-8 animate-spin text-muted-foreground"})});if(s||!o)return e.jsx(a,{to:"/404",replace:!0});const n=o.content?l.sanitize(o.content,{ALLOWED_TAGS:["p","br","strong","em","u","h1","h2","h3","h4","h5","h6","ul","ol","li","a","img","blockquote","code","pre","hr","div","span","dl","dt","dd","figure","figcaption"],ALLOWED_ATTR:["href","src","alt","title","class","style"]}):"";return e.jsxs(e.Fragment,{children:[e.jsxs(d,{children:[e.jsx("title",{children:o.meta_title||o.title}),e.jsx("meta",{name:"description",content:o.meta_description||o.title}),e.jsx("meta",{property:"og:title",content:o.meta_title||o.title}),e.jsx("meta",{property:"og:description",content:o.meta_description||o.title}),e.jsx("meta",{property:"og:type",content:"website"}),e.jsx("meta",{name:"twitter:card",content:"summary"}),e.jsx("meta",{name:"twitter:title",content:o.meta_title||o.title}),e.jsx("meta",{name:"twitter:description",content:o.meta_description||o.title})]}),e.jsxs("div",{className:"min-h-screen bg-background",children:[e.jsx(c,{}),e.jsx("main",{className:"pt-24 pb-20",children:e.jsx("section",{style:{paddingTop:"1rem",paddingBottom:"5rem"},children:e.jsx("div",{className:"container-tight",children:e.jsxs("article",{className:"max-w-4xl mx-auto",children:[e.jsx("h1",{className:"text-4xl sm:text-5xl lg:text-6xl font-heading font-bold text-foreground mb-6",children:o.title}),e.jsx("div",{className:`prose prose-lg max-w-none \r
+                    prose-headings:font-heading prose-headings:font-bold prose-headings:text-foreground prose-headings:tracking-tight\r
+                    prose-h1:text-[36px] prose-h1:font-heading prose-h1:font-bold\r
+                    prose-h2:text-[24px] prose-h2:font-heading prose-h2:font-semibold\r
+                    prose-h3:text-[16px] prose-h3:font-heading prose-h3:font-bold\r
+                    prose-h4:text-[14px] prose-h4:font-heading prose-h4:font-bold\r
+                    prose-h5:text-[13px] prose-h5:font-heading prose-h5:font-bold\r
+                    prose-h6:text-[12px] prose-h6:font-heading prose-h6:font-bold\r
+                    prose-p:text-lg prose-p:text-foreground prose-p:font-body\r
+                    prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline\r
+                    prose-strong:text-foreground prose-strong:font-bold\r
+                    prose-em:text-foreground prose-em:italic\r
+                    prose-ul:text-lg prose-ul:text-foreground prose-ul:font-body\r
+                    prose-ol:text-lg prose-ol:text-foreground prose-ol:font-body\r
+                    prose-li:text-foreground prose-li:font-body\r
+                    prose-img:rounded-lg prose-img:my-6\r
+                    prose-hr:border-t prose-hr:border-border\r
+                    prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-6 prose-blockquote:pr-4 prose-blockquote:py-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-blockquote:font-body prose-blockquote:bg-muted/30\r
+                    prose-pre:bg-muted prose-pre:text-foreground prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto\r
+                    prose-code:text-sm prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono\r
+                    prose-dt:font-bold prose-dt:text-foreground\r
+                    prose-dd:text-foreground\r
+                    prose-figcaption:text-sm prose-figcaption:text-muted-foreground prose-figcaption:text-center\r
+                    dark:prose-invert`,dangerouslySetInnerHTML:{__html:n}})]})})})}),e.jsx(x,{}),e.jsx(g,{}),e.jsx(u,{}),e.jsx(f,{}),e.jsx(h,{})]})]})}export{J as default};

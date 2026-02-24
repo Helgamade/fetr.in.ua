@@ -83,7 +83,7 @@ export const AboutSection: React.FC = () => {
           ref={parallaxRef}
           className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: `url(${heroBackgroundImage})`,
+            backgroundImage: heroBackgroundImage ? `url(${heroBackgroundImage})` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             opacity: 0.06,

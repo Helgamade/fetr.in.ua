@@ -101,7 +101,7 @@ export const HeroSection: React.FC = () => {
       <div 
         className="absolute inset-0 -z-5"
         style={{
-          backgroundImage: `url(${heroBackgroundImage})`,
+          backgroundImage: heroBackgroundImage ? `url(${heroBackgroundImage})` : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           transform: `translate(${mousePosition.x * 0.1}px, ${mousePosition.y * 0.1}px) scale(1.1)`,
