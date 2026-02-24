@@ -2,122 +2,155 @@
 
 ## Доступ к серверу
 ```
-SSH: idesig02@idesig02.ftp.tools
-Проект: /home/idesig02/fetr.in.ua/www/
-Git: https://github.com/Helgamade/fetr.in.ua.git (ветка main)
+SSH:     idesig02@idesig02.ftp.tools
+Проект:  /home/idesig02/fetr.in.ua/www/
+Git:     https://github.com/Helgamade/fetr.in.ua.git (ветка main)
+Сайт:    https://fetr.in.ua/
 ```
 
 ---
 
-## Как это работает (правильная архитектура)
+## Архитектура (как это работает)
 
 ```
-Локальная машина                  GitHub                  Сервер
-─────────────────                 ───────                 ──────
-src/ (исходники)                                          dist/ (из git)
-    ↓ npm run build               git push                    ↓ cp
-dist/ (скомпилированный)  ──────────────────────→  index.html + assets/
-    ↓ git add dist/               
-    ↓ git commit                                    (никакого npm run build!)
-    ↓ git push
+Локально                    GitHub                  Сервер (production)
+────────                    ──────                  ───────────────────
+src/        ─┐                                      /www/index.html        ← из dist/index.html
+server/      │  npm run build                       /www/assets/*.js       ← из dist/assets/
+vite.config  │       ↓                              /www/assets/*.css
+             ├─→  dist/          git add -A         /www/server/           ← Node.js API
+             │    dist/index.html ──────────→ GitHub → server/deploy.sh → сервер
+             │    dist/assets/    git commit
+             └─   (все файлы)    git push
 ```
 
-**Ключевой принцип:** `npm run build` выполняется **ТОЛЬКО ЛОКАЛЬНО**. Сервер получает уже собранный `dist/` из git и просто копирует файлы.
-
-Это устраняет проблему "4 модулей вместо 2795" навсегда — сервер никогда не запускает Vite.
+**Node.js сервер** слушает порт `3001`, обслуживает API (`/api/*`).
+**Apache** обслуживает статику — `index.html` и `assets/` из корня `/www/`.
+**Никакой сборки на сервере нет** — только копирование из `dist/`.
 
 ---
 
-## Стандартный деплой
+## ❗ ЖЕЛЕЗНОЕ ПРАВИЛО #1 — dist/ коммитится ВЕСЬ, ВСЕГДА
 
-### Шаг 1 — локально (любые изменения в коде):
+```
+НЕЛЬЗЯ: git add dist/index.html     ← ЗАПРЕЩЕНО. Сломает сайт.
+НЕЛЬЗЯ: git add src/ index.html     ← Без dist/ деплой сломается.
+
+МОЖНО ТОЛЬКО: git add -A            ← Добавляет ВСЁ, включая dist/
+```
+
+**Почему:** Vite генерирует хеши в именах файлов (`index-CFd-NLOE.js`).
+`dist/index.html` ссылается на конкретные хеши. Если в git попадёт
+только `index.html` с новыми хешами, но старые `assets/*.js` — сервер
+вернёт `index.html` вместо JS → ошибка `Failed to load module script`.
+
+**Симптом нарушения:** `Failed to load module script: Expected a JavaScript module but the server responded with MIME type "text/html"`.
+
+---
+
+## ❗ ЖЕЛЕЗНОЕ ПРАВИЛО #2 — Стандартная последовательность (не менять!)
+
+Каждый раз при изменении ЛЮБОГО файла в `src/`, `server/`, `vite.config.ts`, `index.html`:
+
 ```powershell
-cd "e:\fetr.in.ua\www"
-
-# Сборка
+# 1. Собрать (ЛОКАЛЬНО, не на сервере)
 npm run build
 
-# Коммит (включая dist/)
+# 2. Закоммитить ВСЁ включая dist/
 git add -A
-git commit -m "описание изменений"
-git push origin main
-```
+git commit -m "краткое описание"
+git push
 
-### Шаг 2 — на сервере:
-```powershell
+# 3. Задеплоить
 ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && bash server/deploy.sh"
 ```
 
-`server/deploy.sh` делает:
-1. `git fetch && git reset --hard origin/main` — точная копия из Git
-2. `cp dist/index.html → index.html` — для Apache
-3. `cp dist/assets/* → assets/` — JS/CSS бандлы
-4. Права доступа (755/644)
-5. Перезапуск Node.js сервера
+PowerShell не поддерживает `&&`. Используй `;` для цепочки команд:
+```powershell
+git add -A ; git commit -m "описание" ; git push
+```
 
 ---
 
-## Что НЕ нужно делать
+## ❗ ЖЕЛЕЗНОЕ ПРАВИЛО #3 — Проверка после деплоя
 
-- ❌ НЕ запускать `npm run build` на сервере
-- ❌ НЕ делать `git checkout -- index.html` (больше не нужно)
-- ❌ НЕ редактировать файлы вручную на сервере
-- ❌ НЕ пушить без предварительного `npm run build` локально
+После каждого деплоя ОБЯЗАТЕЛЬНО проверить:
 
----
+```powershell
+# Timestamp должен совпасть с выведенным в логе deploy.sh
+ssh idesig02@idesig02.ftp.tools "cat /home/idesig02/fetr.in.ua/www/DEPLOY_TIMESTAMP.txt"
 
-## Файлы в Git
-
-| Файл/папка | В Git? | Описание |
-|---|---|---|
-| `src/` | ✅ да | Исходники React/TS |
-| `server/` | ✅ да | Express API |
-| `dist/` | ✅ **да** | Скомпилированный фронтенд — деплоится через git |
-| `index.html` | ✅ да | Исходный Vite шаблон (`/src/main.tsx`) |
-| `public/` | ✅ да | robots.txt, .htaccess |
-| `uploads/` | ❌ нет | Загружаемые файлы, персистентные |
-| `server/.env` | ❌ нет | Секреты, никогда в git |
-| `node_modules/` | ❌ нет | Зависимости |
-
----
-
-## Проверка деплоя
-
-```bash
-# Timestamp на сайте должен совпадать с выведенным в логе deploy.sh
-curl -s "https://fetr.in.ua/DEPLOY_TIMESTAMP.txt"
-
-# Проверить что JS бандл из dist/ используется (не src/main.tsx!)
+# index.html должен ссылаться на assets/index-*.js, а не src/main.tsx
 ssh idesig02@idesig02.ftp.tools "grep 'assets/index-' /home/idesig02/fetr.in.ua/www/index.html"
 ```
 
 ---
 
-## Сервер Node.js
+## Что делает server/deploy.sh
 
-```
-Процесс: node --max-old-space-size=512 server/index.js
-Лог:     /home/idesig02/fetr.in.ua/www/server/api.log
-Порт:    3001 (проксируется Apache через .htaccess)
-
-Перезапуск вручную:
-ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && pkill -f 'node.*server/index.js'; sleep 1; nohup node --max-old-space-size=512 server/index.js > server/api.log 2>&1 &"
-```
+1. `git fetch && git reset --hard origin/main` — точная копия из Git
+2. Проверяет что `dist/index.html` существует (иначе — ошибка и стоп)
+3. `cp dist/index.html → index.html` — для Apache
+4. `cp -r dist/assets/* → assets/` — JS/CSS бандлы
+5. Права: `755` для папок, `644` для файлов
+6. Перезапуск Node.js сервера (`server/index.js`)
+7. Верификация через `DEPLOY_TIMESTAMP.txt`
 
 ---
 
-## Если deploy.sh упал с ошибкой git (конфликт)
+## Файлы и Git
 
+| Файл/папка     | В Git?    | Описание |
+|----------------|-----------|----------|
+| `src/`         | ✅ да     | Исходники React/TS |
+| `server/`      | ✅ да     | Express API + deploy.sh |
+| `dist/`        | ✅ **да** | Скомпилированный фронтенд — деплоится через git |
+| `index.html`   | ✅ да     | Vite-шаблон (содержит `src/main.tsx`) |
+| `public/`      | ✅ да     | `.htaccess`, `robots.txt` |
+| `uploads/`     | ❌ нет    | Загруженные файлы (персистентные на сервере) |
+| `server/.env`  | ❌ нет    | Секреты БД, JWT — никогда в git |
+| `node_modules/`| ❌ нет    | Зависимости |
+| `dist-ssr/`    | ❌ нет    | SSR артефакты |
+
+---
+
+## Диагностика ошибок
+
+### "Failed to load module script" (MIME type text/html)
+**Причина:** В git попал `dist/index.html` с новыми хешами, но `dist/assets/` остался старый.
+**Исправление:**
+```powershell
+# Локально: пересобрать и закоммитить ВСЁ
+npm run build ; git add -A ; git commit -m "fix: full dist rebuild" ; git push
+# Затем задеплоить
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && bash server/deploy.sh"
+```
+
+### Сайт отдаёт старую версию
+**Причина:** Деплой выполнен, но браузер кешировал.
+**Исправление:** В браузере `Ctrl+Shift+R` (hard reload).
+
+### Node.js API не отвечает (/api/*)
+```bash
+# Посмотреть лог
+ssh idesig02@idesig02.ftp.tools "tail -50 /home/idesig02/fetr.in.ua/www/server/api.log"
+
+# Перезапустить вручную
+ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && pkill -f 'node.*server/index.js'; sleep 1; nohup node --max-old-space-size=512 server/index.js > server/api.log 2>&1 &"
+```
+
+### git reset --hard конфликт
 ```bash
 ssh idesig02@idesig02.ftp.tools "cd /home/idesig02/fetr.in.ua/www && git fetch origin && git reset --hard origin/main && bash server/deploy.sh"
 ```
 
 ---
 
-## Чеклист перед деплоем
+## ЗАПРЕЩЕНО
 
-- [ ] `npm run build` выполнен локально — `✓ 2795 modules transformed`
-- [ ] `dist/index.html` содержит `/assets/index-*.js` (не `/src/main.tsx`)
-- [ ] `git push origin main` выполнен
-- [ ] `bash server/deploy.sh` завершился без ошибок
-- [ ] Timestamp на сайте совпадает
+- ❌ `npm run build` на сервере
+- ❌ Редактировать файлы вручную на сервере
+- ❌ `git add dist/index.html` без `dist/assets/`
+- ❌ `git push` без предварительного `npm run build`
+- ❌ Изменять `uploads/` или `server/.env` через git
+- ❌ Коммитить `node_modules/`
