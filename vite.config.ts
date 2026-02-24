@@ -23,14 +23,25 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
+          // React + ReactDOM — ПЕРВЫМ ДЕЛОМ явно отправляем в vendor-react.
+          // Без этого Rollup может затащить react-dom внутрь chunk-charts/chunk-lottie
+          // (если recharts или @lottiefiles бандлят React), и тогда index.js получает
+          // статический импорт этих чанков — они грузятся на ВСЕХ страницах.
+          if (
+            id.includes('/node_modules/react/') ||
+            id.includes('/node_modules/react-dom/') ||
+            id.includes('/node_modules/react-is/') ||
+            id.includes('/node_modules/scheduler/')
+          ) {
+            return 'vendor-react';
+          }
           // Lottie (~1MB) — только на /thank-you, грузится лениво
           if (id.includes('lottie') || id.includes('@lottiefiles')) {
             return 'chunk-lottie';
           }
-          // Recharts + d3 (~300KB) — только в /admin
-          if (id.includes('recharts') || id.includes('d3-')) {
-            return 'chunk-charts';
-          }
+          // Recharts + d3 — НЕ форсируем вручную.
+          // Dashboard lazy-loaded → recharts естественно попадёт в Dashboard chunk.
+          // Ручной manualChunks для recharts вызывал статический импорт в index.js.
           // TinyMCE + Tiptap (~heavy) — только в /admin
           if (
             id.includes('tinymce') ||
